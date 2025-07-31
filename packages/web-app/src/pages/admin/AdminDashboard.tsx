@@ -15,10 +15,14 @@ import { adminApi } from '../../services/api'
 interface SessionSummary {
   sessionId: string
   customerName: string
+  customerEmail: string
   customerCompany: string
+  customerTitle?: string
   status: 'active' | 'completed' | 'expired' | 'inactive'
   createdAt: string
   completedAt?: string
+  salesRepEmail: string
+  agentId: string
 }
 
 export default function AdminDashboard() {
@@ -79,16 +83,25 @@ export default function AdminDashboard() {
       <SpaceBetween size="l">
         <Header
           variant="h1"
+          description="고객이 AI 에이전트와 대화할 수 있는 상담 세션을 관리합니다. 필요 정보가 획득되면 세션이 완료되고, 30일이 경과한 모든 세션은 파기됩니다."
           actions={
-            <Button
-              variant="primary"
-              onClick={() => navigate('/admin/sessions/create')}
-            >
-              Create Session
-            </Button>
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                variant="normal"
+                onClick={() => navigate('/admin/agents')}
+              >
+                PreChat 에이전트
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => navigate('/admin/sessions/create')}
+              >
+                세션 추가
+              </Button>
+            </SpaceBetween>
           }
         >
-          MTE Pre-consultation Sessions
+          PreChat 세션 💬
         </Header>
 
         <Box minHeight="50vh">
@@ -96,45 +109,54 @@ export default function AdminDashboard() {
           columnDefinitions={[
             {
               id: 'customer',
-              header: 'Customer',
+              header: '고객사/담당자명',
               cell: (item) => (
                 <Box>
                   <Box fontWeight="bold">{item.customerCompany}/{item.customerName}</Box>
                   <Box fontSize="body-s" color="text-status-inactive">
-                    ({item.customerEmail})
+                    {item.customerTitle && `${item.customerTitle} • `}{item.customerEmail}
                   </Box>
                 </Box>
               )
             },
             {
+              id: 'agent',
+              header: '대화 에이전트',
+              cell: (item) => (
+                <Box fontSize="body-s" color="text-status-inactive">
+                  {item.agentId ? `Agent: ${item.agentId}` : 'No agent assigned'}
+                </Box>
+              )
+            },
+            {
               id: 'status',
-              header: 'Status',
+              header: '세션 상태',
               cell: (item) => getStatusBadge(item.status)
             },
             {
               id: 'created',
-              header: 'Created',
+              header: '생성일',
               cell: (item) => new Date(item.createdAt).toLocaleDateString()
             },
             {
               id: 'completed',
-              header: 'Completed',
+              header: '완료일',
               cell: (item) => item.completedAt ? new Date(item.completedAt).toLocaleDateString() : '-'
             },
             {
               id: 'actions',
-              header: 'Actions',
+              header: '작업',
               cell: (item) => (
                 <ButtonDropdown
                   expandToViewport
                   items={[
                     {
-                      text: 'View Details',
+                      text: '상세',
                       id: 'view',
                       iconName: 'external'
                     },
                     {
-                      text: 'Copy URL',
+                      text: '진입 URL',
                       id: 'copy',
                       iconName: 'copy'
                     },
@@ -182,7 +204,7 @@ export default function AdminDashboard() {
                 No pre-consultation sessions found.
               </Box>
               <Button onClick={() => navigate('/admin/sessions/create')}>
-                Create Session
+                세션 추가
               </Button>
             </Box>
           }

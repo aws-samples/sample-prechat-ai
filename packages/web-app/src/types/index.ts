@@ -1,11 +1,4 @@
-export enum ConversationStage {
-  AUTHORITY = 'authority',
-  BUSINESS = 'business',
-  AWS_SERVICES = 'aws_services',
-  TECHNICAL = 'technical',
-  NEXT_STEPS = 'next_steps',
-  COMPLETED = 'completed'
-}
+export type ConversationStage = 'conversation' | 'completed'
 
 export interface Message {
   id: string;
@@ -18,22 +11,26 @@ export interface Message {
 export interface Session {
   sessionId: string;
   status: 'active' | 'completed' | 'expired' | 'inactive';
-  currentStage: ConversationStage;
   conversationHistory: Message[];
   customerInfo: {
     name: string;
     email: string;
     company: string;
-    targetAuthority: string;
+    title?: string;
   };
-  salesRepId: string;
+  salesRepEmail: string;
+  salesRepInfo?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  agentId: string;
 }
 
 export interface ChatMessageRequest {
   sessionId: string;
   message: string;
   messageId: string;
-  modelId?: string;
 }
 
 export interface ChatMessageResponse {
@@ -53,6 +50,18 @@ export interface BedrockModel {
   name: string;
   provider: string;
   region: string;
+}
+
+export interface BedrockAgent {
+  agentId: string;
+  agentName: string;
+  agentStatus: 'CREATING' | 'PREPARING' | 'PREPARED' | 'NOT_PREPARED' | 'DELETING' | 'FAILED' | 'VERSIONING' | 'UPDATING';
+  foundationModel: string;
+  instruction: string;
+  createdAt: string;
+  updatedAt: string;
+  agentVersion?: string;
+  agentArn?: string;
 }
 
 export const BEDROCK_MODELS: BedrockModel[] = [

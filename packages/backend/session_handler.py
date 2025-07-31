@@ -1,8 +1,11 @@
 import json
 import boto3
-from utils import lambda_response, parse_body, get_timestamp, generate_id
+import os
+from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp
 
 dynamodb = boto3.resource('dynamodb')
+cognito = boto3.client('cognito-idp')
+USER_POOL_ID = os.environ.get('USER_POOL_ID')
 
 def create_session(event, context):
     body = parse_body(event)
@@ -10,10 +13,11 @@ def create_session(event, context):
     customer_name = body.get('customerName', '')
     customer_email = body.get('customerEmail', '')
     customer_company = body.get('customerCompany', '')
-    target_authority = body.get('targetAuthority', '')
-    sales_rep_id = body.get('salesRepId', '')
+    customer_title = body.get('customerTitle', '')
+    sales_rep_email = body.get('salesRepEmail', '')
+    agent_id = body.get('agentId', '')
     
-    if not all([customer_name, customer_email, sales_rep_id]):
+    if not all([customer_name, customer_email, sales_rep_email, agent_id]):
         return lambda_response(400, {'error': 'Missing required fields'})
     
     session_id = generate_id()
@@ -28,12 +32,13 @@ def create_session(event, context):
             'name': customer_name,
             'email': customer_email,
             'company': customer_company,
-            'targetAuthority': target_authority
+            'title': customer_title
         },
-        'salesRepId': sales_rep_id,
+        'salesRepEmail': sales_rep_email,
+        'agentId': agent_id,
         'createdAt': timestamp,
-        'currentStage': 'authority',
-        'GSI1PK': f'SALESREP#{sales_rep_id}',
+        'ttl': get_ttl_timestamp(30),  # 30 days TTL
+        'GSI1PK': f'SALESREP#{sales_rep_email}',
         'GSI1SK': f'SESSION#{timestamp}'
     }
     
@@ -69,13 +74,75 @@ def get_session(event, context):
             ScanIndexForward=True
         )
         
+        # Transform messages to match frontend Message interface
+        conversation_history = []
+        for item in history_resp.get('Items', []):
+            # Extract message ID from SK (format: MESSAGE#{messageId})
+            sk = item.get('SK', '')
+            message_id = sk.replace('MESSAGE#', '') if sk.startswith('MESSAGE#') else sk
+            
+            conversation_history.append({
+                'id': message_id,
+                'content': item.get('content', ''),
+                'sender': item.get('sender', ''),
+                'timestamp': item.get('timestamp', ''),
+                'stage': item.get('stage', 'conversation')
+            })
+        
+        # Get sales rep info from Cognito
+        sales_rep_email = session.get('salesRepEmail', session.get('salesRepId', ''))
+        sales_rep_info = get_sales_rep_info(sales_rep_email)
+        
         return lambda_response(200, {
             'sessionId': session['sessionId'],
             'status': session['status'],
-            'currentStage': session['currentStage'],
             'customerInfo': session['customerInfo'],
-            'salesRepId': session.get('salesRepId', ''),
-            'conversationHistory': history_resp.get('Items', [])
+            'salesRepEmail': sales_rep_email,
+            'salesRepInfo': sales_rep_info,
+            'agentId': session.get('agentId', ''),
+            'conversationHistory': conversation_history
         })
     except Exception as e:
         return lambda_response(500, {'error': 'Failed to get session'})
+
+def get_sales_rep_info(email):
+    """Get sales representative info from Cognito"""
+    if not email or not USER_POOL_ID:
+        return {
+            'email': email or 'Unknown',
+            'name': email.split('@')[0] if email else 'Unknown',
+            'phone': 'Contact via email'
+        }
+    
+    try:
+        # List users to find the user by email
+        response = cognito.list_users(
+            UserPoolId=USER_POOL_ID,
+            Filter=f'email = "{email}"',
+            Limit=1
+        )
+        
+        if response['Users']:
+            user = response['Users'][0]
+            attributes = {attr['Name']: attr['Value'] for attr in user['Attributes']}
+            
+            return {
+                'email': attributes.get('email', email),
+                'name': attributes.get('name', email.split('@')[0]),
+                'phone': attributes.get('phone_number', 'Contact via email')
+            }
+        else:
+            # User not found in Cognito, return basic info
+            return {
+                'email': email,
+                'name': email.split('@')[0],
+                'phone': 'Contact via email'
+            }
+    except Exception as e:
+        print(f"Error getting sales rep info from Cognito: {str(e)}")
+        # Fallback to basic info
+        return {
+            'email': email,
+            'name': email.split('@')[0] if email else 'Unknown',
+            'phone': 'Contact via email'
+        }

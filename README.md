@@ -8,8 +8,32 @@ The MTE Pre-consultation Chatbot consists of:
 
 - **Customer Interface**: A conversational chatbot that guides customers through a 5-stage conversation flow
 - **Admin Interface**: A dashboard for AWS sales representatives to create sessions and view results
+- **Bedrock Agents Management**: Create, configure, and deploy Amazon Bedrock Agents for enhanced AI capabilities
 - **AI-Powered Analysis**: Amazon Bedrock integration for intelligent conversation management and summary generation
 - **Serverless Architecture**: Built on AWS serverless services for scalability and cost-effectiveness
+
+## Features
+
+### Customer Experience
+- Interactive chatbot interface with 5-stage conversation flow
+- Real-time conversation with AI-powered responses
+- Mobile-responsive design
+
+### Admin Dashboard
+- Session management (create, view, inactivate, delete)
+- Detailed session reports with AI-generated summaries
+- Customer profile and conversation history
+- AWS documentation recommendations
+
+### Bedrock Agents Management
+- **Agent Creation**: Create new Bedrock agents with custom instructions
+- **Agent Editing**: Update agent name, foundation model, and instructions
+- **Default Prompt Template**: Pre-loaded agent instructions from prechat-agent-prompt.md
+- **Model Selection**: Choose from various foundation models (Claude, Nova)
+- **Agent Deployment**: Prepare and deploy agents for production use
+- **Agent Management**: View, update, and delete existing agents
+- **Status Management**: Track agent status (Creating, Prepared, Not Prepared, etc.)
+- **Prompt Management**: Load default prompt template or customize instructions
 
 ## Prerequisites
 

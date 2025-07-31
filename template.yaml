@@ -10,8 +10,85 @@ Globals:
         SESSIONS_TABLE: !Ref SessionsTable
         MESSAGES_TABLE: !Ref MessagesTable
         BEDROCK_REGION: ap-northeast-2
+        USER_POOL_ID: !Ref AdminUserPool
+        CLIENT_ID: !Ref AdminUserPoolClient
 
 Resources:
+  # Bedrock Agent Service Role
+  BedrockAgentServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AmazonBedrockExecutionRoleForAgents_bedrock-agent-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: bedrock.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+      Policies:
+        - PolicyName: BedrockAgentPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:Converse
+                Resource: '*'
+
+  AdminUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: mte-admin-users
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      EmailVerificationMessage: "[AWS PreChat] This is your sign-in code: \"{####}\""
+      EmailVerificationSubject: "[AWS PreChat] Your sign-in code"
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+        - Name: name
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+        - Name: phone_number
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+
+  AdminUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref AdminUserPool
+      ClientName: mte-admin-client
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ADMIN_NO_SRP_AUTH
+        - USER_PASSWORD_AUTH
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+      AccessTokenValidity: 24
+      IdTokenValidity: 24
+      RefreshTokenValidity: 30
+
   # DynamoDB Tables
   SessionsTable:
     Type: AWS::DynamoDB::Table
@@ -41,6 +118,11 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
 
   MessagesTable:
     Type: AWS::DynamoDB::Table
@@ -57,12 +139,15 @@ Resources:
           KeyType: HASH
         - AttributeName: SK
           KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
 
   # API Gateway
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: prod
+      StageName: dev
       Cors:
         AllowMethods: "'*'"
         AllowHeaders: "'*'"
@@ -82,8 +167,7 @@ Resources:
         - Statement:
             Effect: Allow
             Action:
-              - bedrock:InvokeModel
-              - bedrock:Converse
+              - bedrock:InvokeAgent
             Resource: '*'
       Events:
         PostMessage:
@@ -119,6 +203,11 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:ListUsers
+            Resource: !GetAtt AdminUserPool.Arn
       Events:
         GetSession:
           Type: Api
@@ -156,8 +245,8 @@ Resources:
         - Statement:
             Effect: Allow
             Action:
+              - bedrock:InvokeAgent
               - bedrock:InvokeModel
-              - bedrock:Converse
             Resource: '*'
       Events:
         GetReport:
@@ -201,7 +290,253 @@ Resources:
             Path: /api/admin/sessions/{sessionId}
             Method: delete
 
+  SignupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: auth_handler.signup
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:SignUp
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        Signup:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/auth/signup
+            Method: post
+
+  SigninFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: auth_handler.signin
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:AdminInitiateAuth
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        Signin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/auth/signin
+            Method: post
+
+  ConfirmSignupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: auth_handler.confirm_signup
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:ConfirmSignUp
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        ConfirmSignup:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/auth/confirm
+            Method: post
+
+  VerifyTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: auth_handler.verify_token
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:GetUser
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        VerifyToken:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/auth/verify
+            Method: get
+
+  ConfirmPhoneFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: auth_handler.confirm_phone
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:VerifyUserAttribute
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        ConfirmPhone:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/auth/confirm-phone
+            Method: post
+
+  # Bedrock Agent Functions
+  ListAgentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.list_agents
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:ListAgents
+              - bedrock:GetAgent
+            Resource: '*'
+      Events:
+        ListAgents:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents
+            Method: get
+
+  CreateAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.create_agent
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:CreateAgent
+              - bedrock:GetAgent
+              - iam:PassRole
+            Resource: '*'
+      Events:
+        CreateAgent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents
+            Method: post
+
+  DeleteAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.delete_agent
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:DeleteAgent
+              - bedrock:GetAgent
+            Resource: '*'
+      Events:
+        DeleteAgent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents/{agentId}
+            Method: delete
+
+  PrepareAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.prepare_agent
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:PrepareAgent
+              - bedrock:GetAgent
+            Resource: '*'
+      Events:
+        PrepareAgent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents/{agentId}/prepare
+            Method: post
+
+  GetAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.get_agent
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:GetAgent
+            Resource: '*'
+      Events:
+        GetAgent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents/{agentId}
+            Method: get
+
+  UpdateAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.update_agent
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:UpdateAgent
+              - bedrock:GetAgent
+            Resource: '*'
+      Events:
+        UpdateAgent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents/{agentId}
+            Method: put
+
+  # DynamoDB Streams Handler
+  SessionStreamHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: stream_handler.handle_session_stream
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - ses:SendEmail
+              - sns:Publish
+            Resource: '*'
+      Events:
+        SessionStream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt SessionsTable.StreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 5
+
 Outputs:
   ApiUrl:
     Description: API Gateway URL
     Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod"
+  # UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref AdminUserPool
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref AdminUserPoolClient

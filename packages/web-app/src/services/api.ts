@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { ChatMessageRequest, ChatMessageResponse, Session } from '../types'
+import type { ChatMessageRequest, ChatMessageResponse, Session, BedrockAgent } from '../types'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -23,8 +23,9 @@ export const adminApi = {
     customerName: string
     customerEmail: string
     customerCompany: string
-    targetAuthority: string
-    salesRepId: string
+    customerTitle: string
+    salesRepEmail: string
+    agentId: string
   }) => {
     const response = await api.post('/admin/sessions', data)
     return response.data
@@ -47,6 +48,44 @@ export const adminApi = {
 
   deleteSession: async (sessionId: string) => {
     const response = await api.delete(`/admin/sessions/${sessionId}`)
+    return response.data
+  },
+
+  // Bedrock Agents API
+  listAgents: async () => {
+    const response = await api.get('/admin/agents')
+    return response.data
+  },
+
+  createAgent: async (data: {
+    agentName: string
+    foundationModel: string
+    instruction: string
+  }) => {
+    const response = await api.post('/admin/agents', data)
+    return response.data
+  },
+
+  deleteAgent: async (agentId: string) => {
+    const response = await api.delete(`/admin/agents/${agentId}`)
+    return response.data
+  },
+
+  prepareAgent: async (agentId: string) => {
+    const response = await api.post(`/admin/agents/${agentId}/prepare`)
+    return response.data
+  },
+
+  getAgent: async (agentId: string) => {
+    const response = await api.get(`/admin/agents/${agentId}`)
+    return response.data
+  },
+
+  updateAgent: async (agentId: string, data: {
+    foundationModel: string
+    instruction: string
+  }) => {
+    const response = await api.put(`/admin/agents/${agentId}`, data)
     return response.data
   }
 }

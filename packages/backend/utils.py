@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 def lambda_response(status_code, body):
     return {
@@ -20,17 +20,14 @@ def generate_id():
 def get_timestamp():
     return datetime.now(timezone.utc).isoformat()
 
+def get_ttl_timestamp(days=30):
+    """Get TTL timestamp for DynamoDB (30 days from now)"""
+    future_date = datetime.now(timezone.utc) + timedelta(days=days)
+    return int(future_date.timestamp())
+
 def parse_body(event):
     try:
         return json.loads(event.get('body', '{}'))
     except:
         return {}
 
-STAGES = ['authority', 'business', 'aws_services', 'technical', 'next_steps', 'completed']
-
-def get_next_stage(current_stage):
-    try:
-        idx = STAGES.index(current_stage)
-        return STAGES[min(idx + 1, len(STAGES) - 1)]
-    except:
-        return STAGES[0]

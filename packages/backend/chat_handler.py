@@ -1,15 +1,15 @@
 import json
 import boto3
-from utils import lambda_response, parse_body, get_timestamp, generate_id, get_next_stage
+from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp
 
 dynamodb = boto3.resource('dynamodb')
-bedrock = boto3.client('bedrock-runtime', region_name='ap-northeast-2')
+bedrock_agent = boto3.client('bedrock-agent-runtime', region_name='ap-northeast-2')
 
 def handle_message(event, context):
     body = parse_body(event)
     session_id = body.get('sessionId')
     message = body.get('message', '')
-    request_model_id = body.get('selectedModel')
+    message_id = body.get('messageId', generate_id())
     
     if not session_id or not message:
         return lambda_response(400, {'error': 'Missing sessionId or message'})
@@ -39,122 +39,128 @@ def handle_message(event, context):
     except:
         messages = []
     
-    current_stage = session.get('currentStage', 'authority')
+    agent_id = session.get('agentId')
     
-    # Generate AI response using request model or default
-    selected_model = request_model_id or 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-3-sonnet-20240229-v1:0'
-    ai_response = generate_ai_response(message, current_stage, messages, selected_model)
-    
-    # Save customer message
+    # Save customer message immediately
     timestamp = get_timestamp()
+    ttl_value = get_ttl_timestamp(30)  # 30 days TTL
+    
     customer_msg = {
         'PK': f'SESSION#{session_id}',
-        'SK': f'MESSAGE#{timestamp}#{generate_id()}',
+        'SK': f'MESSAGE#{message_id}',  # Use frontend messageId
         'sessionId': session_id,
         'timestamp': timestamp,
         'sender': 'customer',
         'content': message,
-        'stage': current_stage
+        'stage': 'conversation',
+        'ttl': ttl_value
     }
     
+    # Save customer message first
+    try:
+        messages_table.put_item(Item=customer_msg)
+        print(f"Customer message saved successfully: {message_id} - {message[:50]}...")
+    except Exception as e:
+        print(f"Failed to save customer message {message_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to save customer message'})
+    
+    # Generate AI response using Bedrock Agent
+    if not agent_id:
+        print(f"No agent assigned to session {session_id}")
+        return lambda_response(400, {'error': 'No agent assigned to this session'})
+    
+    try:
+        ai_response = generate_agent_response(message, session_id, agent_id)
+    except Exception as e:
+        print(f"Failed to generate AI response: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to generate AI response'})
+    
+    # Check if conversation should be marked as complete (based on agent's EOF token)
+    is_complete = 'EOF' in ai_response
+    
+    # Clean up EOF token from response before saving
+    if is_complete:
+        ai_response = ai_response.replace('EOF', '').strip()
+    
     # Save bot response
+    bot_response_id = f"{int(message_id) + 1}"  # Increment for bot response
     bot_msg = {
         'PK': f'SESSION#{session_id}',
-        'SK': f'MESSAGE#{timestamp}#{generate_id()}',
+        'SK': f'MESSAGE#{bot_response_id}',
         'sessionId': session_id,
         'timestamp': timestamp,
         'sender': 'bot',
         'content': ai_response,
-        'stage': current_stage
+        'stage': 'conversation',
+        'ttl': ttl_value
     }
     
+    # Save bot message
     try:
-        messages_table.put_item(Item=customer_msg)
         messages_table.put_item(Item=bot_msg)
-    except:
-        return lambda_response(500, {'error': 'Failed to save messages'})
+        print(f"Bot message saved successfully: {bot_response_id} - {ai_response[:50]}...")
+    except Exception as e:
+        print(f"Failed to save bot message {bot_response_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to save bot response'})
     
-    # Check if conversation should progress
-    is_complete = len(messages) > 15 and current_stage == 'next_steps'
-    next_stage = get_next_stage(current_stage) if not is_complete else current_stage
-    
-    # Update session if needed
-    if next_stage != current_stage or is_complete:
+    # Update session status if conversation is complete
+    if is_complete:
         try:
+            # Update session status to completed (this will trigger DynamoDB Streams)
             sessions_table.update_item(
                 Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
-                UpdateExpression='SET currentStage = :stage, #status = :status',
+                UpdateExpression='SET #status = :status, completedAt = :completed_at',
                 ExpressionAttributeNames={'#status': 'status'},
                 ExpressionAttributeValues={
-                    ':stage': next_stage,
-                    ':status': 'completed' if is_complete else 'active'
+                    ':status': 'completed',
+                    ':completed_at': timestamp
                 }
             )
-        except:
+            print(f"Session {session_id} marked as completed successfully - DynamoDB Streams triggered")
+        except Exception as e:
+            print(f"Warning: Failed to update session status for {session_id}: {str(e)}")
+            # Don't fail the entire request if session status update fails
             pass
     
     return lambda_response(200, {
         'response': ai_response,
-        'stage': next_stage,
+        'stage': 'conversation',
         'isComplete': is_complete
     })
 
-def generate_ai_response(message, stage, history, model_id):
-    stage_prompts = {
-        'authority': "Ask about decision makers, budget approval, and authority structure.",
-        'business': "Ask about business problems, industry, and AWS goals.",
-        'aws_services': "Ask about specific AWS services of interest. You SHOULD focus on quality attributes of distributed system architecture.",
-        'technical': "Ask about technical requirements, scale, and compliance.",
-        'next_steps': "Ask about timeline, meeting preferences, and next steps."
-    }
-    
-    # Build conversation messages - must start with user
-    converse_messages = []
-    
-    # Process history to ensure user-first pattern
-    for msg in history[-10:]:
-        role = 'user' if msg['sender'] == 'customer' else 'assistant'
-        converse_messages.append({
-            'role': role,
-            'content': [{'text': msg['content']}]
-        })
-    
-    # Ensure conversation starts with user message
-    while converse_messages and converse_messages[0]['role'] == 'assistant':
-        converse_messages.pop(0)
-    
-    # Ensure alternating pattern (user -> assistant -> user...)
-    cleaned_messages = []
-    last_role = None
-    for msg in converse_messages:
-        if msg['role'] != last_role:
-            cleaned_messages.append(msg)
-            last_role = msg['role']
-    converse_messages = cleaned_messages
-    
-    # Add current user message
-    converse_messages.append({
-        'role': 'user',
-        'content': [{'text': message}]
-    })
-    
-    # System prompt
-    system_prompt = f"""You are an KOREAN AWS pre-consultation chatbot. You kindly handle your customer to understand their business&technical purpose, vision, expected outcome and what values they're seeking from AWS cloud adoption. You MUST provide the conversation using KOREAN. Current stage: {stage}.
-    
-    {stage_prompts.get(stage, 'Continue the conversation naturally.')}
-    
-    Respond naturally and ask relevant follow-up questions. Provide detailed explanations when helpful."""
-    
+def generate_agent_response(message, session_id, agent_id):
+    """Generate response using Bedrock Agent"""
     try:
-        response = bedrock.converse(
-            modelId=model_id,
-            messages=converse_messages,
-            system=[{'text': system_prompt}],
-            inferenceConfig={'maxTokens': 8192}
+        print(f"Invoking Bedrock Agent {agent_id} for session {session_id}")
+        response = bedrock_agent.invoke_agent(
+            agentId=agent_id,
+            agentAliasId='TSTALIASID',  # Use test alias
+            sessionId=session_id,
+            inputText=message
         )
         
-        return response['output']['message']['content'][0]['text']
+        # Extract response from agent
+        response_text = ""
+        for event in response['completion']:
+            if 'chunk' in event:
+                chunk = event['chunk']
+                if 'bytes' in chunk:
+                    response_text += chunk['bytes'].decode('utf-8')
+        
+        if response_text:
+            print(f"Agent response generated successfully: {len(response_text)} characters")
+            return response_text
+        else:
+            print("Agent returned empty response")
+            return "죄송합니다. 다시 말씀해 주시겠어요?"
+            
     except Exception as e:
-        print(f"Bedrock converse error: {str(e)}")
-        print(f"Converse messages: {json.dumps(converse_messages, ensure_ascii=False)}")
-        return "I understand. Could you tell me more about that?"
+        print(f"Bedrock Agent error: {str(e)}")
+        # Return a more specific error message
+        if 'ResourceNotFoundException' in str(e):
+            return "죄송합니다. 에이전트를 찾을 수 없습니다. 관리자에게 문의해 주세요."
+        elif 'ValidationException' in str(e):
+            return "죄송합니다. 요청이 올바르지 않습니다. 다시 시도해 주세요."
+        else:
+            return "죄송합니다. 시스템에 일시적인 문제가 있습니다. 잠시 후 다시 시도해 주세요."
+

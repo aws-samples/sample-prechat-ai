@@ -34,8 +34,11 @@ def list_sessions(event, context):
                 'customerName': item['customerInfo']['name'],
                 'customerEmail': item['customerInfo']['email'],
                 'customerCompany': item['customerInfo']['company'],
+                'customerTitle': item['customerInfo'].get('title', ''),
                 'createdAt': item['createdAt'],
-                'currentStage': item['currentStage']
+                'completedAt': item.get('completedAt', ''),
+                'salesRepEmail': item.get('salesRepEmail', item.get('salesRepId', '')),
+                'agentId': item.get('agentId', '')
             })
         
         return lambda_response(200, {'sessions': sessions})
@@ -109,24 +112,9 @@ def get_session_report(event, context):
         selected_model = model_id or 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-3-sonnet-20240229-v1:0'
         summary = generate_summary(messages, session, selected_model)
         
-        # Organize by stages
-        stages = {}
-        for msg in messages:
-            stage = msg.get('stage', 'unknown')
-            if stage not in stages:
-                stages[stage] = []
-            stages[stage].append({
-                'sender': msg['sender'],
-                'content': msg['content'],
-                'timestamp': msg['timestamp']
-            })
-        
         return lambda_response(200, {
             'sessionId': session_id,
             'summary': summary,
-            'qnaTranscript': stages,
-            'customerProfile': session['customerInfo'],
-            'awsDocumentation': get_aws_docs_recommendations(messages)
         })
     except Exception as e:
         return lambda_response(500, {'error': 'Failed to generate report'})
@@ -171,7 +159,8 @@ Format as markdown."""
             return result['content'][0]['text']
         else:
             return result['output']['message']['content'][0]['text']
-    except:
+    except Exception as e:
+        print(e)
         return f"# Summary for {session['customerInfo']['name']}\n\nConversation completed with {len(messages)} messages."
 
 def get_aws_docs_recommendations(messages):
@@ -190,3 +179,4 @@ def get_aws_docs_recommendations(messages):
         recommendations.append({'service': 'Lambda', 'url': 'https://docs.aws.amazon.com/lambda/'})
     
     return recommendations
+    

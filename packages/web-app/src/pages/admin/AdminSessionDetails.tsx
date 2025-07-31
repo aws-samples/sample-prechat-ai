@@ -14,6 +14,7 @@ import {
   Select
 } from '@cloudscape-design/components'
 import ReactMarkdown from 'react-markdown'
+import AnimatedButton from '../../components/AnimatedButton'
 import LoadingBar from '@cloudscape-design/chat-components/loading-bar'
 import { adminApi, chatApi } from '../../services/api'
 import { Session, BEDROCK_MODELS } from '../../types'
@@ -84,12 +85,12 @@ export default function AdminSessionDetails() {
         <Header
           variant="h1"
           actions={
-            <Button variant="normal" onClick={() => navigate('/admin')}>
-              Back to Dashboard
-            </Button>
+            <AnimatedButton variant="normal" onClick={() => navigate('/admin')} animation="pulse">
+              대시보드로
+            </AnimatedButton>
           }
         >
-          Session Details
+          사전상담 내용을 확인합니다
         </Header>
 
         <ColumnLayout columns={3}>
@@ -104,7 +105,7 @@ export default function AdminSessionDetails() {
           </Box>
           <Box>
             <Box variant="awsui-key-label">Sales Rep</Box>
-            <Box>{session.salesRepId}</Box>
+            <Box>{session.salesRepInfo?.name} / {session.salesRepEmail}</Box>
           </Box>
         </ColumnLayout>
         
@@ -112,10 +113,6 @@ export default function AdminSessionDetails() {
           <Box>
             <Box variant="awsui-key-label">Status</Box>
             {getStatusBadge(session.status)}
-          </Box>
-          <Box>
-            <Box variant="awsui-key-label">Current Stage</Box>
-            <Box>{session.currentStage.replace('_', ' ').toUpperCase()}</Box>
           </Box>
         </ColumnLayout>
 
@@ -140,7 +137,7 @@ export default function AdminSessionDetails() {
                         <Box fontSize="body-s" color="text-status-inactive">
                           {message.sender === 'customer' ? 'Customer' : 'Assistant'} • 
                           {new Date(message.timestamp).toLocaleString()} • 
-                          Stage: {message.stage.replace('_', ' ').toUpperCase()}
+                          Stage: {message.stage?.replace('_', ' ').toUpperCase() || 'Unknown'}
                         </Box>
                         <Box>{message.content}</Box>
                       </SpaceBetween>
@@ -174,7 +171,7 @@ export default function AdminSessionDetails() {
                             value: model.id
                           }))}
                         />
-                        <Button
+                        <AnimatedButton
                           variant="primary"
                           iconName="refresh"
                           loading={reportLoading}
@@ -189,9 +186,10 @@ export default function AdminSessionDetails() {
                               setReportLoading(false)
                             }
                           }}
+                          animation="pulse"
                         >
                           Generate Report
-                        </Button>
+                        </AnimatedButton>
                       </SpaceBetween>
                     }
                   >

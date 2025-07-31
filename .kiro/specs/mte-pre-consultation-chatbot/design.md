@@ -2,7 +2,7 @@
 
 ## Overview
 
-The MTE Pre-consultation Chatbot is a serverless web application that facilitates structured conversations between AWS customers and an AI-powered chatbot to collect business requirements before sales meetings. The system consists of two main interfaces: a customer-facing chatbot interface and an admin interface for AWS sales representatives. The architecture leverages AWS serverless services including API Gateway, Lambda, DynamoDB, and Amazon Bedrock for AI capabilities.
+The MTE Pre-consultation Chatbot is a serverless web application that facilitates structured conversations between AWS customers and an AI-powered chatbot to collect business requirements before sales meetings. The system consists of two main interfaces: a customer-facing chatbot interface and an admin interface for AWS sales representatives. The architecture leverages AWS serverless services including API Gateway, Lambda, DynamoDB, Amazon Bedrock for AI capabilities, and AWS Cognito for authentication. The system is designed to replace traditional Excel-based forms with an intuitive conversational interface that adapts to the customer's technical level and provides comprehensive reporting for AWS sales teams and engineers.
 
 ## Architecture
 
@@ -30,6 +30,10 @@ graph TB
         BR[Amazon Bedrock]
     end
     
+    subgraph "Authentication Layer"
+        COG[AWS Cognito]
+    end
+    
     subgraph "Data Layer"
         DB[(DynamoDB)]
     end
@@ -50,6 +54,8 @@ graph TB
     SL --> DB
     RL --> DB
     RL --> BR
+    AW --> COG
+    COG --> AL
     
     S3 --> CW
     S3 --> AW
@@ -67,9 +73,10 @@ graph TB
 
 **Backend:**
 - AWS API Gateway for REST API endpoints
-- AWS Lambda (Node.js 20.x runtime) for serverless functions
+- AWS Lambda (Python3.13 runtime) for serverless functions
 - Amazon DynamoDB for data persistence
 - Amazon Bedrock (Claude 3 or similar) for conversational AI
+- AWS Cognito for admin authentication with @amazon.com domain restriction
 - AWS CloudWatch for logging and monitoring
 
 **Infrastructure:**
@@ -91,10 +98,11 @@ graph TB
 - Cloudscape Chat UI components
 
 **ConversationFlow**
-- State management for 5-stage conversation flow
+- State management for 5-stage conversation flow (Authority, Business, AWS Services, Technical Requirements, Next Steps)
 - Dynamic question generation based on customer responses
 - Context preservation across conversation stages
 - Adaptive questioning based on technical level detection
+- Cross-stage information handling and conversation flow adaptation
 
 **SessionManager**
 - URL parameter parsing for session ID
@@ -190,7 +198,7 @@ interface SessionListResponse {
 ```typescript
 interface SessionReportResponse {
   sessionId: string;
-  summary: string; // Markdown formatted
+  summary: string; // AI-generated markdown summary using Bedrock
   qnaTranscript: ConversationStage[];
   awsDocumentation: DocumentationRecommendation[];
   customerProfile: CustomerProfile;
@@ -306,6 +314,21 @@ interface TimelineInfo {
   budgetApprovalTimeline: string;
   additionalParticipants: string[];
 }
+
+interface DocumentationRecommendation {
+  title: string;
+  url: string;
+  category: 'service' | 'architecture' | 'compliance' | 'best-practices';
+  relevanceScore: number;
+  description: string;
+}
+
+interface SalesRepresentative {
+  name: string;
+  email: string;
+  phone?: string;
+  region: string;
+}
 ```
 
 ## Error Handling
@@ -344,6 +367,48 @@ interface TimelineInfo {
 - Fallback responses when AI service is unavailable
 - Rate limiting and quota management
 - Content filtering and safety checks
+
+## Security and Data Protection
+
+### Data Security
+
+**Encryption and Transport Security**
+- All data transmission uses HTTPS/TLS encryption (Requirement 10.1)
+- DynamoDB encryption at rest using AWS managed keys
+- Secure API Gateway endpoints with proper SSL/TLS configuration
+- Content Security Policy (CSP) headers for web applications
+
+**Authentication and Authorization**
+- AWS Cognito User Pool for admin authentication with @amazon.com domain restriction
+- JWT token-based authentication for admin API access
+- Session-based access control for customer conversations
+- Proper IAM roles and policies with least privilege principle
+
+**Input Validation and Sanitization**
+- Server-side input validation for all API endpoints
+- Content filtering and safety checks for customer messages
+- SQL injection and XSS prevention measures
+- Rate limiting and abuse prevention mechanisms
+
+### Data Management
+
+**Data Retention and Privacy**
+- Configurable data retention policies for conversation data (Requirement 10.2)
+- Secure data deletion when sessions are closed/archived (Requirement 10.3)
+- Customer data anonymization options for long-term analytics
+- GDPR and privacy compliance considerations
+
+**Access Control**
+- Role-based access control for admin users (Requirement 10.4)
+- Session isolation to prevent cross-customer data access
+- Audit logging for all data access and modifications
+- Secure session management with proper expiration handling
+
+**Monitoring and Compliance**
+- CloudWatch logging for security events and access patterns
+- Automated alerts for suspicious activities or security violations
+- Regular security assessments and penetration testing
+- Compliance with AWS security best practices and standards
 
 ## Testing Strategy
 
