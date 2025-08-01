@@ -16,9 +16,14 @@ def create_session(event, context):
     customer_title = body.get('customerTitle', '')
     sales_rep_email = body.get('salesRepEmail', '')
     agent_id = body.get('agentId', '')
+    pin_number = body.get('pinNumber', '')
     
-    if not all([customer_name, customer_email, sales_rep_email, agent_id]):
+    if not all([customer_name, customer_email, sales_rep_email, agent_id, pin_number]):
         return lambda_response(400, {'error': 'Missing required fields'})
+    
+    # Validate PIN format (6 digits)
+    if not pin_number.isdigit() or len(pin_number) != 6:
+        return lambda_response(400, {'error': 'PIN must be exactly 6 digits'})
     
     session_id = generate_id()
     timestamp = get_timestamp()
@@ -36,6 +41,7 @@ def create_session(event, context):
         },
         'salesRepEmail': sales_rep_email,
         'agentId': agent_id,
+        'pinNumber': pin_number,
         'createdAt': timestamp,
         'ttl': get_ttl_timestamp(30),  # 30 days TTL
         'GSI1PK': f'SALESREP#{sales_rep_email}',
@@ -146,3 +152,50 @@ def get_sales_rep_info(email):
             'name': email.split('@')[0] if email else 'Unknown',
             'phone': 'Contact via email'
         }
+
+def verify_session_pin(event, context):
+    """Verify PIN for session access and record privacy consent"""
+    session_id = event['pathParameters']['sessionId']
+    body = parse_body(event)
+    provided_pin = body.get('pinNumber', '')
+    privacy_agreed = body.get('privacyAgreed', False)
+    
+    if not provided_pin:
+        return lambda_response(400, {'error': 'PIN number is required'})
+    
+    if not privacy_agreed:
+        return lambda_response(400, {'error': 'Privacy policy agreement is required'})
+    
+    try:
+        sessions_table = dynamodb.Table('mte-sessions')
+        session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
+        
+        if 'Item' not in session_resp:
+            return lambda_response(404, {'error': 'Session not found'})
+        
+        session = session_resp['Item']
+        
+        # Check if session is active
+        if session.get('status') != 'active':
+            return lambda_response(403, {'error': 'Session is not active'})
+        
+        # Verify PIN
+        stored_pin = session.get('pinNumber', '')
+        if provided_pin != stored_pin:
+            return lambda_response(403, {'error': 'Invalid PIN number'})
+        
+        # Record privacy consent
+        timestamp = get_timestamp()
+        sessions_table.update_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            UpdateExpression='SET privacyConsentTimestamp = :timestamp, privacyConsentAgreed = :agreed',
+            ExpressionAttributeValues={
+                ':timestamp': timestamp,
+                ':agreed': True
+            }
+        )
+        
+        return lambda_response(200, {'message': 'PIN verified successfully'})
+        
+    except Exception as e:
+        return lambda_response(500, {'error': 'Failed to verify PIN'})

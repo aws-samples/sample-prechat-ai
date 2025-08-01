@@ -32,8 +32,7 @@ export default function CreateAgent() {
     setFormData(prev => ({ ...prev, instruction: defaultPrompt }))
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     setLoading(true)
     setError('')
     setSuccess('')
@@ -113,7 +112,7 @@ export default function CreateAgent() {
               <Select
                 selectedOption={
                   formData.foundationModel ? 
-                  modelOptions.find(opt => opt.value === formData.foundationModel) : null
+                  modelOptions.find(opt => opt.value === formData.foundationModel) || null : null
                 }
                 onChange={({ detail }) => 
                   updateFormData('foundationModel', detail.selectedOption?.value || '')

@@ -15,6 +15,14 @@ export const chatApi = {
   getSession: async (sessionId: string): Promise<Session> => {
     const response = await api.get(`/chat/session/${sessionId}`)
     return response.data
+  },
+
+  verifySessionPin: async (sessionId: string, pinNumber: string, privacyAgreed: boolean = false) => {
+    const response = await api.post(`/chat/session/${sessionId}/verify-pin`, { 
+      pinNumber, 
+      privacyAgreed 
+    })
+    return response.data
   }
 }
 
@@ -26,6 +34,7 @@ export const adminApi = {
     customerTitle: string
     salesRepEmail: string
     agentId: string
+    pinNumber: string
   }) => {
     const response = await api.post('/admin/sessions', data)
     return response.data
@@ -33,6 +42,11 @@ export const adminApi = {
 
   listSessions: async () => {
     const response = await api.get('/admin/sessions')
+    return response.data
+  },
+
+  getSessionDetails: async (sessionId: string) => {
+    const response = await api.get(`/admin/sessions/${sessionId}/details`)
     return response.data
   },
 

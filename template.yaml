@@ -216,6 +216,22 @@ Resources:
             Path: /api/chat/session/{sessionId}
             Method: get
 
+  VerifySessionPinFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: session_handler.verify_session_pin
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        VerifySessionPin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/verify-pin
+            Method: post
+
   ListSessionsFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -230,6 +246,22 @@ Resources:
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/sessions
+            Method: get
+
+  GetSessionDetailsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.get_session_details
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetSessionDetails:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/details
             Method: get
 
   GetReportFunction:

@@ -6,11 +6,11 @@ import {
   Table,
   Button,
   SpaceBetween,
-  Badge,
   Box,
   ButtonDropdown
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
+import { StatusBadge } from '../../components'
 
 interface SessionSummary {
   sessionId: string
@@ -42,21 +42,6 @@ export default function AdminDashboard() {
       console.error('Failed to load sessions:', err)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge color="blue">Active</Badge>
-      case 'completed':
-        return <Badge color="green">Completed</Badge>
-      case 'expired':
-        return <Badge color="red">Expired</Badge>
-      case 'inactive':
-        return <Badge color="grey">Inactive</Badge>
-      default:
-        return <Badge>{status}</Badge>
     }
   }
 
@@ -104,7 +89,7 @@ export default function AdminDashboard() {
           PreChat 세션 💬
         </Header>
 
-        <Box minHeight="50vh">
+        <div style={{ minHeight: '50vh' }}>
           <Table
           columnDefinitions={[
             {
@@ -131,7 +116,7 @@ export default function AdminDashboard() {
             {
               id: 'status',
               header: '세션 상태',
-              cell: (item) => getStatusBadge(item.status)
+              cell: (item) => <StatusBadge status={item.status} type="session" />
             },
             {
               id: 'created',
@@ -162,13 +147,11 @@ export default function AdminDashboard() {
                     },
                     ...(item.status === 'active' ? [{
                       text: 'Inactivate',
-                      id: 'inactivate',
-                      iconName: 'status-stopped'
+                      id: 'inactivate'
                     }] : []),
                     ...(item.status === 'inactive' ? [{
                       text: 'Delete',
-                      id: 'delete',
-                      iconName: 'remove'
+                      id: 'delete'
                     }] : [])
                   ]}
                   onItemClick={({ detail }) => {
@@ -209,7 +192,7 @@ export default function AdminDashboard() {
             </Box>
           }
           />
-        </Box>
+        </div>
       </SpaceBetween>
     </Container>
   )

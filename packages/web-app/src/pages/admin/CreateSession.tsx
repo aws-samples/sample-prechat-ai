@@ -11,11 +11,12 @@ import {
   Alert,
   Select,
   Box,
-  Table,
-  Badge
+  Table
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
 import { authService } from '../../services/auth'
+import { StatusBadge } from '../../components'
+import { extractModelName } from '../../constants'
 import type { BedrockAgent } from '../../types'
 
 export default function CreateSession() {
@@ -32,7 +33,8 @@ export default function CreateSession() {
     customerCompany: '',
     customerTitle: '',
     salesRepEmail: '',
-    agentId: ''
+    agentId: '',
+    pinNumber: ''
   })
 
   useEffect(() => {
@@ -63,8 +65,12 @@ export default function CreateSession() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const generateRandomPin = () => {
+    const pin = Math.floor(100000 + Math.random() * 900000).toString()
+    setFormData(prev => ({ ...prev, pinNumber: pin }))
+  }
+
+  const handleSubmit = async () => {
     setLoading(true)
     setError('')
     setSuccess('')
@@ -72,7 +78,7 @@ export default function CreateSession() {
     try {
       const response = await adminApi.createSession(formData)
       const fullUrl = `${window.location.origin}/customer/${response.sessionId}`
-      setSuccess(`Session created successfully! URL: ${fullUrl}`)
+      setSuccess(`Session created successfully! URL: ${fullUrl} | PIN: ${formData.pinNumber}`)
       setTimeout(() => navigate('/admin'), 3000)
     } catch (err) {
       setError('Failed to create session')
@@ -103,16 +109,42 @@ export default function CreateSession() {
         {success && <Alert type="success">{success}</Alert>}
 
         {success && (
-          <SpaceBetween size="s" direction="horizontal">
-            <Input
-              value={success.split('URL: ')[1] || ''}
-              readOnly
-            />
-            <Button
-              onClick={() => navigator.clipboard.writeText(success.split('URL: ')[1] || '')}
-            >
-              Copy URL
-            </Button>
+          <SpaceBetween size="m">
+            <Box>
+              <Box fontWeight="bold" fontSize="heading-s">고객에게 전달할 정보:</Box>
+            </Box>
+            <SpaceBetween size="s">
+              <Box>
+                <Box fontWeight="bold">채팅 URL:</Box>
+                <SpaceBetween size="xs" direction="horizontal">
+                  <Input
+                    value={success.split('URL: ')[1]?.split(' | PIN: ')[0] || ''}
+                    readOnly
+                  />
+                  <Button
+                    onClick={() => navigator.clipboard.writeText(success.split('URL: ')[1]?.split(' | PIN: ')[0] || '')}
+                    iconName="copy"
+                  >
+                    Copy URL
+                  </Button>
+                </SpaceBetween>
+              </Box>
+              <Box>
+                <Box fontWeight="bold">PIN 번호:</Box>
+                <SpaceBetween size="xs" direction="horizontal">
+                  <Input
+                    value={formData.pinNumber}
+                    readOnly
+                  />
+                  <Button
+                    onClick={() => navigator.clipboard.writeText(formData.pinNumber)}
+                    iconName="copy"
+                  >
+                    Copy PIN
+                  </Button>
+                </SpaceBetween>
+              </Box>
+            </SpaceBetween>
           </SpaceBetween>
         )}
 
@@ -126,7 +158,7 @@ export default function CreateSession() {
                 variant="primary"
                 onClick={handleSubmit}
                 loading={loading}
-                disabled={!formData.customerName || !formData.customerEmail || !formData.salesRepEmail || !formData.agentId}
+                disabled={!formData.customerName || !formData.customerEmail || !formData.salesRepEmail || !formData.agentId || !formData.pinNumber}
               >
                 세션 추가
               </Button>
@@ -145,7 +177,7 @@ export default function CreateSession() {
               />
             </FormField>
 
-            <FormField 
+            <FormField
               label="Customer Email"
               description="고객 담당자 이메일"
               stretch>
@@ -157,8 +189,8 @@ export default function CreateSession() {
               />
             </FormField>
 
-            <FormField 
-              label="Customer Company" 
+            <FormField
+              label="Customer Company"
               description="고객사 이름"
               stretch>
               <Input
@@ -168,7 +200,7 @@ export default function CreateSession() {
               />
             </FormField>
 
-            <FormField 
+            <FormField
               label="Customer Title"
               description="고객 직책"
               stretch>
@@ -179,8 +211,8 @@ export default function CreateSession() {
               />
             </FormField>
 
-            <FormField 
-              label="Sales Representative Email" 
+            <FormField
+              label="Sales Representative Email"
               description="영업 담당자(자동 입력)"
               stretch
             >
@@ -215,9 +247,32 @@ export default function CreateSession() {
                   }))
                 }
                 placeholder="Select an agent"
-                loading={loadingAgents}
                 empty="No prepared agents available"
               />
+            </FormField>
+
+            <FormField
+              label="6자리 PIN 번호"
+              description="고객이 채팅에 접속할 때 사용할 PIN 번호입니다."
+              stretch
+            >
+              <SpaceBetween direction="horizontal" size="xs">
+                <Input
+                  value={formData.pinNumber}
+                  onChange={({ detail }) => updateFormData('pinNumber', detail.value)}
+                  placeholder="6자리 숫자 입력"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                />
+                <Button
+                  variant="normal"
+                  onClick={generateRandomPin}
+                  iconName="refresh"
+                >
+                  랜덤 생성
+                </Button>
+              </SpaceBetween>
             </FormField>
 
 
@@ -225,7 +280,7 @@ export default function CreateSession() {
         </Form>
 
         <Header variant="h2">사용 가능한 에이전트 🤖</Header>
-        <Box minHeight="30vh">
+        <div style={{ minHeight: '30vh' }}>
           <Table
             columnDefinitions={[
               {
@@ -243,44 +298,12 @@ export default function CreateSession() {
               {
                 id: 'model',
                 header: 'Foundation Model',
-                cell: (item) => {
-                  // Extract model name from ARN
-                  const modelArn = item.foundationModel
-                  if (modelArn.includes('claude-3-haiku')) return 'Claude 3 Haiku'
-                  if (modelArn.includes('claude-3-sonnet')) return 'Claude 3 Sonnet'
-                  if (modelArn.includes('claude-3-5-sonnet-20240620')) return 'Claude 3.5 Sonnet (June)'
-                  if (modelArn.includes('claude-3-5-sonnet-20241022')) return 'Claude 3.5 Sonnet (Oct)'
-                  if (modelArn.includes('claude-3-7-sonnet')) return 'Claude 3.7 Sonnet'
-                  if (modelArn.includes('claude-sonnet-4')) return 'Claude Sonnet 4'
-                  if (modelArn.includes('nova-micro')) return 'Nova Micro'
-                  if (modelArn.includes('nova-lite')) return 'Nova Lite'
-                  if (modelArn.includes('nova-pro')) return 'Nova Pro'
-                  return 'Unknown Model'
-                }
+                cell: (item) => extractModelName(item.foundationModel)
               },
               {
                 id: 'status',
                 header: '상태',
-                cell: (item) => {
-                  switch (item.agentStatus) {
-                    case 'PREPARED':
-                      return <Badge color="green">Prepared</Badge>
-                    case 'PREPARING':
-                      return <Badge color="blue">Preparing</Badge>
-                    case 'NOT_PREPARED':
-                      return <Badge color="grey">Not Prepared</Badge>
-                    case 'CREATING':
-                      return <Badge color="blue">Creating</Badge>
-                    case 'UPDATING':
-                      return <Badge color="blue">Updating</Badge>
-                    case 'DELETING':
-                      return <Badge color="red">Deleting</Badge>
-                    case 'FAILED':
-                      return <Badge color="red">Failed</Badge>
-                    default:
-                      return <Badge>{item.agentStatus}</Badge>
-                  }
-                }
+                cell: (item) => <StatusBadge status={item.agentStatus} type="agent" />
               }
             ]}
             items={agents}
@@ -299,7 +322,7 @@ export default function CreateSession() {
               </Box>
             }
           />
-        </Box>
+        </div>
       </SpaceBetween>
     </Container>
   )

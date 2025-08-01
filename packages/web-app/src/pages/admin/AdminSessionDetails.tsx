@@ -37,8 +37,13 @@ export default function AdminSessionDetails() {
 
   const loadSessionData = async () => {
     try {
+      // Load basic session data for conversation
       const sessionData = await chatApi.getSession(sessionId!)
       setSession(sessionData)
+      
+      // Load detailed session info including PIN for admin
+      const sessionDetails = await adminApi.getSessionDetails(sessionId!)
+      setSession(prev => prev ? { ...prev, pinNumber: sessionDetails.pinNumber } : null)
     } catch (err) {
       setError('Failed to load session details')
     } finally {
@@ -109,10 +114,42 @@ export default function AdminSessionDetails() {
           </Box>
         </ColumnLayout>
         
-        <ColumnLayout columns={2}>
+        <ColumnLayout columns={3}>
           <Box>
             <Box variant="awsui-key-label">Status</Box>
             {getStatusBadge(session.status)}
+          </Box>
+          <Box>
+            <Box variant="awsui-key-label">PIN 번호</Box>
+            <Box fontWeight="bold" fontSize="body-l">
+              {(session as any)?.pinNumber || 'N/A'}
+            </Box>
+          </Box>
+          <Box>
+            <Box variant="awsui-key-label">Created</Box>
+            <Box>{new Date(session.createdAt || '').toLocaleDateString()}</Box>
+          </Box>
+        </ColumnLayout>
+        
+        <ColumnLayout columns={2}>
+          <Box>
+            <Box variant="awsui-key-label">개인정보 동의</Box>
+            <Box>
+              {(session as any)?.privacyConsentAgreed ? (
+                <Badge color="green">동의 완료</Badge>
+              ) : (
+                <Badge color="grey">미동의</Badge>
+              )}
+            </Box>
+          </Box>
+          <Box>
+            <Box variant="awsui-key-label">동의 시간</Box>
+            <Box>
+              {(session as any)?.privacyConsentTimestamp ? 
+                new Date((session as any).privacyConsentTimestamp).toLocaleString() : 
+                '-'
+              }
+            </Box>
           </Box>
         </ColumnLayout>
 

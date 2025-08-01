@@ -39,6 +39,7 @@ def list_sessions(event, context):
                 'completedAt': item.get('completedAt', ''),
                 'salesRepEmail': item.get('salesRepEmail', item.get('salesRepId', '')),
                 'agentId': item.get('agentId', '')
+                # PIN 번호는 보안상 세션 목록에서 제외
             })
         
         return lambda_response(200, {'sessions': sessions})
@@ -179,4 +180,31 @@ def get_aws_docs_recommendations(messages):
         recommendations.append({'service': 'Lambda', 'url': 'https://docs.aws.amazon.com/lambda/'})
     
     return recommendations
+
+def get_session_details(event, context):
+    """Get detailed session info including PIN (only for session owner)"""
+    session_id = event['pathParameters']['sessionId']
     
+    try:
+        sessions_table = dynamodb.Table('mte-sessions')
+        session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
+        
+        if 'Item' not in session_resp:
+            return lambda_response(404, {'error': 'Session not found'})
+        
+        session = session_resp['Item']
+        
+        # Return session details including PIN for the owner
+        return lambda_response(200, {
+            'sessionId': session['sessionId'],
+            'status': session['status'],
+            'customerInfo': session['customerInfo'],
+            'salesRepEmail': session.get('salesRepEmail', session.get('salesRepId', '')),
+            'agentId': session.get('agentId', ''),
+            'pinNumber': session.get('pinNumber', ''),
+            'createdAt': session['createdAt'],
+            'completedAt': session.get('completedAt', '')
+        })
+        
+    except Exception as e:
+        return lambda_response(500, {'error': 'Failed to get session details'})

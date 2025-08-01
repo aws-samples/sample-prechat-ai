@@ -57,8 +57,7 @@ export default function EditAgent() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     if (!agentId) return
     
     setLoading(true)
@@ -165,7 +164,7 @@ export default function EditAgent() {
               <Select
                 selectedOption={
                   formData.foundationModel ? 
-                  modelOptions.find(opt => opt.value === formData.foundationModel) : null
+                  modelOptions.find(opt => opt.value === formData.foundationModel) || null : null
                 }
                 onChange={({ detail }) => 
                   updateFormData('foundationModel', detail.selectedOption?.value || '')
