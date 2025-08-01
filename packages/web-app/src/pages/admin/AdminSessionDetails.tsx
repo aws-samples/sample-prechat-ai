@@ -18,6 +18,7 @@ import AnimatedButton from '../../components/AnimatedButton'
 import LoadingBar from '@cloudscape-design/chat-components/loading-bar'
 import { adminApi, chatApi } from '../../services/api'
 import { Session, BEDROCK_MODELS } from '../../types'
+import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
 
 export default function AdminSessionDetails() {
   const { sessionId } = useParams<{ sessionId: string }>()
@@ -64,6 +65,24 @@ export default function AdminSessionDetails() {
     }
   }
 
+  const handleDownloadCSV = () => {
+    if (!session) return
+    
+    const csvData = {
+      customerCompany: session.customerInfo.company || '미입력',
+      customerName: session.customerInfo.name,
+      customerTitle: session.customerInfo.title || '미입력',
+      chatUrl: `${window.location.origin}/customer/${session.sessionId}`,
+      pinNumber: (session as any)?.pinNumber || 'N/A',
+      createdAt: new Date(session.createdAt || '').toLocaleString('ko-KR')
+    }
+    
+    const csvContent = generateSessionCSV(csvData)
+    const filename = generateCSVFilename(session.customerInfo.company || 'Unknown')
+    
+    downloadCSV(csvContent, filename)
+  }
+
   if (loading) {
     return (
       <Container>
@@ -90,9 +109,19 @@ export default function AdminSessionDetails() {
         <Header
           variant="h1"
           actions={
-            <AnimatedButton variant="normal" onClick={() => navigate('/admin')} animation="pulse">
-              대시보드로
-            </AnimatedButton>
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                variant="normal"
+                onClick={handleDownloadCSV}
+                iconName="download"
+                disabled={!session}
+              >
+                CSV 다운로드
+              </Button>
+              <AnimatedButton variant="normal" onClick={() => navigate('/admin')} animation="pulse">
+                대시보드로
+              </AnimatedButton>
+            </SpaceBetween>
           }
         >
           사전상담 내용을 확인합니다

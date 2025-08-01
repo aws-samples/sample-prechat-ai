@@ -17,6 +17,7 @@ import { adminApi } from '../../services/api'
 import { authService } from '../../services/auth'
 import { StatusBadge } from '../../components'
 import { extractModelName } from '../../constants'
+import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
 import type { BedrockAgent } from '../../types'
 
 export default function CreateSession() {
@@ -79,12 +80,32 @@ export default function CreateSession() {
       const response = await adminApi.createSession(formData)
       const fullUrl = `${window.location.origin}/customer/${response.sessionId}`
       setSuccess(`Session created successfully! URL: ${fullUrl} | PIN: ${formData.pinNumber}`)
+      
+      // CSV 파일 생성 및 다운로드
+      generateAndDownloadCSV(fullUrl)
+      
       setTimeout(() => navigate('/admin'), 3000)
     } catch (err) {
       setError('Failed to create session')
     } finally {
       setLoading(false)
     }
+  }
+
+  const generateAndDownloadCSV = (chatUrl: string) => {
+    const csvData = {
+      customerCompany: formData.customerCompany || '미입력',
+      customerName: formData.customerName,
+      customerTitle: formData.customerTitle || '미입력',
+      chatUrl: chatUrl,
+      pinNumber: formData.pinNumber,
+      createdAt: new Date().toLocaleString('ko-KR')
+    }
+    
+    const csvContent = generateSessionCSV(csvData)
+    const filename = generateCSVFilename(formData.customerCompany || 'Unknown')
+    
+    downloadCSV(csvContent, filename)
   }
 
   const updateFormData = (field: string, value: string) => {
@@ -141,6 +162,21 @@ export default function CreateSession() {
                     iconName="copy"
                   >
                     Copy PIN
+                  </Button>
+                </SpaceBetween>
+              </Box>
+              <Box>
+                <Box fontWeight="bold">CSV 파일 다운로드:</Box>
+                <SpaceBetween size="xs" direction="horizontal">
+                  <Box fontSize="body-s" color="text-status-inactive">
+                    세션 정보가 포함된 CSV 파일이 자동으로 다운로드되었습니다.
+                  </Box>
+                  <Button
+                    onClick={() => generateAndDownloadCSV(success.split('URL: ')[1]?.split(' | PIN: ')[0] || '')}
+                    iconName="download"
+                    variant="normal"
+                  >
+                    다시 다운로드
                   </Button>
                 </SpaceBetween>
               </Box>

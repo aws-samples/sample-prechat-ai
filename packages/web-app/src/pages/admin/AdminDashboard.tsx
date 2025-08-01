@@ -11,6 +11,7 @@ import {
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
 import { StatusBadge } from '../../components'
+import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
 
 interface SessionSummary {
   sessionId: string
@@ -61,6 +62,22 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Failed to delete session:', err)
     }
+  }
+
+  const handleDownloadCSV = (session: SessionSummary) => {
+    const csvData = {
+      customerCompany: session.customerCompany || '미입력',
+      customerName: session.customerName,
+      customerTitle: session.customerTitle || '미입력',
+      chatUrl: `${window.location.origin}/customer/${session.sessionId}`,
+      pinNumber: 'PIN 정보는 세션 상세에서 확인하세요',
+      createdAt: new Date(session.createdAt).toLocaleString('ko-KR')
+    }
+    
+    const csvContent = generateSessionCSV(csvData)
+    const filename = generateCSVFilename(session.customerCompany || 'Unknown')
+    
+    downloadCSV(csvContent, filename)
   }
 
   return (
@@ -141,9 +158,9 @@ export default function AdminDashboard() {
                       iconName: 'external'
                     },
                     {
-                      text: '진입 URL',
-                      id: 'copy',
-                      iconName: 'copy'
+                      text: '진입 정보 CSV',
+                      id: 'download-csv',
+                      iconName: 'download'
                     },
                     ...(item.status === 'active' ? [{
                       text: 'Inactivate',
@@ -159,14 +176,14 @@ export default function AdminDashboard() {
                       case 'view':
                         navigate(`/admin/sessions/${item.sessionId}`)
                         break
-                      case 'copy':
-                        navigator.clipboard.writeText(`${window.location.origin}/customer/${item.sessionId}`)
-                        break
                       case 'inactivate':
                         handleInactivate(item.sessionId)
                         break
                       case 'delete':
                         handleDelete(item.sessionId)
+                        break
+                      case 'download-csv':
+                        handleDownloadCSV(item)
                         break
                     }
                   }}
