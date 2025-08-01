@@ -64,6 +64,31 @@ export interface BedrockAgent {
   agentArn?: string;
 }
 
+// Report Analysis Options
+export interface ReportAnalysisOptions {
+  coreRequirements: boolean; // 핵심 요구사항 (필수)
+  priorities: boolean; // 우선순위 (필수)
+  bant: boolean; // BANT 분석
+  awsServices: boolean; // 추천 AWS 서비스
+  approachStrategy: boolean; // 유사고객 접근 전략
+}
+
+export interface ReportGenerationRequest {
+  sessionId: string;
+  analysisOptions: ReportAnalysisOptions;
+  modelId?: string;
+  agentId?: string;
+  customPrompt?: string;
+}
+
+export interface ReportGenerationResponse {
+  reportId: string;
+  content: string;
+  generatedAt: string;
+  modelUsed?: string;
+  agentUsed?: string;
+}
+
 export const BEDROCK_MODELS: BedrockModel[] = [
   { id: 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-3-haiku-20240307-v1:0', name: 'Claude 3 Haiku', provider: 'Anthropic', region: 'ap-northeast-2' },
   { id: 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-3-sonnet-20240229-v1:0', name: 'Claude 3 Sonnet', provider: 'Anthropic', region: 'ap-northeast-2' },

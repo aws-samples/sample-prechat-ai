@@ -10,25 +10,20 @@ import {
   Spinner,
   Tabs,
   Badge,
-  ColumnLayout,
-  Select
+  ColumnLayout
 } from '@cloudscape-design/components'
-import ReactMarkdown from 'react-markdown'
 import AnimatedButton from '../../components/AnimatedButton'
-import LoadingBar from '@cloudscape-design/chat-components/loading-bar'
+import ReportGenerator from '../../components/ReportGenerator'
 import { adminApi, chatApi } from '../../services/api'
-import { Session, BEDROCK_MODELS } from '../../types'
+import { Session } from '../../types'
 import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
 
 export default function AdminSessionDetails() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const navigate = useNavigate()
   const [session, setSession] = useState<Session | null>(null)
-  const [report, setReport] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [selectedModel, setSelectedModel] = useState(BEDROCK_MODELS[0])
-  const [reportLoading, setReportLoading] = useState(false)
 
   useEffect(() => {
     if (sessionId) {
@@ -110,14 +105,6 @@ export default function AdminSessionDetails() {
           variant="h1"
           actions={
             <SpaceBetween direction="horizontal" size="xs">
-              <Button
-                variant="normal"
-                onClick={handleDownloadCSV}
-                iconName="download"
-                disabled={!session}
-              >
-                CSV 다운로드
-              </Button>
               <AnimatedButton variant="normal" onClick={() => navigate('/admin')} animation="pulse">
                 대시보드로
               </AnimatedButton>
@@ -218,62 +205,9 @@ export default function AdminSessionDetails() {
               )
             },
             {
-              label: 'Report',
+              label: 'AI 리포트',
               id: 'report',
-              content: (
-                <SpaceBetween size="m">
-                  <Header 
-                    variant="h3"
-                    actions={
-                      <SpaceBetween size="s" direction="horizontal">
-                        <Select
-                          selectedOption={{ label: selectedModel.name, value: selectedModel.id }}
-                          onChange={({ detail }) => {
-                            const model = BEDROCK_MODELS.find(m => m.id === detail.selectedOption.value)
-                            if (model) setSelectedModel(model)
-                          }}
-                          options={BEDROCK_MODELS.map(model => ({
-                            label: `${model.name} (${model.provider})`,
-                            value: model.id
-                          }))}
-                        />
-                        <AnimatedButton
-                          variant="primary"
-                          iconName="refresh"
-                          loading={reportLoading}
-                          onClick={async () => {
-                            setReportLoading(true)
-                            try {
-                              const reportData = await adminApi.getSessionReport(sessionId!)
-                              setReport(reportData)
-                            } catch (err) {
-                              setError('Failed to generate report')
-                            } finally {
-                              setReportLoading(false)
-                            }
-                          }}
-                          animation="pulse"
-                        >
-                          Generate Report
-                        </AnimatedButton>
-                      </SpaceBetween>
-                    }
-                  >
-                    AI-Generated Summary
-                  </Header>
-                  {reportLoading ? (
-                    <LoadingBar variant="gen-ai" />
-                  ) : report ? (
-                    <Box padding="m" backgroundColor="background-container-content" borderRadius="8px">
-                      <ReactMarkdown>{report.summary}</ReactMarkdown>
-                    </Box>
-                  ) : (
-                    <Alert type="info">
-                      Click "Generate Report" to create an AI-based summary of this session
-                    </Alert>
-                  )}
-                </SpaceBetween>
-              )
+              content: sessionId ? <ReportGenerator sessionId={sessionId} /> : null
             }
           ]}
         />

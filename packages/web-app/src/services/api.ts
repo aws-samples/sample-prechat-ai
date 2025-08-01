@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { ChatMessageRequest, ChatMessageResponse, Session, BedrockAgent } from '../types'
+import type { ChatMessageRequest, ChatMessageResponse, Session, BedrockAgent, ReportAnalysisOptions } from '../types'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -100,6 +100,35 @@ export const adminApi = {
     instruction: string
   }) => {
     const response = await api.put(`/admin/agents/${agentId}`, data)
+    return response.data
+  },
+
+  // Report Generation API
+  generateOptimizedPrompt: async (sessionId: string, analysisOptions: ReportAnalysisOptions, modelId?: string) => {
+    const response = await api.post(`/admin/sessions/${sessionId}/generate-prompt`, { 
+      analysisOptions,
+      modelId 
+    })
+    return response.data
+  },
+
+  generateReportWithModel: async (sessionId: string, modelId: string, prompt: string, conversationHistory?: any[], customerInfo?: any) => {
+    const response = await api.post(`/admin/sessions/${sessionId}/generate-report-model`, { 
+      modelId, 
+      prompt,
+      conversationHistory,
+      customerInfo
+    })
+    return response.data
+  },
+
+  generateReportWithAgent: async (sessionId: string, agentId: string, prompt: string, conversationHistory?: any[], customerInfo?: any) => {
+    const response = await api.post(`/admin/sessions/${sessionId}/generate-report-agent`, { 
+      agentId, 
+      prompt,
+      conversationHistory,
+      customerInfo
+    })
     return response.data
   }
 }

@@ -538,6 +538,68 @@ Resources:
             Path: /api/admin/agents/{agentId}
             Method: put
 
+  # New Report Generation Functions
+  GenerateOptimizedPromptFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.generate_optimized_prompt
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+            Resource: '*'
+      Events:
+        GenerateOptimizedPrompt:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/generate-prompt
+            Method: post
+
+  GenerateReportWithModelFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.generate_report_with_model
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+            Resource: '*'
+      Events:
+        GenerateReportWithModel:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/generate-report-model
+            Method: post
+
+  GenerateReportWithAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.generate_report_with_agent
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeAgent
+            Resource: '*'
+      Events:
+        GenerateReportWithAgent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/generate-report-agent
+            Method: post
+
   # DynamoDB Streams Handler
   SessionStreamHandler:
     Type: AWS::Serverless::Function
