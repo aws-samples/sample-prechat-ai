@@ -7,11 +7,14 @@ import {
   Button,
   SpaceBetween,
   Box,
-  ButtonDropdown
+  ButtonDropdown,
+  Toggle,
+  FormField
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
 import { StatusBadge } from '../../components'
 import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
+import { authService } from '../../services/auth'
 
 interface SessionSummary {
   sessionId: string
@@ -30,10 +33,22 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [loading, setLoading] = useState(true)
+  const [showMySessionsOnly, setShowMySessionsOnly] = useState(true)
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>('')
 
   useEffect(() => {
+    loadCurrentUser()
     loadSessions()
   }, [])
+
+  const loadCurrentUser = async () => {
+    try {
+      const user = await authService.verifyToken()
+      setCurrentUserEmail(user.email)
+    } catch (err) {
+      console.error('Failed to get current user:', err)
+    }
+  }
 
   const loadSessions = async () => {
     try {
@@ -70,15 +85,20 @@ export default function AdminDashboard() {
       customerName: session.customerName,
       customerTitle: session.customerTitle || '미입력',
       chatUrl: `${window.location.origin}/customer/${session.sessionId}`,
-      pinNumber: 'PIN 정보는 세션 상세에서 확인하세요',
+      pinNumber: `PIN 정보는 영업 담당(${session.salesRepEmail})에게 확인하세요`,
       createdAt: new Date(session.createdAt).toLocaleString('ko-KR')
     }
-    
+
     const csvContent = generateSessionCSV(csvData)
     const filename = generateCSVFilename(session.customerCompany || 'Unknown')
-    
+
     downloadCSV(csvContent, filename)
   }
+
+  // Filter sessions based on toggle state
+  const filteredSessions = showMySessionsOnly 
+    ? sessions.filter(session => session.salesRepEmail === currentUserEmail)
+    : sessions
 
   return (
     <Container>
@@ -106,108 +126,120 @@ export default function AdminDashboard() {
           PreChat 세션 💬
         </Header>
 
+        <Box>
+          <FormField
+            label=""
+            description="본인이 생성한 세션만 표시하기"
+          >
+            <Toggle
+              checked={showMySessionsOnly}
+              onChange={({ detail }) => setShowMySessionsOnly(detail.checked)}
+            />
+          </FormField>
+        </Box>
+
         <div style={{ minHeight: '50vh' }}>
           <Table
-          columnDefinitions={[
-            {
-              id: 'customer',
-              header: '고객사/담당자명',
-              cell: (item) => (
-                <Box>
-                  <Box fontWeight="bold">{item.customerCompany}/{item.customerName}</Box>
-                  <Box fontSize="body-s" color="text-status-inactive">
-                    {item.customerTitle && `${item.customerTitle} • `}{item.customerEmail}
+            columnDefinitions={[
+              {
+                id: 'customer',
+                header: '고객사/담당자명',
+                cell: (item) => (
+                  <Box>
+                    <Box fontWeight="bold">{item.customerCompany}/{item.customerName}</Box>
+                    <Box fontSize="body-s" color="text-status-inactive">
+                      {item.customerTitle && `${item.customerTitle} • `}{item.customerEmail}
+                    </Box>
                   </Box>
+                )
+              },
+              {
+                id: 'agent',
+                header: '대화 에이전트',
+                cell: (item) => (
+                  <Box fontSize="body-s" color="text-status-inactive">
+                    {item.agentId ? `Agent: ${item.agentId}` : 'No agent assigned'}
+                  </Box>
+                )
+              },
+              {
+                id: 'status',
+                header: '세션 상태',
+                cell: (item) => <StatusBadge status={item.status} type="session" />
+              },
+              {
+                id: 'created',
+                header: '생성일',
+                cell: (item) => new Date(item.createdAt).toLocaleDateString()
+              },
+              {
+                id: 'completed',
+                header: '완료일',
+                cell: (item) => item.completedAt ? new Date(item.completedAt).toLocaleDateString() : '-'
+              },
+              {
+                id: 'actions',
+                header: '작업',
+                cell: (item) => (
+                  <ButtonDropdown
+                    expandToViewport
+                    items={[
+                      {
+                        text: '대화 분석',
+                        id: 'view',
+                        iconName: 'external'
+                      },
+                      {
+                        text: '진입 정보 CSV',
+                        id: 'download-csv',
+                        iconName: 'download'
+                      },
+                      ...(item.status === 'active' ? [{
+                        text: 'Inactivate',
+                        id: 'inactivate', 
+                      }] : []),
+                      ...(item.status === 'inactive' ? [{
+                        text: 'Delete',
+                        id: 'delete'
+                      }] : [])
+                    ]}
+                    onItemClick={({ detail }) => {
+                      switch (detail.id) {
+                        case 'view':
+                          navigate(`/admin/sessions/${item.sessionId}`)
+                          break
+                        case 'inactivate':
+                          handleInactivate(item.sessionId)
+                          break
+                        case 'delete':
+                          handleDelete(item.sessionId)
+                          break
+                        case 'download-csv':
+                          handleDownloadCSV(item)
+                          break
+                      }
+                    }}
+                  >
+                    Actions
+                  </ButtonDropdown>
+                )
+              }
+            ]}
+            items={filteredSessions}
+            loading={loading}
+            empty={
+              <Box textAlign="center" color="inherit">
+                <Box variant="strong" textAlign="center" color="inherit">
+                  No sessions
                 </Box>
-              )
-            },
-            {
-              id: 'agent',
-              header: '대화 에이전트',
-              cell: (item) => (
-                <Box fontSize="body-s" color="text-status-inactive">
-                  {item.agentId ? `Agent: ${item.agentId}` : 'No agent assigned'}
+                <Box variant="p" padding={{ bottom: 's' }} color="inherit">
+                  No pre-consultation sessions found.
                 </Box>
-              )
-            },
-            {
-              id: 'status',
-              header: '세션 상태',
-              cell: (item) => <StatusBadge status={item.status} type="session" />
-            },
-            {
-              id: 'created',
-              header: '생성일',
-              cell: (item) => new Date(item.createdAt).toLocaleDateString()
-            },
-            {
-              id: 'completed',
-              header: '완료일',
-              cell: (item) => item.completedAt ? new Date(item.completedAt).toLocaleDateString() : '-'
-            },
-            {
-              id: 'actions',
-              header: '작업',
-              cell: (item) => (
-                <ButtonDropdown
-                  expandToViewport
-                  items={[
-                    {
-                      text: '상세',
-                      id: 'view',
-                      iconName: 'external'
-                    },
-                    {
-                      text: '진입 정보 CSV',
-                      id: 'download-csv',
-                      iconName: 'download'
-                    },
-                    ...(item.status === 'active' ? [{
-                      text: 'Inactivate',
-                      id: 'inactivate'
-                    }] : []),
-                    ...(item.status === 'inactive' ? [{
-                      text: 'Delete',
-                      id: 'delete'
-                    }] : [])
-                  ]}
-                  onItemClick={({ detail }) => {
-                    switch (detail.id) {
-                      case 'view':
-                        navigate(`/admin/sessions/${item.sessionId}`)
-                        break
-                      case 'inactivate':
-                        handleInactivate(item.sessionId)
-                        break
-                      case 'delete':
-                        handleDelete(item.sessionId)
-                        break
-                      case 'download-csv':
-                        handleDownloadCSV(item)
-                        break
-                    }
-                  }}
-                >
-                  Actions
-                </ButtonDropdown>
-              )
+                <Button onClick={() => navigate('/admin/sessions/create')}>
+                  세션 추가
+                </Button>
+              </Box>
             }
-          ]}
-          items={sessions}
-          loading={loading}
-          empty={
-            <Box textAlign="center" color="inherit">
-              <Box variant="strong" textAlign="center" color="inherit">
-                No sessions
-              </Box>
-              <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                No pre-consultation sessions found.
-              </Box>
-              <Button onClick={() => navigate('/admin/sessions/create')}>
-                세션 추가
-              </Button>
-            </Box>
-          }
           />
         </div>
       </SpaceBetween>

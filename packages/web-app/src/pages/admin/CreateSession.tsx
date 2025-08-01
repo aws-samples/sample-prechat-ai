@@ -37,6 +37,7 @@ export default function CreateSession() {
     agentId: '',
     pinNumber: ''
   })
+  const [showPin, setShowPin] = useState(false)
 
   useEffect(() => {
     loadAgents()
@@ -169,7 +170,7 @@ export default function CreateSession() {
                 <Box fontWeight="bold">CSV 파일 다운로드:</Box>
                 <SpaceBetween size="xs" direction="horizontal">
                   <Box fontSize="body-s" color="text-status-inactive">
-                    세션 정보가 포함된 CSV 파일이 자동으로 다운로드되었습니다.
+                    CSV 파일이 자동으로 다운로드되었습니다.
                   </Box>
                   <Button
                     onClick={() => generateAndDownloadCSV(success.split('URL: ')[1]?.split(' | PIN: ')[0] || '')}
@@ -297,10 +298,17 @@ export default function CreateSession() {
                   value={formData.pinNumber}
                   onChange={({ detail }) => updateFormData('pinNumber', detail.value)}
                   placeholder="6자리 숫자 입력"
-                  type="text"
+                  type={showPin ? "text" : "password"}
                   inputMode="numeric"
                   maxLength={6}
                 />
+                <Button
+                  variant="normal"
+                  onClick={() => setShowPin(!showPin)}
+                  iconName={showPin ? "view-off" : "view"}
+                >
+                  {showPin ? "숨기기" : "보기"}
+                </Button>
                 <Button
                   variant="normal"
                   onClick={generateRandomPin}

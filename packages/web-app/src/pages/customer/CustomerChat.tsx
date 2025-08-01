@@ -24,6 +24,13 @@ import { useSession, useChat } from '../../hooks'
 import { LoadingSpinner, ChatMessage, PrivacyTermsModal } from '../../components'
 import { MESSAGES } from '../../constants'
 import { chatApi } from '../../services/api'
+import { 
+  storePinForSession, 
+  getStoredPinForSession, 
+  storePrivacyConsentForSession,
+  getStoredPrivacyConsentForSession,
+  removePinForSession
+} from '../../utils/sessionStorage'
 
 export default function CustomerChat() {
   const { sessionId } = useParams<{ sessionId: string }>()
@@ -33,6 +40,7 @@ export default function CustomerChat() {
   const [pinLoading, setPinLoading] = useState(false)
   const [privacyAgreed, setPrivacyAgreed] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
+  const [isCheckingStoredPin, setIsCheckingStoredPin] = useState(true)
   
   const {
     sessionData,
@@ -43,7 +51,7 @@ export default function CustomerChat() {
     addMessage,
     updateSessionComplete,
     setMessages
-  } = useSession(sessionId, !showPinModal) // Only load session after PIN verification
+  } = useSession(sessionId, !showPinModal && !isCheckingStoredPin) // Only load session after PIN verification
 
   const {
     inputValue,
@@ -53,6 +61,40 @@ export default function CustomerChat() {
     sendMessage,
     clearInput
   } = useChat(sessionId)
+
+  // 컴포넌트 로드 시 저장된 PIN 확인
+  useEffect(() => {
+    const checkStoredPin = async () => {
+      if (!sessionId) {
+        setIsCheckingStoredPin(false)
+        return
+      }
+
+      const storedPin = getStoredPinForSession(sessionId)
+      const storedPrivacyConsent = getStoredPrivacyConsentForSession(sessionId)
+
+      if (storedPin && storedPrivacyConsent) {
+        // 저장된 PIN으로 자동 검증 시도
+        try {
+          await chatApi.verifySessionPin(sessionId, storedPin, true)
+          setShowPinModal(false) // 모달 건너뛰기
+        } catch (error) {
+          // 저장된 PIN이 유효하지 않으면 저장소에서 제거하고 모달 표시
+          console.warn('Stored PIN is no longer valid:', error)
+          storePinForSession(sessionId, '') // 잘못된 PIN 제거
+          // 모달에 이전 PIN을 미리 채워주기 (사용자 편의성)
+          setPinInput(storedPin)
+        }
+      } else if (storedPin) {
+        // PIN은 있지만 개인정보 동의가 없는 경우, PIN만 미리 채워주기
+        setPinInput(storedPin)
+      }
+      
+      setIsCheckingStoredPin(false)
+    }
+
+    checkStoredPin()
+  }, [sessionId])
 
   useEffect(() => {
     // If no conversation history, pre-fill the input with greeting message
@@ -77,6 +119,11 @@ export default function CustomerChat() {
     
     try {
       await chatApi.verifySessionPin(sessionId, pinInput, privacyAgreed)
+      
+      // PIN 검증 성공 시 세션 저장소에 저장
+      storePinForSession(sessionId, pinInput)
+      storePrivacyConsentForSession(sessionId)
+      
       setShowPinModal(false)
     } catch (error: any) {
       setPinError(error.response?.data?.error || 'PIN 번호가 올바르지 않습니다.')
@@ -90,6 +137,11 @@ export default function CustomerChat() {
   }
 
 
+
+  // 저장된 PIN 확인 중일 때 로딩 표시
+  if (isCheckingStoredPin) {
+    return <LoadingSpinner />
+  }
 
   if (showPinModal) {
     return (
@@ -126,9 +178,13 @@ export default function CustomerChat() {
           <FormField label="PIN 번호">
             <Input
               value={pinInput}
-              onChange={({ detail }) => setPinInput(detail.value)}
+              onChange={({ detail }) => {
+                // 숫자만 허용하고 최대 6자리까지만
+                const numericValue = detail.value.replace(/\D/g, '').slice(0, 6)
+                setPinInput(numericValue)
+              }}
               placeholder="6자리 숫자 입력"
-              type="text"
+              type="password"
               inputMode="numeric"
               maxLength={6}
               onKeyDown={(e) => {
@@ -168,6 +224,11 @@ export default function CustomerChat() {
   }
 
   if (sessionError) {
+    // 세션 오류 시 저장된 PIN 정리
+    if (sessionId) {
+      removePinForSession(sessionId)
+    }
+    
     return (
       <Container>
         <Alert type="error" header="Session Error">
