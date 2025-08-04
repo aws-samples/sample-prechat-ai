@@ -50,14 +50,12 @@ export default function CustomerChat() {
     isComplete,
     addMessage,
     updateSessionComplete,
-    setMessages
   } = useSession(sessionId, !showPinModal && !isCheckingStoredPin) // Only load session after PIN verification
 
   const {
     inputValue,
     setInputValue,
     loading: chatLoading,
-    error: chatError,
     sendMessage,
     clearInput
   } = useChat(sessionId)
@@ -186,9 +184,8 @@ export default function CustomerChat() {
               placeholder="6자리 숫자 입력"
               type="password"
               inputMode="numeric"
-              maxLength={6}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && pinInput.length === 6 && privacyAgreed) {
+                if ((e as any).key === 'Enter' && pinInput.length === 6 && privacyAgreed) {
                   handlePinSubmit()
                 }
               }}

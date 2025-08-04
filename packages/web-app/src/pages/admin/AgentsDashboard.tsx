@@ -106,7 +106,7 @@ export default function AgentsDashboard() {
           PreChat 에이전트 🤖
         </Header>
 
-        <Box minHeight="50vh">
+        <div style={{ minHeight: '50vh' }}>
           <Table
             columnDefinitions={[
               {
@@ -154,17 +154,17 @@ export default function AgentsDashboard() {
                       ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
                         text: '에이전트 편집',
                         id: 'edit',
-                        iconName: 'edit'
+                        iconName: 'edit' as const
                       }] : []),
                       ...(item.agentStatus === 'NOT_PREPARED' ? [{
                         text: '에이전트 준비',
                         id: 'prepare',
-                        iconName: 'status-positive'
+                        iconName: 'status-positive' as const
                       }] : []),
                       ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
                         text: '에이전트 제거',
                         id: 'delete',
-                        iconName: 'remove'
+                        iconName: 'remove' as const
                       }] : [])
                     ]}
                     onItemClick={({ detail }) => {
@@ -202,7 +202,7 @@ export default function AgentsDashboard() {
               </Box>
             }
           />
-        </Box>
+        </div>
       </SpaceBetween>
     </Container>
   )

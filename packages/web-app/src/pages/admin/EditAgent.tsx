@@ -15,7 +15,7 @@ import {
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
 import { BEDROCK_MODELS } from '../../types'
-import type { BedrockAgent } from '../../types'
+
 import defaultPrompt from '../../assets/prechat-agent-prompt.md?raw'
 
 export default function EditAgent() {

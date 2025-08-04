@@ -1,6 +1,5 @@
 import axios from 'axios'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://za5ttx0t8j.execute-api.ap-northeast-2.amazonaws.com/dev/api'
+import { API_BASE_URL } from '../config/api'
 
 export interface SignupRequest {
   email: string

@@ -1,8 +1,9 @@
 import axios from 'axios'
-import type { ChatMessageRequest, ChatMessageResponse, Session, BedrockAgent, ReportAnalysisOptions } from '../types'
+import type { ChatMessageRequest, ChatMessageResponse, Session, AnalysisResults } from '../types'
+import { API_BASE_URL } from '../config/api'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: API_BASE_URL,
   timeout: 30000,
 })
 
@@ -50,9 +51,17 @@ export const adminApi = {
     return response.data
   },
 
-  getSessionReport: async (sessionId: string) => {
-    const response = await api.get(`/admin/sessions/${sessionId}/report`)
-    return response.data
+  getSessionReport: async (sessionId: string): Promise<AnalysisResults | null> => {
+    try {
+      const response = await api.get(`/admin/sessions/${sessionId}/report`)
+      return response.data
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        // No analysis data exists yet
+        return null
+      }
+      throw error
+    }
   },
 
   inactivateSession: async (sessionId: string) => {
@@ -103,32 +112,16 @@ export const adminApi = {
     return response.data
   },
 
-  // Report Generation API
-  generateOptimizedPrompt: async (sessionId: string, analysisOptions: ReportAnalysisOptions, modelId?: string) => {
-    const response = await api.post(`/admin/sessions/${sessionId}/generate-prompt`, { 
-      analysisOptions,
-      modelId 
-    })
+
+
+  // Producer-Consumer Analysis API
+  requestAnalysis: async (sessionId: string, modelId: string) => {
+    const response = await api.post(`/admin/sessions/${sessionId}/analyze`, { modelId })
     return response.data
   },
 
-  generateReportWithModel: async (sessionId: string, modelId: string, prompt: string, conversationHistory?: any[], customerInfo?: any) => {
-    const response = await api.post(`/admin/sessions/${sessionId}/generate-report-model`, { 
-      modelId, 
-      prompt,
-      conversationHistory,
-      customerInfo
-    })
-    return response.data
-  },
-
-  generateReportWithAgent: async (sessionId: string, agentId: string, prompt: string, conversationHistory?: any[], customerInfo?: any) => {
-    const response = await api.post(`/admin/sessions/${sessionId}/generate-report-agent`, { 
-      agentId, 
-      prompt,
-      conversationHistory,
-      customerInfo
-    })
+  getAnalysisStatus: async (sessionId: string) => {
+    const response = await api.get(`/admin/sessions/${sessionId}/analysis-status`)
     return response.data
   }
 }

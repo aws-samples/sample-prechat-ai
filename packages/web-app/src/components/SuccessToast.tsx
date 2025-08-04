@@ -1,1 +1,40 @@
-import { useState, useEffect } from 'react'\nimport { Box, StatusIndicator } from '@cloudscape-design/components'\n\ninterface SuccessToastProps {\n  message: string\n  show: boolean\n  onHide: () => void\n  duration?: number\n}\n\nexport default function SuccessToast({ message, show, onHide, duration = 3000 }: SuccessToastProps) {\n  useEffect(() => {\n    if (show) {\n      const timer = setTimeout(onHide, duration)\n      return () => clearTimeout(timer)\n    }\n  }, [show, onHide, duration])\n\n  if (!show) return null\n\n  return (\n    <Box\n      position=\"fixed\"\n      top=\"20px\"\n      right=\"20px\"\n      zIndex={1000}\n      className=\"success-animation\"\n      padding=\"s\"\n      backgroundColor=\"background-status-success\"\n      borderRadius=\"8px\"\n      boxShadow=\"0 4px 12px rgba(0,0,0,0.15)\"\n    >\n      <StatusIndicator type=\"success\">\n        {message}\n      </StatusIndicator>\n    </Box>\n  )\n}
+import { useEffect } from 'react'
+import { StatusIndicator } from '@cloudscape-design/components'
+
+interface SuccessToastProps {
+  message: string
+  show: boolean
+  onHide: () => void
+  duration?: number
+}
+
+export default function SuccessToast({ message, show, onHide, duration = 3000 }: SuccessToastProps) {
+  useEffect(() => {
+    if (show) {
+      const timer = setTimeout(onHide, duration)
+      return () => clearTimeout(timer)
+    }
+  }, [show, onHide, duration])
+
+  if (!show) return null
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        zIndex: 1000,
+        padding: '8px',
+        backgroundColor: 'var(--awsui-color-background-status-success)',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+      }}
+      className="success-animation"
+    >
+      <StatusIndicator type="success">
+        {message}
+      </StatusIndicator>
+    </div>
+  )
+}

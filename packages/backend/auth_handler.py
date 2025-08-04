@@ -1,25 +1,12 @@
 import json
 import boto3
 import os
-
-def lambda_response(status_code, body):
-    return {
-        'statusCode': status_code,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        },
-        'body': json.dumps(body)
-    }
-
-def parse_body(event):
-    return json.loads(event.get('body', '{}'))
+from utils import lambda_response, parse_body
 
 cognito = boto3.client('cognito-idp')
 USER_POOL_ID = os.environ.get('USER_POOL_ID')
 CLIENT_ID = os.environ.get('CLIENT_ID')
+ALLOWED_EMAIL_DOMAINS = os.environ.get('ALLOWED_EMAIL_DOMAINS', 'amazon.com').split(',')
 
 def signup(event, context):
     body = parse_body(event)
@@ -32,9 +19,11 @@ def signup(event, context):
     if not all([email, password, name, phone_number]):
         return lambda_response(400, {'error': 'Missing required fields: email, password, name, and phone number are required'})
     
-    # Validate Amazon.com domain
-    if not email.endswith('@amazon.com'):
-        return lambda_response(400, {'error': 'Only @amazon.com email addresses are allowed'})
+    # Validate allowed email domains
+    email_domain = email.split('@')[-1] if '@' in email else ''
+    if not any(email.endswith(f'@{domain.strip()}') for domain in ALLOWED_EMAIL_DOMAINS):
+        allowed_domains = ', '.join(f'@{domain.strip()}' for domain in ALLOWED_EMAIL_DOMAINS)
+        return lambda_response(400, {'error': f'Only {allowed_domains} email addresses are allowed'})
     
     # Validate phone number format (basic validation)
     if not phone_number.startswith('+'):

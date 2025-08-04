@@ -117,7 +117,7 @@ export default function Login() {
           </Box>
         </Box>
 
-        <Box maxWidth="600px" margin="auto">
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <style>{`
             .awsui_input_2rhyz_x45v2_149 { width: 100% !important; min-width: 300px !important; }
           `}</style>
@@ -272,7 +272,7 @@ export default function Login() {
                           onChange={({ detail }) => 
                             setSignupData(prev => ({ ...prev, phoneNumber: detail.value }))
                           }
-                          type="tel"
+                          type="text"
                           placeholder="+1234567890"
                         />
                       </FormField>
@@ -293,7 +293,7 @@ export default function Login() {
               }
             ]}
           />
-        </Box>
+        </div>
       </div>
     </Container>
   )

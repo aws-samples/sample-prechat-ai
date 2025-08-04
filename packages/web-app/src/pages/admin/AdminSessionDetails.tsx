@@ -5,7 +5,6 @@ import {
   Header,
   SpaceBetween,
   Box,
-  Button,
   Alert,
   Spinner,
   Tabs,
@@ -13,10 +12,10 @@ import {
   ColumnLayout
 } from '@cloudscape-design/components'
 import AnimatedButton from '../../components/AnimatedButton'
-import ReportGenerator from '../../components/ReportGenerator'
+import AIAnalysisReport from '../../components/AIAnalysisReport'
 import { adminApi, chatApi } from '../../services/api'
 import { Session } from '../../types'
-import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
+
 
 export default function AdminSessionDetails() {
   const { sessionId } = useParams<{ sessionId: string }>()
@@ -39,7 +38,12 @@ export default function AdminSessionDetails() {
       
       // Load detailed session info including PIN for admin
       const sessionDetails = await adminApi.getSessionDetails(sessionId!)
-      setSession(prev => prev ? { ...prev, pinNumber: sessionDetails.pinNumber } : null)
+      setSession(prev => prev ? { 
+        ...prev, 
+        pinNumber: sessionDetails.pinNumber,
+        privacyConsentAgreed: sessionDetails.privacyConsentAgreed,
+        privacyConsentTimestamp: sessionDetails.privacyConsentTimestamp
+      } : null)
     } catch (err) {
       setError('Failed to load session details')
     } finally {
@@ -60,23 +64,7 @@ export default function AdminSessionDetails() {
     }
   }
 
-  const handleDownloadCSV = () => {
-    if (!session) return
-    
-    const csvData = {
-      customerCompany: session.customerInfo.company || '미입력',
-      customerName: session.customerInfo.name,
-      customerTitle: session.customerInfo.title || '미입력',
-      chatUrl: `${window.location.origin}/customer/${session.sessionId}`,
-      pinNumber: (session as any)?.pinNumber || 'N/A',
-      createdAt: new Date(session.createdAt || '').toLocaleString('ko-KR')
-    }
-    
-    const csvContent = generateSessionCSV(csvData)
-    const filename = generateCSVFilename(session.customerInfo.company || 'Unknown')
-    
-    downloadCSV(csvContent, filename)
-  }
+
 
   if (loading) {
     return (
@@ -137,13 +125,13 @@ export default function AdminSessionDetails() {
           </Box>
           <Box>
             <Box variant="awsui-key-label">PIN 번호</Box>
-            <Box fontWeight="bold" fontSize="body-l">
-              {(session as any)?.pinNumber || 'N/A'}
+            <Box fontWeight="bold" fontSize="body-s">
+              {session.pinNumber || 'N/A'}
             </Box>
           </Box>
           <Box>
             <Box variant="awsui-key-label">Created</Box>
-            <Box>{new Date(session.createdAt || '').toLocaleDateString()}</Box>
+            <Box>{session.createdAt ? new Date(session.createdAt).toLocaleDateString() : 'N/A'}</Box>
           </Box>
         </ColumnLayout>
         
@@ -151,7 +139,7 @@ export default function AdminSessionDetails() {
           <Box>
             <Box variant="awsui-key-label">개인정보 동의</Box>
             <Box>
-              {(session as any)?.privacyConsentAgreed ? (
+              {session.privacyConsentAgreed ? (
                 <Badge color="green">동의 완료</Badge>
               ) : (
                 <Badge color="grey">미동의</Badge>
@@ -161,8 +149,8 @@ export default function AdminSessionDetails() {
           <Box>
             <Box variant="awsui-key-label">동의 시간</Box>
             <Box>
-              {(session as any)?.privacyConsentTimestamp ? 
-                new Date((session as any).privacyConsentTimestamp).toLocaleString() : 
+              {session.privacyConsentTimestamp ? 
+                new Date(session.privacyConsentTimestamp).toLocaleString('ko-KR') : 
                 '-'
               }
             </Box>
@@ -180,11 +168,6 @@ export default function AdminSessionDetails() {
                     <Box
                       key={message.id}
                       padding="s"
-                      backgroundColor={
-                        message.sender === 'customer' 
-                          ? 'background-status-info' 
-                          : 'background-container-header'
-                      }
                     >
                       <SpaceBetween size="xs">
                         <Box fontSize="body-s" color="text-status-inactive">
@@ -207,7 +190,7 @@ export default function AdminSessionDetails() {
             {
               label: 'AI 리포트',
               id: 'report',
-              content: sessionId ? <ReportGenerator sessionId={sessionId} /> : null
+              content: sessionId ? <AIAnalysisReport sessionId={sessionId} /> : null
             }
           ]}
         />

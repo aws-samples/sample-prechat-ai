@@ -1,10 +1,19 @@
 import json
 import boto3
-from utils import lambda_response, parse_body
+import time
+import logging
+import os
+from botocore.exceptions import ClientError, ReadTimeoutError
+from utils import lambda_response, parse_body, get_timestamp
+
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource('dynamodb')
 bedrock = boto3.client('bedrock-runtime', region_name='ap-northeast-2')
-bedrock_agent = boto3.client('bedrock-agent-runtime', region_name='ap-northeast-2')
+sqs = boto3.client('sqs')
+ANALYSIS_QUEUE_URL = os.environ.get('ANALYSIS_QUEUE_URL')
 
 def clean_llm_response(content):
     """Clean up LLM response by removing code block markers and trimming"""
@@ -109,83 +118,74 @@ def delete_session(event, context):
         return lambda_response(500, {'error': 'Failed to delete session'})
 
 def get_session_report(event, context):
+    """Retrieve stored analysis results from DynamoDB"""
     session_id = event['pathParameters']['sessionId']
-    model_id = event.get('queryStringParameters', {}).get('modelId') if event.get('queryStringParameters') else None
     
     try:
-        # Get session
+        # Get session with aiAnalysis data
         sessions_table = dynamodb.Table('mte-sessions')
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         
         if 'Item' not in session_resp:
+            logger.error(f"Session {session_id} not found")
             return lambda_response(404, {'error': 'Session not found'})
         
         session = session_resp['Item']
         
-        # Get messages
-        messages_table = dynamodb.Table('mte-messages')
-        messages_resp = messages_table.query(
-            KeyConditionExpression='PK = :pk',
-            ExpressionAttributeValues={':pk': f'SESSION#{session_id}'},
-            ScanIndexForward=True
-        )
+        # Check analysis status
+        analysis_status = session.get('analysisStatus', 'not_started')
         
-        messages = messages_resp.get('Items', [])
+        if analysis_status == 'processing':
+            return lambda_response(202, {
+                'status': 'processing',
+                'message': 'Analysis is still in progress. Please check again in a few moments.'
+            })
+        elif analysis_status == 'failed':
+            return lambda_response(500, {
+                'status': 'failed',
+                'message': 'Analysis failed. Please try running the analysis again.'
+            })
+        elif 'aiAnalysis' not in session:
+            return lambda_response(404, {
+                'status': 'not_started',
+                'error': 'No analysis data found',
+                'message': 'Please run AI analysis first to generate report data'
+            })
         
-        # Generate summary using selected or default model
-        selected_model = model_id or 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-3-sonnet-20240229-v1:0'
-        summary = generate_summary(messages, session, selected_model)
+        analysis_data = session['aiAnalysis']
         
+        # Validate analysis data structure
+        try:
+            _validate_analysis_data(analysis_data)
+        except ValueError as e:
+            logger.error(f"Invalid analysis data structure for session {session_id}: {str(e)}")
+            return lambda_response(500, {
+                'error': 'Invalid analysis data structure',
+                'message': 'Analysis data is corrupted, please re-run analysis'
+            })
+        
+        # Return structured analysis results
         return lambda_response(200, {
             'sessionId': session_id,
-            'summary': summary,
+            'status': 'completed',
+            'analysis': {
+                'markdownSummary': analysis_data['markdownSummary'],
+                'bantAnalysis': analysis_data['bantAnalysis'],
+                'awsServices': analysis_data['awsServices'],
+                'customerCases': analysis_data['customerCases'],
+                'analyzedAt': analysis_data['analyzedAt'],
+                'modelUsed': analysis_data['modelUsed']
+            }
         })
-    except Exception as e:
-        return lambda_response(500, {'error': 'Failed to generate report'})
-
-def generate_summary(messages, session, model_id):
-    conversation_text = '\n'.join([f"{msg['sender']}: {msg['content']}" for msg in messages])
-    
-    prompt = f"""Generate a concise 1-page markdown summary of this AWS pre-consultation conversation in KOREAN. This will help our sales team understand the customer's needs and prepare for the next steps.:
-
-Customer: {session['customerInfo']['name']} from {session['customerInfo']['company']}
-
-Conversation:
-{conversation_text[:3000]}
-
-Include:
-- Business requirements
-- Technical needs
-- AWS services discussed
-- Next steps
-
-Format as markdown."""
-    
-    try:
-        if 'anthropic' in model_id.lower():
-            # Anthropic Claude format
-            body = json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 8192,
-                "messages": [{"role": "user", "content": prompt}]
-            })
-        else:
-            # Amazon Nova format
-            body = json.dumps({
-                "messages": [{"role": "user", "content": [{"text": prompt}]}],
-                "inferenceConfig": {"max_new_tokens": 8192}
-            })
         
-        response = bedrock.invoke_model(modelId=model_id, body=body)
-        result = json.loads(response['body'].read())
-        
-        if 'anthropic' in model_id.lower():
-            return result['content'][0]['text']
-        else:
-            return result['output']['message']['content'][0]['text']
+    except ClientError as e:
+        logger.error(f"DynamoDB error retrieving session {session_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Database error retrieving session'})
     except Exception as e:
-        print(e)
-        return f"# Summary for {session['customerInfo']['name']}\n\nConversation completed with {len(messages)} messages."
+        logger.error(f"Unexpected error retrieving report for session {session_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to retrieve report'})
+
+
 
 def get_aws_docs_recommendations(messages):
     # Simple keyword-based recommendations
@@ -203,6 +203,41 @@ def get_aws_docs_recommendations(messages):
         recommendations.append({'service': 'Lambda', 'url': 'https://docs.aws.amazon.com/lambda/'})
     
     return recommendations
+
+def get_analysis_status(event, context):
+    """Get analysis status for frontend polling"""
+    session_id = event['pathParameters']['sessionId']
+    
+    try:
+        sessions_table = dynamodb.Table('mte-sessions')
+        session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
+        
+        if 'Item' not in session_resp:
+            return lambda_response(404, {'error': 'Session not found'})
+        
+        session = session_resp['Item']
+        analysis_status = session.get('analysisStatus', 'not_started')
+        
+        response_data = {
+            'sessionId': session_id,
+            'status': analysis_status
+        }
+        
+        if analysis_status == 'processing':
+            response_data['message'] = 'Analysis is in progress'
+        elif analysis_status == 'completed':
+            response_data['message'] = 'Analysis completed successfully'
+            response_data['analyzedAt'] = session.get('aiAnalysis', {}).get('analyzedAt')
+        elif analysis_status == 'failed':
+            response_data['message'] = 'Analysis failed'
+        else:
+            response_data['message'] = 'Analysis not started'
+        
+        return lambda_response(200, response_data)
+        
+    except Exception as e:
+        logger.error(f"Error getting analysis status for session {session_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to get analysis status'})
 
 def get_session_details(event, context):
     """Get detailed session info including PIN (only for session owner)"""
@@ -226,63 +261,147 @@ def get_session_details(event, context):
             'agentId': session.get('agentId', ''),
             'pinNumber': session.get('pinNumber', ''),
             'createdAt': session['createdAt'],
-            'completedAt': session.get('completedAt', '')
+            'completedAt': session.get('completedAt', ''),
+            'privacyConsentAgreed': session.get('privacyConsentAgreed', False),
+            'privacyConsentTimestamp': session.get('privacyConsentTimestamp', '')
         })
         
     except Exception as e:
         return lambda_response(500, {'error': 'Failed to get session details'})
 
-def generate_optimized_prompt(event, context):
-    """Generate optimized prompt using LLM based on analysis options"""
+
+
+def request_analysis(event, context):
+    """Producer function - Enqueue analysis request to SQS"""
     session_id = event['pathParameters']['sessionId']
     body = parse_body(event)
-    analysis_options = body.get('analysisOptions', {})
-    model_id = body.get('modelId', 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-3-sonnet-20240229-v1:0')
+    model_id = body.get('modelId')
+    
+    if not model_id:
+        return lambda_response(400, {'error': 'Missing modelId parameter'})
     
     try:
-        # Get session and messages
+        # Check if session exists
         sessions_table = dynamodb.Table('mte-sessions')
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         
         if 'Item' not in session_resp:
             return lambda_response(404, {'error': 'Session not found'})
         
-        session = session_resp['Item']
-        
-        # Get messages
-        messages_table = dynamodb.Table('mte-messages')
-        messages_resp = messages_table.query(
-            KeyConditionExpression='PK = :pk',
-            ExpressionAttributeValues={':pk': f'SESSION#{session_id}'},
-            ScanIndexForward=True
+        # Mark analysis as in progress
+        timestamp = get_timestamp()
+        sessions_table.update_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            UpdateExpression='SET analysisStatus = :status, analysisRequestedAt = :timestamp',
+            ExpressionAttributeValues={
+                ':status': 'processing',
+                ':timestamp': timestamp
+            }
         )
         
+        # Send message to SQS
+        message = {
+            'sessionId': session_id,
+            'modelId': model_id,
+            'requestedAt': timestamp
+        }
+        
+        sqs.send_message(
+            QueueUrl=ANALYSIS_QUEUE_URL,
+            MessageBody=json.dumps(message)
+        )
+        
+        return lambda_response(202, {
+            'message': 'Analysis request queued successfully',
+            'sessionId': session_id,
+            'status': 'processing'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error queuing analysis request for session {session_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to queue analysis request'})
+
+def process_analysis(event, context):
+    """Consumer function - Process analysis from SQS queue"""
+    try:
+        # Process each SQS record
+        for record in event['Records']:
+            message_body = json.loads(record['body'])
+            session_id = message_body['sessionId']
+            model_id = message_body['modelId']
+            
+            logger.info(f"Processing analysis for session {session_id} with model {model_id}")
+            
+            # Perform the actual analysis
+            result = _perform_conversation_analysis(session_id, model_id)
+            
+            if result['success']:
+                logger.info(f"Analysis completed successfully for session {session_id}")
+            else:
+                logger.error(f"Analysis failed for session {session_id}: {result.get('error')}")
+        
+        return {'statusCode': 200}
+        
+    except Exception as e:
+        logger.error(f"Error processing analysis from SQS: {str(e)}")
+        raise e
+
+def _perform_conversation_analysis(session_id, model_id):
+    """Perform the actual conversation analysis"""
+    logger.info(f"Starting conversation analysis for session {session_id} with model {model_id}")
+    
+    try:
+        # Update status to processing
+        sessions_table = dynamodb.Table('mte-sessions')
+        sessions_table.update_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            UpdateExpression='SET analysisStatus = :status',
+            ExpressionAttributeValues={':status': 'processing'}
+        )
+        
+        # Get session and messages with error handling
+        try:
+            session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
+        except ClientError as e:
+            logger.error(f"DynamoDB error retrieving session {session_id}: {str(e)}")
+            return lambda_response(500, {'error': 'Database error retrieving session'})
+        
+        if 'Item' not in session_resp:
+            logger.error(f"Session {session_id} not found")
+            return lambda_response(404, {'error': 'Session not found'})
+        
+        session = session_resp['Item']
+        logger.info(f"Retrieved session for customer: {session['customerInfo']['name']}")
+        
+        # Get messages with error handling
+        messages_table = dynamodb.Table('mte-messages')
+        try:
+            messages_resp = messages_table.query(
+                KeyConditionExpression='PK = :pk',
+                ExpressionAttributeValues={':pk': f'SESSION#{session_id}'},
+                ScanIndexForward=True
+            )
+        except ClientError as e:
+            logger.error(f"DynamoDB error retrieving messages for session {session_id}: {str(e)}")
+            return lambda_response(500, {'error': 'Database error retrieving messages'})
+        
         messages = messages_resp.get('Items', [])
+        
+        if not messages:
+            logger.error(f"No conversation messages found for session {session_id}")
+            return lambda_response(400, {'error': 'No conversation messages found'})
+        
+        logger.info(f"Found {len(messages)} messages for analysis")
+        
+        # Build conversation history with length check
         conversation_text = '\n'.join([f"{msg['sender']}: {msg['content']}" for msg in messages])
         
-        # Build analysis requirements based on selected options
-        analysis_requirements = []
+        if len(conversation_text) > 50000:  # Limit conversation length
+            logger.warning(f"Conversation too long ({len(conversation_text)} chars), truncating")
+            conversation_text = conversation_text[:50000] + "\n[대화 내용이 길어 일부 생략됨]"
         
-        # 필수 항목들
-        if analysis_options.get('coreRequirements', True):
-            analysis_requirements.append("- 핵심 요구사항: 고객이 언급한 주요 비즈니스 요구사항과 기술적 니즈")
-        
-        if analysis_options.get('priorities', True):
-            analysis_requirements.append("- 우선순위 분석: 고객이 중요하게 생각하는 항목들의 우선순위")
-        
-        # 선택 항목들
-        if analysis_options.get('bant', False):
-            analysis_requirements.append("- BANT 분석: Budget(예산), Authority(권한), Need(필요성), Timeline(일정)")
-        
-        if analysis_options.get('awsServices', False):
-            analysis_requirements.append("- 추천 AWS 서비스: 고객 요구사항에 적합한 AWS 서비스 추천")
-        
-        if analysis_options.get('approachStrategy', False):
-            analysis_requirements.append("- 유사고객 접근 전략: 비슷한 고객 사례 기반 접근 전략")
-        
-        # Create meta-prompt for LLM to generate optimized prompt
-        meta_prompt = f"""당신은 AWS 영업 담당자를 위한 프롬프트 엔지니어링 전문가입니다. 
-다음 고객 상담 정보를 바탕으로, 영업 담당자가 효과적인 미팅을 준비할 수 있도록 도와주는 최적화된 분석 프롬프트를 생성해주세요.
+        # Generate structured analysis prompt using meet-logs-md.md template
+        analysis_prompt = f"""고객 상담 내용을 분석하여 다음 4가지 항목을 JSON 형태로 제공해주세요:
 
 고객 정보:
 - 이름: {session['customerInfo']['name']}
@@ -290,180 +409,423 @@ def generate_optimized_prompt(event, context):
 - 직책: {session['customerInfo'].get('title', '미입력')}
 - 이메일: {session['customerInfo']['email']}
 
-대화 내용 요약:
-{conversation_text[:2000]}
+대화 내용:
+{conversation_text}
 
-요청된 분석 항목:
-{chr(10).join(analysis_requirements)}
+다음 형식으로 분석 결과를 제공해주세요. 반드시 유효한 JSON 형식으로 응답해주세요:
 
-다음 조건을 만족하는 프롬프트를 생성해주세요:
+{{
+  "markdownSummary": "meet-logs-md.md 파일의 템플릿 구조를 참고하여 작성된 마크다운 요약. Account Info 섹션(SFDC URL, Site URL, Partner, Industry/Domain, Business model, Customer's Key Requirement, Key Challenges, TAS, Chat Summary, Developer status, Key Contact, Budget), Meeting Logs 섹션(Meeting Minute, F/up items), Account Planning 섹션을 포함해야 합니다.",
+  "bantAnalysis": {{
+    "budget": "예산 관련 분석 - 고객이 언급한 예산 정보나 투자 계획",
+    "authority": "의사결정권한 분석 - 대화 상대방의 의사결정 권한 수준", 
+    "need": "필요성 분석 - 고객의 핵심 요구사항과 해결해야 할 문제",
+    "timeline": "일정 분석 - 프로젝트 진행 일정이나 도입 계획"
+  }},
+  "awsServices": [
+    {{
+      "service": "추천 AWS 서비스명",
+      "reason": "해당 서비스를 추천하는 이유",
+      "implementation": "구체적인 구현 방안이나 적용 방법"
+    }}
+  ],
+  "customerCases": [
+    {{
+      "title": "관련 고객 사례 제목",
+      "description": "사례에 대한 상세 설명",
+      "relevance": "현재 고객과의 관련성 및 적용 가능성"
+    }}
+  ]
+}}
 
-1. 위 대화 내용을 분석하여 요청된 항목들에 대한 구체적이고 실행 가능한 분석을 요구하는 프롬프트
-2. 영업 담당자가 바로 활용할 수 있는 실무적인 관점의 분석을 유도
-3. 마크다운 형식으로 구조화된 결과를 요구
-4. 고객의 업종, 규모, 기술 수준을 고려한 맞춤형 분석을 유도
-5. AWS 서비스 추천 시 구체적인 이유와 구현 방안을 포함하도록 유도
+중요: 응답은 반드시 유효한 JSON 형식이어야 하며, 마크다운 코드 블록(```)이나 다른 텍스트 없이 순수 JSON만 반환해주세요."""
 
-생성할 프롬프트는 다른 AI 모델이나 에이전트가 실행할 것이므로, 명확하고 구체적인 지시사항을 포함해주세요.
-
-프롬프트만 출력하고, 다른 설명은 포함하지 마세요."""
-
-        # Generate optimized prompt using LLM
-        if 'anthropic' in model_id.lower():
-            # Anthropic Claude format
-            request_body = json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 4096,
-                "messages": [{"role": "user", "content": meta_prompt}]
+        # Note: Running in SQS consumer with 15-minute timeout, no need to check remaining time
+        
+        # Call LLM for analysis with retry logic
+        analysis_result = _call_llm_for_analysis(model_id, analysis_prompt)
+        
+        if not analysis_result:
+            logger.error("LLM analysis failed after all retries")
+            # Return fallback response
+            fallback_analysis = _generate_fallback_analysis(session, messages)
+            return lambda_response(500, {
+                'error': 'LLM analysis failed',
+                'fallback': fallback_analysis,
+                'message': 'Analysis failed but basic summary provided'
             })
-        else:
-            # Amazon Nova format
-            request_body = json.dumps({
-                "messages": [{"role": "user", "content": [{"text": meta_prompt}]}],
-                "inferenceConfig": {"max_new_tokens": 4096}
-            })
         
-        response = bedrock.invoke_model(modelId=model_id, body=request_body)
-        result = json.loads(response['body'].read())
-        
-        if 'anthropic' in model_id.lower():
-            optimized_prompt = result['content'][0]['text']
-        else:
-            optimized_prompt = result['output']['message']['content'][0]['text']
-        
-        # Clean up the prompt
-        optimized_prompt = clean_llm_response(optimized_prompt)
-        
-        return lambda_response(200, {
-            'prompt': optimized_prompt,
-            'sessionId': session_id,
+        # Store analysis results in DynamoDB
+        timestamp = get_timestamp()
+        analysis_data = {
+            **analysis_result,
+            'analyzedAt': timestamp,
             'modelUsed': model_id
-        })
+        }
         
-    except Exception as e:
-        print(f"Error generating optimized prompt: {str(e)}")
-        return lambda_response(500, {'error': 'Failed to generate optimized prompt'})
-
-def generate_report_with_model(event, context):
-    """Generate report using Bedrock model"""
-    session_id = event['pathParameters']['sessionId']
-    body = parse_body(event)
-    model_id = body.get('modelId')
-    prompt = body.get('prompt')
-    conversation_history = body.get('conversationHistory', [])
-    customer_info = body.get('customerInfo', {})
-    
-    if not model_id or not prompt:
-        return lambda_response(400, {'error': 'Missing modelId or prompt'})
-    
-    try:
-        # Build conversation context
-        conversation_text = '\n'.join([f"{msg.get('sender', 'unknown')}: {msg.get('content', '')}" for msg in conversation_history])
+        # Store analysis results with atomic update
+        if not _store_analysis_results(session_id, analysis_data):
+            logger.error(f"Failed to store analysis results for session {session_id}")
+            # Update status to failed
+            sessions_table.update_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+                UpdateExpression='SET analysisStatus = :status',
+                ExpressionAttributeValues={':status': 'failed'}
+            )
+            return {'success': False, 'error': 'Failed to store analysis results'}
         
-        # Enhance prompt with conversation context
-        enhanced_prompt = f"""고객 정보:
-- 이름: {customer_info.get('name', '미입력')}
-- 회사: {customer_info.get('company', '미입력')}
-- 직책: {customer_info.get('title', '미입력')}
-- 이메일: {customer_info.get('email', '미입력')}
-
-대화 내용:
-{conversation_text}
-
-분석 요청:
-{prompt}"""
-        # Generate report using Bedrock model
-        if 'anthropic' in model_id.lower():
-            # Anthropic Claude format
-            request_body = json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 8192,
-                "messages": [{"role": "user", "content": enhanced_prompt}]
-            })
-        else:
-            # Amazon Nova format
-            request_body = json.dumps({
-                "messages": [{"role": "user", "content": [{"text": enhanced_prompt}]}],
-                "inferenceConfig": {"max_new_tokens": 8192}
-            })
-        
-        response = bedrock.invoke_model(modelId=model_id, body=request_body)
-        result = json.loads(response['body'].read())
-        
-        if 'anthropic' in model_id.lower():
-            content = result['content'][0]['text']
-        else:
-            content = result['output']['message']['content'][0]['text']
-        
-        # Clean up the content
-        content = clean_llm_response(content)
-        
-        return lambda_response(200, {
-            'content': content,
-            'modelUsed': model_id,
-            'sessionId': session_id
-        })
-        
-    except Exception as e:
-        print(f"Error generating report with model: {str(e)}")
-        return lambda_response(500, {'error': 'Failed to generate report with model'})
-
-def generate_report_with_agent(event, context):
-    """Generate report using Bedrock Agent"""
-    session_id = event['pathParameters']['sessionId']
-    body = parse_body(event)
-    agent_id = body.get('agentId')
-    prompt = body.get('prompt')
-    conversation_history = body.get('conversationHistory', [])
-    customer_info = body.get('customerInfo', {})
-    
-    if not agent_id or not prompt:
-        return lambda_response(400, {'error': 'Missing agentId or prompt'})
-    
-    try:
-        # Build conversation context
-        conversation_text = '\n'.join([f"{msg.get('sender', 'unknown')}: {msg.get('content', '')}" for msg in conversation_history])
-        
-        # Enhance prompt with conversation context
-        enhanced_prompt = f"""고객 정보:
-- 이름: {customer_info.get('name', '미입력')}
-- 회사: {customer_info.get('company', '미입력')}
-- 직책: {customer_info.get('title', '미입력')}
-- 이메일: {customer_info.get('email', '미입력')}
-
-대화 내용:
-{conversation_text}
-
-분석 요청:
-{prompt}"""
-        # Generate report using Bedrock Agent
-        response = bedrock_agent.invoke_agent(
-            agentId=agent_id,
-            agentAliasId='TSTALIASID',  # Use test alias
-            sessionId=f"report-{session_id}",  # Unique session for report generation
-            inputText=enhanced_prompt
+        # Update status to completed
+        sessions_table.update_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            UpdateExpression='SET analysisStatus = :status',
+            ExpressionAttributeValues={':status': 'completed'}
         )
         
-        # Extract response from agent
-        response_text = ""
-        for event in response['completion']:
-            if 'chunk' in event:
-                chunk = event['chunk']
-                if 'bytes' in chunk:
-                    response_text += chunk['bytes'].decode('utf-8')
-        
-        if not response_text:
-            response_text = "리포트 생성에 실패했습니다. 다시 시도해주세요."
-        
-        # Clean up the content
-        response_text = clean_llm_response(response_text)
-        
-        return lambda_response(200, {
-            'content': response_text,
-            'agentUsed': agent_id,
-            'sessionId': session_id
-        })
+        logger.info(f"Analysis completed successfully for session {session_id}")
+        return {'success': True, 'analysis': analysis_data}
         
     except Exception as e:
-        print(f"Error generating report with agent: {str(e)}")
-        return lambda_response(500, {'error': 'Failed to generate report with agent'})
+        logger.error(f"Unexpected error in analyze_conversation for session {session_id}: {str(e)}")
+        
+        # Generate fallback response for critical failures
+        try:
+            sessions_table = dynamodb.Table('mte-sessions')
+            session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
+            if 'Item' in session_resp:
+                session = session_resp['Item']
+                messages_table = dynamodb.Table('mte-messages')
+                messages_resp = messages_table.query(
+                    KeyConditionExpression='PK = :pk',
+                    ExpressionAttributeValues={':pk': f'SESSION#{session_id}'},
+                    ScanIndexForward=True
+                )
+                messages = messages_resp.get('Items', [])
+                fallback_analysis = _generate_fallback_analysis(session, messages)
+                
+                # Update status to failed
+                try:
+                    sessions_table.update_item(
+                        Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+                        UpdateExpression='SET analysisStatus = :status',
+                        ExpressionAttributeValues={':status': 'failed'}
+                    )
+                except:
+                    pass
+                
+                return {
+                    'success': False,
+                    'error': 'Analysis failed with critical error',
+                    'fallback': fallback_analysis
+                }
+        except:
+            pass
+        
+        # Update status to failed
+        try:
+            sessions_table = dynamodb.Table('mte-sessions')
+            sessions_table.update_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+                UpdateExpression='SET analysisStatus = :status',
+                ExpressionAttributeValues={':status': 'failed'}
+            )
+        except:
+            pass
+        
+        return {'success': False, 'error': 'Critical failure in conversation analysis'}
+
+def _generate_fallback_analysis(session, messages):
+    """Generate basic fallback analysis when LLM fails"""
+    try:
+        customer_info = session['customerInfo']
+        message_count = len(messages)
+        
+        # Basic conversation summary
+        conversation_summary = f"고객 {customer_info['name']}({customer_info['company']})과의 상담이 {message_count}개 메시지로 진행되었습니다."
+        
+        fallback = {
+            'markdownSummary': f"""# {customer_info['company']}
+
+## Account Info
+
+| 항목 | 내용 |
+|------|------|
+| 고객명 | {customer_info['name']} |
+| 회사명 | {customer_info['company']} |
+| 직책 | {customer_info.get('title', '미입력')} |
+| 이메일 | {customer_info['email']} |
+| 대화 요약 | {conversation_summary} |
+
+## Meeting Logs
+
+#### Meeting Minute
+- AI 분석 실패로 인해 자동 요약을 생성할 수 없습니다.
+- 수동으로 대화 내용을 검토해주세요.
+
+#### F/up items
+- [ ] 대화 내용 수동 검토 필요
+- [ ] 고객 요구사항 재확인 필요
+
+## Account Planning
+- AI 분석 실패로 인해 자동 계획을 생성할 수 없습니다.
+""",
+            'bantAnalysis': {
+                'budget': 'AI 분석 실패로 인해 예산 정보를 추출할 수 없습니다.',
+                'authority': 'AI 분석 실패로 인해 권한 정보를 추출할 수 없습니다.',
+                'need': 'AI 분석 실패로 인해 필요성 정보를 추출할 수 없습니다.',
+                'timeline': 'AI 분석 실패로 인해 일정 정보를 추출할 수 없습니다.'
+            },
+            'awsServices': [
+                {
+                    'service': '분석 실패',
+                    'reason': 'AI 분석 실패로 인해 서비스 추천을 제공할 수 없습니다.',
+                    'implementation': '수동으로 대화 내용을 검토하여 적절한 서비스를 선택해주세요.'
+                }
+            ],
+            'customerCases': [
+                {
+                    'title': '분석 실패',
+                    'description': 'AI 분석 실패로 인해 관련 고객 사례를 제공할 수 없습니다.',
+                    'relevance': '수동으로 유사한 고객 사례를 검토해주세요.'
+                }
+            ]
+        }
+        
+        return fallback
+        
+    except Exception as e:
+        logger.error(f"Error generating fallback analysis: {str(e)}")
+        return {
+            'markdownSummary': '# 분석 실패\n\n시스템 오류로 인해 분석을 수행할 수 없습니다.',
+            'bantAnalysis': {'budget': '분석 실패', 'authority': '분석 실패', 'need': '분석 실패', 'timeline': '분석 실패'},
+            'awsServices': [{'service': '분석 실패', 'reason': '시스템 오류', 'implementation': '수동 검토 필요'}],
+            'customerCases': [{'title': '분석 실패', 'description': '시스템 오류', 'relevance': '수동 검토 필요'}]
+        }
+
+def _call_llm_for_analysis(model_id, prompt, max_retries=3):
+    """Helper function to call LLM and parse JSON response with retry logic"""
+    last_error = None
+    
+    for attempt in range(max_retries):
+        try:
+            logger.info(f"Attempting LLM analysis (attempt {attempt + 1}/{max_retries}) with model: {model_id}")
+            
+            # Prepare request based on model type
+            if 'anthropic' in model_id.lower():
+                # Anthropic Claude format
+                request_body = json.dumps({
+                    "anthropic_version": "bedrock-2023-05-31",
+                    "max_tokens": 8192,
+                    "messages": [{"role": "user", "content": prompt}]
+                })
+            else:
+                # Amazon Nova format
+                request_body = json.dumps({
+                    "messages": [{"role": "user", "content": [{"text": prompt}]}],
+                    "inferenceConfig": {"max_new_tokens": 8192}
+                })
+            
+            # Call Bedrock with timeout handling
+            start_time = time.time()
+            response = bedrock.invoke_model(modelId=model_id, body=request_body)
+            end_time = time.time()
+            
+            logger.info(f"LLM call completed in {end_time - start_time:.2f} seconds")
+            
+            result = json.loads(response['body'].read())
+            
+            # Extract content based on model type
+            if 'anthropic' in model_id.lower():
+                content = result['content'][0]['text']
+            else:
+                content = result['output']['message']['content'][0]['text']
+            
+            # Clean up response and parse JSON
+            content = clean_llm_response(content)
+            logger.info(f"Raw LLM response length: {len(content)} characters")
+            
+            # Parse JSON response
+            analysis_result = json.loads(content)
+            
+            # Validate required fields
+            _validate_llm_response(analysis_result)
+            
+            logger.info("LLM analysis completed successfully")
+            return analysis_result
+            
+        except ReadTimeoutError as e:
+            last_error = e
+            logger.warning(f"LLM request timeout on attempt {attempt + 1}: {str(e)}")
+            if attempt < max_retries - 1:
+                wait_time = 2 ** attempt  # Exponential backoff
+                logger.info(f"Retrying in {wait_time} seconds...")
+                time.sleep(wait_time)
+            
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            last_error = e
+            
+            if error_code in ['ThrottlingException', 'ServiceUnavailableException']:
+                logger.warning(f"Transient error on attempt {attempt + 1}: {error_code}")
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt  # Exponential backoff
+                    logger.info(f"Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+            else:
+                logger.error(f"Non-retryable error: {error_code} - {str(e)}")
+                break
+                
+        except json.JSONDecodeError as e:
+            last_error = e
+            logger.error(f"Failed to parse LLM response as JSON on attempt {attempt + 1}: {str(e)}")
+            logger.error(f"Raw content: {content[:500]}...")  # Log first 500 chars
+            if attempt < max_retries - 1:
+                logger.info("Retrying with same prompt...")
+                time.sleep(1)
+            
+        except ValueError as e:
+            last_error = e
+            logger.error(f"LLM response validation failed on attempt {attempt + 1}: {str(e)}")
+            if attempt < max_retries - 1:
+                logger.info("Retrying with same prompt...")
+                time.sleep(1)
+                
+        except Exception as e:
+            last_error = e
+            logger.error(f"Unexpected error on attempt {attempt + 1}: {str(e)}")
+            if attempt < max_retries - 1:
+                time.sleep(1)
+    
+    logger.error(f"All {max_retries} attempts failed. Last error: {str(last_error)}")
+    return None
+
+def _validate_llm_response(analysis_result):
+    """Validate LLM response structure"""
+    required_fields = ['markdownSummary', 'bantAnalysis', 'awsServices', 'customerCases']
+    for field in required_fields:
+        if field not in analysis_result:
+            raise ValueError(f"Missing required field: {field}")
+    
+    # Validate bantAnalysis structure
+    bant_fields = ['budget', 'authority', 'need', 'timeline']
+    for field in bant_fields:
+        if field not in analysis_result['bantAnalysis']:
+            raise ValueError(f"Missing BANT field: {field}")
+    
+    # Validate lists
+    if not isinstance(analysis_result['awsServices'], list):
+        raise ValueError("awsServices must be a list")
+    
+    if not isinstance(analysis_result['customerCases'], list):
+        raise ValueError("customerCases must be a list")
+
+def _store_analysis_results(session_id, analysis_data, max_retries=3):
+    """Store analysis results in DynamoDB with atomic updates and retry logic"""
+    last_error = None
+    
+    for attempt in range(max_retries):
+        try:
+            logger.info(f"Storing analysis results for session {session_id} (attempt {attempt + 1}/{max_retries})")
+            
+            sessions_table = dynamodb.Table('mte-sessions')
+            
+            # Validate analysis data structure before storing
+            _validate_analysis_data(analysis_data)
+            
+            # Perform atomic update to prevent partial data corruption
+            sessions_table.update_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+                UpdateExpression='SET aiAnalysis = :analysis',
+                ExpressionAttributeValues={':analysis': analysis_data},
+                # Ensure the session exists before updating
+                ConditionExpression='attribute_exists(PK)'
+            )
+            
+            logger.info(f"Successfully stored analysis results for session {session_id}")
+            return True
+            
+        except sessions_table.meta.client.exceptions.ConditionalCheckFailedException as e:
+            logger.error(f"Session {session_id} not found - cannot store analysis")
+            return False  # Don't retry for this error
+            
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            last_error = e
+            
+            if error_code in ['ThrottlingException', 'ServiceUnavailableException']:
+                logger.warning(f"Transient DynamoDB error on attempt {attempt + 1}: {error_code}")
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.info(f"Retrying storage in {wait_time} seconds...")
+                    time.sleep(wait_time)
+            else:
+                logger.error(f"Non-retryable DynamoDB error: {error_code} - {str(e)}")
+                return False
+                
+        except ValueError as e:
+            logger.error(f"Analysis data validation failed: {str(e)}")
+            return False  # Don't retry for validation errors
+            
+        except Exception as e:
+            last_error = e
+            logger.error(f"Unexpected error storing analysis on attempt {attempt + 1}: {str(e)}")
+            if attempt < max_retries - 1:
+                time.sleep(1)
+    
+    logger.error(f"Failed to store analysis after {max_retries} attempts. Last error: {str(last_error)}")
+    return False
+
+def _validate_analysis_data(analysis_data):
+    """Validate analysis data structure before storage"""
+    required_fields = ['markdownSummary', 'bantAnalysis', 'awsServices', 'customerCases', 'analyzedAt', 'modelUsed']
+    
+    for field in required_fields:
+        if field not in analysis_data:
+            raise ValueError(f"Missing required analysis field: {field}")
+    
+    # Validate bantAnalysis structure
+    bant_fields = ['budget', 'authority', 'need', 'timeline']
+    for field in bant_fields:
+        if field not in analysis_data['bantAnalysis']:
+            raise ValueError(f"Missing BANT field: {field}")
+    
+    # Validate awsServices is a list
+    if not isinstance(analysis_data['awsServices'], list):
+        raise ValueError("awsServices must be a list")
+    
+    # Validate each AWS service entry
+    for service in analysis_data['awsServices']:
+        service_fields = ['service', 'reason', 'implementation']
+        for field in service_fields:
+            if field not in service:
+                raise ValueError(f"Missing AWS service field: {field}")
+    
+    # Validate customerCases is a list
+    if not isinstance(analysis_data['customerCases'], list):
+        raise ValueError("customerCases must be a list")
+    
+    # Validate each customer case entry
+    for case in analysis_data['customerCases']:
+        case_fields = ['title', 'description', 'relevance']
+        for field in case_fields:
+            if field not in case:
+                raise ValueError(f"Missing customer case field: {field}")
+
+def _get_stored_analysis(session_id):
+    """Retrieve stored analysis results from DynamoDB"""
+    try:
+        sessions_table = dynamodb.Table('mte-sessions')
+        response = sessions_table.get_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            ProjectionExpression='aiAnalysis'
+        )
+        
+        if 'Item' in response and 'aiAnalysis' in response['Item']:
+            return response['Item']['aiAnalysis']
+        
+        return None
+        
+    except Exception as e:
+        print(f"Error retrieving analysis for session {session_id}: {str(e)}")
+        return None
+
+

@@ -300,12 +300,12 @@ export default function CreateSession() {
                   placeholder="6자리 숫자 입력"
                   type={showPin ? "text" : "password"}
                   inputMode="numeric"
-                  maxLength={6}
+    
                 />
                 <Button
                   variant="normal"
                   onClick={() => setShowPin(!showPin)}
-                  iconName={showPin ? "view-off" : "view"}
+                  iconName={showPin ? "lock-private" : "security"}
                 >
                   {showPin ? "숨기기" : "보기"}
                 </Button>

@@ -1,6 +1,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+    Description: Deployment stage
+
 Globals:
   Function:
     Runtime: python3.13
@@ -12,6 +21,9 @@ Globals:
         BEDROCK_REGION: ap-northeast-2
         USER_POOL_ID: !Ref AdminUserPool
         CLIENT_ID: !Ref AdminUserPoolClient
+        ALLOWED_EMAIL_DOMAINS: amazon.com,nongshim.co.kr
+  Api:
+    EndpointConfiguration: REGIONAL
 
 Resources:
   # Bedrock Agent Service Role
@@ -147,7 +159,7 @@ Resources:
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: dev
+      StageName: !Ref Stage
       Cors:
         AllowMethods: "'*'"
         AllowHeaders: "'*'"
@@ -177,6 +189,7 @@ Resources:
             Path: /api/chat/message
             Method: post
 
+
   CreateSessionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -192,6 +205,7 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/sessions
             Method: post
+
 
   GetSessionFunction:
     Type: AWS::Serverless::Function
@@ -216,6 +230,7 @@ Resources:
             Path: /api/chat/session/{sessionId}
             Method: get
 
+
   VerifySessionPinFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -231,6 +246,7 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/chat/session/{sessionId}/verify-pin
             Method: post
+
 
   ListSessionsFunction:
     Type: AWS::Serverless::Function
@@ -269,6 +285,8 @@ Resources:
     Properties:
       CodeUri: packages/backend/
       Handler: admin_handler.get_session_report
+      Timeout: 300
+      MemorySize: 1024
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
@@ -287,6 +305,7 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/sessions/{sessionId}/report
             Method: get
+            TimeoutInMillis: 29000
 
   InactivateSessionFunction:
     Type: AWS::Serverless::Function
@@ -359,6 +378,7 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/auth/signin
             Method: post
+
 
   ConfirmSignupFunction:
     Type: AWS::Serverless::Function
@@ -538,12 +558,51 @@ Resources:
             Path: /api/admin/agents/{agentId}
             Method: put
 
-  # New Report Generation Functions
-  GenerateOptimizedPromptFunction:
+  # SQS Queue for Analysis Jobs
+  AnalysisQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: mte-analysis-queue
+      VisibilityTimeout: 900
+      MessageRetentionPeriod: 1209600
+
+  # Producer Function - Enqueues analysis request
+  RequestAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/
-      Handler: admin_handler.generate_optimized_prompt
+      Handler: admin_handler.request_analysis
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:UpdateItem
+            Resource: !GetAtt SessionsTable.Arn
+        - Statement:
+            Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt AnalysisQueue.Arn
+      Environment:
+        Variables:
+          ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
+      Events:
+        RequestAnalysis:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/analyze
+            Method: post
+
+  # Consumer Function - Processes analysis from SQS
+  ProcessAnalysisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.process_analysis
+      Timeout: 900
+      MemorySize: 1024
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
@@ -555,49 +614,43 @@ Resources:
               - bedrock:InvokeModel
             Resource: '*'
       Events:
-        GenerateOptimizedPrompt:
-          Type: Api
+        ProcessAnalysis:
+          Type: SQS
           Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/sessions/{sessionId}/generate-prompt
-            Method: post
+            Queue: !GetAtt AnalysisQueue.Arn
+            BatchSize: 1
 
-  GenerateReportWithModelFunction:
+  # Status Function - Check analysis status
+  GetAnalysisStatusFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/
-      Handler: admin_handler.generate_report_with_model
+      Handler: admin_handler.get_analysis_status
       Policies:
-        - Statement:
-            Effect: Allow
-            Action:
-              - bedrock:InvokeModel
-            Resource: '*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
       Events:
-        GenerateReportWithModel:
+        GetAnalysisStatus:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/admin/sessions/{sessionId}/generate-report-model
-            Method: post
+            Path: /api/admin/sessions/{sessionId}/analysis-status
+            Method: get
 
-  GenerateReportWithAgentFunction:
+  # AWS Documentation Tools Action Group
+  AWSDocsActionFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/
-      Handler: admin_handler.generate_report_with_agent
-      Policies:
-        - Statement:
-            Effect: Allow
-            Action:
-              - bedrock:InvokeAgent
-            Resource: '*'
+      Handler: aws_docs_handler.aws_docs_action_handler
+      MemorySize: 512
+      Timeout: 30
       Events:
-        GenerateReportWithAgent:
+        BedrockActionApi:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/admin/sessions/{sessionId}/generate-report-agent
+            Path: /bedrock/aws-docs-action
             Method: post
 
   # DynamoDB Streams Handler
@@ -615,6 +668,14 @@ Resources:
               - ses:SendEmail
               - sns:Publish
             Resource: '*'
+        - Statement:
+            Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt AnalysisQueue.Arn
+      Environment:
+        Variables:
+          ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
       Events:
         SessionStream:
           Type: DynamoDB
@@ -624,13 +685,99 @@ Resources:
             BatchSize: 10
             MaximumBatchingWindowInSeconds: 5
 
+  # S3 Bucket for Static Website (Private)
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "mte-prechat-website-${Stage}-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # CloudFront Origin Access Control
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "mte-prechat-oac-${Stage}"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # # S3 Bucket Policy for CloudFront OAC
+  # WebsiteBucketPolicy:
+  #   Type: AWS::S3::BucketPolicy
+  #   Properties:
+  #     Bucket: !Ref WebsiteBucket
+  #     PolicyDocument:
+  #       Statement:
+  #         - Sid: AllowCloudFrontServicePrincipal
+  #           Effect: Allow
+  #           Principal:
+  #             Service: cloudfront.amazonaws.com
+  #           Action: s3:GetObject
+  #           Resource: !Sub "${WebsiteBucket}/*"
+  #           Condition:
+  #             StringEquals:
+  #               AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+  # CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt WebsiteBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+            OriginAccessControlId: !Ref OriginAccessControl
+        Enabled: true
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # Managed-CachingOptimized
+          Compress: true
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        PriceClass: PriceClass_100
+        Comment: !Sub "MTE PreChat Website - ${Stage}"
+
+
+
 Outputs:
   ApiUrl:
     Description: API Gateway URL
-    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod"
-  # UserPoolId:
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  BedrockActionEndpoint:
+    Description: Bedrock Agent Action Group endpoint URL
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/bedrock/aws-docs-action"
+  UserPoolId:
     Description: Cognito User Pool ID
     Value: !Ref AdminUserPool
   UserPoolClientId:
     Description: Cognito User Pool Client ID
     Value: !Ref AdminUserPoolClient
+  AnalysisQueueUrl:
+    Description: SQS Queue URL for analysis jobs
+    Value: !Ref AnalysisQueue
+  Stage:
+    Description: Deployment stage
+    Value: !Ref Stage
+  WebsiteBucket:
+    Description: S3 Bucket for static website
+    Value: !Ref WebsiteBucket
+  WebsiteURL:
+    Description: Website URL
+    Value: !Sub "https://${CloudFrontDistribution.DomainName}"
+  CloudFrontDistributionId:
+    Description: CloudFront Distribution ID
+    Value: !Ref CloudFrontDistribution

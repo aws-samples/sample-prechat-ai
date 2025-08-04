@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { AppTopNavigation } from './components/TopNavigation'
 import { WelcomeScreen } from './components/WelcomeScreen'

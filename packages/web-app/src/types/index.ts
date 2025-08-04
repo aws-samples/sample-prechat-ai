@@ -25,6 +25,12 @@ export interface Session {
     phone: string;
   };
   agentId: string;
+  aiAnalysis?: AnalysisResults;
+  pinNumber?: string;
+  privacyConsentAgreed?: boolean;
+  privacyConsentTimestamp?: string;
+  createdAt?: string;
+  completedAt?: string;
 }
 
 export interface ChatMessageRequest {
@@ -64,39 +70,52 @@ export interface BedrockAgent {
   agentArn?: string;
 }
 
-// Report Analysis Options
-export interface ReportAnalysisOptions {
-  coreRequirements: boolean; // 핵심 요구사항 (필수)
-  priorities: boolean; // 우선순위 (필수)
-  bant: boolean; // BANT 분석
-  awsServices: boolean; // 추천 AWS 서비스
-  approachStrategy: boolean; // 유사고객 접근 전략
+
+
+// AI Analysis Types
+export interface BANTAnalysis {
+  budget: string;
+  authority: string;
+  need: string;
+  timeline: string;
 }
 
-export interface ReportGenerationRequest {
+export interface AWSService {
+  service: string;
+  reason: string;
+  implementation: string;
+}
+
+export interface CustomerCase {
+  title: string;
+  description: string;
+  relevance: string;
+}
+
+export interface AnalysisResults {
+  markdownSummary: string;
+  bantAnalysis: BANTAnalysis;
+  awsServices: AWSService[];
+  customerCases: CustomerCase[];
+  analyzedAt: string;
+  modelUsed: string;
+}
+
+export interface AnalysisRequest {
   sessionId: string;
-  analysisOptions: ReportAnalysisOptions;
-  modelId?: string;
-  agentId?: string;
-  customPrompt?: string;
+  modelId: string;
 }
 
-export interface ReportGenerationResponse {
-  reportId: string;
-  content: string;
-  generatedAt: string;
-  modelUsed?: string;
-  agentUsed?: string;
-}
+
 
 export const BEDROCK_MODELS: BedrockModel[] = [
-  { id: 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-3-haiku-20240307-v1:0', name: 'Claude 3 Haiku', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-3-sonnet-20240229-v1:0', name: 'Claude 3 Sonnet', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-3-5-sonnet-20240620-v1:0', name: 'Claude 3.5 Sonnet (June)', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-3-5-sonnet-20241022-v2:0', name: 'Claude 3.5 Sonnet (Oct)', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-3-7-sonnet-20250219-v1:0', name: 'Claude 3.7 Sonnet', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.anthropic.claude-sonnet-4-20250514-v1:0', name: 'Claude Sonnet 4', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.amazon.nova-micro-v1:0', name: 'Nova Micro', provider: 'Amazon', region: 'ap-northeast-2' },
-  { id: 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.amazon.nova-lite-v1:0', name: 'Nova Lite', provider: 'Amazon', region: 'ap-northeast-2' },
-  { id: 'arn:aws:bedrock:ap-northeast-2:890742565845:inference-profile/apac.amazon.nova-pro-v1:0', name: 'Nova Pro', provider: 'Amazon', region: 'ap-northeast-2' }
+  { id: 'apac.anthropic.claude-3-haiku-20240307-v1:0', name: 'Claude 3 Haiku', provider: 'Anthropic', region: 'ap-northeast-2' },
+  { id: 'apac.anthropic.claude-3-sonnet-20240229-v1:0', name: 'Claude 3 Sonnet', provider: 'Anthropic', region: 'ap-northeast-2' },
+  { id: 'apac.anthropic.claude-3-5-sonnet-20240620-v1:0', name: 'Claude 3.5 Sonnet (June)', provider: 'Anthropic', region: 'ap-northeast-2' },
+  { id: 'apac.anthropic.claude-3-5-sonnet-20241022-v2:0', name: 'Claude 3.5 Sonnet (Oct)', provider: 'Anthropic', region: 'ap-northeast-2' },
+  { id: 'apac.anthropic.claude-3-7-sonnet-20250219-v1:0', name: 'Claude 3.7 Sonnet', provider: 'Anthropic', region: 'ap-northeast-2' },
+  { id: 'apac.anthropic.claude-sonnet-4-20250514-v1:0', name: 'Claude Sonnet 4', provider: 'Anthropic', region: 'ap-northeast-2' },
+  { id: 'apac.amazon.nova-micro-v1:0', name: 'Nova Micro', provider: 'Amazon', region: 'ap-northeast-2' },
+  { id: 'apac.amazon.nova-lite-v1:0', name: 'Nova Lite', provider: 'Amazon', region: 'ap-northeast-2' },
+  { id: 'apac.amazon.nova-pro-v1:0', name: 'Nova Pro', provider: 'Amazon', region: 'ap-northeast-2' }
 ];

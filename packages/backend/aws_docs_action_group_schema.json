@@ -1,0 +1,196 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "AWS Documentation API",
+    "description": "API for accessing AWS documentation, searching content, and getting recommendations",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/read_documentation": {
+      "post": {
+        "summary": "Read AWS documentation page",
+        "description": "Fetch and convert an AWS documentation page to markdown format",
+        "operationId": "read_documentation",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "URL of the AWS documentation page to read (must be from docs.aws.amazon.com and end with .html)",
+                    "example": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html"
+                  },
+                  "max_length": {
+                    "type": "integer",
+                    "description": "Maximum number of characters to return",
+                    "default": 5000,
+                    "minimum": 1,
+                    "maximum": 1000000
+                  },
+                  "start_index": {
+                    "type": "integer",
+                    "description": "Starting character index for pagination",
+                    "default": 0,
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Markdown content of the AWS documentation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "description": "Markdown formatted documentation content"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          }
+        }
+      }
+    },
+    "/search_documentation": {
+      "post": {
+        "summary": "Search AWS documentation",
+        "description": "Search AWS documentation using the official AWS Documentation Search API",
+        "operationId": "search_documentation",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["search_phrase"],
+                "properties": {
+                  "search_phrase": {
+                    "type": "string",
+                    "description": "Search phrase to use for finding documentation",
+                    "example": "S3 bucket versioning"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of results to return",
+                    "default": 10,
+                    "minimum": 1,
+                    "maximum": 50
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "rank_order": {
+                        "type": "integer",
+                        "description": "Relevance ranking (lower is more relevant)"
+                      },
+                      "url": {
+                        "type": "string",
+                        "description": "Documentation page URL"
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "Page title"
+                      },
+                      "context": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Brief excerpt or summary"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          }
+        }
+      }
+    },
+    "/recommend": {
+      "post": {
+        "summary": "Get content recommendations",
+        "description": "Get content recommendations for an AWS documentation page",
+        "operationId": "recommend",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "URL of the AWS documentation page to get recommendations for",
+                    "example": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of recommended pages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string",
+                        "description": "Documentation page URL"
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "Page title"
+                      },
+                      "context": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Brief description"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": ["highly_rated", "journey", "new", "similar"],
+                        "description": "Type of recommendation"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          }
+        }
+      }
+    }
+  }
+}

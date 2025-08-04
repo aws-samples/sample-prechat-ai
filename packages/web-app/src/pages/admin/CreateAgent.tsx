@@ -38,7 +38,7 @@ export default function CreateAgent() {
     setSuccess('')
 
     try {
-      const response = await adminApi.createAgent(formData)
+      await adminApi.createAgent(formData)
       setSuccess(`Agent "${formData.agentName}" created successfully!`)
       setTimeout(() => navigate('/admin/agents'), 3000)
     } catch (err) {
