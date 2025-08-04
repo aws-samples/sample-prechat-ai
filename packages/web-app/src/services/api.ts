@@ -7,6 +7,15 @@ const api = axios.create({
   timeout: 30000,
 })
 
+// Add Authorization header for authenticated requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 export const chatApi = {
   sendMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse> => {
     const response = await api.post('/chat/message', request)

@@ -164,6 +164,10 @@ Resources:
         AllowMethods: "'*'"
         AllowHeaders: "'*'"
         AllowOrigin: "'*'"
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt AdminUserPool.Arn
 
   # Lambda Functions
   ChatFunction:
@@ -205,6 +209,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/sessions
             Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
 
 
   GetSessionFunction:
@@ -263,6 +269,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/sessions
             Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   GetSessionDetailsFunction:
     Type: AWS::Serverless::Function
@@ -279,6 +287,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/sessions/{sessionId}/details
             Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   GetReportFunction:
     Type: AWS::Serverless::Function
@@ -306,6 +316,8 @@ Resources:
             Path: /api/admin/sessions/{sessionId}/report
             Method: get
             TimeoutInMillis: 29000
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   InactivateSessionFunction:
     Type: AWS::Serverless::Function
@@ -322,6 +334,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/sessions/{sessionId}/inactivate
             Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   DeleteSessionFunction:
     Type: AWS::Serverless::Function
@@ -340,6 +354,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/sessions/{sessionId}
             Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   SignupFunction:
     Type: AWS::Serverless::Function
@@ -457,6 +473,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/agents
             Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   CreateAgentFunction:
     Type: AWS::Serverless::Function
@@ -478,6 +496,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/agents
             Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   DeleteAgentFunction:
     Type: AWS::Serverless::Function
@@ -498,6 +518,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/agents/{agentId}
             Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   PrepareAgentFunction:
     Type: AWS::Serverless::Function
@@ -518,6 +540,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/agents/{agentId}/prepare
             Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   GetAgentFunction:
     Type: AWS::Serverless::Function
@@ -537,6 +561,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/agents/{agentId}
             Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   UpdateAgentFunction:
     Type: AWS::Serverless::Function
@@ -557,6 +583,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/agents/{agentId}
             Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   # SQS Queue for Analysis Jobs
   AnalysisQueue:
@@ -594,6 +622,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/sessions/{sessionId}/analyze
             Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   # Consumer Function - Processes analysis from SQS
   ProcessAnalysisFunction:
@@ -636,6 +666,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/sessions/{sessionId}/analysis-status
             Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   # AWS Documentation Tools Action Group
   AWSDocsActionFunction:
