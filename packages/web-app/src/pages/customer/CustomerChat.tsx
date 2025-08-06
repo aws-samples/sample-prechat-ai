@@ -21,7 +21,7 @@ import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
 
 import { useSession, useChat } from '../../hooks'
-import { LoadingSpinner, ChatMessage, PrivacyTermsModal } from '../../components'
+import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage } from '../../components'
 import { MESSAGES } from '../../constants'
 import { chatApi } from '../../services/api'
 import { 
@@ -49,6 +49,7 @@ export default function CustomerChat() {
     error: sessionError,
     isComplete,
     addMessage,
+    updateMessage,
     updateSessionComplete,
   } = useSession(sessionId, !showPinModal && !isCheckingStoredPin) // Only load session after PIN verification
 
@@ -57,7 +58,8 @@ export default function CustomerChat() {
     setInputValue,
     loading: chatLoading,
     sendMessage,
-    clearInput
+    clearInput,
+    streamingMessage
   } = useChat(sessionId)
 
   // 컴포넌트 로드 시 저장된 PIN 확인
@@ -131,7 +133,7 @@ export default function CustomerChat() {
   }
 
   const handleSendMessage = () => {
-    sendMessage(addMessage, updateSessionComplete)
+    sendMessage(addMessage, updateSessionComplete, updateMessage)
   }
 
 
@@ -284,13 +286,28 @@ export default function CustomerChat() {
               }}
             >
               <SpaceBetween size="m">
-                {messages.map((message) => (
-                  <ChatMessage
-                    key={message.id}
-                    message={message}
-                    isCustomer={message.sender === 'customer'}
-                  />
-                ))}
+                {messages.map((message) => {
+                  // Check if this message is currently being streamed
+                  const isCurrentlyStreaming = Boolean(streamingMessage && streamingMessage.id === message.id)
+                  
+                  if (message.sender === 'customer') {
+                    return (
+                      <ChatMessage
+                        key={message.id}
+                        message={message}
+                        isCustomer={true}
+                      />
+                    )
+                  } else {
+                    return (
+                      <StreamingChatMessage
+                        key={message.id}
+                        message={isCurrentlyStreaming && streamingMessage ? streamingMessage : message}
+                        isStreaming={isCurrentlyStreaming}
+                      />
+                    )
+                  }
+                })}
                 {chatLoading && (
                   <div className="slide-in-left" style={{ maxWidth: '70vw' }}>
                     <ChatBubble
@@ -299,7 +316,7 @@ export default function CustomerChat() {
                       avatar={
                         <Avatar
                           color="gen-ai"
-                          iconName="gen-ai"
+                          iconName="angle-right-double"
                           ariaLabel="AI Assistant"
                           tooltipText="AI Assistant"
                         />

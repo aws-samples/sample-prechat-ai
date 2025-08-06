@@ -22,7 +22,7 @@ export const MESSAGES = {
   LOADING: 'Loading...',
   SESSION_NOT_FOUND: 'Session not found or expired',
   FAILED_TO_SEND: '죄송합니다. 메시지 전송 중 오류가 발생했습니다. 다시 시도해 주세요.',
-  AI_THINKING: 'AI is thinking...',
+  AI_THINKING: '어시스턴스가 응답을 받았습니다...',
   CONSULTATION_COMPLETE: '✅ 상담이 완료되었습니다',
   CONSULTATION_COMPLETE_DESC: '감사합니다. 귀하의 응답이 기록되었습니다. 담당자가 연락드릴 예정입니다.',
   CHAT_PLACEHOLDER: '💬 Tell me about your business goals, technical challenges, or AWS requirements... I\'m here to help!'

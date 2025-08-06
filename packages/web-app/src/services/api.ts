@@ -9,7 +9,7 @@ const api = axios.create({
 
 // Add Authorization header for authenticated requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken')
+  const token = localStorage.getItem('idToken')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -19,6 +19,11 @@ api.interceptors.request.use((config) => {
 export const chatApi = {
   sendMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse> => {
     const response = await api.post('/chat/message', request)
+    return response.data
+  },
+
+  sendStreamMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse & { chunks: string[] }> => {
+    const response = await api.post('/chat/stream', request)
     return response.data
   },
 

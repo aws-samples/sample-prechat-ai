@@ -48,6 +48,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
                   - bedrock:Converse
                 Resource: '*'
 
@@ -191,6 +192,30 @@ Resources:
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /api/chat/message
+            Method: post
+
+  ChatStreamFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: chat_stream_handler.handle_stream_message
+      Timeout: 300
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeAgent
+            Resource: '*'
+      Events:
+        PostStreamMessage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/stream
             Method: post
 
 

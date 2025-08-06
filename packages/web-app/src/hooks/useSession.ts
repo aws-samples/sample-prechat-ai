@@ -37,6 +37,12 @@ export const useSession = (sessionId: string | undefined, shouldLoad: boolean = 
     setMessages(prev => [...prev, message])
   }
 
+  const updateMessage = (messageId: string, updatedMessage: Message) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? updatedMessage : msg
+    ))
+  }
+
   const updateSessionComplete = (complete: boolean) => {
     setIsComplete(complete)
   }
@@ -48,6 +54,7 @@ export const useSession = (sessionId: string | undefined, shouldLoad: boolean = 
     error,
     isComplete,
     addMessage,
+    updateMessage,
     updateSessionComplete,
     setMessages
   }

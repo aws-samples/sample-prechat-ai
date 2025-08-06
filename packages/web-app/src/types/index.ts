@@ -44,6 +44,8 @@ export interface ChatMessageResponse {
   stage: ConversationStage;
   isComplete: boolean;
   nextQuestions?: string[];
+  chunks?: string[];
+  messageId?: string;
   salesRepInfo?: {
     name: string;
     email: string;

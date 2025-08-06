@@ -1,6 +1,7 @@
 export { StatusBadge } from './StatusBadge'
 export { LoadingSpinner } from './LoadingSpinner'
 export { ChatMessage } from './ChatMessage'
+export { StreamingChatMessage } from './StreamingChatMessage'
 export { Layout } from './Layout'
 export { PrivacyTermsModal } from './PrivacyTermsModal'
 export { default as AIAnalysisReport } from './AIAnalysisReport'
