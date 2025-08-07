@@ -85,11 +85,6 @@ export default function Login() {
       return
     }
 
-    if (!signupData.email.endsWith('@amazon.com')) {
-      setError('Only @amazon.com email addresses are allowed')
-      return
-    }
-
     setLoading(true)
     setError('')
     setSuccess('')
@@ -216,7 +211,7 @@ export default function Login() {
                             setConfirmData(prev => ({ ...prev, email: detail.value }))
                           }
                           type="email"
-                          placeholder="your.name@amazon.com"
+                          placeholder="Enter your email address"
                         />
                       </FormField>
                       
@@ -255,14 +250,14 @@ export default function Login() {
                         />
                       </FormField>
                       
-                      <FormField label="Email" description="Only @amazon.com addresses allowed">
+                      <FormField label="Email">
                         <Input
                           value={signupData.email}
                           onChange={({ detail }) => 
                             setSignupData(prev => ({ ...prev, email: detail.value }))
                           }
                           type="email"
-                          placeholder="your.name@amazon.com"
+                          placeholder="Enter your email address"
                         />
                       </FormField>
                       
