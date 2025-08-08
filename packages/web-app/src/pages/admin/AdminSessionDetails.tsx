@@ -13,6 +13,7 @@ import {
 } from '@cloudscape-design/components'
 import AnimatedButton from '../../components/AnimatedButton'
 import AIAnalysisReport from '../../components/AIAnalysisReport'
+import SessionAttachments from '../../components/SessionAttachments'
 import { adminApi, chatApi } from '../../services/api'
 import { Session } from '../../types'
 
@@ -191,6 +192,11 @@ export default function AdminSessionDetails() {
               label: 'AI 리포트',
               id: 'report',
               content: sessionId ? <AIAnalysisReport sessionId={sessionId} /> : null
+            },
+            {
+              label: '첨부 파일',
+              id: 'attachments',
+              content: sessionId ? <SessionAttachments sessionId={sessionId} /> : null
             }
           ]}
         />

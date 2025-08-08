@@ -181,3 +181,22 @@ p {
 [data-awsui-polaris-button-dropdown] {
   padding-left: 0 !important;
 }
+
+/* File Upload Modal Z-Index Fix */
+[data-awsui-polaris-modal] {
+  z-index: 9999 !important;
+}
+
+[data-awsui-polaris-modal-backdrop] {
+  z-index: 9998 !important;
+}
+
+/* Ensure modal content is above everything */
+.awsui-modal {
+  z-index: 9999 !important;
+}
+
+.awsui-modal-backdrop {
+  z-index: 9998 !important;
+}
+

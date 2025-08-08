@@ -38,6 +38,27 @@ export const chatApi = {
       privacyAgreed 
     })
     return response.data
+  },
+
+  generateUploadUrl: async (sessionId: string, fileInfo: {
+    fileName: string
+    fileType: string
+    fileSize: number
+  }) => {
+    const response = await api.post(`/chat/session/${sessionId}/upload-url`, fileInfo)
+    return response.data
+  },
+
+  listSessionFiles: async (sessionId: string) => {
+    const response = await api.get(`/chat/session/${sessionId}/files`)
+    return response.data
+  },
+
+  deleteSessionFile: async (sessionId: string, fileKey: string) => {
+    // Encode the fileKey to handle special characters in the path
+    const encodedFileKey = encodeURIComponent(fileKey)
+    const response = await api.delete(`/chat/session/${sessionId}/files/${encodedFileKey}`)
+    return response.data
   }
 }
 

@@ -21,7 +21,7 @@ import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
 
 import { useSession, useChat } from '../../hooks'
-import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage } from '../../components'
+import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload } from '../../components'
 import { MESSAGES } from '../../constants'
 import { chatApi } from '../../services/api'
 import { 
@@ -41,6 +41,7 @@ export default function CustomerChat() {
   const [privacyAgreed, setPrivacyAgreed] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const [isCheckingStoredPin, setIsCheckingStoredPin] = useState(true)
+  const [showFileUpload, setShowFileUpload] = useState(false)
   
   const {
     sessionData,
@@ -248,6 +249,15 @@ export default function CustomerChat() {
             <Header
               variant="h1"
               description=""
+              actions={
+                <Button
+                  variant="normal"
+                  iconName="upload"
+                  onClick={() => setShowFileUpload(true)}
+                >
+                  첨부파일 제공
+                </Button>
+              }
             >
               PreChat 에게 고민을 말씀해 보세요.
             </Header>
@@ -269,7 +279,9 @@ export default function CustomerChat() {
               {
                 `안녕하세요 저는 AWS PreChat 입니다. 저는 고객님의 클라우드 사용을 성공적으로 돕기위해 얘기를 나누고 싶습니다.
 
-  저희와 만남전에 논의할 내용과 기대하시는 내용을 알려주세요! 적합한 AWS 담당자께 전달해 드리겠습니다.`}
+  저희와 만남전에 논의할 내용과 기대하시는 내용을 알려주세요! 적합한 AWS 담당자께 전달해 드리겠습니다.
+  
+  아키텍처 다이어그램과 같이 미팅에 도움이 될 유첨파일을 제공해 주시면 함께 확인하겠습니다.`}
             </ReactMarkdown>
           </ChatBubble>
 
@@ -425,6 +437,14 @@ export default function CustomerChat() {
         onDismiss={() => setShowPrivacyModal(false)}
         initialTab="privacy"
       />
+      
+      {sessionId && (
+        <FileUpload
+          sessionId={sessionId}
+          visible={showFileUpload}
+          onDismiss={() => setShowFileUpload(false)}
+        />
+      )}
     </Grid>
   )
 }

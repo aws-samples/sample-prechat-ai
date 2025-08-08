@@ -12,7 +12,7 @@ import {
   FormField
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
-import { StatusBadge } from '../../components'
+import { StatusBadge, BedrockQuotaNotification } from '../../components'
 import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
 import { authService } from '../../services/auth'
 
@@ -103,6 +103,7 @@ export default function AdminDashboard() {
   return (
     <Container>
       <SpaceBetween size="l">
+        <BedrockQuotaNotification />
         <Header
           variant="h1"
           description="고객이 AI 에이전트와 대화할 수 있는 상담 세션을 관리합니다. 필요 정보가 획득되면 세션이 완료되고, 30일이 경과한 모든 세션은 파기됩니다."

@@ -710,6 +710,89 @@ Resources:
             Path: /bedrock/aws-docs-action
             Method: post
 
+  # File Upload Functions
+  GenerateUploadUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: file_upload_handler.generate_presigned_url
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetBucketLocation
+            Resource: !GetAtt WebsiteBucket.Arn
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:PutObjectAcl
+              - s3:PutObjectTagging
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        GenerateUploadUrl:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/upload-url
+            Method: post
+
+  ListSessionFilesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: file_upload_handler.list_session_files
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource: !GetAtt WebsiteBucket.Arn
+            Condition:
+              StringLike:
+                s3:prefix: "uploads/*"
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:HeadObject
+              - s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        ListSessionFiles:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/files
+            Method: get
+
+  DeleteSessionFileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: file_upload_handler.delete_session_file
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:DeleteObject
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        DeleteSessionFile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/files/{fileKey+}
+            Method: delete
+
   # DynamoDB Streams Handler
   SessionStreamHandler:
     Type: AWS::Serverless::Function
@@ -752,6 +835,24 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - Id: FileUploadCorsRule
+            AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - PUT
+              - POST
+              - GET
+              - HEAD
+              - DELETE
+            AllowedOrigins:
+              - "*"
+            ExposedHeaders:
+              - ETag
+              - x-amz-meta-original-filename-encoded
+              - x-amz-version-id
+            MaxAge: 3600
 
   # CloudFront Origin Access Control
   OriginAccessControl:
