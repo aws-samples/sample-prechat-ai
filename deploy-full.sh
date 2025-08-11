@@ -8,6 +8,7 @@ PROFILE=${1:-default}
 STAGE=${2:-dev}
 REGION=${3:-ap-northeast-2}
 BEDROCK_REGION=${4:-$REGION}
+STACK_NAME=${5:-mte-prechat}
 
 echo "🚀 Starting full deployment..."
 echo "📋 Configuration:"
@@ -15,6 +16,7 @@ echo "   AWS Profile: $PROFILE"
 echo "   Stage: $STAGE"
 echo "   Region: $REGION"
 echo "   Bedrock Region: $BEDROCK_REGION"
+echo "   Stack Name: $STACK_NAME"
 echo ""
 
 # Step 1: Install dependencies
@@ -30,15 +32,16 @@ echo "🏗️  Deploying infrastructure..."
 sam deploy \
   --profile $PROFILE \
   --region $REGION \
+  --stack-name $STACK_NAME \
   --parameter-overrides "Stage=\"$STAGE\" BedrockRegion=\"$BEDROCK_REGION\""
 
 # Step 4: Update environment variables
 echo "🔧 Updating environment variables..."
-./update-env-vars.sh $PROFILE $STAGE $REGION
+./update-env-vars.sh $PROFILE $STAGE $REGION $STACK_NAME
 
 # Step 5: Build and deploy website
 echo "🌐 Building and deploying website..."
-./deploy-website.sh $STAGE $PROFILE $REGION
+./deploy-website.sh $STAGE $PROFILE $REGION $STACK_NAME
 
 echo ""
 echo "✅ Full deployment completed successfully!"
@@ -46,14 +49,14 @@ echo "🎉 Your MTE PreChat application is ready!"
 
 # Get final URLs
 API_URL=$(aws cloudformation describe-stacks \
-  --stack-name mte-prechat \
+  --stack-name $STACK_NAME \
   --region $REGION \
   --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
   --output text \
   --profile $PROFILE)
 
 WEBSITE_URL=$(aws cloudformation describe-stacks \
-  --stack-name mte-prechat \
+  --stack-name $STACK_NAME \
   --region $REGION \
   --query 'Stacks[0].Outputs[?OutputKey==`WebsiteURL`].OutputValue' \
   --output text \

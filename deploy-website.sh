@@ -3,18 +3,26 @@
 # Website deployment script for MTE PreChat
 set -e
 
+STAGE=${1:-dev}
 PROFILE=${2:-default}
 REGION=${3:-ap-northeast-2}
+STACK_NAME=${4:-mte-prechat}
+
+echo "📋 Configuration:"
+echo "   Stage: $STAGE"
+echo "   AWS Profile: $PROFILE"
+echo "   Region: $REGION"
+echo "   Stack Name: $STACK_NAME"
+echo ""
 
 # Build the website
-echo "Building website..."
+echo "🔨 Building website..."
 cd packages/web-app
 NODE_ENV=production yarn build
 cd ../..
 
 # Get CloudFormation outputs
 echo "📋 Getting deployment info..."
-STACK_NAME="mte-prechat"
 BUCKET_NAME=$(aws cloudformation describe-stacks \
   --stack-name $STACK_NAME \
   --region $REGION \

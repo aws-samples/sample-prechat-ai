@@ -6,7 +6,7 @@ set -e
 PROFILE=${1:-default}
 STAGE=${2:-dev}
 REGION=${3:-ap-northeast-2}
-STACK_NAME="mte-prechat"
+STACK_NAME=${4:-mte-prechat}
 
 echo "📋 Getting deployment outputs..."
 

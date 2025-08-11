@@ -969,22 +969,26 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
-  # # S3 Bucket Policy for CloudFront OAC
-  # WebsiteBucketPolicy:
-  #   Type: AWS::S3::BucketPolicy
-  #   Properties:
-  #     Bucket: !Ref WebsiteBucket
-  #     PolicyDocument:
-  #       Statement:
-  #         - Sid: AllowCloudFrontServicePrincipal
-  #           Effect: Allow
-  #           Principal:
-  #             Service: cloudfront.amazonaws.com
-  #           Action: s3:GetObject
-  #           Resource: !Sub "${WebsiteBucket}/*"
-  #           Condition:
-  #             StringEquals:
-  #               AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+  # S3 Bucket Policy for CloudFront OAC
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipal
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${WebsiteBucket}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 
+                  - "arn:aws:cloudfront::${AccountId}:distribution/${DistributionId}"
+                  - AccountId: !Ref AWS::AccountId
+                    DistributionId: !Ref CloudFrontDistribution
 
   # CloudFront Distribution
   CloudFrontDistribution:

@@ -71,10 +71,10 @@ parameter_overrides = "Stage=\"prod\" BedrockRegion=\"eu-west-1\" BedrockAgentRo
 ./deploy-full.sh
 
 # 커스텀 설정으로 배포
-./deploy-full.sh AWS_PROFILE STAGE REGION BEDROCK_REGION
+./deploy-full.sh AWS_PROFILE STAGE REGION BEDROCK_REGION STACK_NAME
 
 # 예시: 미국 동부 리전에 프로덕션 환경 배포
-./deploy-full.sh default prod us-east-1 us-east-1
+./deploy-full.sh default prod us-east-1 us-east-1 my-prechat-stack
 ```
 
 #### 옵션 2: 단계별 배포
@@ -90,10 +90,10 @@ sam deploy --profile YOUR_PROFILE --region YOUR_REGION \
   --parameter-overrides "Stage=\"YOUR_STAGE\" BedrockRegion=\"YOUR_BEDROCK_REGION\""
 
 # 4. 환경 변수 업데이트 (API Gateway URL 자동 설정)
-./update-env-vars.sh YOUR_AWS_PROFILE YOUR_STAGE YOUR_REGION
+./update-env-vars.sh YOUR_AWS_PROFILE YOUR_STAGE YOUR_REGION YOUR_STACK_NAME
 
 # 5. 웹사이트 빌드 및 배포
-./deploy-website.sh YOUR_STAGE YOUR_AWS_PROFILE YOUR_REGION
+./deploy-website.sh YOUR_STAGE YOUR_AWS_PROFILE YOUR_REGION YOUR_STACK_NAME
 ```
 
 ### 5. 배포 후 확인
@@ -113,8 +113,8 @@ sam deploy --profile YOUR_PROFILE --region YOUR_REGION \
 ./deploy-full.sh default dev ap-northeast-2
 
 # 또는 단계별 배포
-./update-env-vars.sh default dev ap-northeast-2
-./deploy-website.sh dev default ap-northeast-2
+./update-env-vars.sh default dev ap-northeast-2 mte-prechat
+./deploy-website.sh dev default ap-northeast-2 mte-prechat
 ```
 
 ### 프로덕션 환경 (Production)
@@ -123,20 +123,20 @@ sam deploy --profile YOUR_PROFILE --region YOUR_REGION \
 ./deploy-full.sh default prod ap-northeast-2
 
 # 또는 단계별 배포
-./update-env-vars.sh default prod ap-northeast-2
-./deploy-website.sh prod default ap-northeast-2
+./update-env-vars.sh default prod ap-northeast-2 mte-prechat
+./deploy-website.sh prod default ap-northeast-2 mte-prechat
 ```
 
 ### 다중 리전 배포 예시
 ```bash
 # 미국 동부 리전에 배포
-./deploy-full.sh default prod us-east-1 us-east-1
+./deploy-full.sh default prod us-east-1 us-east-1 mte-prechat-us
 
 # 유럽 서부 리전에 배포
-./deploy-full.sh default prod eu-west-1 eu-west-1
+./deploy-full.sh default prod eu-west-1 eu-west-1 mte-prechat-eu
 
 # 도쿄 리전에 배포 (Bedrock은 서울 리전 사용)
-./deploy-full.sh default prod ap-northeast-1 ap-northeast-2
+./deploy-full.sh default prod ap-northeast-1 ap-northeast-2 mte-prechat-jp
 ```
 
 ## 트러블슈팅
@@ -166,13 +166,35 @@ sam deploy --profile YOUR_PROFILE --region YOUR_REGION \
 
 ```bash
 # CloudFormation 스택 삭제
-aws cloudformation delete-stack --stack-name mte-prechat --profile YOUR_PROFILE
+aws cloudformation delete-stack --stack-name YOUR_STACK_NAME --profile YOUR_PROFILE
 
 # S3 버킷 내용 삭제 (필요한 경우)
 aws s3 rm s3://mte-prechat-website-STAGE-ACCOUNT_ID --recursive --profile YOUR_PROFILE
 ```
 
-## 파라미터 설명
+## 스크립트 파라미터 설명
+
+### deploy-full.sh
+```bash
+./deploy-full.sh [AWS_PROFILE] [STAGE] [REGION] [BEDROCK_REGION] [STACK_NAME]
+```
+- **AWS_PROFILE**: AWS CLI 프로파일 (기본값: `default`)
+- **STAGE**: 배포 환경 (기본값: `dev`)
+- **REGION**: AWS 리전 (기본값: `ap-northeast-2`)
+- **BEDROCK_REGION**: Bedrock 서비스 리전 (기본값: REGION과 동일)
+- **STACK_NAME**: CloudFormation 스택 이름 (기본값: `mte-prechat`)
+
+### deploy-website.sh
+```bash
+./deploy-website.sh [STAGE] [AWS_PROFILE] [REGION] [STACK_NAME]
+```
+
+### update-env-vars.sh
+```bash
+./update-env-vars.sh [AWS_PROFILE] [STAGE] [REGION] [STACK_NAME]
+```
+
+## CloudFormation 파라미터 설명
 
 ### 필수 파라미터
 - **Stage**: 배포 환경 (`dev`, `prod`)
