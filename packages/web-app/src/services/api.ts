@@ -29,6 +29,10 @@ export const chatApi = {
 
   getSession: async (sessionId: string): Promise<Session> => {
     const response = await api.get(`/chat/session/${sessionId}`)
+    // Store CSRF token if provided
+    if (response.data.csrfToken) {
+      localStorage.setItem(`csrf_${sessionId}`, response.data.csrfToken)
+    }
     return response.data
   },
 
@@ -37,6 +41,10 @@ export const chatApi = {
       pinNumber, 
       privacyAgreed 
     })
+    // Store CSRF token for subsequent requests
+    if (response.data.csrfToken) {
+      localStorage.setItem(`csrf_${sessionId}`, response.data.csrfToken)
+    }
     return response.data
   },
 
@@ -45,19 +53,28 @@ export const chatApi = {
     fileType: string
     fileSize: number
   }) => {
-    const response = await api.post(`/chat/session/${sessionId}/upload-url`, fileInfo)
+    const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
+    const response = await api.post(`/chat/session/${sessionId}/upload-url`, fileInfo, {
+      headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
+    })
     return response.data
   },
 
   listSessionFiles: async (sessionId: string) => {
-    const response = await api.get(`/chat/session/${sessionId}/files`)
+    const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
+    const response = await api.get(`/chat/session/${sessionId}/files`, {
+      headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
+    })
     return response.data
   },
 
   deleteSessionFile: async (sessionId: string, fileKey: string) => {
+    const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
     // Encode the fileKey to handle special characters in the path
     const encodedFileKey = encodeURIComponent(fileKey)
-    const response = await api.delete(`/chat/session/${sessionId}/files/${encodedFileKey}`)
+    const response = await api.delete(`/chat/session/${sessionId}/files/${encodedFileKey}`, {
+      headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
+    })
     return response.data
   }
 }
@@ -157,6 +174,18 @@ export const adminApi = {
 
   getAnalysisStatus: async (sessionId: string) => {
     const response = await api.get(`/admin/sessions/${sessionId}/analysis-status`)
+    return response.data
+  },
+
+  // Admin file operations (no CSRF required)
+  listSessionFiles: async (sessionId: string) => {
+    const response = await api.get(`/admin/sessions/${sessionId}/files`)
+    return response.data
+  },
+
+  deleteSessionFile: async (sessionId: string, fileKey: string) => {
+    const encodedFileKey = encodeURIComponent(fileKey)
+    const response = await api.delete(`/admin/sessions/${sessionId}/files/${encodedFileKey}`)
     return response.data
   }
 }

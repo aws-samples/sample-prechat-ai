@@ -11,7 +11,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource('dynamodb')
-bedrock = boto3.client('bedrock-runtime', region_name='ap-northeast-2')
+bedrock_region = os.environ.get('BEDROCK_REGION', 'ap-northeast-2')
+bedrock = boto3.client('bedrock-runtime', region_name=bedrock_region)
 sqs = boto3.client('sqs')
 ANALYSIS_QUEUE_URL = os.environ.get('ANALYSIS_QUEUE_URL')
 
@@ -415,7 +416,7 @@ def _perform_conversation_analysis(session_id, model_id):
 다음 형식으로 분석 결과를 제공해주세요. 반드시 유효한 JSON 형식으로 응답해주세요:
 
 {{
-  "markdownSummary": "meet-logs-md.md 파일의 템플릿 구조를 참고하여 작성된 마크다운 요약. Account Info 섹션(SFDC URL, Site URL, Partner, Industry/Domain, Business model, Customer's Key Requirement, Key Challenges, TAS, Chat Summary, Developer status, Key Contact, Budget), Meeting Logs 섹션(Meeting Minute, F/up items), Account Planning 섹션을 포함해야 합니다.",
+  "markdownSummary": "마크다운 템플릿 구조를 참고하여 작성된 마크다운 요약. Account Info 섹션(SFDC URL, Site URL, Partner, Industry/Domain, Business model, Customer's Key Requirement, Key Challenges, TAS, Chat Summary, Developer status, Key Contact, Budget), Meeting Logs 섹션(Meeting Minute, F/up items), Account Planning 섹션을 포함해야 합니다.",
   "bantAnalysis": {{
     "budget": "예산 관련 분석 - 고객이 언급한 예산 정보나 투자 계획",
     "authority": "의사결정권한 분석 - 대화 상대방의 의사결정 권한 수준", 

@@ -9,6 +9,29 @@ Parameters:
       - dev
       - prod
     Description: Deployment stage
+  BedrockRegion:
+    Type: String
+    Default: ap-northeast-2
+    Description: AWS Region for Bedrock services
+    AllowedValues:
+      - us-east-1
+      - us-west-2
+      - ap-northeast-1
+      - ap-northeast-2
+      - eu-west-1
+      - eu-central-1
+  BedrockAgentRoleName:
+    Type: String
+    Default: AmazonBedrockExecutionRoleForAgents_prechat-agent-role
+    Description: Name for the Bedrock Agent service role
+  BedrockAgentAliasId:
+    Type: String
+    Default: TSTALIASID
+    Description: Bedrock Agent Alias ID to use for invocations
+  AllowedEmailDomains:
+    Type: String
+    Default: amazon.com,nongshim.co.kr
+    Description: Comma-separated list of allowed email domains for user registration
 
 Globals:
   Function:
@@ -18,10 +41,12 @@ Globals:
       Variables:
         SESSIONS_TABLE: !Ref SessionsTable
         MESSAGES_TABLE: !Ref MessagesTable
-        BEDROCK_REGION: ap-northeast-2
+        BEDROCK_REGION: !Ref BedrockRegion
         USER_POOL_ID: !Ref AdminUserPool
         CLIENT_ID: !Ref AdminUserPoolClient
-        ALLOWED_EMAIL_DOMAINS: amazon.com,nongshim.co.kr
+        ALLOWED_EMAIL_DOMAINS: !Ref AllowedEmailDomains
+        BEDROCK_AGENT_ROLE_ARN: !GetAtt BedrockAgentServiceRole.Arn
+        BEDROCK_AGENT_ALIAS_ID: !Ref BedrockAgentAliasId
   Api:
     EndpointConfiguration: REGIONAL
 
@@ -30,7 +55,7 @@ Resources:
   BedrockAgentServiceRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: AmazonBedrockExecutionRoleForAgents_bedrock-agent-role
+      RoleName: !Ref BedrockAgentRoleName
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -45,11 +70,18 @@ Resources:
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              - Effect: Allow
+              - Sid: BedrockModelInvocation
+                Effect: Allow
                 Action:
                   - bedrock:InvokeModel
                   - bedrock:InvokeModelWithResponseStream
                   - bedrock:Converse
+                Resource: '*'
+              - Sid: BedrockAgentOperations
+                Effect: Allow
+                Action:
+                  - bedrock:Retrieve
+                  - bedrock:RetrieveAndGenerate
                 Resource: '*'
 
   AdminUserPool:
@@ -720,6 +752,8 @@ Resources:
         Variables:
           WEBSITE_BUCKET: !Ref WebsiteBucket
       Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
         - Statement:
             Effect: Allow
             Action:
@@ -749,6 +783,8 @@ Resources:
         Variables:
           WEBSITE_BUCKET: !Ref WebsiteBucket
       Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
         - Statement:
             Effect: Allow
             Action:
@@ -780,6 +816,8 @@ Resources:
         Variables:
           WEBSITE_BUCKET: !Ref WebsiteBucket
       Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
         - Statement:
             Effect: Allow
             Action:
@@ -792,6 +830,64 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/chat/session/{sessionId}/files/{fileKey+}
             Method: delete
+
+  # Admin File Functions (no CSRF required)
+  ListSessionFilesAdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_file_handler.list_session_files_admin
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource: !GetAtt WebsiteBucket.Arn
+            Condition:
+              StringLike:
+                s3:prefix: "uploads/*"
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:HeadObject
+              - s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        ListSessionFilesAdmin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/files
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  DeleteSessionFileAdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_file_handler.delete_session_file_admin
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:DeleteObject
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        DeleteSessionFileAdmin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/files/{fileKey+}
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   # DynamoDB Streams Handler
   SessionStreamHandler:
@@ -813,9 +909,18 @@ Resources:
             Action:
               - sqs:SendMessage
             Resource: !GetAtt AnalysisQueue.Arn
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+              - s3:DeleteObject
+            Resource: 
+              - !GetAtt WebsiteBucket.Arn
+              - !Sub "${WebsiteBucket.Arn}/uploads/*"
       Environment:
         Variables:
           ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
+          WEBSITE_BUCKET: !Ref WebsiteBucket
       Events:
         SessionStream:
           Type: DynamoDB

@@ -5,15 +5,17 @@ import {
   Button,
   Grid,
   Container,
-  Header
+  Header,
+  SpaceBetween
 } from '@cloudscape-design/components'
 import { UploadedFile, getDisplayFileName, formatFileSize, isImageFile } from '../utils/fileUtils'
 
 interface ImageGalleryProps {
   files: UploadedFile[]
+  onDelete?: (fileKey: string) => void
 }
 
-export default function ImageGallery({ files }: ImageGalleryProps) {
+export default function ImageGallery({ files, onDelete }: ImageGalleryProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [imageModalVisible, setImageModalVisible] = useState(false)
 
@@ -105,12 +107,35 @@ export default function ImageGallery({ files }: ImageGalleryProps) {
                   }}
                 />
                 <Box padding="xs">
-                  <Box fontSize="body-s" fontWeight="bold">
+                  <Box fontSize="body-s" fontWeight="bold" margin={{ bottom: "xxs" }}>
                     {getDisplayFileName(file)}
                   </Box>
-                  <Box fontSize="body-s" color="text-status-inactive">
-                    {formatFileSize(file.fileSize)}
-                  </Box>
+                  <SpaceBetween direction="horizontal" size="xs" alignItems="center">
+                    <Box fontSize="body-s" color="text-status-inactive">
+                      {formatFileSize(file.fileSize)}
+                    </Box>
+                    <SpaceBetween direction="horizontal" size="xxs">
+                      <Button
+                        variant="icon"
+                        iconName="download"
+                        href={file.fileUrl}
+                        target="_blank"
+                        download={getDisplayFileName(file)}
+                        ariaLabel="다운로드"
+                      />
+                      {onDelete && (
+                        <Button
+                          variant="icon"
+                          iconName="remove"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDelete(file.fileKey)
+                          }}
+                          ariaLabel="삭제"
+                        />
+                      )}
+                    </SpaceBetween>
+                  </SpaceBetween>
                 </Box>
               </div>
             </Box>

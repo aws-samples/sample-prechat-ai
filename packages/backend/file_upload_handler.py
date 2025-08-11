@@ -2,7 +2,7 @@ import json
 import boto3
 import os
 from datetime import datetime, timedelta
-from utils import lambda_response, parse_body, verify_origin
+from utils import lambda_response, parse_body, verify_csrf_token
 import uuid
 
 s3_client = boto3.client('s3')
@@ -10,13 +10,14 @@ s3_client = boto3.client('s3')
 def generate_presigned_url(event, context):
     """Generate presigned URL for file upload to S3"""
     try:
-        # CSRF Protection - Verify request origin
-        if not verify_origin(event):
-            return lambda_response(403, {'error': 'Invalid request origin - CSRF protection'})
+        session_id = event['pathParameters']['sessionId']
+        
+        # CSRF Protection - Verify CSRF token
+        if not verify_csrf_token(event, session_id):
+            return lambda_response(403, {'error': 'Invalid CSRF token'})
             
         # Parse request body
         body = parse_body(event)
-        session_id = event['pathParameters']['sessionId']
         
         # Get file info from request
         file_name = body.get('fileName')
@@ -93,6 +94,10 @@ def list_session_files(event, context):
     """List uploaded files for a session"""
     try:
         session_id = event['pathParameters']['sessionId']
+        
+        # CSRF Protection - Verify CSRF token
+        if not verify_csrf_token(event, session_id):
+            return lambda_response(403, {'error': 'Invalid CSRF token'})
         bucket_name = os.environ.get('WEBSITE_BUCKET')
         
         if not bucket_name:
@@ -151,15 +156,8 @@ def list_session_files(event, context):
                         except Exception as infer_error:
                             print(f"Debug - Failed to infer content type: {infer_error}")
                     
-                    # Generate presigned URL for file access
-                    file_url = s3_client.generate_presigned_url(
-                        'get_object',
-                        Params={
-                            'Bucket': bucket_name,
-                            'Key': obj['Key']
-                        },
-                        ExpiresIn=3600  # 1 hour
-                    )
+                    # Generate relative URL for CloudFront access
+                    file_url = f"/{obj['Key']}"
                     
                     files.append({
                         'fileKey': obj['Key'],
@@ -185,11 +183,12 @@ def list_session_files(event, context):
 def delete_session_file(event, context):
     """Delete an uploaded file"""
     try:
-        # CSRF Protection - Verify request origin
-        if not verify_origin(event):
-            return lambda_response(403, {'error': 'Invalid request origin - CSRF protection'})
-        
         session_id = event['pathParameters']['sessionId']
+        
+        # CSRF Protection - Verify CSRF token
+        if not verify_csrf_token(event, session_id):
+            return lambda_response(403, {'error': 'Invalid CSRF token'})
+        
         file_key = event['pathParameters']['fileKey']
         bucket_name = os.environ.get('WEBSITE_BUCKET')
         

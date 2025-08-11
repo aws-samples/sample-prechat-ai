@@ -77,11 +77,11 @@ docker --version
 ### AWS Configuration
 
 #### 1. AWS Profile Setup
-Configure your AWS credentials with the profile name `terraform`:
+Configure your AWS credentials with the default profile:
 
 ```bash
 # Configure AWS profile
-aws configure --profile terraform
+aws configure
 
 # You'll be prompted to enter:
 # AWS Access Key ID: [Your Access Key]
@@ -93,7 +93,7 @@ aws configure --profile terraform
 #### 2. Verify AWS Profile
 ```bash
 # Test AWS profile configuration
-aws sts get-caller-identity --profile terraform
+aws sts get-caller-identity
 
 # Should return your AWS account information
 ```
@@ -156,7 +156,7 @@ The following environment variables will be configured during development:
 
 ```bash
 # AWS Configuration
-AWS_PROFILE=terraform
+AWS_PROFILE=default
 AWS_REGION=ap-northeast-2
 
 # Application Configuration
@@ -178,7 +178,7 @@ Before starting development, verify all prerequisites:
 - [ ] AWS CLI v2.x installed and configured
 - [ ] SAM CLI v1.x installed
 - [ ] Docker installed and running
-- [ ] AWS profile `terraform` configured
+- [ ] AWS profile configured (default)
 - [ ] AWS account access to required services in ap-northeast-2
 - [ ] Amazon Bedrock model access enabled
 - [ ] Development IDE/editor set up
@@ -189,7 +189,7 @@ Once all prerequisites are met:
 
 1. **Clone the repository** (when available)
 2. **Install dependencies**: `yarn install`
-3. **Set up AWS resources**: `sam build && sam deploy --profile terraform`
+3. **Set up AWS resources**: `sam build && sam deploy`
 4. **Start local development**: `yarn dev`
 
 ### Troubleshooting
@@ -200,7 +200,7 @@ Once all prerequisites are met:
 ```bash
 # If AWS profile is not working
 aws configure list-profiles
-aws configure --profile terraform
+aws configure
 ```
 
 **SAM CLI Issues**:

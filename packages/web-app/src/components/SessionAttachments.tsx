@@ -7,7 +7,7 @@ import {
   Container,
   Header
 } from '@cloudscape-design/components'
-import { chatApi } from '../services/api'
+import { adminApi } from '../services/api'
 import FileList from './FileList'
 import ImageGallery from './ImageGallery'
 import { UploadedFile } from '../utils/fileUtils'
@@ -20,6 +20,7 @@ export default function SessionAttachments({ sessionId }: SessionAttachmentsProp
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   useEffect(() => {
     loadFiles()
@@ -28,7 +29,7 @@ export default function SessionAttachments({ sessionId }: SessionAttachmentsProp
   const loadFiles = async () => {
     try {
       setLoading(true)
-      const response = await chatApi.listSessionFiles(sessionId)
+      const response = await adminApi.listSessionFiles(sessionId)
       console.log('SessionAttachments - API response:', response)
       console.log('SessionAttachments - Files:', response.files)
       setFiles(response.files || [])
@@ -37,6 +38,23 @@ export default function SessionAttachments({ sessionId }: SessionAttachmentsProp
       setError('파일 목록을 불러오는데 실패했습니다.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteFile = async (fileKey: string) => {
+    if (!confirm('정말로 이 파일을 삭제하시겠습니까?')) {
+      return
+    }
+
+    try {
+      setDeleting(fileKey)
+      await adminApi.deleteSessionFile(sessionId, fileKey)
+      setFiles(prev => prev.filter(file => file.fileKey !== fileKey))
+    } catch (err) {
+      console.error('Error deleting file:', err)
+      setError('파일 삭제에 실패했습니다.')
+    } finally {
+      setDeleting(null)
     }
   }
 
@@ -61,11 +79,18 @@ export default function SessionAttachments({ sessionId }: SessionAttachmentsProp
       {/* File List Table */}
       <Container>
         <Header variant="h3">업로드된 파일</Header>
-        <FileList files={files} />
+        <FileList 
+          files={files} 
+          loading={loading || deleting !== null}
+          onDelete={handleDeleteFile}
+        />
       </Container>
 
       {/* Image Gallery */}
-      <ImageGallery files={files} />
+      <ImageGallery 
+        files={files} 
+        onDelete={handleDeleteFile}
+      />
     </SpaceBetween>
   )
 }

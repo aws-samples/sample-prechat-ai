@@ -3,7 +3,8 @@ import boto3
 from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp
 
 dynamodb = boto3.resource('dynamodb')
-bedrock_agent = boto3.client('bedrock-agent-runtime', region_name='ap-northeast-2')
+bedrock_region = os.environ.get('BEDROCK_REGION', 'ap-northeast-2')
+bedrock_agent = boto3.client('bedrock-agent-runtime', region_name=bedrock_region)
 
 def handle_stream_message(event, context):
     """Handle streaming chat messages with real-time agent responses"""
@@ -67,7 +68,7 @@ def generate_streaming_response(message, session_id, agent_id, message_id, times
         # Invoke Bedrock Agent with streaming enabled
         response = bedrock_agent.invoke_agent(
             agentId=agent_id,
-            agentAliasId='TSTALIASID',
+            agentAliasId=os.environ.get('BEDROCK_AGENT_ALIAS_ID', 'TSTALIASID'),
             sessionId=session_id,
             inputText=message,
             streamingConfigurations={

@@ -15,60 +15,59 @@ def lambda_response(status_code, body):
 def generate_id():
     return str(uuid.uuid4())
 
+def generate_csrf_token():
+    """Generate a secure CSRF token"""
+    import secrets
+    return secrets.token_urlsafe(32)
+
+def verify_csrf_token(event, session_id):
+    """Verify CSRF token for session operations"""
+    import boto3
+    
+    # Get CSRF token from request headers or body
+    headers = event.get('headers', {})
+    headers_lower = {k.lower(): v for k, v in headers.items()}
+    csrf_token = headers_lower.get('x-csrf-token')
+    
+    if not csrf_token:
+        # Try to get from body as fallback
+        body = parse_body(event)
+        csrf_token = body.get('csrfToken')
+    
+    if not csrf_token:
+        print("CSRF - No CSRF token provided")
+        return False
+    
+    try:
+        # Get session from DynamoDB to verify token
+        dynamodb = boto3.resource('dynamodb')
+        sessions_table = dynamodb.Table('mte-sessions')
+        session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
+        
+        if 'Item' not in session_resp:
+            print(f"CSRF - Session not found: {session_id}")
+            return False
+        
+        session = session_resp['Item']
+        stored_csrf_token = session.get('csrfToken', '')
+        
+        if not stored_csrf_token:
+            print(f"CSRF - No CSRF token stored for session: {session_id}")
+            return False
+        
+        if csrf_token != stored_csrf_token:
+            print(f"CSRF - Token mismatch for session: {session_id}")
+            return False
+        
+        print(f"CSRF - Token verified for session: {session_id}")
+        return True
+        
+    except Exception as e:
+        print(f"CSRF - Error verifying token: {str(e)}")
+        return False
+
 def get_timestamp():
     return datetime.now(timezone.utc).isoformat()
-
-def verify_origin(event):
-    """Verify request origin for CSRF protection"""
-    import os
-    
-    # Get headers (case-insensitive)
-    headers = event.get('headers', {})
-    
-    # Convert headers to lowercase for case-insensitive lookup
-    headers_lower = {k.lower(): v for k, v in headers.items()}
-    
-    origin = headers_lower.get('origin')
-    referer = headers_lower.get('referer')
-    
-    # Get allowed origins from environment or use defaults
-    allowed_origins = [
-        'http://localhost:5173',  # Vite dev server
-        'http://localhost:3000',  # Alternative dev server
-    ]
-    
-    # Add CloudFront domain if available
-    cloudfront_domain = os.environ.get('CLOUDFRONT_DOMAIN')
-    if cloudfront_domain:
-        allowed_origins.append(f'https://{cloudfront_domain}')
-    
-    # Add custom domain if available
-    custom_domain = os.environ.get('CUSTOM_DOMAIN')
-    if custom_domain:
-        allowed_origins.append(f'https://{custom_domain}')
-    
-    print(f"CSRF - Allowed origins: {allowed_origins}")
-    print(f"CSRF - Request origin: {origin}")
-    print(f"CSRF - Request referer: {referer}")
-    
-    # Check origin header first
-    if origin:
-        if origin in allowed_origins:
-            return True
-        print(f"CSRF - Invalid origin: {origin}")
-        return False
-    
-    # Fallback to referer header
-    if referer:
-        for allowed_origin in allowed_origins:
-            if referer.startswith(allowed_origin):
-                return True
-        print(f"CSRF - Invalid referer: {referer}")
-        return False
-    
-    # No origin or referer header (suspicious)
-    print("CSRF - No origin or referer header found")
-    return False
 
 def get_ttl_timestamp(days=30):
     """Get TTL timestamp for DynamoDB (30 days from now)"""
@@ -87,4 +86,3 @@ def parse_body(event):
         return {}
     except Exception:
         return {}
-

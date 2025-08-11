@@ -1,10 +1,12 @@
 import json
 import boto3
 import uuid
+import os
 from datetime import datetime
 from utils import lambda_response, parse_body
 
-bedrock_agent = boto3.client('bedrock-agent', region_name='ap-northeast-2')
+bedrock_region = os.environ.get('BEDROCK_REGION', 'ap-northeast-2')
+bedrock_agent = boto3.client('bedrock-agent', region_name=bedrock_region)
 
 def list_agents(event, context):
     """List all Bedrock agents"""
@@ -59,9 +61,10 @@ def create_agent(event, context):
         if not all([agent_name, foundation_model, instruction]):
             return lambda_response(400, {'error': 'Missing required fields'})
         
-        # Get account ID from context
-        account_id = context.invoked_function_arn.split(':')[4]
-        role_arn = f"arn:aws:iam::{account_id}:role/AmazonBedrockExecutionRoleForAgents_bedrock-agent-role"
+        # Get Bedrock Agent Role ARN from environment variable
+        role_arn = os.environ.get('BEDROCK_AGENT_ROLE_ARN')
+        if not role_arn:
+            return lambda_response(500, {'error': 'Bedrock Agent Role ARN not configured'})
         
         # Create the agent
         response = bedrock_agent.create_agent(

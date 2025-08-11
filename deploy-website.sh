@@ -4,6 +4,7 @@
 set -e
 
 PROFILE=${2:-default}
+REGION=${3:-ap-northeast-2}
 
 # Build the website
 echo "Building website..."
@@ -16,18 +17,21 @@ echo "📋 Getting deployment info..."
 STACK_NAME="mte-prechat"
 BUCKET_NAME=$(aws cloudformation describe-stacks \
   --stack-name $STACK_NAME \
+  --region $REGION \
   --query 'Stacks[0].Outputs[?OutputKey==`WebsiteBucket`].OutputValue' \
   --output text \
   --profile $PROFILE)
 
 DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
   --stack-name $STACK_NAME \
+  --region $REGION \
   --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontDistributionId`].OutputValue' \
   --output text \
   --profile $PROFILE)
 
 WEBSITE_URL=$(aws cloudformation describe-stacks \
   --stack-name $STACK_NAME \
+  --region $REGION \
   --query 'Stacks[0].Outputs[?OutputKey==`WebsiteURL`].OutputValue' \
   --output text \
   --profile $PROFILE)

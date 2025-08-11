@@ -1,7 +1,9 @@
 import {
   Table,
   Button,
-  Box
+  Box,
+  Link,
+  SpaceBetween
 } from '@cloudscape-design/components'
 import { UploadedFile, getDisplayFileName, formatFileSize } from '../utils/fileUtils'
 
@@ -12,12 +14,16 @@ interface FileListProps {
   onDelete?: (fileKey: string) => void
 }
 
-export default function FileList({ files, loading = false, showActions = false, onDelete }: FileListProps) {
+export default function FileList({ files, loading = false, showActions = true, onDelete }: FileListProps) {
   const columnDefinitions: any[] = [
     {
       id: 'fileName',
       header: '파일명',
-      cell: (item: UploadedFile) => getDisplayFileName(item)
+      cell: (item: UploadedFile) => (
+        <Link href={item.fileUrl} external>
+          {getDisplayFileName(item)}
+        </Link>
+      )
     },
     {
       id: 'fileSize',
@@ -36,18 +42,31 @@ export default function FileList({ files, loading = false, showActions = false, 
     }
   ]
 
-  if (showActions && onDelete) {
+  if (showActions) {
     columnDefinitions.push({
       id: 'actions',
       header: '작업',
       cell: (item: UploadedFile) => (
-        <Button
-          variant="normal"
-          iconName="remove"
-          onClick={() => onDelete(item.fileKey)}
-        >
-          삭제
-        </Button>
+        <SpaceBetween direction="horizontal" size="xs">
+          <Button
+            variant="normal"
+            iconName="download"
+            href={item.fileUrl}
+            target="_blank"
+            download={getDisplayFileName(item)}
+          >
+            다운로드
+          </Button>
+          {onDelete && (
+            <Button
+              variant="normal"
+              iconName="remove"
+              onClick={() => onDelete(item.fileKey)}
+            >
+              삭제
+            </Button>
+          )}
+        </SpaceBetween>
       )
     })
   }

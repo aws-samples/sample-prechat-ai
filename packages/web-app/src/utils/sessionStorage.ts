@@ -36,6 +36,8 @@ export const removePinForSession = (sessionId: string): void => {
   try {
     const key = `${PIN_STORAGE_PREFIX}${sessionId}`
     sessionStorage.removeItem(key)
+    // Also remove CSRF token from localStorage
+    localStorage.removeItem(`csrf_${sessionId}`)
   } catch (error) {
     console.warn('Failed to remove PIN from session storage:', error)
   }
@@ -47,6 +49,7 @@ export const removePinForSession = (sessionId: string): void => {
 export const clearAllStoredPins = (): void => {
   try {
     const keysToRemove: string[] = []
+    const csrfKeysToRemove: string[] = []
     
     // sessionStorage의 모든 키를 확인
     for (let i = 0; i < sessionStorage.length; i++) {
@@ -56,8 +59,17 @@ export const clearAllStoredPins = (): void => {
       }
     }
     
+    // localStorage의 CSRF 토큰 키들도 확인
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith('csrf_')) {
+        csrfKeysToRemove.push(key)
+      }
+    }
+    
     // PIN 관련 키들을 삭제
     keysToRemove.forEach(key => sessionStorage.removeItem(key))
+    csrfKeysToRemove.forEach(key => localStorage.removeItem(key))
   } catch (error) {
     console.warn('Failed to clear stored PINs:', error)
   }

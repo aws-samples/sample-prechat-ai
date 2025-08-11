@@ -1,7 +1,7 @@
 import json
 import boto3
 import os
-from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp
+from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp, generate_csrf_token
 
 dynamodb = boto3.resource('dynamodb')
 cognito = boto3.client('cognito-idp')
@@ -28,6 +28,8 @@ def create_session(event, context):
     session_id = generate_id()
     timestamp = get_timestamp()
     
+    csrf_token = generate_csrf_token()
+    
     session_record = {
         'PK': f'SESSION#{session_id}',
         'SK': 'METADATA',
@@ -42,6 +44,7 @@ def create_session(event, context):
         'salesRepEmail': sales_rep_email,
         'agentId': agent_id,
         'pinNumber': pin_number,
+        'csrfToken': csrf_token,
         'createdAt': timestamp,
         'ttl': get_ttl_timestamp(30),  # 30 days TTL
         'GSI1PK': f'SALESREP#{sales_rep_email}',
@@ -55,6 +58,7 @@ def create_session(event, context):
         return lambda_response(200, {
             'sessionId': session_id,
             'sessionUrl': f'/chat/{session_id}',
+            'csrfToken': csrf_token,
             'createdAt': timestamp
         })
     except Exception as e:
@@ -106,6 +110,7 @@ def get_session(event, context):
             'salesRepEmail': sales_rep_email,
             'salesRepInfo': sales_rep_info,
             'agentId': session.get('agentId', ''),
+            'csrfToken': session.get('csrfToken', ''),
             'conversationHistory': conversation_history
         })
     except Exception as e:
@@ -195,7 +200,12 @@ def verify_session_pin(event, context):
             }
         )
         
-        return lambda_response(200, {'message': 'PIN verified successfully'})
+        # Return CSRF token for subsequent requests
+        csrf_token = session.get('csrfToken', '')
+        return lambda_response(200, {
+            'message': 'PIN verified successfully',
+            'csrfToken': csrf_token
+        })
         
     except Exception as e:
         return lambda_response(500, {'error': 'Failed to verify PIN'})

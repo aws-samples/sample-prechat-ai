@@ -60,17 +60,17 @@ yarn test
 # Build SAM application
 yarn sam:build
 # or
-sam build --profile terraform
+sam build --profile default
 
 # Deploy to AWS
 yarn sam:deploy
 # or
-sam deploy --profile terraform
+sam deploy --profile default
 
 # Local API development
 yarn sam:local
 # or
-sam local start-api --profile terraform
+sam local start-api --profile default
 ```
 
 ### Package-specific Commands
@@ -86,7 +86,7 @@ yarn workspace @mte-prechat/web-app preview
 ```
 
 ## Environment Configuration
-- **AWS Profile**: `terraform` (required for all AWS operations)
+- **AWS Profile**: `default` (required for all AWS operations)
 - **AWS Region**: `ap-northeast-2` (primary region for Bedrock)
 - **Node Environment**: Development uses Vite dev server, production uses built assets
 

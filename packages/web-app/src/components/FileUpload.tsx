@@ -183,6 +183,10 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
   }
 
   const handleDeleteFile = async (fileKey: string) => {
+    if (!confirm('정말로 이 파일을 삭제하시겠습니까?')) {
+      return
+    }
+    
     try {
       await chatApi.deleteSessionFile(sessionId, fileKey)
       setSuccess('파일이 삭제되었습니다.')
