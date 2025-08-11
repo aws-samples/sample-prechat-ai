@@ -23,7 +23,7 @@ yarn install
 
 # Step 2: Build SAM application
 echo "🔨 Building SAM application..."
-yarn sam:build
+sam build --profile $PROFILE
 
 # Step 3: Deploy infrastructure
 echo "🏗️  Deploying infrastructure..."
