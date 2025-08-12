@@ -13,13 +13,15 @@ import {
 import LoadingBar from '@cloudscape-design/chat-components/loading-bar'
 import ReactMarkdown from 'react-markdown'
 import { adminApi } from '../services/api'
-import { BEDROCK_MODELS, AnalysisResults, BedrockModel } from '../types'
+import { BEDROCK_MODELS, AnalysisResults, BedrockModel, Session } from '../types'
+import { generateAnalysisReportHTML, downloadHTMLFile } from '../utils/htmlExport'
 
 interface AIAnalysisReportProps {
   sessionId: string
+  session?: Session
 }
 
-export default function AIAnalysisReport({ sessionId }: AIAnalysisReportProps) {
+export default function AIAnalysisReport({ sessionId, session }: AIAnalysisReportProps) {
   const [selectedModel, setSelectedModel] = useState<BedrockModel>(BEDROCK_MODELS[0])
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -118,6 +120,26 @@ export default function AIAnalysisReport({ sessionId }: AIAnalysisReportProps) {
     await loadExistingAnalysis()
   }
 
+  const exportToHTML = () => {
+    if (!analysisResults || !session) {
+      return
+    }
+
+    const exportData = {
+      sessionId,
+      customerInfo: session.customerInfo,
+      salesRepInfo: session.salesRepInfo,
+      salesRepEmail: session.salesRepEmail,
+      analysisResults,
+      exportedAt: new Date().toLocaleString('ko-KR')
+    }
+
+    const htmlContent = generateAnalysisReportHTML(exportData)
+    const filename = `AI분석리포트_${session.customerInfo.company}_${session.customerInfo.name}_${new Date().toISOString().split('T')[0]}.html`
+    
+    downloadHTMLFile(htmlContent, filename)
+  }
+
   const renderAnalysisInterface = () => (
     <Container>
       <SpaceBetween size="l">
@@ -159,15 +181,25 @@ export default function AIAnalysisReport({ sessionId }: AIAnalysisReportProps) {
               </Button>
               
               {analysisResults && (
-                <Button
-                  variant="normal"
-                  iconName="refresh"
-                  onClick={refreshAnalysis}
-                  loading={isLoading}
-                  disabled={isAnalyzing || isLoading}
-                >
-                  새로고침
-                </Button>
+                <>
+                  <Button
+                    variant="normal"
+                    iconName="refresh"
+                    onClick={refreshAnalysis}
+                    loading={isLoading}
+                    disabled={isAnalyzing || isLoading}
+                  >
+                    새로고침
+                  </Button>
+                  <Button
+                    variant="normal"
+                    iconName="download"
+                    onClick={exportToHTML}
+                    disabled={isAnalyzing || isLoading || !session}
+                  >
+                    HTML 저장
+                  </Button>
+                </>
               )}
             </SpaceBetween>
           </Box>

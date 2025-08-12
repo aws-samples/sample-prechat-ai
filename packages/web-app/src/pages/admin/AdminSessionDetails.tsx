@@ -191,7 +191,7 @@ export default function AdminSessionDetails() {
             {
               label: 'AI 리포트',
               id: 'report',
-              content: sessionId ? <AIAnalysisReport sessionId={sessionId} /> : null
+              content: sessionId ? <AIAnalysisReport sessionId={sessionId} session={session} /> : null
             },
             {
               label: '첨부 파일',
