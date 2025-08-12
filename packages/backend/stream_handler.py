@@ -89,13 +89,11 @@ def build_workflow_slack_payload(session_id, customer_info, session_data, old_st
     customer_title = customer_info.get('title', {}).get('S', '')
     
     # Extract sales rep info properly
-    sales_rep_info = session_data.get('sales_rep_info', {})
-    sales_rep_name = sales_rep_info.get('name', 'Unknown')
     sales_rep_email = session_data.get('sales_rep_email', 'Unknown')
     
     # Debug logging
     print(f"Building Slack payload for session {session_id}")
-    print(f"Sales rep info: name={sales_rep_name}, email={sales_rep_email}")
+    print(f"Sales rep info: email={sales_rep_email}")
     print(f"Customer info: name={customer_name}, company={customer_company}, email={customer_email}")
     print(f"Session data keys: {list(session_data.keys())}")
     
@@ -150,7 +148,7 @@ def build_workflow_slack_payload(session_id, customer_info, session_data, old_st
         "new_status": new_status,
         "old_status": old_status,
         # Additional rich data for Workflow to use
-        "sales_rep": f"{sales_rep_name} ({sales_rep_email})",
+        "sales_rep": f"{sales_rep_email}",
         "duration": duration_text,
         "message_stats": message_stats,
         "conversation_preview": conversation_preview,
