@@ -74,6 +74,12 @@ def delete_session_file_admin(event, context):
         file_key = event['pathParameters']['fileKey']
         bucket_name = os.environ.get('WEBSITE_BUCKET')
         
+        # Get client IP address for admin access logging
+        client_ip = event.get('requestContext', {}).get('identity', {}).get('sourceIp', 'Unknown')
+        user_agent = event.get('headers', {}).get('User-Agent', 'Unknown')
+        
+        print(f"Admin file deletion request - Session ID: {session_id}, File Key: {file_key}, Client IP: {client_ip}, User-Agent: {user_agent}")
+        
         if not bucket_name:
             return lambda_response(500, {'error': 'S3 bucket not configured'})
         
@@ -96,6 +102,7 @@ def delete_session_file_admin(event, context):
             Key=decoded_file_key
         )
         
+        print(f"Admin file deleted successfully - Session ID: {session_id}, File: {decoded_file_key}, Client IP: {client_ip}")
         return lambda_response(200, {'message': 'File deleted successfully'})
         
     except Exception as e:

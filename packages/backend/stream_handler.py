@@ -1,10 +1,10 @@
 import json
 import boto3
 import os
+import urllib3
 from utils import lambda_response, get_timestamp
 
 sqs = boto3.client('sqs')
-sns = boto3.client('sns')
 ANALYSIS_QUEUE_URL = os.environ.get('ANALYSIS_QUEUE_URL')
 DEFAULT_MODEL_ID = 'apac.anthropic.claude-3-5-sonnet-20241022-v2:0'
 
@@ -40,87 +40,182 @@ def handle_session_stream(event, context):
                 print(f"Customer: {customer_info.get('name', {}).get('S', '')}")
                 print(f"Sales Rep: {sales_rep_email}")
                 
-                # Send completion email to sales representative
-                send_completion_email(session_id, customer_info, sales_rep_email)
-                
-                # Send SMS notification to sales representative
-                send_completion_sms(session_id, customer_info, sales_rep_email)
+                # Send Slack notification
+                send_slack_notification(session_id, customer_info, old_status, new_status)
                 
                 # Enqueue analysis request
                 enqueue_analysis_request(session_id)
     
     return lambda_response(200, {'message': 'Stream processed successfully'})
 
-def send_completion_email(session_id, customer_info, sales_rep_email):
-    """Send completion email to sales representative"""
+def send_slack_notification(session_id, customer_info, old_status, new_status):
+    """Send Slack notification via Workflow webhook when session status changes to completed"""
     try:
-        customer_name = customer_info.get('name', {}).get('S', '')
-        customer_company = customer_info.get('company', {}).get('S', '')
+        slack_webhook_url = os.environ.get('SLACK_WEBHOOK_URL')
         
-        print(f"Sending completion email for session {session_id}")
-        print(f"Customer: {customer_name} from {customer_company}")
-        print(f"Sales Rep: {sales_rep_email}")
-        
-        # TODO: Implement SES email sending
-        # ses = boto3.client('ses')
-        # ses.send_email(
-        #     Source='noreply@example.com',
-        #     Destination={'ToAddresses': [sales_rep_email]},
-        #     Message={
-        #         'Subject': {'Data': f'Pre-consultation completed: {customer_name}'},
-        #         'Body': {
-        #             'Text': {
-        #                 'Data': f'Customer {customer_name} from {customer_company} has completed their pre-consultation session {session_id}.'
-        #             }
-        #         }
-        #     }
-        # )
-        
-    except Exception as e:
-        print(f"Error sending completion email: {str(e)}")
-
-def send_completion_sms(session_id, customer_info, sales_rep_email):
-    """Send SMS notification to sales representative"""
-    try:
-        customer_name = customer_info.get('name', {}).get('S', '')
-        customer_company = customer_info.get('company', {}).get('S', '')
-        
-        # Get sales rep phone from Cognito (would need to implement)
-        # For now, use a placeholder or skip if no phone available
-        sales_rep_phone = get_sales_rep_phone(sales_rep_email)
-        
-        if not sales_rep_phone:
-            print(f"No phone number found for sales rep {sales_rep_email}, skipping SMS")
+        if not slack_webhook_url:
+            print(f"No Slack webhook URL configured, skipping notification for session {session_id}")
             return
         
-        message = f"Pre-consultation completed: {customer_name} from {customer_company}. Session: {session_id}"
+        # Get additional session data for rich notification
+        session_data = get_session_details_for_notification(session_id)
         
-        sns.publish(
-            PhoneNumber=sales_rep_phone,
-            Message=message
+        # Build payload for Workflow webhook
+        payload = build_workflow_slack_payload(session_id, customer_info, session_data, old_status, new_status)
+        
+        # Send HTTP POST request to Slack webhook
+        http = urllib3.PoolManager()
+        response = http.request(
+            'POST',
+            slack_webhook_url,
+            body=json.dumps(payload),
+            headers={'Content-Type': 'application/json'}
         )
         
-        print(f"SMS sent to {sales_rep_phone} for session {session_id}")
+        if response.status == 200:
+            print(f"Slack notification sent successfully for session {session_id}")
+        else:
+            print(f"Failed to send Slack notification for session {session_id}. Status: {response.status}")
+            
+    except Exception as e:
+        print(f"Error sending Slack notification for session {session_id}: {str(e)}")
+
+def build_workflow_slack_payload(session_id, customer_info, session_data, old_status, new_status):
+    """Build simple payload for Slack Workflow webhook (matches your example format)"""
+    
+    customer_name = customer_info.get('name', {}).get('S', 'Unknown')
+    customer_company = customer_info.get('company', {}).get('S', 'Unknown')
+    customer_email = customer_info.get('email', {}).get('S', 'Unknown')
+    customer_title = customer_info.get('title', {}).get('S', '')
+    
+    # Extract sales rep info properly
+    sales_rep_info = session_data.get('sales_rep_info', {})
+    sales_rep_name = sales_rep_info.get('name', 'Unknown')
+    sales_rep_email = session_data.get('sales_rep_email', 'Unknown')
+    
+    # Debug logging
+    print(f"Building Slack payload for session {session_id}")
+    print(f"Sales rep info: name={sales_rep_name}, email={sales_rep_email}")
+    print(f"Customer info: name={customer_name}, company={customer_company}, email={customer_email}")
+    print(f"Session data keys: {list(session_data.keys())}")
+    
+    # Calculate session duration and format completion time
+    duration_text = "Unknown"
+    completed_at_formatted = "Unknown"
+    
+    if session_data.get('completed_at'):
+        try:
+            from datetime import datetime
+            completed = datetime.fromisoformat(session_data['completed_at'].replace('Z', '+00:00'))
+            completed_at_formatted = completed.strftime('%Y-%m-%d %H:%M:%S UTC')
+            
+            if session_data.get('created_at'):
+                created = datetime.fromisoformat(session_data['created_at'].replace('Z', '+00:00'))
+                duration = completed - created
+                duration_minutes = int(duration.total_seconds() / 60)
+                if duration_minutes < 60:
+                    duration_text = f"{duration_minutes} minutes"
+                else:
+                    hours = duration_minutes // 60
+                    minutes = duration_minutes % 60
+                    duration_text = f"{hours}h {minutes}m"
+        except Exception as e:
+            print(f"Error calculating duration: {str(e)}")
+            duration_text = "Unknown"
+            completed_at_formatted = session_data.get('completed_at', 'Unknown')
+    
+    # Format customer info with rich details
+    customer_display = f"{customer_name}"
+    if customer_title:
+        customer_display += f" ({customer_title})"
+    customer_display += f" from {customer_company} ({customer_email})"
+    
+    # Add session statistics
+    message_stats = f"{session_data.get('message_count', 0)} messages"
+    if session_data.get('customer_messages', 0) > 0:
+        message_stats += f" ({session_data.get('customer_messages', 0)} customer, {session_data.get('bot_messages', 0)} AI)"
+    
+    # Add conversation preview if available
+    conversation_preview = ""
+    if session_data.get('first_message'):
+        conversation_preview = f"First message: {session_data['first_message'][:150]}..."
+    
+    # Get admin URL from environment variable
+    cloudfront_url = os.environ.get('CLOUDFRONT_URL', 'https://localhost:3000')
+    
+    # Build the payload matching your example format
+    payload = {
+        "session_id": session_id,
+        "customer": customer_display,
+        "new_status": new_status,
+        "old_status": old_status,
+        # Additional rich data for Workflow to use
+        "sales_rep": f"{sales_rep_name} ({sales_rep_email})",
+        "duration": duration_text,
+        "message_stats": message_stats,
+        "conversation_preview": conversation_preview,
+        "admin_url": f"{cloudfront_url}/admin/sessions/{session_id}",
+        "completed_at": completed_at_formatted
+    }
+    
+    return payload
+
+def get_session_details_for_notification(session_id):
+    """Get additional session details for rich notification"""
+    try:
+        dynamodb = boto3.resource('dynamodb')
+        
+        # Get session metadata
+        sessions_table = dynamodb.Table('mte-sessions')
+        session_resp = sessions_table.get_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
+        )
+        
+        session_data = {}
+        if 'Item' in session_resp:
+            session = session_resp['Item']
+            session_data = {
+                'created_at': session.get('createdAt', ''),
+                'completed_at': session.get('completedAt', ''),
+                'sales_rep_email': session.get('salesRepEmail', ''),
+                'sales_rep_info': session.get('salesRepInfo', {}),
+                'agent_id': session.get('agentId', '')
+            }
+            
+            # Debug logging
+            print(f"Session data retrieved: {session_data}")
+        
+        # Get conversation messages
+        messages_table = dynamodb.Table('mte-messages')
+        messages_resp = messages_table.query(
+            KeyConditionExpression='PK = :pk',
+            ExpressionAttributeValues={':pk': f'SESSION#{session_id}'},
+            ScanIndexForward=True
+        )
+        
+        messages = messages_resp.get('Items', [])
+        session_data['message_count'] = len(messages)
+        session_data['customer_messages'] = len([m for m in messages if m.get('sender') == 'customer'])
+        session_data['bot_messages'] = len([m for m in messages if m.get('sender') == 'bot'])
+        
+        # Get conversation summary (first and last messages)
+        if messages:
+            first_content = messages[0].get('content', '')
+            last_content = messages[-1].get('content', '')
+            
+            session_data['first_message'] = first_content[:150] + '...' if len(first_content) > 150 else first_content
+            session_data['last_message'] = last_content[:150] + '...' if len(last_content) > 150 else last_content
+        
+        print(f"Final session data for notification: {session_data}")
+        return session_data
         
     except Exception as e:
-        print(f"Error sending SMS notification: {str(e)}")
+        print(f"Error getting session details for notification: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {}
 
-def get_sales_rep_phone(sales_rep_email):
-    """Get sales rep phone number from Cognito user attributes"""
-    try:
-        # TODO: Implement Cognito user lookup by email
-        # cognito = boto3.client('cognito-idp')
-        # response = cognito.list_users(
-        #     UserPoolId=os.environ.get('USER_POOL_ID'),
-        #     Filter=f'email = "{sales_rep_email}"'
-        # )
-        # if response['Users']:
-        #     attributes = {attr['Name']: attr['Value'] for attr in response['Users'][0]['Attributes']}
-        #     return attributes.get('phone_number')
-        return None  # Placeholder - implement Cognito lookup
-    except Exception as e:
-        print(f"Error getting sales rep phone: {str(e)}")
-        return None
+
 
 def enqueue_analysis_request(session_id):
     """Enqueue analysis request to SQS"""

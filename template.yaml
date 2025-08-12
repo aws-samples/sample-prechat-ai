@@ -943,12 +943,9 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
-        - Statement:
-            Effect: Allow
-            Action:
-              - ses:SendEmail
-              - sns:Publish
-            Resource: '*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+
         - Statement:
             Effect: Allow
             Action:
@@ -966,6 +963,8 @@ Resources:
         Variables:
           ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
           WEBSITE_BUCKET: !Ref WebsiteBucket
+          SLACK_WEBHOOK_URL: "https://hooks.slack.com/triggers/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"
+          CLOUDFRONT_URL: !Sub "https://${CloudFrontDistribution.DomainName}"
       Events:
         SessionStream:
           Type: DynamoDB
@@ -1015,25 +1014,25 @@ Resources:
         SigningProtocol: sigv4
 
   #S3 Bucket Policy for CloudFront OAC
-  WebsiteBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref WebsiteBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowCloudFrontServicePrincipal
-            Effect: Allow
-            Principal:
-              Service: cloudfront.amazonaws.com
-            Action: s3:GetObject
-            Resource: !Sub "${WebsiteBucket}/*"
-            Condition:
-              StringEquals:
-                AWS:SourceArn: !Sub 
-                  - "arn:aws:cloudfront::${AccountId}:distribution/${DistributionId}"
-                  - AccountId: !Ref AWS::AccountId
-                    DistributionId: !Ref CloudFrontDistribution
+  # WebsiteBucketPolicy:
+  #   Type: AWS::S3::BucketPolicy
+  #   Properties:
+  #     Bucket: !Ref WebsiteBucket
+  #     PolicyDocument:
+  #       Version: '2012-10-17'
+  #       Statement:
+  #         - Sid: AllowCloudFrontServicePrincipal
+  #           Effect: Allow
+  #           Principal:
+  #             Service: cloudfront.amazonaws.com
+  #           Action: s3:GetObject
+  #           Resource: !Sub "${WebsiteBucket}/*"
+  #           Condition:
+  #             StringEquals:
+  #               AWS:SourceArn: !Sub 
+  #                 - "arn:aws:cloudfront::${AccountId}:distribution/${DistributionId}"
+  #                 - AccountId: !Ref AWS::AccountId
+  #                   DistributionId: !Ref CloudFrontDistribution
 
   # CloudFront Distribution
   CloudFrontDistribution:

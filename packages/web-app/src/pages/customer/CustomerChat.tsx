@@ -6,8 +6,6 @@ import {
   SpaceBetween,
   Box,
   Alert,
-  ButtonGroup,
-  PromptInput,
   Grid,
   Modal,
   Input,
@@ -21,7 +19,7 @@ import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
 
 import { useSession, useChat } from '../../hooks'
-import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload } from '../../components'
+import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload, MultilineChatInput } from '../../components'
 import { MESSAGES } from '../../constants'
 import { chatApi } from '../../services/api'
 import { 
@@ -354,37 +352,13 @@ export default function CustomerChat() {
           </Box>
 
           {!isComplete && (
-            <PromptInput
+            <MultilineChatInput
               value={inputValue}
-              onChange={({ detail }) => setInputValue(detail.value)}
-              onAction={handleSendMessage}
-              actionButtonAriaLabel="Send message"
-              actionButtonIconName="send"
+              onChange={setInputValue}
+              onSend={handleSendMessage}
               placeholder={MESSAGES.CHAT_PLACEHOLDER}
               disabled={chatLoading}
-              disableSecondaryActionsPaddings
-              secondaryActions={
-                <Box padding={{ left: "xxs", top: "xs" }}>
-                  <ButtonGroup
-                    ariaLabel="Chat actions"
-                    items={[
-                      {
-                        type: "icon-button",
-                        id: "clear",
-                        iconName: "close",
-                        text: "Clear input",
-                        disabled: !inputValue || chatLoading
-                      }
-                    ]}
-                    variant="icon"
-                    onItemClick={({ detail }) => {
-                      if (detail.id === 'clear') {
-                        clearInput()
-                      }
-                    }}
-                  />
-                </Box>
-              }
+              onClear={clearInput}
             />
           )}
 

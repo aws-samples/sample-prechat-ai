@@ -185,8 +185,15 @@ def delete_session_file(event, context):
     try:
         session_id = event['pathParameters']['sessionId']
         
+        # Get client IP address
+        client_ip = event.get('requestContext', {}).get('identity', {}).get('sourceIp', 'Unknown')
+        user_agent = event.get('headers', {}).get('User-Agent', 'Unknown')
+        
+        print(f"File deletion request - Session ID: {session_id}, Client IP: {client_ip}, User-Agent: {user_agent}")
+        
         # CSRF Protection - Verify CSRF token
         if not verify_csrf_token(event, session_id):
+            print(f"CSRF token verification failed - Session ID: {session_id}, Client IP: {client_ip}")
             return lambda_response(403, {'error': 'Invalid CSRF token'})
         
         file_key = event['pathParameters']['fileKey']
@@ -225,7 +232,7 @@ def delete_session_file(event, context):
             Key=decoded_file_key
         )
         
-        print(f"Debug - File deleted successfully: {decoded_file_key}")
+        print(f"File deleted successfully - Session ID: {session_id}, File: {decoded_file_key}, Client IP: {client_ip}")
         return lambda_response(200, {'message': 'File deleted successfully'})
         
     except Exception as e:

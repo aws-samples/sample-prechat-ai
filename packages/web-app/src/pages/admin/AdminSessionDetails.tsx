@@ -161,6 +161,16 @@ export default function AdminSessionDetails() {
         <Tabs
           tabs={[
             {
+              label: '미팅 로그',
+              id: 'meeting-log',
+              content: sessionId ? <MeetingLogView sessionId={sessionId} session={session} /> : null
+            },
+            {
+              label: '첨부 파일',
+              id: 'attachments',
+              content: sessionId ? <SessionAttachments sessionId={sessionId} /> : null
+            },
+            {
               label: 'Conversation',
               id: 'conversation',
               content: (
@@ -187,16 +197,6 @@ export default function AdminSessionDetails() {
                   )}
                 </SpaceBetween>
               )
-            },
-            {
-              label: '미팅 로그',
-              id: 'meeting-log',
-              content: sessionId ? <MeetingLogView sessionId={sessionId} session={session} /> : null
-            },
-            {
-              label: '첨부 파일',
-              id: 'attachments',
-              content: sessionId ? <SessionAttachments sessionId={sessionId} /> : null
             }
           ]}
         />
