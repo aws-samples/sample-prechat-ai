@@ -1,5 +1,11 @@
 export type ConversationStage = 'conversation' | 'completed'
 
+export interface SalesRepInfo {
+  name: string
+  email: string
+  phone: string
+}
+
 export interface Message {
   id: string;
   content: string;
@@ -29,6 +35,7 @@ export interface Session {
   pinNumber?: string;
   privacyConsentAgreed?: boolean;
   privacyConsentTimestamp?: string;
+  meetingLog?: string;
   createdAt?: string;
   completedAt?: string;
 }

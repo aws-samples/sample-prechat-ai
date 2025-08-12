@@ -14,6 +14,7 @@ import {
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
 import { BEDROCK_MODELS } from '../../types'
+import { PlaceholderTooltip } from '../../components'
 import defaultPrompt from '../../assets/prechat-agent-prompt.md?raw'
 
 export default function CreateAgent() {
@@ -123,8 +124,13 @@ export default function CreateAgent() {
             </FormField>
 
             <FormField 
-              label="Agent Instructions" 
-              description="에이전트 행동에 대한 지침을 상세하게 작성합니다"
+              label={
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>Agent Instructions</span>
+                  <PlaceholderTooltip />
+                </div>
+              }
+              description="에이전트 행동에 대한 지침을 상세하게 작성합니다. 플레이스홀더를 사용하여 동적 정보를 포함할 수 있습니다."
               stretch
               secondaryControl={
                 <Button

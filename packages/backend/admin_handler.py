@@ -264,11 +264,102 @@ def get_session_details(event, context):
             'createdAt': session['createdAt'],
             'completedAt': session.get('completedAt', ''),
             'privacyConsentAgreed': session.get('privacyConsentAgreed', False),
-            'privacyConsentTimestamp': session.get('privacyConsentTimestamp', '')
+            'privacyConsentTimestamp': session.get('privacyConsentTimestamp', ''),
+            'meetingLog': session.get('meetingLog', '')
         })
         
     except Exception as e:
         return lambda_response(500, {'error': 'Failed to get session details'})
+
+def save_meeting_log(event, context):
+    """Save meeting log for a session"""
+    session_id = event['pathParameters']['sessionId']
+    body = parse_body(event)
+    meeting_log = body.get('meetingLog', '')
+    
+    try:
+        sessions_table = dynamodb.Table('mte-sessions')
+        
+        # Check if session exists
+        session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
+        if 'Item' not in session_resp:
+            return lambda_response(404, {'error': 'Session not found'})
+        
+        # Update meeting log
+        timestamp = get_timestamp()
+        sessions_table.update_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            UpdateExpression='SET meetingLog = :log, meetingLogUpdatedAt = :timestamp',
+            ExpressionAttributeValues={
+                ':log': meeting_log,
+                ':timestamp': timestamp
+            }
+        )
+        
+        return lambda_response(200, {
+            'message': 'Meeting log saved successfully',
+            'sessionId': session_id,
+            'updatedAt': timestamp
+        })
+        
+    except Exception as e:
+        logger.error(f"Error saving meeting log for session {session_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to save meeting log'})
+
+def reanalyze_with_meeting_log(event, context):
+    """Request re-analysis including meeting log context"""
+    session_id = event['pathParameters']['sessionId']
+    body = parse_body(event)
+    model_id = body.get('modelId')
+    
+    if not model_id:
+        return lambda_response(400, {'error': 'Missing modelId parameter'})
+    
+    try:
+        # Check if session exists and has meeting log
+        sessions_table = dynamodb.Table('mte-sessions')
+        session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
+        
+        if 'Item' not in session_resp:
+            return lambda_response(404, {'error': 'Session not found'})
+        
+        session = session_resp['Item']
+        meeting_log = session.get('meetingLog', '')
+        
+        # Mark analysis as in progress
+        timestamp = get_timestamp()
+        sessions_table.update_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            UpdateExpression='SET analysisStatus = :status, analysisRequestedAt = :timestamp',
+            ExpressionAttributeValues={
+                ':status': 'processing',
+                ':timestamp': timestamp
+            }
+        )
+        
+        # Send message to SQS with meeting log flag
+        message = {
+            'sessionId': session_id,
+            'modelId': model_id,
+            'requestedAt': timestamp,
+            'includeMeetingLog': True,
+            'meetingLog': meeting_log
+        }
+        
+        sqs.send_message(
+            QueueUrl=ANALYSIS_QUEUE_URL,
+            MessageBody=json.dumps(message)
+        )
+        
+        return lambda_response(202, {
+            'message': 'Re-analysis with meeting log queued successfully',
+            'sessionId': session_id,
+            'status': 'processing'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error queuing re-analysis for session {session_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to queue re-analysis request'})
 
 
 
@@ -330,11 +421,13 @@ def process_analysis(event, context):
             message_body = json.loads(record['body'])
             session_id = message_body['sessionId']
             model_id = message_body['modelId']
+            include_meeting_log = message_body.get('includeMeetingLog', False)
+            meeting_log = message_body.get('meetingLog', '')
             
-            logger.info(f"Processing analysis for session {session_id} with model {model_id}")
+            logger.info(f"Processing analysis for session {session_id} with model {model_id}, includeMeetingLog: {include_meeting_log}")
             
             # Perform the actual analysis
-            result = _perform_conversation_analysis(session_id, model_id)
+            result = _perform_conversation_analysis(session_id, model_id, include_meeting_log, meeting_log)
             
             if result['success']:
                 logger.info(f"Analysis completed successfully for session {session_id}")
@@ -347,9 +440,9 @@ def process_analysis(event, context):
         logger.error(f"Error processing analysis from SQS: {str(e)}")
         raise e
 
-def _perform_conversation_analysis(session_id, model_id):
+def _perform_conversation_analysis(session_id, model_id, include_meeting_log=False, meeting_log=''):
     """Perform the actual conversation analysis"""
-    logger.info(f"Starting conversation analysis for session {session_id} with model {model_id}")
+    logger.info(f"Starting conversation analysis for session {session_id} with model {model_id}, includeMeetingLog: {include_meeting_log}")
     
     try:
         # Update status to processing
@@ -401,6 +494,16 @@ def _perform_conversation_analysis(session_id, model_id):
             logger.warning(f"Conversation too long ({len(conversation_text)} chars), truncating")
             conversation_text = conversation_text[:50000] + "\n[대화 내용이 길어 일부 생략됨]"
         
+        # Add meeting log context if provided
+        meeting_log_context = ""
+        if include_meeting_log and meeting_log:
+            meeting_log_context = f"""
+
+미팅 로그 (Sales Rep이 작성한 초도미팅록):
+{meeting_log}
+
+위의 미팅 로그와 사전상담 대화 내용을 모두 고려하여 분석해주세요."""
+        
         # Generate structured analysis prompt using meet-logs-md.md template
         analysis_prompt = f"""고객 상담 내용을 분석하여 다음 4가지 항목을 JSON 형태로 제공해주세요:
 
@@ -411,7 +514,7 @@ def _perform_conversation_analysis(session_id, model_id):
 - 이메일: {session['customerInfo']['email']}
 
 대화 내용:
-{conversation_text}
+{conversation_text}{meeting_log_context}
 
 다음 형식으로 분석 결과를 제공해주세요. 반드시 유효한 JSON 형식으로 응답해주세요:
 

@@ -187,5 +187,16 @@ export const adminApi = {
     const encodedFileKey = encodeURIComponent(fileKey)
     const response = await api.delete(`/admin/sessions/${sessionId}/files/${encodedFileKey}`)
     return response.data
+  },
+
+  // Meeting log operations
+  saveMeetingLog: async (sessionId: string, meetingLog: string) => {
+    const response = await api.put(`/admin/sessions/${sessionId}/meeting-log`, { meetingLog })
+    return response.data
+  },
+
+  reanalyzeWithMeetingLog: async (sessionId: string, modelId: string) => {
+    const response = await api.post(`/admin/sessions/${sessionId}/reanalyze`, { modelId })
+    return response.data
   }
 }

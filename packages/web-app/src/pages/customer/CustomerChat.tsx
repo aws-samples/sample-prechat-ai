@@ -308,6 +308,7 @@ export default function CustomerChat() {
                         key={message.id}
                         message={message}
                         isCustomer={true}
+                        salesRepInfo={sessionData?.salesRepInfo}
                       />
                     )
                   } else {
@@ -316,6 +317,7 @@ export default function CustomerChat() {
                         key={message.id}
                         message={isCurrentlyStreaming && streamingMessage ? streamingMessage : message}
                         isStreaming={isCurrentlyStreaming}
+                        salesRepInfo={sessionData?.salesRepInfo}
                       />
                     )
                   }

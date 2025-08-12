@@ -2,14 +2,16 @@ import { ButtonGroup, StatusIndicator } from '@cloudscape-design/components'
 import Avatar from '@cloudscape-design/chat-components/avatar'
 import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
-import { Message } from '../types'
+import type { Message, SalesRepInfo } from '../types'
+import { replaceSalesRepPlaceholders } from '../utils/placeholderReplacer'
 
 interface ChatMessageProps {
   message: Message
   isCustomer?: boolean
+  salesRepInfo?: SalesRepInfo
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = false }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = false, salesRepInfo }) => {
   const handleActionClick = (actionId: string) => {
     switch (actionId) {
       case 'copy':
@@ -105,7 +107,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
           />
         }
       >
-        <ReactMarkdown>{message.content}</ReactMarkdown>
+        <ReactMarkdown>{replaceSalesRepPlaceholders(message.content, salesRepInfo)}</ReactMarkdown>
       </ChatBubble>
     </div>
   )

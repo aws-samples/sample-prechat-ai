@@ -726,6 +726,51 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  # Meeting Log Functions
+  SaveMeetingLogFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.save_meeting_log
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        SaveMeetingLog:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/meeting-log
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  ReanalyzeWithMeetingLogFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.reanalyze_with_meeting_log
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt AnalysisQueue.Arn
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Environment:
+        Variables:
+          ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
+      Events:
+        ReanalyzeWithMeetingLog:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/reanalyze
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   # AWS Documentation Tools Action Group
   AWSDocsActionFunction:
     Type: AWS::Serverless::Function
@@ -969,7 +1014,7 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
-  # S3 Bucket Policy for CloudFront OAC
+  #S3 Bucket Policy for CloudFront OAC
   WebsiteBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:

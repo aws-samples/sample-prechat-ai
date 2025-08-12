@@ -3,16 +3,19 @@ import { ButtonGroup, StatusIndicator } from '@cloudscape-design/components'
 import Avatar from '@cloudscape-design/chat-components/avatar'
 import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
-import { Message } from '../types'
+import type { Message, SalesRepInfo } from '../types'
+import { replaceSalesRepPlaceholders } from '../utils/placeholderReplacer'
 
 interface StreamingChatMessageProps {
   message: Message
   isStreaming?: boolean
+  salesRepInfo?: SalesRepInfo
 }
 
 export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({ 
   message, 
-  isStreaming = false 
+  isStreaming = false,
+  salesRepInfo
 }) => {
   const [displayedContent, setDisplayedContent] = useState('')
   const [showCursor, setShowCursor] = useState(isStreaming)
@@ -107,7 +110,7 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
         }
       >
         <div style={{ position: 'relative' }}>
-          <ReactMarkdown>{displayedContent}</ReactMarkdown>
+          <ReactMarkdown>{replaceSalesRepPlaceholders(displayedContent, salesRepInfo)}</ReactMarkdown>
           {isStreaming && (
             <span 
               style={{ 

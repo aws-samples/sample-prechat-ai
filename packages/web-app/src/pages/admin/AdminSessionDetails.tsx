@@ -12,7 +12,7 @@ import {
   ColumnLayout
 } from '@cloudscape-design/components'
 import AnimatedButton from '../../components/AnimatedButton'
-import AIAnalysisReport from '../../components/AIAnalysisReport'
+import MeetingLogView from '../../components/MeetingLogView'
 import SessionAttachments from '../../components/SessionAttachments'
 import { adminApi, chatApi } from '../../services/api'
 import { Session } from '../../types'
@@ -189,9 +189,9 @@ export default function AdminSessionDetails() {
               )
             },
             {
-              label: 'AI 리포트',
-              id: 'report',
-              content: sessionId ? <AIAnalysisReport sessionId={sessionId} session={session} /> : null
+              label: '미팅 로그',
+              id: 'meeting-log',
+              content: sessionId ? <MeetingLogView sessionId={sessionId} session={session} /> : null
             },
             {
               label: '첨부 파일',
