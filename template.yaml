@@ -1439,6 +1439,41 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  # Feedback Functions
+  SubmitFeedbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: feedback_handler.submit_feedback
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        SubmitFeedback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/feedback
+            Method: post
+
+  GetSessionFeedbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: feedback_handler.get_session_feedback
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetSessionFeedback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/feedback
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   # DynamoDB Streams Handler
   SessionStreamHandler:
     Type: AWS::Serverless::Function

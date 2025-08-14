@@ -19,7 +19,7 @@ import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
 
 import { useSession, useChat } from '../../hooks'
-import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload, MultilineChatInput, FeedbackModal } from '../../components'
+import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload, MultilineChatInput, FeedbackModal, ConsultationPurposeSelector } from '../../components'
 import { MESSAGES } from '../../constants'
 import { chatApi } from '../../services/api'
 import { 
@@ -27,8 +27,12 @@ import {
   getStoredPinForSession, 
   storePrivacyConsentForSession,
   getStoredPrivacyConsentForSession,
-  removePinForSession
+  removePinForSession,
+  storeConsultationPurposeForSession,
+  getStoredConsultationPurposeForSession
 } from '../../utils/sessionStorage'
+import type { ConsultationPurpose } from '../../components/ConsultationPurposeSelector'
+import { CONSULTATION_PURPOSES } from '../../components/ConsultationPurposeSelector'
 
 export default function CustomerChat() {
   const { sessionId } = useParams<{ sessionId: string }>()
@@ -42,6 +46,8 @@ export default function CustomerChat() {
   const [showFileUpload, setShowFileUpload] = useState(false)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+  const [selectedPurpose, setSelectedPurpose] = useState<ConsultationPurpose | null>(null)
+  const [showPurposeSelector, setShowPurposeSelector] = useState(false)
   
   const {
     sessionData,
@@ -98,17 +104,34 @@ export default function CustomerChat() {
   }, [sessionId])
 
   useEffect(() => {
-    // If no conversation history, pre-fill the input with greeting message
-    if (sessionData && messages.length === 0 && !inputValue) {
+    // Check for stored purpose and show selector if needed
+    if (sessionData && messages.length === 0 && !selectedPurpose && sessionId) {
+      const storedPurpose = getStoredConsultationPurposeForSession(sessionId)
+      if (storedPurpose) {
+        const purpose = CONSULTATION_PURPOSES.find(p => p.value === storedPurpose)
+        if (purpose) {
+          setSelectedPurpose(purpose)
+        }
+      } else {
+        setShowPurposeSelector(true)
+      }
+    }
+  }, [sessionData, messages.length, selectedPurpose, sessionId])
+
+  useEffect(() => {
+    // If no conversation history and purpose is selected, pre-fill the input with greeting message
+    if (sessionData && messages.length === 0 && selectedPurpose && !inputValue) {
       const customerInfo = sessionData.customerInfo
       const company = customerInfo.company || '회사'
       const title = customerInfo.title || '담당자'
       const name = customerInfo.name || '고객'
 
-      const greetingMessage = `안녕하세요, 저는 ${company}에서 ${title}로 있는 ${name}이라 합니다. 사전에 논의할 내용과 기대사항을 공유드리기 위해 PreChat 사전채팅에 참가하였습니다!`
+      const greetingMessage = `안녕하세요, 저는 ${company}에서 ${title}로 있는 ${name}이라 합니다. 
+
+이번에 ${selectedPurpose.label}와 관련하여 사전에 논의할 내용과 기대사항을 공유드리기 위해 PreChat 사전채팅에 참가하였습니다!`
       setInputValue(greetingMessage)
     }
-  }, [sessionData, messages.length, inputValue, setInputValue])
+  }, [sessionData, messages.length, selectedPurpose, inputValue, setInputValue])
 
 
 
@@ -148,6 +171,15 @@ export default function CustomerChat() {
       // Still close modal even if submission fails
       setFeedbackSubmitted(true)
       setShowFeedbackModal(false)
+    }
+  }
+
+  const handlePurposeSelect = (purpose: ConsultationPurpose) => {
+    setSelectedPurpose(purpose)
+    setShowPurposeSelector(false)
+    // Store purpose in session storage
+    if (sessionId) {
+      storeConsultationPurposeForSession(sessionId, purpose.value)
     }
   }
 
@@ -263,6 +295,23 @@ export default function CustomerChat() {
     )
   }
 
+  // Show purpose selector modal
+  if (showPurposeSelector) {
+    return (
+      <Modal
+        onDismiss={() => {}} // Prevent closing
+        visible={true}
+        header="상담 목적 선택"
+        size="large"
+      >
+        <ConsultationPurposeSelector
+          onSelect={handlePurposeSelect}
+          selectedPurpose={selectedPurpose?.value}
+        />
+      </Modal>
+    )
+  }
+
   return (
     <Grid gridDefinition={[
       { colspan: { default: 12, m: 10, l: 9 } },
@@ -273,15 +322,26 @@ export default function CustomerChat() {
           <div className="fade-in-up">
             <Header
               variant="h1"
-              description=""
+              description={selectedPurpose ? `상담 목적: ${selectedPurpose.label}` : ""}
               actions={
-                <Button
-                  variant="normal"
-                  iconName="upload"
-                  onClick={() => setShowFileUpload(true)}
-                >
-                  첨부파일 제공
-                </Button>
+                <SpaceBetween direction="horizontal" size="xs">
+                  {selectedPurpose && (
+                    <Button
+                      variant="normal"
+                      iconName="edit"
+                      onClick={() => setShowPurposeSelector(true)}
+                    >
+                      상담 목적 변경
+                    </Button>
+                  )}
+                  <Button
+                    variant="normal"
+                    iconName="upload"
+                    onClick={() => setShowFileUpload(true)}
+                  >
+                    첨부파일 제공
+                  </Button>
+                </SpaceBetween>
               }
             >
               PreChat 에게 고민을 말씀해 보세요.

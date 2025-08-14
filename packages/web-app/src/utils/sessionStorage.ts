@@ -99,3 +99,28 @@ export const getStoredPrivacyConsentForSession = (sessionId: string): boolean =>
     return false
   }
 }
+
+/**
+ * 세션 ID에 대한 상담 목적을 세션 저장소에 저장
+ */
+export const storeConsultationPurposeForSession = (sessionId: string, purpose: string): void => {
+  try {
+    const key = `ConsultationPurpose_${sessionId}`
+    sessionStorage.setItem(key, purpose)
+  } catch (error) {
+    console.warn('Failed to store consultation purpose in session storage:', error)
+  }
+}
+
+/**
+ * 세션 ID에 대한 저장된 상담 목적을 가져옴
+ */
+export const getStoredConsultationPurposeForSession = (sessionId: string): string | null => {
+  try {
+    const key = `ConsultationPurpose_${sessionId}`
+    return sessionStorage.getItem(key)
+  } catch (error) {
+    console.warn('Failed to get consultation purpose from session storage:', error)
+    return null
+  }
+}
