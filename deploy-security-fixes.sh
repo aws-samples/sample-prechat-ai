@@ -167,11 +167,21 @@ else
 fi
 
 # Check access logging configuration
-LOGGING_CONFIG=$(aws s3api get-bucket-logging --bucket mte-prechat-website-dev-$ACCOUNT_ID --profile default --query 'LoggingEnabled.TargetBucket' --output text 2>/dev/null || echo "NONE")
+WEBSITE_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name sam-app --profile default --query 'Stacks[0].Outputs[?OutputKey==`WebsiteBucket`].OutputValue' --output text 2>/dev/null || echo "mte-prechat-website-dev-$ACCOUNT_ID")
+LOGGING_CONFIG=$(aws s3api get-bucket-logging --bucket $WEBSITE_BUCKET_NAME --profile default --query 'LoggingEnabled.TargetBucket' --output text 2>/dev/null || echo "NONE")
 if [ "$LOGGING_CONFIG" != "NONE" ] && [ "$LOGGING_CONFIG" != "None" ]; then
-    echo "   ✅ S3 access logging enabled"
+    echo "   ✅ S3 access logging enabled to: $LOGGING_CONFIG"
 else
     echo "   ⚠️  S3 access logging status: $LOGGING_CONFIG"
+fi
+
+# Check access logging bucket policy
+ACCESS_LOGGING_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name sam-app --profile default --query 'Stacks[0].Outputs[?OutputKey==`AccessLoggingBucket`].OutputValue' --output text 2>/dev/null || echo "sam-app-access-logs-dev-$ACCOUNT_ID")
+BUCKET_POLICY_EXISTS=$(aws s3api get-bucket-policy --bucket $ACCESS_LOGGING_BUCKET_NAME --profile default 2>/dev/null && echo "EXISTS" || echo "NOT_FOUND")
+if [ "$BUCKET_POLICY_EXISTS" = "EXISTS" ]; then
+    echo "   ✅ Access logging bucket policy configured"
+else
+    echo "   ⚠️  Access logging bucket policy not found"
 fi
 
 echo ""

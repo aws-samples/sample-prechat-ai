@@ -58,7 +58,8 @@ This guide covers the complete security enhancements implemented to address Lamb
 ### 8. ✅ CKV_AWS_18: Access logging not enabled
 **Solution**: Dedicated S3 bucket for access logging
 - **Logging Bucket**: `AccessLoggingBucket` for centralized access logs
-- **Configuration**: Website bucket logs to dedicated logging bucket
+- **Bucket Policy**: `AccessLoggingBucketPolicy` allows S3 logging service access
+- **Configuration**: Website bucket logs to dedicated logging bucket with proper permissions
 - **Retention**: 90-day lifecycle policy for log management
 
 ### 9. ✅ CKV_AWS_21: Versioning not enabled
@@ -75,8 +76,10 @@ This guide covers the complete security enhancements implemented to address Lamb
 
 ### 11. ✅ S3_BUCKET_LOGGING_ENABLED: Missing access logs
 **Solution**: Comprehensive access logging implementation
-- **Target Bucket**: Dedicated access logging bucket
-- **Log Prefix**: Organized log structure with prefixes
+- **Target Bucket**: Dedicated access logging bucket with proper IAM policy
+- **Service Principal**: `logging.s3.amazonaws.com` granted PutObject permissions
+- **Log Prefix**: Organized log structure with `website-access-logs/` prefix
+- **Security**: Source account and ARN validation in bucket policy
 - **Monitoring**: Track all access patterns and requests
 
 ### 12. ✅ S3_BUCKET_VERSIONING_ENABLED: Versioning disabled

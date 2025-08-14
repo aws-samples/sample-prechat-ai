@@ -150,7 +150,7 @@ aws cloudformation delete-stack --stack-name mte-prechat --profile default
 
 ### 🤝 상업적 사용 문의
 
-상업적 목적으로 사용하고 싶으시다면 **jaebin@amazon.com**으로 연락해 주세요.
+상업적 목적으로 사용하고 싶으시다면 **aws-prechat@amazon.com**으로 연락해 주세요.
 
 - 조직 대 조직 간 구체적 협의 필요
 

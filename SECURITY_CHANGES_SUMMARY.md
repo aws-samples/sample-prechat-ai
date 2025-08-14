@@ -51,7 +51,8 @@ Successfully implemented comprehensive security mitigations for all 38 Lambda fu
 
 ### 8. CKV_AWS_18: Access logging not enabled
 - **Created**: Dedicated `AccessLoggingBucket` for centralized access logs
-- **Configuration**: Website bucket logs all access to logging bucket
+- **Bucket Policy**: `AccessLoggingBucketPolicy` grants S3 logging service permissions
+- **Configuration**: Website bucket logs all access to logging bucket with proper IAM
 - **Retention**: 90-day lifecycle policy for cost optimization
 
 ### 9. CKV_AWS_21: Versioning not enabled
@@ -66,7 +67,9 @@ Successfully implemented comprehensive security mitigations for all 38 Lambda fu
 
 ### 11. S3_BUCKET_LOGGING_ENABLED: Missing access logs
 - **Implemented**: Comprehensive access logging to dedicated bucket
+- **IAM Policy**: Proper bucket policy allowing `logging.s3.amazonaws.com` service
 - **Log Prefix**: Organized structure with `website-access-logs/` prefix
+- **Security**: Source account and ARN validation in bucket policy
 - **Monitoring**: Complete audit trail of all bucket access
 
 ### 12. S3_BUCKET_VERSIONING_ENABLED: Versioning disabled

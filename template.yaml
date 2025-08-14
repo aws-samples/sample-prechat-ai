@@ -1452,9 +1452,9 @@ Resources:
       BucketName: !Sub "${AWS::StackName}-access-logs-${Stage}-${AWS::AccountId}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
-        BlockPublicPolicy: true
+        BlockPublicPolicy: false  # Allow bucket policy for S3 logging service
         IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+        RestrictPublicBuckets: false  # Allow S3 logging service access
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -1469,6 +1469,37 @@ Resources:
           Value: !Ref Stage
         - Key: Purpose
           Value: AccessLogging
+
+  # Bucket Policy for S3 Server Access Logs
+  AccessLoggingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AccessLoggingBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: S3ServerAccessLogsPolicy
+            Effect: Allow
+            Principal:
+              Service: logging.s3.amazonaws.com
+            Action:
+              - s3:PutObject
+            Resource: !Sub "${AccessLoggingBucket.Arn}/website-access-logs/*"
+            Condition:
+              ArnLike:
+                "aws:SourceArn": !GetAtt WebsiteBucket.Arn
+              StringEquals:
+                "aws:SourceAccount": !Ref AWS::AccountId
+          - Sid: S3ServerAccessLogsDelivery
+            Effect: Allow
+            Principal:
+              Service: logging.s3.amazonaws.com
+            Action:
+              - s3:GetBucketAcl
+            Resource: !GetAtt AccessLoggingBucket.Arn
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Ref AWS::AccountId
 
   # S3 Failover/Replication Bucket (Different Region)
   FailoverBucket:
@@ -1520,8 +1551,9 @@ Resources:
                 Resource: !Sub "arn:aws:s3:::${AWS::StackName}-website-${Stage}-${AWS::AccountId}/*" # WebsiteBucket
               - Effect: Allow
                 Action:
+                  - s3:GetReplicationConfiguration
                   - s3:ListBucket
-                Resource: !Sub "arn:aws:s3:::${AWS::StackName}-website-${Stage}-${AWS::AccountId}"
+                Resource: !Sub "arn:aws:s3:::${AWS::StackName}-website-${Stage}-${AWS::AccountId}" # WebsiteBucket
               - Effect: Allow
                 Action:
                   - s3:ReplicateObject
@@ -1549,16 +1581,15 @@ Resources:
         Status: Enabled
       LoggingConfiguration:
         DestinationBucketName: !Ref AccessLoggingBucket
-        LogFilePrefix: website-access-logs/
+        LogFilePrefix: !Sub "${AWS::StackName}/"
       ReplicationConfiguration:
         Role: !GetAtt S3ReplicationRole.Arn
         Rules:
           - Id: ReplicateToFailover
             Status: Enabled
-            Prefix: uploads/
             Destination:
               Bucket: !Sub "arn:aws:s3:::${FailoverBucket}"
-              StorageClass: STANDARD_IA
+              StorageClass: ONEZONE_IA
       CorsConfiguration:
         CorsRules:
           - Id: FileUploadCorsRule
