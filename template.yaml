@@ -1439,38 +1439,28 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  # Feedback Functions
-  SubmitFeedbackFunction:
+  GenerateFilePresignedUrlFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/
-      Handler: feedback_handler.submit_feedback
+      Handler: admin_file_handler.generate_file_presigned_url
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:HeadObject
+              - s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
       Events:
-        SubmitFeedback:
+        GenerateFilePresignedUrl:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/chat/session/{sessionId}/feedback
+            Path: /api/admin/sessions/{sessionId}/files/{fileKey+}/presigned-url
             Method: post
-
-  GetSessionFeedbackFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: feedback_handler.get_session_feedback
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-      Events:
-        GetSessionFeedback:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/sessions/{sessionId}/feedback
-            Method: get
             Auth:
               Authorizer: CognitoAuthorizer
 

@@ -9,25 +9,53 @@ import {
   SpaceBetween
 } from '@cloudscape-design/components'
 import { UploadedFile, getDisplayFileName, formatFileSize, isImageFile } from '../utils/fileUtils'
+import { adminApi } from '../services/api'
 
 interface ImageGalleryProps {
   files: UploadedFile[]
   onDelete?: (fileKey: string) => void
+  sessionId?: string
 }
 
-export default function ImageGallery({ files, onDelete }: ImageGalleryProps) {
+export default function ImageGallery({ files, onDelete, sessionId }: ImageGalleryProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [imageModalVisible, setImageModalVisible] = useState(false)
-  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
+  const [preparingFiles, setPreparingFiles] = useState<Set<string>>(new Set())
+  const [preparedUrls, setPreparedUrls] = useState<Map<string, string>>(new Map())
 
-  console.log('ImageGallery - All files:', files)
   const imageFiles = files.filter(file => isImageFile(file.contentType))
-  console.log('ImageGallery - Image files:', imageFiles)
-  console.log('ImageGallery - Image files count:', imageFiles.length)
 
-  const openImageModal = (file: UploadedFile) => {
-    setSelectedImage(file.fileUrl)
-    setImageModalVisible(true)
+  const handlePrepareFile = async (fileKey: string) => {
+    if (!sessionId) return
+    
+    setPreparingFiles(prev => new Set(prev).add(fileKey))
+    try {
+      const response = await adminApi.generateFilePresignedUrl(sessionId, fileKey)
+      setPreparedUrls(prev => new Map(prev).set(fileKey, response.presignedUrl))
+    } catch (error) {
+      console.error('Failed to prepare file:', error)
+    } finally {
+      setPreparingFiles(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(fileKey)
+        return newSet
+      })
+    }
+  }
+
+  const openImageModal = async (file: UploadedFile) => {
+    const preparedUrl = preparedUrls.get(file.fileKey)
+    if (preparedUrl) {
+      setSelectedImage(preparedUrl)
+      setImageModalVisible(true)
+    } else {
+      await handlePrepareFile(file.fileKey)
+      const newUrl = preparedUrls.get(file.fileKey)
+      if (newUrl) {
+        setSelectedImage(newUrl)
+        setImageModalVisible(true)
+      }
+    }
   }
 
   const closeImageModal = () => {
@@ -35,9 +63,7 @@ export default function ImageGallery({ files, onDelete }: ImageGalleryProps) {
     setImageModalVisible(false)
   }
 
-  const handleImageError = (fileKey: string) => {
-    setImageErrors(prev => new Set(prev).add(fileKey))
-  }
+
 
   if (imageFiles.length === 0) {
     console.log('ImageGallery - No image files found, returning null')
@@ -63,26 +89,20 @@ export default function ImageGallery({ files, onDelete }: ImageGalleryProps) {
           { colspan: { default: 12, xs: 6, s: 4, m: 3, l: 2 } },
           { colspan: { default: 12, xs: 6, s: 4, m: 3, l: 2 } }
         ]}>
-          {imageFiles.map((file) => (
-            <Box key={file.fileKey} padding="xs">
-              <div
-                style={{
-                  border: '1px solid #e1e4e8',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s ease',
-                  backgroundColor: '#f8f9fa'
-                }}
-                onClick={() => openImageModal(file)}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.02)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)'
-                }}
-              >
-                {imageErrors.has(file.fileKey) ? (
+          {imageFiles.map((file) => {
+            const isPreparing = preparingFiles.has(file.fileKey)
+            const preparedUrl = preparedUrls.get(file.fileKey)
+            
+            return (
+              <Box key={file.fileKey} padding="xs">
+                <div
+                  style={{
+                    border: '1px solid #e1e4e8',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    backgroundColor: '#f8f9fa'
+                  }}
+                >
                   <div
                     style={{
                       height: '150px',
@@ -90,58 +110,69 @@ export default function ImageGallery({ files, onDelete }: ImageGalleryProps) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '14px',
-                      color: '#666'
+                      color: '#666',
+                      backgroundColor: '#f0f0f0'
                     }}
                   >
-                    이미지를 불러올 수 없습니다
-                  </div>
-                ) : (
-                  <img
-                    src={file.fileUrl}
-                    alt={getDisplayFileName(file)}
-                    style={{
-                      width: '100%',
-                      height: '150px',
-                      objectFit: 'cover',
-                      display: 'block'
-                    }}
-                    onError={() => handleImageError(file.fileKey)}
-                  />
-                )}
-                <Box padding="xs">
-                  <Box fontSize="body-s" fontWeight="bold" margin={{ bottom: "xxs" }}>
-                    {getDisplayFileName(file)}
-                  </Box>
-                  <SpaceBetween direction="horizontal" size="xs" alignItems="center">
-                    <Box fontSize="body-s" color="text-status-inactive">
-                      {formatFileSize(file.fileSize)}
-                    </Box>
-                    <SpaceBetween direction="horizontal" size="xxs">
-                      <Button
-                        variant="icon"
-                        iconName="download"
-                        href={file.fileUrl}
-                        target="_blank"
-                        download={getDisplayFileName(file)}
-                        ariaLabel="다운로드"
+                    {preparedUrl ? (
+                      <img
+                        src={preparedUrl}
+                        alt={getDisplayFileName(file)}
+                        style={{
+                          width: '100%',
+                          height: '150px',
+                          objectFit: 'cover',
+                          display: 'block',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => openImageModal(file)}
                       />
-                      {onDelete && (
-                        <Button
-                          variant="icon"
-                          iconName="remove"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onDelete(file.fileKey)
-                          }}
-                          ariaLabel="삭제"
-                        />
-                      )}
+                    ) : (
+                      <Button
+                        variant="primary"
+                        iconName="file"
+                        loading={isPreparing}
+                        onClick={() => handlePrepareFile(file.fileKey)}
+                        disabled={!sessionId}
+                      >
+                        이미지 준비
+                      </Button>
+                    )}
+                  </div>
+                  <Box padding="xs">
+                    <Box fontSize="body-s" fontWeight="bold" margin={{ bottom: "xxs" }}>
+                      {getDisplayFileName(file)}
+                    </Box>
+                    <SpaceBetween direction="horizontal" size="xs" alignItems="center">
+                      <Box fontSize="body-s" color="text-status-inactive">
+                        {formatFileSize(file.fileSize)}
+                      </Box>
+                      <SpaceBetween direction="horizontal" size="xxs">
+                        {preparedUrl && (
+                          <Button
+                            variant="icon"
+                            iconName="download"
+                            href={preparedUrl}
+                            target="_blank"
+                            download={getDisplayFileName(file)}
+                            ariaLabel="다운로드"
+                          />
+                        )}
+                        {onDelete && (
+                          <Button
+                            variant="icon"
+                            iconName="remove"
+                            onClick={() => onDelete(file.fileKey)}
+                            ariaLabel="삭제"
+                          />
+                        )}
+                      </SpaceBetween>
                     </SpaceBetween>
-                  </SpaceBetween>
-                </Box>
-              </div>
-            </Box>
-          ))}
+                  </Box>
+                </div>
+              </Box>
+            )
+          })}
         </Grid>
       </Container>
 

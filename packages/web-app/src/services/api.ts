@@ -200,6 +200,12 @@ export const adminApi = {
     return response.data
   },
 
+  generateFilePresignedUrl: async (sessionId: string, fileKey: string) => {
+    const encodedFileKey = encodeURIComponent(fileKey)
+    const response = await api.post(`/admin/sessions/${sessionId}/files/${encodedFileKey}/presigned-url`)
+    return response.data
+  },
+
   // Meeting log operations
   saveMeetingLog: async (sessionId: string, meetingLog: string) => {
     const response = await api.put(`/admin/sessions/${sessionId}/meeting-log`, { meetingLog })
