@@ -36,14 +36,27 @@ export default function AdminSessionDetails() {
       // Load basic session data for conversation
       const sessionData = await chatApi.getSession(sessionId!)
       setSession(sessionData)
-      
+
       // Load detailed session info including PIN for admin
       const sessionDetails = await adminApi.getSessionDetails(sessionId!)
-      setSession(prev => prev ? { 
-        ...prev, 
+
+      // Load feedback (try regardless of session status)
+      let feedbackData = null
+      console.log('Session status:', sessionData.status)
+      try {
+        feedbackData = await adminApi.getSessionFeedback(sessionId!)
+        console.log('Feedback data loaded:', feedbackData)
+      } catch (error) {
+        // Feedback might not exist, which is fine
+        console.log('No feedback found for session:', sessionId, error)
+      }
+
+      setSession(prev => prev ? {
+        ...prev,
         pinNumber: sessionDetails.pinNumber,
         privacyConsentAgreed: sessionDetails.privacyConsentAgreed,
-        privacyConsentTimestamp: sessionDetails.privacyConsentTimestamp
+        privacyConsentTimestamp: sessionDetails.privacyConsentTimestamp,
+        customerFeedback: feedbackData
       } : null)
     } catch (err) {
       setError('Failed to load session details')
@@ -118,7 +131,7 @@ export default function AdminSessionDetails() {
             <Box>{session.salesRepInfo?.name} / {session.salesRepEmail}</Box>
           </Box>
         </ColumnLayout>
-        
+
         <ColumnLayout columns={3}>
           <Box>
             <Box variant="awsui-key-label">Status</Box>
@@ -135,7 +148,7 @@ export default function AdminSessionDetails() {
             <Box>{session.createdAt ? new Date(session.createdAt).toLocaleDateString() : 'N/A'}</Box>
           </Box>
         </ColumnLayout>
-        
+
         <ColumnLayout columns={2}>
           <Box>
             <Box variant="awsui-key-label">개인정보 동의</Box>
@@ -150,8 +163,8 @@ export default function AdminSessionDetails() {
           <Box>
             <Box variant="awsui-key-label">동의 시간</Box>
             <Box>
-              {session.privacyConsentTimestamp ? 
-                new Date(session.privacyConsentTimestamp).toLocaleString('ko-KR') : 
+              {session.privacyConsentTimestamp ?
+                new Date(session.privacyConsentTimestamp).toLocaleString('ko-KR') :
                 '-'
               }
             </Box>
@@ -174,27 +187,117 @@ export default function AdminSessionDetails() {
               label: 'Conversation',
               id: 'conversation',
               content: (
-                <SpaceBetween size="m">
-                  {session.conversationHistory.map((message) => (
-                    <Box
-                      key={message.id}
-                      padding="s"
-                    >
-                      <SpaceBetween size="xs">
-                        <Box fontSize="body-s" color="text-status-inactive">
-                          {message.sender === 'customer' ? 'Customer' : 'Assistant'} • 
-                          {new Date(message.timestamp).toLocaleString()} • 
-                          Stage: {message.stage?.replace('_', ' ').toUpperCase() || 'Unknown'}
-                        </Box>
-                        <Box>{message.content}</Box>
+                <SpaceBetween size="l">
+                  {/* Customer Feedback Section */}
+                  {session.customerFeedback ? (
+                    <Container>
+                      <Header variant="h3">
+                        고객 피드백 (CSAT){' '}
+                        <Badge color="green">
+                          피드백 있음
+                        </Badge>
+                      </Header>
+                      <SpaceBetween size="m">
+                        <ColumnLayout columns={2}>
+                          <Box>
+                            <Box variant="awsui-key-label">만족도 점수</Box>
+                            <Box>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ display: 'flex', gap: '0.1rem' }}>
+                                  {[1, 2, 3, 4, 5].map((star) => {
+                                    const rating = session.customerFeedback!.rating;
+                                    return (
+                                      <span
+                                        key={star}
+                                        style={{
+                                          position: 'relative',
+                                          fontSize: '1.5rem'
+                                        }}
+                                      >
+                                        <span style={{ color: '#ddd' }}>☆</span>
+                                        <span
+                                          style={{
+                                            position: 'absolute',
+                                            left: 0,
+                                            top: 0,
+                                            color: '#ff9900',
+                                            clipPath: rating >= star ? 'none' :
+                                              rating >= star - 0.5 ? 'inset(0 50% 0 0)' : 'inset(0 100% 0 0)'
+                                          }}
+                                        >
+                                          ★
+                                        </span>
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                                <Box fontWeight="bold" fontSize="heading-m">
+                                  {session.customerFeedback.rating}/5.0
+                                </Box>
+                              </div>
+                            </Box>
+                          </Box>
+                          <Box>
+                            <Box variant="awsui-key-label">피드백 제출 시간</Box>
+                            <Box>
+                              {new Date(session.customerFeedback.timestamp).toLocaleString('ko-KR')}
+                            </Box>
+                          </Box>
+                        </ColumnLayout>
+
+                        {session.customerFeedback.feedback && (
+                          <Box>
+                            <Box variant="awsui-key-label">고객 의견</Box>
+                            <Box padding="s" variant="awsui-value-large">
+                              {session.customerFeedback.feedback}
+                            </Box>
+                          </Box>
+                        )}
                       </SpaceBetween>
-                    </Box>
-                  ))}
-                  {session.conversationHistory.length === 0 && (
-                    <Box textAlign="center" color="text-status-inactive">
-                      No messages yet
-                    </Box>
+                    </Container>
+                  ) : (
+                    <Container>
+                      <Header variant="h3">
+                        고객 피드백 (CSAT){' '}
+                        <Badge color="grey">
+                          피드백 없음
+                        </Badge>
+                      </Header>
+                      <Box color="text-status-inactive" textAlign="center" padding="l">
+                        {session.status === 'completed' 
+                          ? '고객이 아직 피드백을 제출하지 않았습니다.'
+                          : '세션이 완료되면 고객 피드백을 확인할 수 있습니다.'
+                        }
+                      </Box>
+                    </Container>
                   )}
+
+                  {/* Conversation History */}
+                  <Container>
+                    <Header variant="h3">대화 내역</Header>
+                    <SpaceBetween size="m">
+                      {session.conversationHistory.map((message) => (
+                        <Box
+                          key={message.id}
+                          padding="s"
+                        >
+                          <SpaceBetween size="xs">
+                            <Box fontSize="body-s" color="text-status-inactive">
+                              {message.sender === 'customer' ? 'Customer' : 'Assistant'} •
+                              {new Date(message.timestamp).toLocaleString()} •
+                              Stage: {message.stage?.replace('_', ' ').toUpperCase() || 'Unknown'}
+                            </Box>
+                            <Box>{message.content}</Box>
+                          </SpaceBetween>
+                        </Box>
+                      ))}
+                      {session.conversationHistory.length === 0 && (
+                        <Box textAlign="center" color="text-status-inactive">
+                          No messages yet
+                        </Box>
+                      )}
+                    </SpaceBetween>
+                  </Container>
                 </SpaceBetween>
               )
             }

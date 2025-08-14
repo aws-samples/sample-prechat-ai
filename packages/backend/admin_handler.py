@@ -3,6 +3,7 @@ import boto3
 import time
 import logging
 import os
+from decimal import Decimal
 from botocore.exceptions import ClientError, ReadTimeoutError
 from utils import lambda_response, parse_body, get_timestamp
 
@@ -39,7 +40,10 @@ def clean_llm_response(content):
     return content.strip()
 
 def list_sessions(event, context):
-    sales_rep_id = event['queryStringParameters'].get('salesRepId') if event.get('queryStringParameters') else None
+    try:
+        sales_rep_id = event['queryStringParameters'].get('salesRepId') if event.get('queryStringParameters') else None
+    except (KeyError, TypeError, AttributeError):
+        sales_rep_id = None
     
     try:
         sessions_table = dynamodb.Table('mte-sessions')
@@ -76,11 +80,21 @@ def list_sessions(event, context):
             })
         
         return lambda_response(200, {'sessions': sessions})
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        logger.error(f"DynamoDB error listing sessions: {error_code} - {str(e)}")
+        return lambda_response(500, {'error': f'Database error: {error_code}'})
     except Exception as e:
+        logger.error(f"Unexpected error listing sessions: {str(e)}")
         return lambda_response(500, {'error': 'Failed to list sessions'})
 
 def inactivate_session(event, context):
-    session_id = event['pathParameters']['sessionId']
+    try:
+        session_id = event['pathParameters']['sessionId']
+        if not session_id:
+            return lambda_response(400, {'error': 'Session ID is required'})
+    except (KeyError, TypeError):
+        return lambda_response(400, {'error': 'Missing session ID parameter'})
     
     try:
         sessions_table = dynamodb.Table('mte-sessions')
@@ -92,11 +106,26 @@ def inactivate_session(event, context):
         )
         
         return lambda_response(200, {'message': 'Session inactivated'})
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        logger.error(f"DynamoDB error inactivating session {session_id}: {error_code} - {str(e)}")
+        if error_code == 'ConditionalCheckFailedException':
+            return lambda_response(404, {'error': 'Session not found'})
+        return lambda_response(500, {'error': f'Database error: {error_code}'})
+    except KeyError as e:
+        logger.error(f"Missing session ID parameter: {str(e)}")
+        return lambda_response(400, {'error': 'Missing session ID'})
     except Exception as e:
+        logger.error(f"Unexpected error inactivating session {session_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to inactivate session'})
 
 def delete_session(event, context):
-    session_id = event['pathParameters']['sessionId']
+    try:
+        session_id = event['pathParameters']['sessionId']
+        if not session_id:
+            return lambda_response(400, {'error': 'Session ID is required'})
+    except (KeyError, TypeError):
+        return lambda_response(400, {'error': 'Missing session ID parameter'})
     
     try:
         sessions_table = dynamodb.Table('mte-sessions')
@@ -115,12 +144,27 @@ def delete_session(event, context):
             messages_table.delete_item(Key={'PK': message['PK'], 'SK': message['SK']})
         
         return lambda_response(200, {'message': 'Session deleted'})
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        logger.error(f"DynamoDB error deleting session {session_id}: {error_code} - {str(e)}")
+        if error_code == 'ResourceNotFoundException':
+            return lambda_response(404, {'error': 'Session not found'})
+        return lambda_response(500, {'error': f'Database error: {error_code}'})
+    except KeyError as e:
+        logger.error(f"Missing session ID parameter: {str(e)}")
+        return lambda_response(400, {'error': 'Missing session ID'})
     except Exception as e:
+        logger.error(f"Unexpected error deleting session {session_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to delete session'})
 
 def get_session_report(event, context):
     """Retrieve stored analysis results from DynamoDB"""
-    session_id = event['pathParameters']['sessionId']
+    try:
+        session_id = event['pathParameters']['sessionId']
+        if not session_id:
+            return lambda_response(400, {'error': 'Session ID is required'})
+    except (KeyError, TypeError):
+        return lambda_response(400, {'error': 'Missing session ID parameter'})
     
     try:
         # Get session with aiAnalysis data
@@ -207,7 +251,12 @@ def get_aws_docs_recommendations(messages):
 
 def get_analysis_status(event, context):
     """Get analysis status for frontend polling"""
-    session_id = event['pathParameters']['sessionId']
+    try:
+        session_id = event['pathParameters']['sessionId']
+        if not session_id:
+            return lambda_response(400, {'error': 'Session ID is required'})
+    except (KeyError, TypeError):
+        return lambda_response(400, {'error': 'Missing session ID parameter'})
     
     try:
         sessions_table = dynamodb.Table('mte-sessions')
@@ -236,13 +285,22 @@ def get_analysis_status(event, context):
         
         return lambda_response(200, response_data)
         
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        logger.error(f"DynamoDB error getting analysis status for session {session_id}: {error_code} - {str(e)}")
+        return lambda_response(500, {'error': f'Database error: {error_code}'})
     except Exception as e:
-        logger.error(f"Error getting analysis status for session {session_id}: {str(e)}")
+        logger.error(f"Unexpected error getting analysis status for session {session_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to get analysis status'})
 
 def get_session_details(event, context):
     """Get detailed session info including PIN (only for session owner)"""
-    session_id = event['pathParameters']['sessionId']
+    try:
+        session_id = event['pathParameters']['sessionId']
+        if not session_id:
+            return lambda_response(400, {'error': 'Session ID is required'})
+    except (KeyError, TypeError):
+        return lambda_response(400, {'error': 'Missing session ID parameter'})
     
     try:
         sessions_table = dynamodb.Table('mte-sessions')
@@ -268,14 +326,34 @@ def get_session_details(event, context):
             'meetingLog': session.get('meetingLog', '')
         })
         
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        logger.error(f"DynamoDB error getting session details {session_id}: {error_code} - {str(e)}")
+        return lambda_response(500, {'error': f'Database error: {error_code}'})
+    except KeyError as e:
+        logger.error(f"Missing session ID parameter: {str(e)}")
+        return lambda_response(400, {'error': 'Missing session ID'})
     except Exception as e:
+        logger.error(f"Unexpected error getting session details {session_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to get session details'})
 
 def save_meeting_log(event, context):
     """Save meeting log for a session"""
-    session_id = event['pathParameters']['sessionId']
-    body = parse_body(event)
-    meeting_log = body.get('meetingLog', '')
+    try:
+        session_id = event['pathParameters']['sessionId']
+        if not session_id:
+            return lambda_response(400, {'error': 'Session ID is required'})
+    except (KeyError, TypeError):
+        return lambda_response(400, {'error': 'Missing session ID parameter'})
+    
+    try:
+        body = parse_body(event)
+        meeting_log = body.get('meetingLog', '')
+        if not isinstance(meeting_log, str):
+            return lambda_response(400, {'error': 'Meeting log must be a string'})
+    except (ValueError, TypeError) as e:
+        logger.error(f"Invalid request body for meeting log: {str(e)}")
+        return lambda_response(400, {'error': 'Invalid request body'})
     
     try:
         sessions_table = dynamodb.Table('mte-sessions')
@@ -302,18 +380,39 @@ def save_meeting_log(event, context):
             'updatedAt': timestamp
         })
         
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        logger.error(f"DynamoDB error saving meeting log for session {session_id}: {error_code} - {str(e)}")
+        if error_code == 'ConditionalCheckFailedException':
+            return lambda_response(404, {'error': 'Session not found'})
+        return lambda_response(500, {'error': f'Database error: {error_code}'})
+    except KeyError as e:
+        logger.error(f"Missing required parameters for meeting log: {str(e)}")
+        return lambda_response(400, {'error': 'Missing required parameters'})
     except Exception as e:
-        logger.error(f"Error saving meeting log for session {session_id}: {str(e)}")
+        logger.error(f"Unexpected error saving meeting log for session {session_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to save meeting log'})
 
 def reanalyze_with_meeting_log(event, context):
     """Request re-analysis including meeting log context"""
-    session_id = event['pathParameters']['sessionId']
-    body = parse_body(event)
-    model_id = body.get('modelId')
+    try:
+        session_id = event['pathParameters']['sessionId']
+        if not session_id:
+            return lambda_response(400, {'error': 'Session ID is required'})
+    except (KeyError, TypeError):
+        return lambda_response(400, {'error': 'Missing session ID parameter'})
     
-    if not model_id:
-        return lambda_response(400, {'error': 'Missing modelId parameter'})
+    try:
+        body = parse_body(event)
+        model_id = body.get('modelId')
+        
+        if not model_id:
+            return lambda_response(400, {'error': 'Missing modelId parameter'})
+        if not isinstance(model_id, str) or not model_id.strip():
+            return lambda_response(400, {'error': 'Invalid modelId parameter'})
+    except (ValueError, TypeError) as e:
+        logger.error(f"Invalid request body for re-analysis request: {str(e)}")
+        return lambda_response(400, {'error': 'Invalid request body'})
     
     try:
         # Check if session exists and has meeting log
@@ -346,10 +445,19 @@ def reanalyze_with_meeting_log(event, context):
             'meetingLog': meeting_log
         }
         
-        sqs.send_message(
-            QueueUrl=ANALYSIS_QUEUE_URL,
-            MessageBody=json.dumps(message)
-        )
+        if not ANALYSIS_QUEUE_URL:
+            logger.error("ANALYSIS_QUEUE_URL environment variable not configured")
+            return lambda_response(500, {'error': 'Analysis queue not configured'})
+        
+        try:
+            sqs.send_message(
+                QueueUrl=ANALYSIS_QUEUE_URL,
+                MessageBody=json.dumps(message)
+            )
+        except ClientError as sqs_error:
+            error_code = sqs_error.response['Error']['Code']
+            logger.error(f"SQS error sending re-analysis request for session {session_id}: {error_code} - {str(sqs_error)}")
+            return lambda_response(500, {'error': f'Failed to queue re-analysis request: {error_code}'})
         
         return lambda_response(202, {
             'message': 'Re-analysis with meeting log queued successfully',
@@ -357,20 +465,36 @@ def reanalyze_with_meeting_log(event, context):
             'status': 'processing'
         })
         
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        logger.error(f"DynamoDB error in re-analysis for session {session_id}: {error_code} - {str(e)}")
+        return lambda_response(500, {'error': f'Database error: {error_code}'})
     except Exception as e:
-        logger.error(f"Error queuing re-analysis for session {session_id}: {str(e)}")
+        logger.error(f"Unexpected error queuing re-analysis for session {session_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to queue re-analysis request'})
 
 
 
 def request_analysis(event, context):
     """Producer function - Enqueue analysis request to SQS"""
-    session_id = event['pathParameters']['sessionId']
-    body = parse_body(event)
-    model_id = body.get('modelId')
+    try:
+        session_id = event['pathParameters']['sessionId']
+        if not session_id:
+            return lambda_response(400, {'error': 'Session ID is required'})
+    except (KeyError, TypeError):
+        return lambda_response(400, {'error': 'Missing session ID parameter'})
     
-    if not model_id:
-        return lambda_response(400, {'error': 'Missing modelId parameter'})
+    try:
+        body = parse_body(event)
+        model_id = body.get('modelId')
+        
+        if not model_id:
+            return lambda_response(400, {'error': 'Missing modelId parameter'})
+        if not isinstance(model_id, str) or not model_id.strip():
+            return lambda_response(400, {'error': 'Invalid modelId parameter'})
+    except (ValueError, TypeError) as e:
+        logger.error(f"Invalid request body for analysis request: {str(e)}")
+        return lambda_response(400, {'error': 'Invalid request body'})
     
     try:
         # Check if session exists
@@ -398,10 +522,19 @@ def request_analysis(event, context):
             'requestedAt': timestamp
         }
         
-        sqs.send_message(
-            QueueUrl=ANALYSIS_QUEUE_URL,
-            MessageBody=json.dumps(message)
-        )
+        if not ANALYSIS_QUEUE_URL:
+            logger.error("ANALYSIS_QUEUE_URL environment variable not configured")
+            return lambda_response(500, {'error': 'Analysis queue not configured'})
+        
+        try:
+            sqs.send_message(
+                QueueUrl=ANALYSIS_QUEUE_URL,
+                MessageBody=json.dumps(message)
+            )
+        except ClientError as sqs_error:
+            error_code = sqs_error.response['Error']['Code']
+            logger.error(f"SQS error sending analysis request for session {session_id}: {error_code} - {str(sqs_error)}")
+            return lambda_response(500, {'error': f'Failed to queue analysis request: {error_code}'})
         
         return lambda_response(202, {
             'message': 'Analysis request queued successfully',
@@ -409,8 +542,12 @@ def request_analysis(event, context):
             'status': 'processing'
         })
         
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        logger.error(f"DynamoDB error in analysis request for session {session_id}: {error_code} - {str(e)}")
+        return lambda_response(500, {'error': f'Database error: {error_code}'})
     except Exception as e:
-        logger.error(f"Error queuing analysis request for session {session_id}: {str(e)}")
+        logger.error(f"Unexpected error queuing analysis request for session {session_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to queue analysis request'})
 
 def process_analysis(event, context):
@@ -613,16 +750,16 @@ def _perform_conversation_analysis(session_id, model_id, include_meeting_log=Fal
                         UpdateExpression='SET analysisStatus = :status',
                         ExpressionAttributeValues={':status': 'failed'}
                     )
-                except:
-                    pass
+                except Exception as status_update_error:
+                    logger.error(f"Failed to update analysis status to failed for session {session_id}: {str(status_update_error)}")
                 
                 return {
                     'success': False,
                     'error': 'Analysis failed with critical error',
                     'fallback': fallback_analysis
                 }
-        except:
-            pass
+        except Exception as fallback_error:
+            logger.error(f"Failed to generate fallback analysis for session {session_id}: {str(fallback_error)}")
         
         # Update status to failed
         try:
@@ -632,8 +769,8 @@ def _perform_conversation_analysis(session_id, model_id, include_meeting_log=Fal
                 UpdateExpression='SET analysisStatus = :status',
                 ExpressionAttributeValues={':status': 'failed'}
             )
-        except:
-            pass
+        except Exception as status_update_error:
+            logger.error(f"Failed to update analysis status to failed for session {session_id}: {str(status_update_error)}")
         
         return {'success': False, 'error': 'Critical failure in conversation analysis'}
 
@@ -931,5 +1068,38 @@ def _get_stored_analysis(session_id):
     except Exception as e:
         print(f"Error retrieving analysis for session {session_id}: {str(e)}")
         return None
+
+
+def get_session_feedback(event, context):
+    """Get customer feedback for a session"""
+    session_id = event['pathParameters']['sessionId']
+    
+    try:
+        sessions_table = dynamodb.Table('mte-sessions')
+        
+        # Get feedback data
+        response = sessions_table.get_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'FEEDBACK'}
+        )
+        
+        if 'Item' not in response:
+            return lambda_response(404, {'error': 'No feedback found for this session'})
+        
+        feedback_item = response['Item']
+        
+        # Convert Decimal rating back to float for JSON serialization
+        rating = feedback_item.get('rating')
+        if isinstance(rating, Decimal):
+            rating = float(rating)
+        
+        return lambda_response(200, {
+            'rating': rating,
+            'feedback': feedback_item.get('feedback', ''),
+            'timestamp': feedback_item.get('timestamp')
+        })
+        
+    except Exception as e:
+        print(f"Error retrieving feedback for session {session_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to retrieve feedback'})
 
 

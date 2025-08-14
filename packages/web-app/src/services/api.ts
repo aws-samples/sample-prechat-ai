@@ -76,6 +76,17 @@ export const chatApi = {
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
     })
     return response.data
+  },
+
+  submitFeedback: async (sessionId: string, rating: number, feedback: string) => {
+    const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
+    const response = await api.post(`/chat/session/${sessionId}/feedback`, {
+      rating,
+      feedback
+    }, {
+      headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
+    })
+    return response.data
   }
 }
 
@@ -198,5 +209,18 @@ export const adminApi = {
   reanalyzeWithMeetingLog: async (sessionId: string, modelId: string) => {
     const response = await api.post(`/admin/sessions/${sessionId}/reanalyze`, { modelId })
     return response.data
+  },
+
+  getSessionFeedback: async (sessionId: string) => {
+    try {
+      const response = await api.get(`/admin/sessions/${sessionId}/feedback`)
+      return response.data
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        // No feedback exists yet
+        return null
+      }
+      throw error
+    }
   }
 }

@@ -771,6 +771,25 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  # Session Feedback Function
+  GetSessionFeedbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.get_session_feedback
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetSessionFeedback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/feedback
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   # AWS Documentation Tools Action Group
   AWSDocsActionFunction:
     Type: AWS::Serverless::Function
@@ -875,6 +894,23 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/chat/session/{sessionId}/files/{fileKey+}
             Method: delete
+
+  # Customer Feedback Function
+  FeedbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: chat_handler.handle_feedback
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        SubmitFeedback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/feedback
+            Method: post
 
   # Admin File Functions (no CSRF required)
   ListSessionFilesAdminFunction:

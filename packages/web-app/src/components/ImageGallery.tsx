@@ -18,6 +18,7 @@ interface ImageGalleryProps {
 export default function ImageGallery({ files, onDelete }: ImageGalleryProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [imageModalVisible, setImageModalVisible] = useState(false)
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
 
   console.log('ImageGallery - All files:', files)
   const imageFiles = files.filter(file => isImageFile(file.contentType))
@@ -32,6 +33,10 @@ export default function ImageGallery({ files, onDelete }: ImageGalleryProps) {
   const closeImageModal = () => {
     setSelectedImage(null)
     setImageModalVisible(false)
+  }
+
+  const handleImageError = (fileKey: string) => {
+    setImageErrors(prev => new Set(prev).add(fileKey))
   }
 
   if (imageFiles.length === 0) {
@@ -77,35 +82,32 @@ export default function ImageGallery({ files, onDelete }: ImageGalleryProps) {
                   e.currentTarget.style.transform = 'scale(1)'
                 }}
               >
-                <img
-                  src={file.fileUrl}
-                  alt={getDisplayFileName(file)}
-                  style={{
-                    width: '100%',
-                    height: '150px',
-                    objectFit: 'cover',
-                    display: 'block'
-                  }}
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                    const parent = target.parentElement
-                    if (parent) {
-                      parent.innerHTML = `
-                        <div style="
-                          height: 150px; 
-                          display: flex; 
-                          align-items: center; 
-                          justify-content: center;
-                          color: #666;
-                          font-size: 14px;
-                        ">
-                          이미지를 불러올 수 없습니다
-                        </div>
-                      `
-                    }
-                  }}
-                />
+                {imageErrors.has(file.fileKey) ? (
+                  <div
+                    style={{
+                      height: '150px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      color: '#666'
+                    }}
+                  >
+                    이미지를 불러올 수 없습니다
+                  </div>
+                ) : (
+                  <img
+                    src={file.fileUrl}
+                    alt={getDisplayFileName(file)}
+                    style={{
+                      width: '100%',
+                      height: '150px',
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                    onError={() => handleImageError(file.fileKey)}
+                  />
+                )}
                 <Box padding="xs">
                   <Box fontSize="body-s" fontWeight="bold" margin={{ bottom: "xxs" }}>
                     {getDisplayFileName(file)}

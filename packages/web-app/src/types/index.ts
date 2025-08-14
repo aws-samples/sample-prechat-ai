@@ -14,6 +14,12 @@ export interface Message {
   stage: ConversationStage;
 }
 
+export interface CustomerFeedback {
+  rating: number;
+  feedback: string;
+  timestamp: string;
+}
+
 export interface Session {
   sessionId: string;
   status: 'active' | 'completed' | 'expired' | 'inactive';
@@ -38,6 +44,7 @@ export interface Session {
   meetingLog?: string;
   createdAt?: string;
   completedAt?: string;
+  customerFeedback?: CustomerFeedback;
 }
 
 export interface ChatMessageRequest {

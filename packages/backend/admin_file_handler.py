@@ -1,6 +1,7 @@
 import json
 import boto3
 import os
+from botocore.exceptions import ClientError
 from utils import lambda_response
 
 s3_client = boto3.client('s3')
@@ -9,6 +10,8 @@ def list_session_files_admin(event, context):
     """List uploaded files for a session (admin access - no CSRF required)"""
     try:
         session_id = event['pathParameters']['sessionId']
+        if not session_id or not session_id.strip():
+            return lambda_response(400, {'error': 'Session ID is required'})
         bucket_name = os.environ.get('WEBSITE_BUCKET')
         
         if not bucket_name:
@@ -41,8 +44,9 @@ def list_session_files_admin(event, context):
                             Key=obj['Key']
                         )
                         content_type = head_response.get('ContentType', 'application/octet-stream')
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        print(f"Warning: Failed to get content type for {obj['Key']}: {str(e)}")
+                        # Continue with default content type
                     
                     # Generate relative URL for CloudFront access
                     file_url = f"/{obj['Key']}"
@@ -59,12 +63,21 @@ def list_session_files_admin(event, context):
             
             return lambda_response(200, {'files': files})
             
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            print(f"S3 ClientError listing files for session {session_id}: {error_code} - {str(e)}")
+            if error_code in ['NoSuchBucket', 'AccessDenied']:
+                return lambda_response(500, {'error': f'S3 configuration error: {error_code}'})
+            return lambda_response(200, {'files': []})
         except Exception as e:
-            print(f"Error listing files: {str(e)}")
+            print(f"Unexpected error listing files for session {session_id}: {str(e)}")
             return lambda_response(200, {'files': []})
         
+    except KeyError as e:
+        print(f"Missing required parameter in list_session_files_admin: {str(e)}")
+        return lambda_response(400, {'error': 'Missing required parameters'})
     except Exception as e:
-        print(f"Error in list_session_files_admin: {str(e)}")
+        print(f"Critical error in list_session_files_admin: {str(e)}")
         return lambda_response(500, {'error': 'Failed to list files'})
 
 def delete_session_file_admin(event, context):
@@ -72,6 +85,11 @@ def delete_session_file_admin(event, context):
     try:
         session_id = event['pathParameters']['sessionId']
         file_key = event['pathParameters']['fileKey']
+        
+        if not session_id or not session_id.strip():
+            return lambda_response(400, {'error': 'Session ID is required'})
+        if not file_key or not file_key.strip():
+            return lambda_response(400, {'error': 'File key is required'})
         bucket_name = os.environ.get('WEBSITE_BUCKET')
         
         # Get client IP address for admin access logging
@@ -105,6 +123,17 @@ def delete_session_file_admin(event, context):
         print(f"Admin file deleted successfully - Session ID: {session_id}, File: {decoded_file_key}, Client IP: {client_ip}")
         return lambda_response(200, {'message': 'File deleted successfully'})
         
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        print(f"S3 ClientError deleting file {file_key} from session {session_id}: {error_code} - {str(e)}")
+        if error_code == 'NoSuchKey':
+            return lambda_response(404, {'error': 'File not found'})
+        elif error_code in ['NoSuchBucket', 'AccessDenied']:
+            return lambda_response(500, {'error': f'S3 configuration error: {error_code}'})
+        return lambda_response(500, {'error': f'S3 error: {error_code}'})
+    except KeyError as e:
+        print(f"Missing required parameter in delete_session_file_admin: {str(e)}")
+        return lambda_response(400, {'error': 'Missing required parameters'})
     except Exception as e:
-        print(f"Error deleting file: {str(e)}")
+        print(f"Unexpected error deleting file {file_key} from session {session_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to delete file'})

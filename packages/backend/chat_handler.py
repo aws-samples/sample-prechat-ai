@@ -1,6 +1,7 @@
 import json
 import boto3
 import os
+from decimal import Decimal
 from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp
 
 dynamodb = boto3.resource('dynamodb')
@@ -165,4 +166,55 @@ def generate_agent_response(message, session_id, agent_id):
             return "죄송합니다. 요청이 올바르지 않습니다. 다시 시도해 주세요."
         else:
             return "죄송합니다. 시스템에 일시적인 문제가 있습니다. 잠시 후 다시 시도해 주세요."
+
+
+def handle_feedback(event, context):
+    """Handle customer feedback submission"""
+    body = parse_body(event)
+    session_id = event['pathParameters']['sessionId']
+    rating = body.get('rating')
+    feedback = body.get('feedback', '')
+    
+    if not session_id:
+        return lambda_response(400, {'error': 'Missing sessionId'})
+    
+    if not rating or not isinstance(rating, (int, float)) or rating < 0.5 or rating > 5:
+        return lambda_response(400, {'error': 'Invalid rating. Must be between 0.5 and 5.0'})
+    
+    # Get session to verify it exists
+    sessions_table = dynamodb.Table('mte-sessions')
+    try:
+        session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
+        if 'Item' not in session_resp:
+            return lambda_response(404, {'error': 'Session not found'})
+    except Exception as e:
+        print(f"Database error checking session: {str(e)}")
+        return lambda_response(500, {'error': 'Database error'})
+    
+    # Save feedback
+    timestamp = get_timestamp()
+    ttl_value = get_ttl_timestamp(365)  # Keep feedback for 1 year
+    
+    feedback_item = {
+        'PK': f'SESSION#{session_id}',
+        'SK': 'FEEDBACK',
+        'sessionId': session_id,
+        'rating': Decimal(str(rating)),  # Convert float to Decimal for DynamoDB
+        'feedback': feedback,
+        'timestamp': timestamp,
+        'ttl': ttl_value
+    }
+    
+    try:
+        sessions_table.put_item(Item=feedback_item)
+        print(f"Feedback saved for session {session_id}: rating={rating}, feedback_length={len(feedback)}")
+        
+        return lambda_response(200, {
+            'message': 'Feedback submitted successfully',
+            'sessionId': session_id,
+            'rating': rating
+        })
+    except Exception as e:
+        print(f"Failed to save feedback for session {session_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to save feedback'})
 

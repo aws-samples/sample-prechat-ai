@@ -19,7 +19,7 @@ import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
 
 import { useSession, useChat } from '../../hooks'
-import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload, MultilineChatInput } from '../../components'
+import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload, MultilineChatInput, FeedbackModal } from '../../components'
 import { MESSAGES } from '../../constants'
 import { chatApi } from '../../services/api'
 import { 
@@ -40,6 +40,8 @@ export default function CustomerChat() {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const [isCheckingStoredPin, setIsCheckingStoredPin] = useState(true)
   const [showFileUpload, setShowFileUpload] = useState(false)
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false)
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   
   const {
     sessionData,
@@ -134,6 +136,31 @@ export default function CustomerChat() {
   const handleSendMessage = () => {
     sendMessage(addMessage, updateSessionComplete, updateMessage)
   }
+
+  const handleFeedbackSubmit = async (rating: number, feedback: string) => {
+    try {
+      // Submit feedback to API
+      await chatApi.submitFeedback(sessionId!, rating, feedback)
+      setFeedbackSubmitted(true)
+      setShowFeedbackModal(false)
+    } catch (error) {
+      console.error('Failed to submit feedback:', error)
+      // Still close modal even if submission fails
+      setFeedbackSubmitted(true)
+      setShowFeedbackModal(false)
+    }
+  }
+
+  // Show feedback modal when consultation is complete
+  useEffect(() => {
+    if (isComplete && !feedbackSubmitted && !showFeedbackModal) {
+      // Small delay to let the completion message show first
+      const timer = setTimeout(() => {
+        setShowFeedbackModal(true)
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [isComplete, feedbackSubmitted, showFeedbackModal])
 
 
 
@@ -421,6 +448,11 @@ export default function CustomerChat() {
           onDismiss={() => setShowFileUpload(false)}
         />
       )}
+      
+      <FeedbackModal
+        visible={showFeedbackModal}
+        onSubmit={handleFeedbackSubmit}
+      />
     </Grid>
   )
 }
