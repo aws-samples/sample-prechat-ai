@@ -48,9 +48,6 @@ def list_session_files_admin(event, context):
                         print(f"Warning: Failed to get content type for {obj['Key']}: {str(e)}")
                         # Continue with default content type
                     
-                    # Generate relative URL for CloudFront access
-                    file_url = f"/{obj['Key']}"
-                    
                     files.append({
                         'fileKey': obj['Key'],
                         'fileName': encoded_filename,
@@ -58,7 +55,8 @@ def list_session_files_admin(event, context):
                         'fileSize': obj['Size'],
                         'uploadedAt': obj['LastModified'].isoformat(),
                         'contentType': content_type,
-                        'fileUrl': file_url
+                        'fileUrl': None,  # No direct URL - use pre-signed URL instead
+                        'presignedUrl': None  # Will be generated on demand
                     })
             
             return lambda_response(200, {'files': files})
@@ -137,3 +135,58 @@ def delete_session_file_admin(event, context):
     except Exception as e:
         print(f"Unexpected error deleting file {file_key} from session {session_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to delete file'})
+
+def generate_file_presigned_url(event, context):
+    """Generate pre-signed URL for secure file download (admin access)"""
+    try:
+        session_id = event['pathParameters']['sessionId']
+        file_key = event['pathParameters']['fileKey']
+        
+        if not session_id or not session_id.strip():
+            return lambda_response(400, {'error': 'Session ID is required'})
+        if not file_key or not file_key.strip():
+            return lambda_response(400, {'error': 'File key is required'})
+        
+        bucket_name = os.environ.get('WEBSITE_BUCKET')
+        if not bucket_name:
+            return lambda_response(500, {'error': 'S3 bucket not configured'})
+        
+        # URL decode the file key
+        import urllib.parse
+        decoded_file_key = urllib.parse.unquote(file_key)
+        
+        # Verify the file belongs to the session
+        expected_prefix = f"uploads/{session_id}/"
+        if not decoded_file_key.startswith(expected_prefix):
+            return lambda_response(403, {'error': 'Access denied - Invalid file path'})
+        
+        # Check if file exists
+        try:
+            s3_client.head_object(Bucket=bucket_name, Key=decoded_file_key)
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'NoSuchKey':
+                return lambda_response(404, {'error': 'File not found'})
+            raise
+        
+        # Generate pre-signed URL (valid for 1 hour)
+        presigned_url = s3_client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': bucket_name, 'Key': decoded_file_key},
+            ExpiresIn=3600  # 1 hour
+        )
+        
+        return lambda_response(200, {
+            'presignedUrl': presigned_url,
+            'expiresIn': 3600
+        })
+        
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        print(f"S3 ClientError generating presigned URL for {file_key}: {error_code} - {str(e)}")
+        return lambda_response(500, {'error': f'S3 error: {error_code}'})
+    except KeyError as e:
+        print(f"Missing required parameter in generate_file_presigned_url: {str(e)}")
+        return lambda_response(400, {'error': 'Missing required parameters'})
+    except Exception as e:
+        print(f"Unexpected error generating presigned URL for {file_key}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to generate download URL'})

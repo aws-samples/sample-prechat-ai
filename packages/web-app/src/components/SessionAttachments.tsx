@@ -83,6 +83,7 @@ export default function SessionAttachments({ sessionId }: SessionAttachmentsProp
           files={files} 
           loading={loading || deleting !== null}
           onDelete={handleDeleteFile}
+          sessionId={sessionId}
         />
       </Container>
 
@@ -90,6 +91,7 @@ export default function SessionAttachments({ sessionId }: SessionAttachmentsProp
       <ImageGallery 
         files={files} 
         onDelete={handleDeleteFile}
+        sessionId={sessionId}
       />
     </SpaceBetween>
   )
