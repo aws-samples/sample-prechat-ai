@@ -200,7 +200,7 @@ Resources:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [0, !GetAZs '']
       CidrBlock: 10.0.1.0/24
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-public-subnet-1-${Stage}'
@@ -211,7 +211,7 @@ Resources:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [1, !GetAZs '']
       CidrBlock: 10.0.2.0/24
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-public-subnet-2-${Stage}'
@@ -286,6 +286,11 @@ Resources:
   DefaultPublicRoute:
     Type: AWS::EC2::Route
     DependsOn: InternetGatewayAttachment
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W5
+            reason: "Public route to IGW is required for NAT Gateways in public subnets to provide internet access for Lambda functions in private subnets. This follows AWS best practices for serverless architectures."
     Properties:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
@@ -450,6 +455,17 @@ Resources:
           ToPort: 443
           SourceSecurityGroupId: !Ref LambdaSecurityGroup
           Description: HTTPS from Lambda functions
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          DestinationSecurityGroupId: !Ref LambdaSecurityGroup
+          Description: HTTPS to Lambda functions
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS outbound for AWS services
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-vpc-endpoint-sg-${Stage}'
@@ -573,6 +589,7 @@ Resources:
         StreamViewType: NEW_AND_OLD_IMAGES
       SSESpecification:
         SSEEnabled: true
+        SSEType: KMS
         KMSMasterKeyId: !Ref DynamoDBKMSKey
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
@@ -604,6 +621,7 @@ Resources:
         Enabled: true
       SSESpecification:
         SSEEnabled: true
+        SSEType: KMS
         KMSMasterKeyId: !Ref DynamoDBKMSKey
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
@@ -618,8 +636,25 @@ Resources:
   # API Gateway
   ApiGateway:
     Type: AWS::Serverless::Api
+    DependsOn: ApiGatewayAccount
     Properties:
       StageName: !Ref Stage
+      TracingEnabled: true
+      AccessLogSetting:
+        DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
+        Format: '$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime]"$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.responseLength $context.requestId $context.extendedRequestId'
+      CacheClusterEnabled: true
+      CacheClusterSize: "0.5"
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          CachingEnabled: true
+          CacheTtlInSeconds: 300
+          LoggingLevel: INFO
+          DataTraceEnabled: true
+          MetricsEnabled: true
+          ThrottlingRateLimit: 100
+          ThrottlingBurstLimit: 200
       Cors:
         AllowMethods: "'*'"
         AllowHeaders: "'*'"
@@ -628,6 +663,12 @@ Resources:
         Authorizers:
           CognitoAuthorizer:
             UserPoolArn: !GetAtt AdminUserPool.Arn
+      Tags:
+        Name: !Sub '${AWS::StackName}-api-gateway'
+        Environment: !Ref Stage
+        Caching: Enabled
+        Tracing: Enabled
+        Logging: Enabled
 
   # Lambda Functions
   ChatFunction:
@@ -1445,6 +1486,34 @@ Resources:
       LogGroupName: !Sub "/aws/s3/${AWS::StackName}-website-bucket"
       RetentionInDays: 30
 
+  # CloudWatch Log Group for API Gateway Access Logs
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/apigateway/${AWS::StackName}-api-access-logs"
+      RetentionInDays: 30
+
+  # IAM Role for API Gateway CloudWatch Logging
+  ApiGatewayCloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-apigateway-cloudwatch-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+
+  # API Gateway Account Configuration for CloudWatch Logging
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGatewayCloudWatchRole.Arn
+
   # S3 Access Logging Bucket
   AccessLoggingBucket:
     Type: AWS::S3::Bucket
@@ -1564,7 +1633,6 @@ Resources:
   # S3 Bucket for Static Website (Enhanced Security)
   WebsiteBucket:
     Type: AWS::S3::Bucket
-    DependsOn: AccessLoggingBucket
     Properties:
       BucketName: !Sub "${AWS::StackName}-website-${Stage}-${AWS::AccountId}"
       PublicAccessBlockConfiguration:
@@ -1685,6 +1753,9 @@ Outputs:
   ApiUrl:
     Description: API Gateway URL
     Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  ApiGatewayLogGroup:
+    Description: API Gateway CloudWatch Log Group
+    Value: !Ref ApiGatewayLogGroup
   BedrockActionEndpoint:
     Description: Bedrock Agent Action Group endpoint URL
     Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/bedrock/aws-docs-action"
