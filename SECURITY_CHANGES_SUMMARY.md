@@ -47,6 +47,39 @@ Successfully implemented comprehensive security mitigations for all 38 Lambda fu
 - **Implementation**: Customer-managed KMS key with proper IAM policies
 - **Compliance**: Full KMS encryption for all table data at rest
 
+### S3 Security Issues
+
+### 8. CKV_AWS_18: Access logging not enabled
+- **Created**: Dedicated `AccessLoggingBucket` for centralized access logs
+- **Configuration**: Website bucket logs all access to logging bucket
+- **Retention**: 90-day lifecycle policy for cost optimization
+
+### 9. CKV_AWS_21: Versioning not enabled
+- **Enabled**: S3 versioning on all buckets (website, logging, failover)
+- **Lifecycle**: Automatic cleanup of old versions after 30 days
+- **Protection**: Prevents accidental deletion and enables rollback
+
+### 10. S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED: Missing encryption
+- **Applied**: SSE-S3 (AES256) encryption to all S3 buckets
+- **BucketKeyEnabled**: Reduces encryption request costs
+- **Coverage**: Website, logging, and failover buckets all encrypted
+
+### 11. S3_BUCKET_LOGGING_ENABLED: Missing access logs
+- **Implemented**: Comprehensive access logging to dedicated bucket
+- **Log Prefix**: Organized structure with `website-access-logs/` prefix
+- **Monitoring**: Complete audit trail of all bucket access
+
+### 12. S3_BUCKET_VERSIONING_ENABLED: Versioning disabled
+- **Status**: Enabled on all buckets with lifecycle management
+- **Transitions**: STANDARD → STANDARD_IA (30d) → GLACIER (90d)
+- **Cleanup**: Automatic deletion of incomplete multipart uploads
+
+### 13. S3_BUCKET_REPLICATION_ENABLED: No replication configured
+- **Replication**: Cross-region replication to failover bucket
+- **Scope**: `uploads/` folder replicated for data durability
+- **Storage Class**: STANDARD_IA for cost-effective failover storage
+- **IAM Role**: Dedicated `S3ReplicationRole` with minimal permissions
+
 ## New Infrastructure Components
 
 ### Security Resources
@@ -55,6 +88,12 @@ Successfully implemented comprehensive security mitigations for all 38 Lambda fu
 - **DynamoDBKMSKey**: Customer-managed KMS key for DynamoDB encryption
 - **DynamoDBKMSKeyAlias**: Key alias for DynamoDB KMS key
 - **LambdaDeadLetterQueue**: Centralized DLQ for all functions
+
+### S3 Resources
+- **WebsiteBucket**: Enhanced with encryption, versioning, logging, replication
+- **AccessLoggingBucket**: Dedicated bucket for S3 access logs
+- **FailoverBucket**: Cross-region replication target for data durability
+- **S3ReplicationRole**: IAM role for cross-bucket replication
 
 ### VPC Infrastructure
 - **VPC**: 10.0.0.0/16 CIDR block
@@ -149,8 +188,8 @@ All Lambda functions now include the security enhancements:
 - ✅ Enhances overall security posture
 
 ## Cost Impact
-- **Estimated additional cost**: ~$126-131/month
-- **Primary drivers**: NAT Gateways ($90), VPC Endpoints ($28), KMS Keys ($2), DynamoDB PITR ($5-10)
+- **Estimated additional cost**: ~$140-150/month
+- **Primary drivers**: NAT Gateways ($90), VPC Endpoints ($28), KMS Keys ($2), DynamoDB PITR ($5-10), S3 Features ($15-20)
 - **Optimization options**: Single AZ for dev, conditional endpoints
 
 ## Deployment Status
@@ -166,4 +205,4 @@ All Lambda functions now include the security enhancements:
 3. Monitor performance and costs
 4. Implement additional monitoring as needed
 
-All Lambda and DynamoDB security issues have been comprehensively addressed with enterprise-grade security controls including encryption, backup, and network isolation.
+All Lambda, DynamoDB, and S3 security issues have been comprehensively addressed with enterprise-grade security controls including encryption, backup, network isolation, access logging, versioning, and cross-region replication.

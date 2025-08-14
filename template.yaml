@@ -91,11 +91,26 @@ Resources:
               - kms:Decrypt
               - kms:DescribeKey
             Resource: '*'
+          - Sid: Allow Lambda execution roles to use the key
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource: '*'
+            Condition:
+              StringLike:
+                "aws:PrincipalArn": 
+                  - !Sub "arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-*"
 
   LambdaKMSKeyAlias:
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: !Sub 'alias/mte-lambda-${Stage}'
+      AliasName: !Sub 'alias/${AWS::StackName}-lambda-${Stage}'
       TargetKeyId: !Ref LambdaKMSKey
 
   # KMS Key for DynamoDB Tables Encryption
@@ -142,14 +157,14 @@ Resources:
   DynamoDBKMSKeyAlias:
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: !Sub 'alias/mte-dynamodb-${Stage}'
+      AliasName: !Sub 'alias/${AWS::StackName}-dynamodb-${Stage}'
       TargetKeyId: !Ref DynamoDBKMSKey
 
   # Dead Letter Queue for Lambda Functions
   LambdaDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub 'mte-lambda-dlq-${Stage}'
+      QueueName: !Sub '${AWS::StackName}-lambda-dlq-${Stage}'
       MessageRetentionPeriod: 1209600  # 14 days
       KmsMasterKeyId: !Ref LambdaKMSKey
 
@@ -162,7 +177,7 @@ Resources:
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: !Sub 'mte-vpc-${Stage}'
+          Value: !Sub '${AWS::StackName}-vpc-${Stage}'
 
   # Internet Gateway
   InternetGateway:
@@ -170,7 +185,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: !Sub 'mte-igw-${Stage}'
+          Value: !Sub '${AWS::StackName}-igw-${Stage}'
 
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -188,7 +203,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub 'mte-public-subnet-1-${Stage}'
+          Value: !Sub '${AWS::StackName}-public-subnet-1-${Stage}'
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -199,7 +214,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub 'mte-public-subnet-2-${Stage}'
+          Value: !Sub '${AWS::StackName}-public-subnet-2-${Stage}'
 
   # Private Subnets for Lambda Functions
   PrivateSubnet1:
@@ -210,7 +225,7 @@ Resources:
       CidrBlock: 10.0.11.0/24
       Tags:
         - Key: Name
-          Value: !Sub 'mte-private-subnet-1-${Stage}'
+          Value: !Sub '${AWS::StackName}-private-subnet-1-${Stage}'
 
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
@@ -220,7 +235,7 @@ Resources:
       CidrBlock: 10.0.12.0/24
       Tags:
         - Key: Name
-          Value: !Sub 'mte-private-subnet-2-${Stage}'
+          Value: !Sub '${AWS::StackName}-private-subnet-2-${Stage}'
 
   # NAT Gateways
   NatGateway1EIP:
@@ -230,7 +245,7 @@ Resources:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: !Sub 'mte-nat-eip-1-${Stage}'
+          Value: !Sub '${AWS::StackName}-nat-eip-1-${Stage}'
 
   NatGateway2EIP:
     Type: AWS::EC2::EIP
@@ -239,7 +254,7 @@ Resources:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: !Sub 'mte-nat-eip-2-${Stage}'
+          Value: !Sub '${AWS::StackName}-nat-eip-2-${Stage}'
 
   NatGateway1:
     Type: AWS::EC2::NatGateway
@@ -248,7 +263,7 @@ Resources:
       SubnetId: !Ref PublicSubnet1
       Tags:
         - Key: Name
-          Value: !Sub 'mte-nat-1-${Stage}'
+          Value: !Sub '${AWS::StackName}-nat-1-${Stage}'
 
   NatGateway2:
     Type: AWS::EC2::NatGateway
@@ -257,7 +272,7 @@ Resources:
       SubnetId: !Ref PublicSubnet2
       Tags:
         - Key: Name
-          Value: !Sub 'mte-nat-2-${Stage}'
+          Value: !Sub '${AWS::StackName}-nat-2-${Stage}'
 
   # Route Tables
   PublicRouteTable:
@@ -266,7 +281,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub 'mte-public-routes-${Stage}'
+          Value: !Sub '${AWS::StackName}-public-routes-${Stage}'
 
   DefaultPublicRoute:
     Type: AWS::EC2::Route
@@ -294,7 +309,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub 'mte-private-routes-1-${Stage}'
+          Value: !Sub '${AWS::StackName}-private-routes-1-${Stage}'
 
   DefaultPrivateRoute1:
     Type: AWS::EC2::Route
@@ -315,7 +330,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub 'mte-private-routes-2-${Stage}'
+          Value: !Sub '${AWS::StackName}-private-routes-2-${Stage}'
 
   DefaultPrivateRoute2:
     Type: AWS::EC2::Route
@@ -334,7 +349,7 @@ Resources:
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub 'mte-lambda-sg-${Stage}'
+      GroupName: !Sub '${AWS::StackName}-lambda-sg-${Stage}'
       GroupDescription: Security group for Lambda functions
       VpcId: !Ref VPC
       SecurityGroupEgress:
@@ -350,7 +365,7 @@ Resources:
           Description: HTTP outbound for package downloads
       Tags:
         - Key: Name
-          Value: !Sub 'mte-lambda-sg-${Stage}'
+          Value: !Sub '${AWS::StackName}-lambda-sg-${Stage}'
 
   # VPC Endpoints for AWS Services
   DynamoDBVPCEndpoint:
@@ -426,7 +441,7 @@ Resources:
   VPCEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub 'mte-vpc-endpoint-sg-${Stage}'
+      GroupName: !Sub '${AWS::StackName}-vpc-endpoint-sg-${Stage}'
       GroupDescription: Security group for VPC endpoints
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -437,7 +452,7 @@ Resources:
           Description: HTTPS from Lambda functions
       Tags:
         - Key: Name
-          Value: !Sub 'mte-vpc-endpoint-sg-${Stage}'
+          Value: !Sub '${AWS::StackName}-vpc-endpoint-sg-${Stage}'
 
   # Bedrock Agent Service Role
   BedrockAgentServiceRole:
@@ -563,7 +578,7 @@ Resources:
         PointInTimeRecoveryEnabled: true
       Tags:
         - Key: Name
-          Value: !Sub 'mte-sessions-${Stage}'
+          Value: !Sub '${AWS::StackName}-sessions-${Stage}'
         - Key: Environment
           Value: !Ref Stage
         - Key: Encryption
@@ -594,7 +609,7 @@ Resources:
         PointInTimeRecoveryEnabled: true
       Tags:
         - Key: Name
-          Value: !Sub 'mte-messages-${Stage}'
+          Value: !Sub '${AWS::StackName}-messages-${Stage}'
         - Key: Environment
           Value: !Ref Stage
         - Key: Encryption
@@ -1423,16 +1438,127 @@ Resources:
             BatchSize: 10
             MaximumBatchingWindowInSeconds: 5
 
-  # S3 Bucket for Static Website (Private)
-  WebsiteBucket:
+  # CloudWatch Log Group for S3 Bucket Notifications
+  S3WebsiteBucketLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/s3/${AWS::StackName}-website-bucket"
+      RetentionInDays: 30
+
+  # S3 Access Logging Bucket
+  AccessLoggingBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "mte-prechat-website-${Stage}-${AWS::AccountId}"
+      BucketName: !Sub "${AWS::StackName}-access-logs-${Stage}-${AWS::AccountId}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+            BucketKeyEnabled: true
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-access-logs-${Stage}'
+        - Key: Environment
+          Value: !Ref Stage
+        - Key: Purpose
+          Value: AccessLogging
+
+  # S3 Failover/Replication Bucket (Different Region)
+  FailoverBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-failover-${Stage}-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+            BucketKeyEnabled: true
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-failover-${Stage}'
+        - Key: Environment
+          Value: !Ref Stage
+        - Key: Purpose
+          Value: Failover
+
+  # IAM Role for S3 Replication
+  S3ReplicationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-s3-replication-role-${Stage}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3ReplicationPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObjectVersionForReplication
+                  - s3:GetObjectVersionAcl
+                  - s3:GetObjectVersionTagging
+                Resource: !Sub "arn:aws:s3:::${AWS::StackName}-website-${Stage}-${AWS::AccountId}/*" # WebsiteBucket
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: !Sub "arn:aws:s3:::${AWS::StackName}-website-${Stage}-${AWS::AccountId}"
+              - Effect: Allow
+                Action:
+                  - s3:ReplicateObject
+                  - s3:ReplicateDelete
+                  - s3:ReplicateTags
+                Resource: !Sub "${FailoverBucket.Arn}/*"
+
+  # S3 Bucket for Static Website (Enhanced Security)
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    DependsOn: AccessLoggingBucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-website-${Stage}-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+            BucketKeyEnabled: true
+      VersioningConfiguration:
+        Status: Enabled
+      LoggingConfiguration:
+        DestinationBucketName: !Ref AccessLoggingBucket
+        LogFilePrefix: website-access-logs/
+      ReplicationConfiguration:
+        Role: !GetAtt S3ReplicationRole.Arn
+        Rules:
+          - Id: ReplicateToFailover
+            Status: Enabled
+            Prefix: uploads/
+            Destination:
+              Bucket: !Sub "arn:aws:s3:::${FailoverBucket}"
+              StorageClass: STANDARD_IA
       CorsConfiguration:
         CorsRules:
           - Id: FileUploadCorsRule
@@ -1451,13 +1577,24 @@ Resources:
               - x-amz-meta-original-filename-encoded
               - x-amz-version-id
             MaxAge: 3600
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-website-${Stage}'
+        - Key: Environment
+          Value: !Ref Stage
+        - Key: Encryption
+          Value: SSE-S3
+        - Key: Versioning
+          Value: Enabled
+        - Key: Replication
+          Value: Enabled
 
   # CloudFront Origin Access Control
   OriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
     Properties:
       OriginAccessControlConfig:
-        Name: !Sub "mte-prechat-oac-${Stage}"
+        Name: !Sub "${AWS::StackName}-oac-${Stage}"
         OriginAccessControlOriginType: s3
         SigningBehavior: always
         SigningProtocol: sigv4
@@ -1535,6 +1672,12 @@ Outputs:
   WebsiteBucket:
     Description: S3 Bucket for static website
     Value: !Ref WebsiteBucket
+  AccessLoggingBucket:
+    Description: S3 Bucket for access logging
+    Value: !Ref AccessLoggingBucket
+  FailoverBucket:
+    Description: S3 Bucket for failover/replication
+    Value: !Ref FailoverBucket
   WebsiteURL:
     Description: Website URL
     Value: !Sub "https://${CloudFrontDistribution.DomainName}"
