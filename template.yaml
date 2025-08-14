@@ -970,6 +970,31 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  GenerateFilePresignedUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_file_handler.generate_file_presigned_url
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:HeadObject
+              - s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        GenerateFilePresignedUrl:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/files/{fileKey+}/presigned-url
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   # DynamoDB Streams Handler
   SessionStreamHandler:
     Type: AWS::Serverless::Function
