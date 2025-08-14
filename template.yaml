@@ -1553,7 +1553,7 @@ Resources:
               Service: logging.s3.amazonaws.com
             Action:
               - s3:PutObject
-            Resource: !Sub "${AccessLoggingBucket.Arn}/website-access-logs/*"
+            Resource: !Sub "${AccessLoggingBucket.Arn}/${AWS::StackName}/*"
             Condition:
               ArnLike:
                 "aws:SourceArn": !GetAtt WebsiteBucket.Arn
