@@ -202,7 +202,7 @@ export const adminApi = {
 
   generateFilePresignedUrl: async (sessionId: string, fileKey: string) => {
     const encodedFileKey = encodeURIComponent(fileKey)
-    const response = await api.post(`/admin/sessions/${sessionId}/files/${encodedFileKey}/presigned-url`)
+    const response = await api.post(`/admin/sessions/${sessionId}/files/presigned-url/${encodedFileKey}`)
     return response.data
   },
 

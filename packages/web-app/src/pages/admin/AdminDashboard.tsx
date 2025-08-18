@@ -35,6 +35,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [showMySessionsOnly, setShowMySessionsOnly] = useState(true)
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('')
+  const [sortingColumn, setSortingColumn] = useState<any>({})
+  const [sortingDescending, setSortingDescending] = useState(false)
 
   useEffect(() => {
     loadCurrentUser()
@@ -95,10 +97,48 @@ export default function AdminDashboard() {
     downloadCSV(csvContent, filename)
   }
 
-  // Filter sessions based on toggle state
+  // Filter and sort sessions
   const filteredSessions = showMySessionsOnly 
     ? sessions.filter(session => session.salesRepEmail === currentUserEmail)
     : sessions
+
+  // Sort sessions based on current sorting state
+  const sortedSessions = [...filteredSessions].sort((a, b) => {
+    if (!sortingColumn.sortingField) return 0
+    
+    let aValue: any, bValue: any
+    
+    switch (sortingColumn.sortingField) {
+      case 'customer':
+        aValue = `${a.customerCompany}/${a.customerName}`.toLowerCase()
+        bValue = `${b.customerCompany}/${b.customerName}`.toLowerCase()
+        break
+      case 'status':
+        // Define status priority for sorting
+        const statusPriority = { active: 1, completed: 2, expired: 3, inactive: 4 }
+        aValue = statusPriority[a.status] || 5
+        bValue = statusPriority[b.status] || 5
+        break
+      case 'created':
+        aValue = new Date(a.createdAt).getTime()
+        bValue = new Date(b.createdAt).getTime()
+        break
+      case 'completed':
+        aValue = a.completedAt ? new Date(a.completedAt).getTime() : 0
+        bValue = b.completedAt ? new Date(b.completedAt).getTime() : 0
+        break
+      case 'agent':
+        aValue = (a.agentId || '').toLowerCase()
+        bValue = (b.agentId || '').toLowerCase()
+        break
+      default:
+        return 0
+    }
+    
+    if (aValue < bValue) return sortingDescending ? 1 : -1
+    if (aValue > bValue) return sortingDescending ? -1 : 1
+    return 0
+  })
 
   return (
     <Container>
@@ -145,6 +185,7 @@ export default function AdminDashboard() {
               {
                 id: 'customer',
                 header: '고객사/담당자명',
+                sortingField: 'customer',
                 cell: (item) => (
                   <Box>
                     <Box fontWeight="bold">{item.customerCompany}/{item.customerName}</Box>
@@ -157,6 +198,7 @@ export default function AdminDashboard() {
               {
                 id: 'agent',
                 header: '대화 에이전트',
+                sortingField: 'agent',
                 cell: (item) => (
                   <Box fontSize="body-s" color="text-status-inactive">
                     {item.agentId ? `Agent: ${item.agentId}` : 'No agent assigned'}
@@ -166,16 +208,19 @@ export default function AdminDashboard() {
               {
                 id: 'status',
                 header: '세션 상태',
+                sortingField: 'status',
                 cell: (item) => <StatusBadge status={item.status} type="session" />
               },
               {
                 id: 'created',
                 header: '생성일',
+                sortingField: 'created',
                 cell: (item) => new Date(item.createdAt).toLocaleDateString()
               },
               {
                 id: 'completed',
                 header: '완료일',
+                sortingField: 'completed',
                 cell: (item) => item.completedAt ? new Date(item.completedAt).toLocaleDateString() : '-'
               },
               {
@@ -226,8 +271,14 @@ export default function AdminDashboard() {
                 )
               }
             ]}
-            items={filteredSessions}
+            items={sortedSessions}
             loading={loading}
+            sortingColumn={sortingColumn}
+            sortingDescending={sortingDescending}
+            onSortingChange={({ detail }) => {
+              setSortingColumn(detail.sortingColumn)
+              setSortingDescending(detail.isDescending || false)
+            }}
             empty={
               <Box textAlign="center" color="inherit">
                 <Box variant="strong" textAlign="center" color="inherit">

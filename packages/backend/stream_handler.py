@@ -1,7 +1,6 @@
 import json
 import boto3
 import os
-import urllib3
 from utils import lambda_response, get_timestamp
 
 sqs = boto3.client('sqs')
@@ -49,39 +48,35 @@ def handle_session_stream(event, context):
     return lambda_response(200, {'message': 'Stream processed successfully'})
 
 def send_slack_notification(session_id, customer_info, old_status, new_status):
-    """Send Slack notification via Workflow webhook when session status changes to completed"""
+    """Send SNS notification when session status changes to completed"""
     try:
-        slack_webhook_url = os.environ.get('SLACK_WEBHOOK_URL')
+        sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
         
-        if not slack_webhook_url:
-            print(f"No Slack webhook URL configured, skipping notification for session {session_id}")
+        if not sns_topic_arn:
+            print(f"No SNS topic ARN configured, skipping notification for session {session_id}")
             return
         
         # Get additional session data for rich notification
         session_data = get_session_details_for_notification(session_id)
         
-        # Build payload for Workflow webhook
-        payload = build_workflow_slack_payload(session_id, customer_info, session_data, old_status, new_status)
+        # Build SNS message payload
+        message = build_sns_message_payload(session_id, customer_info, session_data, old_status, new_status)
         
-        # Send HTTP POST request to Slack webhook
-        http = urllib3.PoolManager()
-        response = http.request(
-            'POST',
-            slack_webhook_url,
-            body=json.dumps(payload),
-            headers={'Content-Type': 'application/json'}
+        # Publish to SNS topic
+        sns = boto3.client('sns')
+        response = sns.publish(
+            TopicArn=sns_topic_arn,
+            Message=json.dumps(message),
+            Subject=f"MTE PreChat Session Completed: {session_id}"
         )
         
-        if response.status == 200:
-            print(f"Slack notification sent successfully for session {session_id}")
-        else:
-            print(f"Failed to send Slack notification for session {session_id}. Status: {response.status}")
+        print(f"SNS notification sent successfully for session {session_id}. MessageId: {response.get('MessageId')}")
             
     except Exception as e:
-        print(f"Error sending Slack notification for session {session_id}: {str(e)}")
+        print(f"Error sending SNS notification for session {session_id}: {str(e)}")
 
-def build_workflow_slack_payload(session_id, customer_info, session_data, old_status, new_status):
-    """Build simple payload for Slack Workflow webhook (matches your example format)"""
+def build_sns_message_payload(session_id, customer_info, session_data, old_status, new_status):
+    """Build SNS message payload following the specified schema"""
     
     customer_name = customer_info.get('name', {}).get('S', 'Unknown')
     customer_company = customer_info.get('company', {}).get('S', 'Unknown')
@@ -90,12 +85,6 @@ def build_workflow_slack_payload(session_id, customer_info, session_data, old_st
     
     # Extract sales rep info properly
     sales_rep_email = session_data.get('sales_rep_email', 'Unknown')
-    
-    # Debug logging
-    print(f"Building Slack payload for session {session_id}")
-    print(f"Sales rep info: email={sales_rep_email}")
-    print(f"Customer info: name={customer_name}, company={customer_company}, email={customer_email}")
-    print(f"Session data keys: {list(session_data.keys())}")
     
     # Calculate session duration and format completion time
     duration_text = "Unknown"
@@ -126,37 +115,54 @@ def build_workflow_slack_payload(session_id, customer_info, session_data, old_st
     customer_display = f"{customer_name}"
     if customer_title:
         customer_display += f" ({customer_title})"
-    customer_display += f" from {customer_company} ({customer_email})"
+    customer_display += f" from {customer_company}"
     
     # Add session statistics
     message_stats = f"{session_data.get('message_count', 0)} messages"
     if session_data.get('customer_messages', 0) > 0:
         message_stats += f" ({session_data.get('customer_messages', 0)} customer, {session_data.get('bot_messages', 0)} AI)"
     
-    # Add conversation preview if available
-    conversation_preview = ""
-    if session_data.get('first_message'):
-        conversation_preview = f"First message: {session_data['first_message'][:150]}..."
-    
     # Get admin URL from environment variable
     cloudfront_url = os.environ.get('CLOUDFRONT_URL', 'https://localhost:3000')
+    admin_url = f"{cloudfront_url}/admin/sessions/{session_id}"
     
-    # Build the payload matching your example format
-    payload = {
-        "session_id": session_id,
-        "customer": customer_display,
-        "new_status": new_status,
-        "old_status": old_status,
-        # Additional rich data for Workflow to use
-        "sales_rep": f"{sales_rep_email}",
-        "duration": duration_text,
-        "message_stats": message_stats,
-        "conversation_preview": conversation_preview,
-        "admin_url": f"{cloudfront_url}/admin/sessions/{session_id}",
-        "completed_at": completed_at_formatted
+    # Build the message following the specified schema
+    message = {
+        "version": "1.0",
+        "source": "mte-prechat",
+        "id": f"session-{session_id}",
+        "content": {
+            "textType": "client-markdown",
+            "title": f":white_check_mark: Pre-consultation Session Completed",
+            "description": f"Customer **{customer_display}** has completed their pre-consultation session with duration of {duration_text}.",
+            "nextSteps": [
+                f"Review session details at <{admin_url}|*Admin Dashboard*>",
+                f"@{sales_rep_email}: Follow up with customer within 24 hours",
+                f"Session statistics: {message_stats}",
+                f"Customer contact: {customer_email}"
+            ],
+            "keywords": ["PreConsultation", "SessionCompleted", "CustomerEngagement"]
+        },
+        "metadata": {
+            "threadId": f"session-{session_id}",
+            "summary": f"Pre-consultation completed for {customer_name}",
+            "eventType": "SessionCompletionEvent",
+            "relatedResources": [session_id],
+            "additionalContext": {
+                "sessionId": session_id,
+                "customerId": customer_email,
+                "salesRep": sales_rep_email,
+                "duration": duration_text,
+                "completedAt": completed_at_formatted,
+                "messageCount": session_data.get('message_count', 0),
+                "customerCompany": customer_company,
+                "adminUrl": admin_url
+            },
+            "enableCustomActions": True
+        }
     }
     
-    return payload
+    return message
 
 def get_session_details_for_notification(session_id):
     """Get additional session details for rich notification"""
