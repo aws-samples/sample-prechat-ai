@@ -45,7 +45,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="footer-links">
           <a href="#" onClick={handlePrivacyClick}>Privacy</a>
           <a href="#" onClick={handleTermsClick}>Terms</a>
-          <a href="#">Support</a>
+          <a href="mailto:aws-prechat@amazon.com">Support</a>
         </div>
         <div className="footer-license">
           <div className="license-info">

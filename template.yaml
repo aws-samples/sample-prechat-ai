@@ -317,31 +317,31 @@ Resources:
         - !Ref VPCEndpointSecurityGroup
       PrivateDnsEnabled: true
 
-  # BedrockAgentRuntimeVPCEndpoint:
-  #   Type: AWS::EC2::VPCEndpoint
-  #   Properties:
-  #     VpcId: !Ref VPC
-  #     ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent-runtime'
-  #     VpcEndpointType: Interface
-  #     SubnetIds:
-  #       - !Ref PrivateSubnet1
-  #       - !Ref PrivateSubnet2
-  #     SecurityGroupIds:
-  #       - !Ref VPCEndpointSecurityGroup
-  #     PrivateDnsEnabled: true
+  BedrockAgentRuntimeVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent-runtime'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
 
-  # BedrockAgentVPCEndpoint:
-  #   Type: AWS::EC2::VPCEndpoint
-  #   Properties:
-  #     VpcId: !Ref VPC
-  #     ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent'
-  #     VpcEndpointType: Interface
-  #     SubnetIds:
-  #       - !Ref PrivateSubnet1
-  #       - !Ref PrivateSubnet2
-  #     SecurityGroupIds:
-  #       - !Ref VPCEndpointSecurityGroup
-  #     PrivateDnsEnabled: true
+  BedrockAgentVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
 
   CognitoVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -1434,9 +1434,11 @@ Resources:
         Variables:
           ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
           WEBSITE_BUCKET: !Ref WebsiteBucket
-          SLACK_WEBHOOK_URL: "https://hooks.slack.com/triggers/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"
           CLOUDFRONT_URL: !Sub "https://${CloudFrontDistribution.DomainName}"
-          SNS_TOPIC_ARN: !Ref SlackNotificationTopic
+          # SNS Topic ARNs (comma-separated list)
+          SNS_TOPIC_ARNS: !Ref SlackNotificationTopic
+          # Slack Webhook URLs (comma-separated list)
+          SLACK_WEBHOOK_URLS: "https://hooks.slack.com/triggers/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"
       Events:
         SessionStream:
           Type: DynamoDB
