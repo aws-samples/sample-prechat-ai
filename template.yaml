@@ -66,27 +66,6 @@ Globals:
 Resources:
   # Security Resources
   # IAM Policies for Reusability
-  BedrockAgentPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: Policy for Bedrock Agent operations
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: BedrockModelInvocation
-            Effect: Allow
-            Action:
-              - bedrock:InvokeModel
-              - bedrock:InvokeModelWithResponseStream
-              - bedrock:Converse
-            Resource: '*'
-          - Sid: BedrockAgentOperations
-            Effect: Allow
-            Action:
-              - bedrock:Retrieve
-              - bedrock:RetrieveAndGenerate
-            Resource: '*'
-
   S3ReplicationPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -120,6 +99,7 @@ Resources:
     Type: AWS::KMS::Key
     Properties:
       Description: KMS Key for DynamoDB tables encryption
+      EnableKeyRotation: true
       KeyPolicy:
         Version: '2012-10-17'
         Statement:
@@ -143,7 +123,7 @@ Resources:
           - Sid: Allow Lambda execution roles to use the key
             Effect: Allow
             Principal:
-              AWS: "*"
+              AWS: '*'
             Action:
               - kms:Decrypt
               - kms:DescribeKey
@@ -281,8 +261,18 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
+          DestinationPrefixListId: pl-48a54021
+          Description: HTTPS outbound to DynamoDB via Gateway VPC endpoint
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          DestinationPrefixListId: pl-78a54011
+          Description: HTTPS outbound to S3 via Gateway VPC endpoint
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
           CidrIp: 10.0.0.0/16
-          Description: HTTPS outbound to VPC endpoints for AWS services
+          Description: HTTP outbound within VPC for internal communication
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
@@ -402,19 +392,14 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          SourceSecurityGroupId: !Ref LambdaSecurityGroup
-          Description: HTTPS from Lambda functions
+          CidrIp: 10.0.0.0/16
+          Description: HTTPS from Lambda functions in the VPC
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          DestinationSecurityGroupId: !Ref LambdaSecurityGroup
-          Description: HTTPS to Lambda functions
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-          Description: HTTPS outbound for AWS services
+          CidrIp: 10.0.0.0/16
+          Description: Useless rule
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-vpc-endpoint-sg-${Stage}'
@@ -432,7 +417,6 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
-        - !Ref BedrockAgentPolicy
 
   AdminUserPool:
     Type: AWS::Cognito::UserPool
@@ -1753,6 +1737,10 @@ Resources:
             ResponsePagePath: /index.html
         PriceClass: PriceClass_100
         Comment: !Sub "MTE PreChat Website - ${Stage}"
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+          MinimumProtocolVersion: TLSv1.2_2021
+        HttpVersion: http2and3
 
 
 
@@ -1805,9 +1793,6 @@ Outputs:
   DynamoDBKMSKeyArn:
     Description: Primary KMS Key ARN for DynamoDB and Lambda encryption
     Value: !GetAtt DynamoDBKMSKey.Arn
-  BedrockAgentPolicyArn:
-    Description: Reusable IAM policy for Bedrock Agent operations
-    Value: !Ref BedrockAgentPolicy
   S3ReplicationPolicyArn:
     Description: Reusable IAM policy for S3 cross-region replication
     Value: !Ref S3ReplicationPolicy
