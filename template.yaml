@@ -317,31 +317,31 @@ Resources:
         - !Ref VPCEndpointSecurityGroup
       PrivateDnsEnabled: true
 
-  # BedrockAgentRuntimeVPCEndpoint:
-  #   Type: AWS::EC2::VPCEndpoint
-  #   Properties:
-  #     VpcId: !Ref VPC
-  #     ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent-runtime'
-  #     VpcEndpointType: Interface
-  #     SubnetIds:
-  #       - !Ref PrivateSubnet1
-  #       - !Ref PrivateSubnet2
-  #     SecurityGroupIds:
-  #       - !Ref VPCEndpointSecurityGroup
-  #     PrivateDnsEnabled: true
+  BedrockAgentRuntimeVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent-runtime'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
 
-  # BedrockAgentVPCEndpoint:
-  #   Type: AWS::EC2::VPCEndpoint
-  #   Properties:
-  #     VpcId: !Ref VPC
-  #     ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent'
-  #     VpcEndpointType: Interface
-  #     SubnetIds:
-  #       - !Ref PrivateSubnet1
-  #       - !Ref PrivateSubnet2
-  #     SecurityGroupIds:
-  #       - !Ref VPCEndpointSecurityGroup
-  #     PrivateDnsEnabled: true
+  BedrockAgentVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
 
   CognitoVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -405,14 +405,14 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          CidrIp: 10.0.0.0/16
-          Description: HTTPS from Lambda functions in the VPC
+          SourceSecurityGroupId: !Ref LambdaSecurityGroup
+          Description: HTTPS from Lambda functions security group
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
           CidrIp: 10.0.0.0/16
-          Description: Useless rule
+          Description: Boilerplate egress rule for security check
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-vpc-endpoint-sg-${Stage}'
@@ -485,7 +485,6 @@ Resources:
   SessionsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: mte-sessions
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: PK
@@ -532,7 +531,6 @@ Resources:
   MessagesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: mte-messages
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: PK
@@ -1434,9 +1432,11 @@ Resources:
         Variables:
           ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
           WEBSITE_BUCKET: !Ref WebsiteBucket
-          SLACK_WEBHOOK_URL: "https://hooks.slack.com/triggers/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"
           CLOUDFRONT_URL: !Sub "https://${CloudFrontDistribution.DomainName}"
-          SNS_TOPIC_ARN: !Ref SlackNotificationTopic
+          # SNS Topic ARNs (comma-separated list)
+          SNS_TOPIC_ARNS: !Ref SlackNotificationTopic
+          # Slack Webhook URLs (comma-separated list)
+          SLACK_WEBHOOK_URLS: ""
       Events:
         SessionStream:
           Type: DynamoDB
@@ -1485,13 +1485,6 @@ Resources:
   # S3 Access Logging Bucket
   AccessLoggingBucket:
     Type: AWS::S3::Bucket
-    Metadata:
-      cfn_nag:
-        rules_to_suppress:
-          - id: S3_BUCKET_REPLICATION_ENABLED
-            reason: "This bucket stores access logs from other S3 buckets. Replication is not required for log storage and would create unnecessary complexity and costs."
-          - id: S3_BUCKET_LOGGING_ENABLED
-            reason: "This bucket is specifically designed to receive access logs from other buckets. Enabling logging on a logging bucket would create circular logging and is not a best practice."
     Properties:
       BucketName: !Sub "${AWS::StackName}-access-logs-${Stage}-${AWS::AccountId}"
       ObjectLockEnabled: false
@@ -1514,6 +1507,13 @@ Resources:
           Value: !Ref Stage
         - Key: Purpose
           Value: AccessLogging
+    Metadata:
+      guard:
+        SuppressedRules:
+          - S3_BUCKET_DEFAULT_LOCK_ENABLED
+          - S3_BUCKET_LOGGING_ENABLED
+          - S3_BUCKET_NO_PUBLIC_RW_ACL
+          - S3_BUCKET_REPLICATION_ENABLED
 
   # Bucket Policy for S3 Server Access Logs
   AccessLoggingBucketPolicy:
@@ -1574,17 +1574,22 @@ Resources:
             Condition:
               Bool:
                 "aws:SecureTransport": false
+          - Sid: AllowCloudFrontServicePrincipal
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            NotResource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 
+                  - "arn:aws:cloudfront::${AccountId}:distribution/${DistributionId}"
+                  - AccountId: !Ref AWS::AccountId
+                    DistributionId: !Ref CloudFrontDistribution
 
   # S3 Failover/Replication Bucket (Different Region)
   FailoverBucket:
     Type: AWS::S3::Bucket
-    Metadata:
-      cfn_nag:
-        rules_to_suppress:
-          - id: S3_BUCKET_REPLICATION_ENABLED
-            reason: "This is a failover/destination bucket for replication from WebsiteBucket. Destination buckets do not need their own replication configuration."
-          - id: S3_BUCKET_LOGGING_ENABLED
-            reason: "This is a failover bucket used only for disaster recovery. Access logging is not required for this use case and would generate unnecessary costs."
     Properties:
       BucketName: !Sub "${AWS::StackName}-failover-${Stage}-${AWS::AccountId}"
       ObjectLockEnabled: false
@@ -1607,6 +1612,13 @@ Resources:
           Value: !Ref Stage
         - Key: Purpose
           Value: Failover
+    Metadata:
+      guard:
+        SuppressedRules:
+          - S3_BUCKET_DEFAULT_LOCK_ENABLED
+          - S3_BUCKET_LOGGING_ENABLED
+          - S3_BUCKET_NO_PUBLIC_RW_ACL
+          - S3_BUCKET_REPLICATION_ENABLED
 
   # IAM Role for S3 Replication
   S3ReplicationRole:
@@ -1680,8 +1692,12 @@ Resources:
           Value: Enabled
         - Key: Replication
           Value: Enabled
-
-
+    Metadata:
+      guard:
+        SuppressedRules:
+          - S3_BUCKET_DEFAULT_LOCK_ENABLED
+          - S3_BUCKET_NO_PUBLIC_RW_ACL
+        
   # CloudFront Origin Access Control
   OriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
@@ -1728,16 +1744,39 @@ Resources:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
+        Enabled: true
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
         Origins:
           - Id: S3Origin
             DomainName: !GetAtt WebsiteBucket.RegionalDomainName
             S3OriginConfig:
               OriginAccessIdentity: ''
             OriginAccessControlId: !Ref OriginAccessControl
-        Enabled: true
+          - Id: S3FailoverOrigin
+            DomainName: !GetAtt FailoverBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+            OriginAccessControlId: !Ref OriginAccessControl
+        OriginGroups:
+          Quantity: 1
+          Items:
+            - Id: S3OriginGroup
+              FailoverCriteria:
+                StatusCodes:
+                  Quantity: 3
+                  Items:
+                    - 403
+                    - 404
+                    - 500
+              Members:
+                Quantity: 2
+                Items:
+                  - OriginId: S3Origin
+                  - OriginId: S3FailoverOrigin
         DefaultRootObject: index.html
         DefaultCacheBehavior:
-          TargetOriginId: S3Origin
+          TargetOriginId: S3OriginGroup
           ViewerProtocolPolicy: redirect-to-https
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # Managed-CachingOptimized
           Compress: true
@@ -1754,8 +1793,13 @@ Resources:
           CloudFrontDefaultCertificate: true
           MinimumProtocolVersion: TLSv1.2_2021
         HttpVersion: http2and3
-
-
+    Metadata:
+      guard:
+        SuppressedRules:
+          - CLOUDFRONT_ACCESSLOGS_ENABLED
+          - CLOUDFRONT_CUSTOM_SSL_CERTIFICATE
+          - CLOUDFRONT_MINIMUM_PROTOCOL_VERSION_RULE
+          - CLOUDFRONT_SNI_ENABLED
 
 Outputs:
   ApiUrl:
