@@ -77,7 +77,6 @@ def send_sns_notifications(session_id, customer_info, session_data, old_status, 
     try:
         # Build SNS message payload
         message = build_sns_message_payload(session_id, customer_info, session_data, old_status, new_status)
-        
         # Publish to all SNS topics
         sns = boto3.client('sns')
         for topic_arn in SNS_TOPIC_ARNS:
@@ -110,7 +109,7 @@ def send_slack_webhook_notifications(session_id, customer_info, session_data, ol
                 response = requests.post(
                     webhook_url,
                     json=slack_message,
-                    timeout=10
+                    timeout=3
                 )
                 
                 if response.status_code == 200:
@@ -208,6 +207,7 @@ def build_sns_message_payload(session_id, customer_info, session_data, old_statu
     
     # Extract sales rep info properly
     sales_rep_email = session_data.get('sales_rep_email', 'Unknown')
+    sales_rep_alias = sales_rep_email.split('@')[0]
     
     # Calculate session duration and format completion time
     duration_text = "Unknown"
@@ -252,12 +252,12 @@ def build_sns_message_payload(session_id, customer_info, session_data, old_statu
     # Build the message following the specified schema
     message = {
         "version": "1.0",
-        "source": "mte-prechat",
+        "source": "custom",
         "id": f"session-{session_id}",
         "content": {
             "textType": "client-markdown",
             "title": f":white_check_mark: Pre-consultation Session Completed",
-            "description": f"Customer **{customer_display}** has completed their pre-consultation session with duration of {duration_text}.",
+            "description": f"@{sales_rep_alias} Customer *{customer_display}* has completed their pre-consultation session with duration of {duration_text}.",
             "nextSteps": [
                 f"Review session details at <{admin_url}|*Admin Dashboard*>",
                 f"@{sales_rep_email}: Follow up with customer within 24 hours",
@@ -277,7 +277,7 @@ def build_sns_message_payload(session_id, customer_info, session_data, old_statu
                 "salesRep": sales_rep_email,
                 "duration": duration_text,
                 "completedAt": completed_at_formatted,
-                "messageCount": session_data.get('message_count', 0),
+                "messageCount": str(session_data.get('message_count', 0)),
                 "customerCompany": customer_company,
                 "adminUrl": admin_url
             },
