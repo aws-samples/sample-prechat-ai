@@ -20,10 +20,6 @@ Parameters:
       - ap-northeast-2
       - eu-west-1
       - eu-central-1
-  BedrockAgentRoleName:
-    Type: String
-    Default: AmazonBedrockExecutionRoleForAgents_prechat-agent-role
-    Description: Name for the Bedrock Agent service role
   BedrockAgentAliasId:
     Type: String
     Default: TSTALIASID
@@ -69,6 +65,55 @@ Globals:
 
 Resources:
   # Security Resources
+  # IAM Policies for Reusability
+  BedrockAgentPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy for Bedrock Agent operations
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: BedrockModelInvocation
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+              - bedrock:InvokeModelWithResponseStream
+              - bedrock:Converse
+            Resource: '*'
+          - Sid: BedrockAgentOperations
+            Effect: Allow
+            Action:
+              - bedrock:Retrieve
+              - bedrock:RetrieveAndGenerate
+            Resource: '*'
+
+  S3ReplicationPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy for S3 cross-region replication
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: S3ReplicationSource
+            Effect: Allow
+            Action:
+              - s3:GetObjectVersionForReplication
+              - s3:GetObjectVersionAcl
+              - s3:GetObjectVersionTagging
+            Resource: !Sub "arn:aws:s3:::${AWS::StackName}-website-${Stage}-${AWS::AccountId}/*"
+          - Sid: S3ReplicationBucket
+            Effect: Allow
+            Action:
+              - s3:GetReplicationConfiguration
+              - s3:ListBucket
+            Resource: !Sub "arn:aws:s3:::${AWS::StackName}-website-${Stage}-${AWS::AccountId}"
+          - Sid: S3ReplicationDestination
+            Effect: Allow
+            Action:
+              - s3:ReplicateObject
+              - s3:ReplicateDelete
+              - s3:ReplicateTags
+            Resource: !Sub "arn:aws:s3:::${AWS::StackName}-failover-${Stage}-${AWS::AccountId}/*"
 
   # KMS Key for DynamoDB Tables Encryption
   DynamoDBKMSKey:
@@ -110,6 +155,42 @@ Resources:
               StringLike:
                 "aws:PrincipalArn": 
                   - !Sub "arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-*"
+          - Sid: Allow CloudWatch Logs service to use the key
+            Effect: Allow
+            Principal:
+              Service: logs.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource: '*'
+            Condition:
+              ArnEquals:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
+          - Sid: Allow SQS service to use the key
+            Effect: Allow
+            Principal:
+              Service: sqs.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource: '*'
+          - Sid: Allow SNS service to use the key
+            Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource: '*'
 
   DynamoDBKMSKeyAlias:
     Type: AWS::KMS::Alias
@@ -194,20 +275,19 @@ Resources:
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub '${AWS::StackName}-lambda-sg-${Stage}'
       GroupDescription: Security group for Lambda functions
       VpcId: !Ref VPC
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          CidrIp: 0.0.0.0/0
-          Description: HTTPS outbound for AWS services
+          CidrIp: 10.0.0.0/16
+          Description: HTTPS outbound to VPC endpoints for AWS services
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          CidrIp: 0.0.0.0/0
-          Description: HTTP outbound for package downloads
+          CidrIp: 10.0.0.0/16
+          Description: HTTP outbound within VPC for internal communication
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-lambda-sg-${Stage}'
@@ -316,7 +396,6 @@ Resources:
   VPCEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub '${AWS::StackName}-vpc-endpoint-sg-${Stage}'
       GroupDescription: Security group for VPC endpoints
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -344,7 +423,6 @@ Resources:
   BedrockAgentServiceRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Ref BedrockAgentRoleName
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -354,24 +432,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
-      Policies:
-        - PolicyName: BedrockAgentPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: BedrockModelInvocation
-                Effect: Allow
-                Action:
-                  - bedrock:InvokeModel
-                  - bedrock:InvokeModelWithResponseStream
-                  - bedrock:Converse
-                Resource: '*'
-              - Sid: BedrockAgentOperations
-                Effect: Allow
-                Action:
-                  - bedrock:Retrieve
-                  - bedrock:RetrieveAndGenerate
-                Resource: '*'
+        - !Ref BedrockAgentPolicy
 
   AdminUserPool:
     Type: AWS::Cognito::UserPool
@@ -519,7 +580,7 @@ Resources:
         - ResourcePath: "/*"
           HttpMethod: "*"
           CachingEnabled: true
-          CacheTtlInSeconds: 300
+          CacheTtlInSeconds: 1
           LoggingLevel: INFO
           DataTraceEnabled: true
           MetricsEnabled: true
@@ -996,7 +1057,7 @@ Resources:
     Properties:
       TopicName: !Sub '${AWS::StackName}-slack-notification'
       DisplayName: 'MTE PreChat Session Notifications'
-      KmsMasterKeyId: alias/aws/sns
+      KmsMasterKeyId: !Ref DynamoDBKMSKey
 
 
 
@@ -1176,7 +1237,6 @@ Resources:
             Effect: Allow
             Action:
               - s3:PutObject
-              - s3:PutObjectAcl
               - s3:PutObjectTagging
             Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
       Events:
@@ -1395,6 +1455,7 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/s3/${AWS::StackName}-website-bucket"
       RetentionInDays: 30
+      KmsKeyId: !GetAtt DynamoDBKMSKey.Arn
 
   # CloudWatch Log Group for API Gateway Access Logs
   ApiGatewayLogGroup:
@@ -1402,12 +1463,12 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/apigateway/${AWS::StackName}-api-access-logs"
       RetentionInDays: 30
+      KmsKeyId: !GetAtt DynamoDBKMSKey.Arn
 
   # IAM Role for API Gateway CloudWatch Logging
   ApiGatewayCloudWatchRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${AWS::StackName}-apigateway-cloudwatch-role'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -1427,8 +1488,16 @@ Resources:
   # S3 Access Logging Bucket
   AccessLoggingBucket:
     Type: AWS::S3::Bucket
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: S3_BUCKET_REPLICATION_ENABLED
+            reason: "This bucket stores access logs from other S3 buckets. Replication is not required for log storage and would create unnecessary complexity and costs."
+          - id: S3_BUCKET_LOGGING_ENABLED
+            reason: "This bucket is specifically designed to receive access logs from other buckets. Enabling logging on a logging bucket would create circular logging and is not a best practice."
     Properties:
       BucketName: !Sub "${AWS::StackName}-access-logs-${Stage}-${AWS::AccountId}"
+      ObjectLockEnabled: false
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -1457,6 +1526,16 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt AccessLoggingBucket.Arn
+              - !Sub "${AccessLoggingBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
           - Sid: S3ServerAccessLogsPolicy
             Effect: Allow
             Principal:
@@ -1480,11 +1559,38 @@ Resources:
               StringEquals:
                 "aws:SourceAccount": !Ref AWS::AccountId
 
+  # Bucket Policy for Failover Bucket TLS Enforcement
+  FailoverBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FailoverBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt FailoverBucket.Arn
+              - !Sub "${FailoverBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+
   # S3 Failover/Replication Bucket (Different Region)
   FailoverBucket:
     Type: AWS::S3::Bucket
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: S3_BUCKET_REPLICATION_ENABLED
+            reason: "This is a failover/destination bucket for replication from WebsiteBucket. Destination buckets do not need their own replication configuration."
+          - id: S3_BUCKET_LOGGING_ENABLED
+            reason: "This is a failover bucket used only for disaster recovery. Access logging is not required for this use case and would generate unnecessary costs."
     Properties:
       BucketName: !Sub "${AWS::StackName}-failover-${Stage}-${AWS::AccountId}"
+      ObjectLockEnabled: false
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -1509,7 +1615,6 @@ Resources:
   S3ReplicationRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${AWS::StackName}-s3-replication-role-${Stage}'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -1517,34 +1622,15 @@ Resources:
             Principal:
               Service: s3.amazonaws.com
             Action: sts:AssumeRole
-      Policies:
-        - PolicyName: S3ReplicationPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetObjectVersionForReplication
-                  - s3:GetObjectVersionAcl
-                  - s3:GetObjectVersionTagging
-                Resource: !Sub "arn:aws:s3:::${AWS::StackName}-website-${Stage}-${AWS::AccountId}/*" # WebsiteBucket
-              - Effect: Allow
-                Action:
-                  - s3:GetReplicationConfiguration
-                  - s3:ListBucket
-                Resource: !Sub "arn:aws:s3:::${AWS::StackName}-website-${Stage}-${AWS::AccountId}" # WebsiteBucket
-              - Effect: Allow
-                Action:
-                  - s3:ReplicateObject
-                  - s3:ReplicateDelete
-                  - s3:ReplicateTags
-                Resource: !Sub "${FailoverBucket.Arn}/*"
+      ManagedPolicyArns:
+        - !Ref S3ReplicationPolicy
 
   # S3 Bucket for Static Website (Enhanced Security)
   WebsiteBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "${AWS::StackName}-website-${Stage}-${AWS::AccountId}"
+      ObjectLockEnabled: false
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -1598,6 +1684,7 @@ Resources:
         - Key: Replication
           Value: Enabled
 
+
   # CloudFront Origin Access Control
   OriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
@@ -1608,26 +1695,36 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
-  #S3 Bucket Policy for CloudFront OAC
-  # WebsiteBucketPolicy:
-  #   Type: AWS::S3::BucketPolicy
-  #   Properties:
-  #     Bucket: !Ref WebsiteBucket
-  #     PolicyDocument:
-  #       Version: '2012-10-17'
-  #       Statement:
-  #         - Sid: AllowCloudFrontServicePrincipal
-  #           Effect: Allow
-  #           Principal:
-  #             Service: cloudfront.amazonaws.com
-  #           Action: s3:GetObject
-  #           Resource: !Sub "${WebsiteBucket}/*"
-  #           Condition:
-  #             StringEquals:
-  #               AWS:SourceArn: !Sub 
-  #                 - "arn:aws:cloudfront::${AccountId}:distribution/${DistributionId}"
-  #                 - AccountId: !Ref AWS::AccountId
-  #                   DistributionId: !Ref CloudFrontDistribution
+  # S3 Bucket Policy for CloudFront OAC and TLS Enforcement
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt WebsiteBucket.Arn
+              - !Sub "${WebsiteBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+          - Sid: AllowCloudFrontServicePrincipal
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 
+                  - "arn:aws:cloudfront::${AccountId}:distribution/${DistributionId}"
+                  - AccountId: !Ref AWS::AccountId
+                    DistributionId: !Ref CloudFrontDistribution
 
   # CloudFront Distribution
   CloudFrontDistribution:
@@ -1708,6 +1805,12 @@ Outputs:
   DynamoDBKMSKeyArn:
     Description: Primary KMS Key ARN for DynamoDB and Lambda encryption
     Value: !GetAtt DynamoDBKMSKey.Arn
+  BedrockAgentPolicyArn:
+    Description: Reusable IAM policy for Bedrock Agent operations
+    Value: !Ref BedrockAgentPolicy
+  S3ReplicationPolicyArn:
+    Description: Reusable IAM policy for S3 cross-region replication
+    Value: !Ref S3ReplicationPolicy
   LambdaDeadLetterQueueUrl:
     Description: Dead Letter Queue URL for Lambda functions
     Value: !Ref LambdaDeadLetterQueue
