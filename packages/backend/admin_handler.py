@@ -65,8 +65,11 @@ def list_sessions(event, context):
         
         sessions = []
         for item in response.get('Items', []):
+            # Extract sessionId from PK (format: SESSION#sessionId)
+            session_id = item.get('sessionId') or item['PK'].replace('SESSION#', '')
+            
             sessions.append({
-                'sessionId': item['sessionId'],
+                'sessionId': session_id,
                 'status': item['status'],
                 'customerName': item['customerInfo']['name'],
                 'customerEmail': item['customerInfo']['email'],

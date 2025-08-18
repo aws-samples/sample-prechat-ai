@@ -84,7 +84,7 @@ def send_sns_notifications(session_id, customer_info, session_data, old_status, 
                 response = sns.publish(
                     TopicArn=topic_arn,
                     Message=json.dumps(message),
-                    Subject=f"MTE PreChat Session Completed: {session_id}"
+                    Subject=f"AWS PreChat Session Completed: {session_id}"
                 )
                 print(f"SNS notification sent to {topic_arn} for session {session_id}. MessageId: {response.get('MessageId')}")
             except Exception as e:
@@ -256,8 +256,8 @@ def build_sns_message_payload(session_id, customer_info, session_data, old_statu
         "id": f"session-{session_id}",
         "content": {
             "textType": "client-markdown",
-            "title": f":white_check_mark: Pre-consultation Session Completed",
-            "description": f"@{sales_rep_alias} Customer *{customer_display}* has completed their pre-consultation session with duration of {duration_text}.",
+            "title": f":gr-blob-excited: [AWS PreChat] Session Completed",
+            "description": f"Customer *{customer_display}* has completed their pre-consultation session with duration of {duration_text}.",
             "nextSteps": [
                 f"Review session details at <{admin_url}|*Admin Dashboard*>",
                 f"@{sales_rep_email}: Follow up with customer within 24 hours",

@@ -78,6 +78,8 @@ yarn --version
 ### 1. 실행 권한 설정
 ```bash
 chmod +x deploy-full.sh
+chmod +x deploy-website.sh
+chmod +x update-env-vars.sh
 ```
 
 ### 3. 기본 배포
