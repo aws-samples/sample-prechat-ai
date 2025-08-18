@@ -325,15 +325,6 @@ export default function CustomerChat() {
               description={selectedPurpose ? `상담 목적: ${selectedPurpose.label}` : ""}
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
-                  {selectedPurpose && (
-                    <Button
-                      variant="normal"
-                      iconName="edit"
-                      onClick={() => setShowPurposeSelector(true)}
-                    >
-                      상담 목적 변경
-                    </Button>
-                  )}
                   <Button
                     variant="normal"
                     iconName="upload"
