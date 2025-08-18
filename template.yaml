@@ -321,7 +321,7 @@ Resources:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       VpcId: !Ref VPC
-      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent'
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent-runtime'
       VpcEndpointType: Interface
       SubnetIds:
         - !Ref PrivateSubnet1
