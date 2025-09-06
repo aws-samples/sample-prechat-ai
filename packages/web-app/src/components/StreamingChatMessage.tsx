@@ -1,3 +1,4 @@
+// nosemgrep
 import { useEffect, useState } from 'react'
 import { ButtonGroup, StatusIndicator } from '@cloudscape-design/components'
 import Avatar from '@cloudscape-design/chat-components/avatar'

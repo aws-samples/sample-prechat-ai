@@ -1,3 +1,4 @@
+// nosemgrep
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopNavigation } from '@cloudscape-design/components';

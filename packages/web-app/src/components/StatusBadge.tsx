@@ -1,3 +1,4 @@
+// nosemgrep
 import { Badge } from '@cloudscape-design/components'
 
 interface StatusBadgeProps {

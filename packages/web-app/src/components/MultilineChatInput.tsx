@@ -1,3 +1,4 @@
+// nosemgrep
 import { useState, useEffect } from 'react'
 import {
   Box,

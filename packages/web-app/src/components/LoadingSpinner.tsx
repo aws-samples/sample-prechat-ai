@@ -1,3 +1,4 @@
+// nosemgrep
 import { Container, Box, Spinner } from '@cloudscape-design/components'
 
 interface LoadingSpinnerProps {

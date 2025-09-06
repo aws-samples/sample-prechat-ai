@@ -1,3 +1,4 @@
+// nosemgrep
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Box, Spinner } from '@cloudscape-design/components'

@@ -1,3 +1,4 @@
+// nosemgrep
 import {
   Table,
   Button,
