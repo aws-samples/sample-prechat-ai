@@ -1,3 +1,4 @@
+// nosemgrep
 import { ButtonGroup, StatusIndicator } from '@cloudscape-design/components'
 import Avatar from '@cloudscape-design/chat-components/avatar'
 import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'

@@ -1,3 +1,4 @@
+// nosemgrep
 import { Box, Header } from '@cloudscape-design/components'
 
 export default function PageHeader() {

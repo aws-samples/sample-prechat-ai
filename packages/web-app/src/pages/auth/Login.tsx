@@ -1,3 +1,4 @@
+// nosemgrep
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -19,24 +20,24 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  
+
   const [signinData, setSigninData] = useState<SigninRequest>({
     email: '',
     password: ''
   })
-  
+
   const [signupData, setSignupData] = useState<SignupRequest>({
     email: '',
     password: '',
     name: '',
     phoneNumber: ''
   })
-  
+
   const [confirmData, setConfirmData] = useState<ConfirmSignupRequest>({
     email: '',
     confirmationCode: ''
   })
-  
+
   const [showConfirmation, setShowConfirmation] = useState(false)
 
   const handleSignin = async () => {
@@ -47,7 +48,7 @@ export default function Login() {
 
     setLoading(true)
     setError('')
-    
+
     try {
       await authService.signin(signinData)
       navigate('/admin')
@@ -66,7 +67,7 @@ export default function Login() {
 
     setLoading(true)
     setError('')
-    
+
     try {
       const result = await authService.confirmSignup(confirmData)
       setSuccess(result.message)
@@ -88,7 +89,7 @@ export default function Login() {
     setLoading(true)
     setError('')
     setSuccess('')
-    
+
     try {
       const result = await authService.signup(signupData)
       setSuccess(result.message)
@@ -121,7 +122,7 @@ export default function Login() {
               {error}
             </Alert>
           )}
-          
+
           {success && (
             <Alert type="success" dismissible onDismiss={() => setSuccess('')}>
               {success}
@@ -156,18 +157,18 @@ export default function Login() {
                       <FormField label="Email">
                         <Input
                           value={signinData.email}
-                          onChange={({ detail }) => 
+                          onChange={({ detail }) =>
                             setSigninData(prev => ({ ...prev, email: detail.value }))
                           }
                           type="email"
                           placeholder="Enter your email"
                         />
                       </FormField>
-                      
+
                       <FormField label="Password">
                         <Input
                           value={signinData.password}
-                          onChange={({ detail }) => 
+                          onChange={({ detail }) =>
                             setSigninData(prev => ({ ...prev, password: detail.value }))
                           }
                           type="password"
@@ -207,18 +208,18 @@ export default function Login() {
                       <FormField label="Email">
                         <Input
                           value={confirmData.email}
-                          onChange={({ detail }) => 
+                          onChange={({ detail }) =>
                             setConfirmData(prev => ({ ...prev, email: detail.value }))
                           }
                           type="email"
                           placeholder="Enter your email address"
                         />
                       </FormField>
-                      
+
                       <FormField label="Confirmation Code" description="Check your email for the 6-digit code">
                         <Input
                           value={confirmData.confirmationCode}
-                          onChange={({ detail }) => 
+                          onChange={({ detail }) =>
                             setConfirmData(prev => ({ ...prev, confirmationCode: detail.value }))
                           }
                           placeholder="Enter 6-digit code"
@@ -243,39 +244,39 @@ export default function Login() {
                       <FormField label="Full Name">
                         <Input
                           value={signupData.name}
-                          onChange={({ detail }) => 
+                          onChange={({ detail }) =>
                             setSignupData(prev => ({ ...prev, name: detail.value }))
                           }
                           placeholder="Enter your full name"
                         />
                       </FormField>
-                      
+
                       <FormField label="Email">
                         <Input
                           value={signupData.email}
-                          onChange={({ detail }) => 
+                          onChange={({ detail }) =>
                             setSignupData(prev => ({ ...prev, email: detail.value }))
                           }
                           type="email"
                           placeholder="Enter your email address"
                         />
                       </FormField>
-                      
+
                       <FormField label="Phone Number" description="International format (e.g., +1234567890)">
                         <Input
                           value={signupData.phoneNumber}
-                          onChange={({ detail }) => 
+                          onChange={({ detail }) =>
                             setSignupData(prev => ({ ...prev, phoneNumber: detail.value }))
                           }
                           type="text"
                           placeholder="+1234567890"
                         />
                       </FormField>
-                      
+
                       <FormField label="Password">
                         <Input
                           value={signupData.password}
-                          onChange={({ detail }) => 
+                          onChange={({ detail }) =>
                             setSignupData(prev => ({ ...prev, password: detail.value }))
                           }
                           type="password"

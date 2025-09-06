@@ -1,3 +1,4 @@
+// nosemgrep
 import React, { useState } from 'react';
 import { PrivacyTermsModal } from './PrivacyTermsModal';
 

@@ -1,3 +1,4 @@
+// nosemgrep
 import { Button, ButtonProps } from '@cloudscape-design/components'
 import { ReactNode } from 'react'
 

@@ -134,40 +134,25 @@ aws cloudformation delete-stack --stack-name mte-prechat --profile default
 
 ### 📄 라이선스 정보
 
-이 프로젝트는 **Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)** 하에 배포됩니다.
+이 프로젝트는 **MIT No Attribution License (MIT-0)** 하에 배포됩니다.
 
 ### ✅ 허용되는 사용
 
-- **개인 학습 및 연구**: 개인적인 학습이나 연구 목적으로 자유롭게 사용
-- **교육 목적**: 대학, 학교 등 교육 기관에서의 교육 목적 사용
-- **오픈소스 프로젝트**: 비영리 오픈소스 프로젝트에서의 활용
-- **내부 도구**: 회사 내부 도구로 사용 (외부 고객 대상 서비스 제외)
+- **무제한 사용**: 개인, 교육, 상업적 목적 모두 자유롭게 사용 가능
+- **수정 및 배포**: 코드 수정, 재배포, 서브라이선스 허용
+- **상업적 활용**: SaaS, 컨설팅, 재판매 등 모든 상업적 사용 허용
+- **저작자 표시 불필요**: 별도의 저작자 표시나 라이선스 고지 의무 없음
 
-### ❌ 제한되는 사용
+### 📋 라이선스 특징
 
-- **상업적 서비스**: 고객에게 유료로 제공하는 서비스
-- **SaaS 플랫폼**: 구독 기반 또는 유료 서비스로 운영
-- **컨설팅 서비스**: 이 코드를 기반으로 한 유료 컨설팅
-- **재판매**: 코드나 솔루션을 제3자에게 판매
-
-### 🤝 상업적 사용 문의
-
-상업적 목적으로 사용하고 싶으시다면 **aws-prechat@amazon.com**으로 연락해 주세요.
-
-- 조직 대 조직 간 구체적 협의 필요
-
-### 📋 라이선스 준수 방법
-
-이 프로젝트를 사용할 때는 다음을 포함해 주세요:
-
-```
-Based on AWS PreChat
-Copyright (c) 2025 AWS PreChat
-Licensed under CC BY-NC 4.0
-```
+MIT-0는 가장 관대한 오픈소스 라이선스 중 하나로:
+- 어떠한 제약 조건도 없음
+- 저작자 표시 의무 없음
+- 상업적 사용 완전 허용
+- 법적 분쟁 위험 최소화
 
 ### 🔗 자세한 라이선스 내용
 
 - **영문**: [LICENSE](LICENSE) 파일 참조
 - **한글**: [LICENSE-KOR](LICENSE-KOR) 파일 참조
-- **공식 라이선스**: https://creativecommons.org/licenses/by-nc/4.0/
+- **공식 라이선스**: https://opensource.org/licenses/MIT-0

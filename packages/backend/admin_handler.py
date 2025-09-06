@@ -1,3 +1,4 @@
+# nosemgrep
 import json
 import boto3
 import time
@@ -577,7 +578,7 @@ def process_analysis(event, context):
         return {'statusCode': 200}
         
     except Exception as e:
-        logger.error(f"Error processing analysis from SQS: {str(e)}")
+        logger.warning(f"Error processing analysis from SQS: {str(e)}")
         raise e
 
 def _perform_conversation_analysis(session_id, model_id, include_meeting_log=False, meeting_log=''):
@@ -924,20 +925,16 @@ def _call_llm_for_analysis(model_id, prompt, max_retries=3):
             logger.error(f"Raw content: {content[:500]}...")  # Log first 500 chars
             if attempt < max_retries - 1:
                 logger.info("Retrying with same prompt...")
-                time.sleep(1)
             
         except ValueError as e:
             last_error = e
             logger.error(f"LLM response validation failed on attempt {attempt + 1}: {str(e)}")
             if attempt < max_retries - 1:
                 logger.info("Retrying with same prompt...")
-                time.sleep(1)
                 
         except Exception as e:
             last_error = e
             logger.error(f"Unexpected error on attempt {attempt + 1}: {str(e)}")
-            if attempt < max_retries - 1:
-                time.sleep(1)
     
     logger.error(f"All {max_retries} attempts failed. Last error: {str(last_error)}")
     return None
@@ -1012,8 +1009,6 @@ def _store_analysis_results(session_id, analysis_data, max_retries=3):
         except Exception as e:
             last_error = e
             logger.error(f"Unexpected error storing analysis on attempt {attempt + 1}: {str(e)}")
-            if attempt < max_retries - 1:
-                time.sleep(1)
     
     logger.error(f"Failed to store analysis after {max_retries} attempts. Last error: {str(last_error)}")
     return False

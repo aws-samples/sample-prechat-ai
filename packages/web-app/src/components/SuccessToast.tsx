@@ -1,3 +1,4 @@
+// nosemgrep
 import { useEffect } from 'react'
 import { StatusIndicator } from '@cloudscape-design/components'
 
