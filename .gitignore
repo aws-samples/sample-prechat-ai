@@ -68,3 +68,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# CFN guard rules
+aws/
