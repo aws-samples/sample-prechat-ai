@@ -1,0 +1,326 @@
+/* Global Styles - MTE Pre-consultation Chatbot */
+:root {
+  --gradient-bg: linear-gradient(135deg, #ffeef8 0%, #e8f4fd 100%);
+  --text-primary: #232f3e;
+  --text-secondary: #666;
+  --amazon-orange: #ff9900;
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--gradient-bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  padding: 2rem 2rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.header-content {
+  text-align: center;
+  flex: 1;
+}
+
+.header-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.4;
+}
+
+.logo {
+  height: 32px;
+}
+
+.header-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.welcome-title {
+  font-size: 4rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  line-height: 1.2;
+}
+
+.welcome-subtitle {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  line-height: 1.5;
+}
+
+/* Footer */
+.footer {
+  padding: 1rem 2rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.footer-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
+.footer-license {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.footer-copyright {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 0.75rem;
+}
+
+.copyright-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.license-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.cc-logo {
+  height: 31px;
+  width: 88px;
+  border-radius: 4px;
+}
+
+.license-text {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  max-width: 500px;
+}
+
+.license-link {
+  color: var(--amazon-orange);
+  text-decoration: none;
+}
+
+.license-link:hover {
+  text-decoration: underline;
+}
+
+/* AWS Seamless Integration */
+.glass-container {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+.awsui-table {
+  background: transparent !important;
+}
+
+.awsui-table-header {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(5px) !important;
+}
+
+.awsui-table-row {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.awsui-table-row:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .welcome-title {
+    font-size: 2.5rem;
+  }
+  
+  .main-content {
+    padding: 2rem 1rem;
+  }
+  
+  .header, .footer {
+    padding: 1rem;
+  }
+  
+  .footer-links {
+    gap: 1rem;
+  }
+  
+  .license-info {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  
+  .license-text {
+    font-size: 0.75rem;
+  }
+}
+
+[data-awsui-polaris-top-navigation] {
+  background: #232f3e !important;
+}
+
+[data-awsui-polaris-top-navigation] img {
+  filter: brightness(0) invert(1) !important;
+}
+
+/* Markdown List Fix - Only in chat bubble content */
+.awsui_content_cdujn_4xote_76 ul,
+.awsui_content_cdujn_4xote_76 ol,
+.awsui_content_cdujn_4xote_76 li {
+  margin-left: 20px !important;
+  padding-left: 8px !important;
+}
+
+/* Markdown Paragraph Spacing */
+p {
+  line-height: 1.5 !important;
+  margin-bottom: 12px !important;
+}
+
+/* Session Actions Padding Fix */
+[data-awsui-polaris-button-dropdown] {
+  padding-left: 0 !important;
+}
+
+/* File Upload Modal Z-Index Fix */
+[data-awsui-polaris-modal] {
+  z-index: 9999 !important;
+}
+
+[data-awsui-polaris-modal-backdrop] {
+  z-index: 9998 !important;
+}
+
+/* Ensure modal content is above everything */
+.awsui-modal {
+  z-index: 9999 !important;
+}
+
+.awsui-modal-backdrop {
+  z-index: 9998 !important;
+}
+
+/* Feedback Modal Star Rating */
+.star-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.5rem 0;
+}
+
+.star-wrapper {
+  position: relative;
+  display: inline-block;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.star-bg {
+  color: #ddd;
+  user-select: none;
+}
+
+.star-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: transparent;
+  user-select: none;
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.star-fill.half {
+  color: var(--amazon-orange);
+}
+
+.star-fill.full {
+  color: var(--amazon-orange);
+  clip-path: none !important;
+}
+
+.star-click-area {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.star-left-area {
+  left: 0;
+}
+
+.star-right-area {
+  right: 0;
+}
+
+.star-wrapper:hover .star-bg {
+  color: #bbb;
+}
+
+.rating-text {
+  margin-left: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+

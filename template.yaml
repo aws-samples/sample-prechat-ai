@@ -1,0 +1,1858 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+    Description: Deployment stage
+  BedrockRegion:
+    Type: String
+    Default: ap-northeast-2
+    Description: AWS Region for Bedrock services
+    AllowedValues:
+      - us-east-1
+      - us-west-2
+      - ap-northeast-1
+      - ap-northeast-2
+      - eu-west-1
+      - eu-central-1
+  BedrockAgentAliasId:
+    Type: String
+    Default: TSTALIASID
+    Description: Bedrock Agent Alias ID to use for invocations
+  AllowedEmailDomains:
+    Type: String
+    Default: amazon.com,nongshim.co.kr
+    Description: Comma-separated list of allowed email domains for user registration
+  LambdaConcurrencyLimit:
+    Type: Number
+    Default: 10
+    Description: Reserved concurrency limit for Lambda functions
+    MinValue: 1
+    MaxValue: 1000
+
+Globals:
+  Function:
+    Runtime: python3.13
+    Timeout: 30
+    ReservedConcurrentExecutions: !Ref LambdaConcurrencyLimit
+    DeadLetterQueue:
+      Type: SQS
+      TargetArn: !GetAtt LambdaDeadLetterQueue.Arn
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref LambdaSecurityGroup
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+    Environment:
+      Variables:
+        SESSIONS_TABLE: !Ref SessionsTable
+        MESSAGES_TABLE: !Ref MessagesTable
+        BEDROCK_REGION: !Ref BedrockRegion
+        USER_POOL_ID: !Ref AdminUserPool
+        CLIENT_ID: !Ref AdminUserPoolClient
+        ALLOWED_EMAIL_DOMAINS: !Ref AllowedEmailDomains
+        BEDROCK_AGENT_ROLE_ARN: !GetAtt BedrockAgentServiceRole.Arn
+        BEDROCK_AGENT_ALIAS_ID: !Ref BedrockAgentAliasId
+    KmsKeyArn: !GetAtt DynamoDBKMSKey.Arn
+  Api:
+    EndpointConfiguration: REGIONAL
+
+Resources:
+  # Security Resources
+  # IAM Policies for Reusability
+  S3ReplicationPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy for S3 cross-region replication
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: S3ReplicationSource
+            Effect: Allow
+            Action:
+              - s3:GetObjectVersionForReplication
+              - s3:GetObjectVersionAcl
+              - s3:GetObjectVersionTagging
+            Resource: !Sub "arn:aws:s3:::${AWS::StackName}-website-${Stage}-${AWS::AccountId}/*"
+          - Sid: S3ReplicationBucket
+            Effect: Allow
+            Action:
+              - s3:GetReplicationConfiguration
+              - s3:ListBucket
+            Resource: !Sub "arn:aws:s3:::${AWS::StackName}-website-${Stage}-${AWS::AccountId}"
+          - Sid: S3ReplicationDestination
+            Effect: Allow
+            Action:
+              - s3:ReplicateObject
+              - s3:ReplicateDelete
+              - s3:ReplicateTags
+            Resource: !Sub "arn:aws:s3:::${AWS::StackName}-failover-${Stage}-${AWS::AccountId}/*"
+
+  # KMS Key for DynamoDB Tables Encryption
+  DynamoDBKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS Key for DynamoDB tables encryption
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow DynamoDB service to use the key
+            Effect: Allow
+            Principal:
+              Service: dynamodb.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource: '*'
+          - Sid: Allow Lambda execution roles to use the key
+            Effect: Allow
+            Principal:
+              AWS: '*'
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource: '*'
+            Condition:
+              StringLike:
+                "aws:PrincipalArn": 
+                  - !Sub "arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-*"
+          - Sid: Allow CloudWatch Logs service to use the key
+            Effect: Allow
+            Principal:
+              Service: logs.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource: '*'
+            Condition:
+              ArnEquals:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
+          - Sid: Allow SQS service to use the key
+            Effect: Allow
+            Principal:
+              Service: sqs.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource: '*'
+          - Sid: Allow SNS service to use the key
+            Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource: '*'
+
+  DynamoDBKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub 'alias/${AWS::StackName}-dynamodb-${Stage}'
+      TargetKeyId: !Ref DynamoDBKMSKey
+
+  # Dead Letter Queue for Lambda Functions
+  LambdaDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${AWS::StackName}-lambda-dlq-${Stage}'
+      MessageRetentionPeriod: 1209600  # 14 days
+      KmsMasterKeyId: !Ref DynamoDBKMSKey
+
+  # VPC Configuration
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-vpc-${Stage}'
+
+
+
+  # Private Subnets for Lambda Functions
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: 10.0.11.0/24
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-subnet-1-${Stage}'
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: 10.0.12.0/24
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-subnet-2-${Stage}'
+
+
+
+  # Route Tables
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-routes-1-${Stage}'
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-routes-2-${Stage}'
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      SubnetId: !Ref PrivateSubnet2
+
+  # Security Group for Lambda Functions
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Lambda functions
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          DestinationPrefixListId: pl-48a54021
+          Description: HTTPS outbound to DynamoDB via Gateway VPC endpoint
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          DestinationPrefixListId: pl-78a54011
+          Description: HTTPS outbound to S3 via Gateway VPC endpoint
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 10.0.0.0/16
+          Description: HTTP outbound within VPC for internal communication
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 10.0.0.0/16
+          Description: HTTP outbound within VPC for internal communication
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-lambda-sg-${Stage}'
+
+  # VPC Endpoints for AWS Services
+  DynamoDBVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.dynamodb'
+      VpcEndpointType: Gateway
+      RouteTableIds:
+        - !Ref PrivateRouteTable1
+        - !Ref PrivateRouteTable2
+
+  S3VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcEndpointType: Gateway
+      RouteTableIds:
+        - !Ref PrivateRouteTable1
+        - !Ref PrivateRouteTable2
+
+  # Interface VPC Endpoints for other AWS services
+  BedrockVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-runtime'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
+
+  BedrockAgentRuntimeVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent-runtime'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
+
+  BedrockAgentVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
+
+  CognitoVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.cognito-idp'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
+
+  SQSVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.sqs'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
+
+  KMSVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.kms'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
+
+  SNSVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.sns'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
+
+  # Security Group for VPC Endpoints
+  VPCEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for VPC endpoints
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref LambdaSecurityGroup
+          Description: HTTPS from Lambda functions security group
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 10.0.0.0/16
+          Description: Boilerplate egress rule for security check
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-vpc-endpoint-sg-${Stage}'
+
+  # Bedrock Agent Service Role
+  BedrockAgentServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: bedrock.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+
+  AdminUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: mte-admin-users
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      EmailVerificationMessage: "[AWS PreChat] This is your sign-in code: \"{####}\""
+      EmailVerificationSubject: "[AWS PreChat] Your sign-in code"
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+        - Name: name
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+        - Name: phone_number
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+
+  AdminUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref AdminUserPool
+      ClientName: mte-admin-client
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ADMIN_NO_SRP_AUTH
+        - USER_PASSWORD_AUTH
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+      AccessTokenValidity: 24
+      IdTokenValidity: 24
+      RefreshTokenValidity: 30
+
+  # DynamoDB Tables
+  SessionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref DynamoDBKMSKey
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-sessions-${Stage}'
+        - Key: Environment
+          Value: !Ref Stage
+        - Key: Encryption
+          Value: KMS
+
+  MessagesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref DynamoDBKMSKey
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-messages-${Stage}'
+        - Key: Environment
+          Value: !Ref Stage
+        - Key: Encryption
+          Value: KMS
+
+  # API Gateway
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    DependsOn: ApiGatewayAccount
+    Properties:
+      StageName: !Ref Stage
+      TracingEnabled: true
+      AccessLogSetting:
+        DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
+        Format: '$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime]"$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.responseLength $context.requestId $context.extendedRequestId'
+      CacheClusterEnabled: true
+      CacheClusterSize: "0.5"
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          CachingEnabled: true
+          CacheTtlInSeconds: 1
+          LoggingLevel: INFO
+          DataTraceEnabled: true
+          MetricsEnabled: true
+          ThrottlingRateLimit: 100
+          ThrottlingBurstLimit: 200
+      Cors:
+        AllowMethods: "'*'"
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'"
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt AdminUserPool.Arn
+      Tags:
+        Name: !Sub '${AWS::StackName}-api-gateway'
+        Environment: !Ref Stage
+        Caching: Enabled
+        Tracing: Enabled
+        Logging: Enabled
+
+  # Lambda Functions
+  ChatFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: chat_handler.handle_message
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeAgent
+            Resource: '*'
+      Events:
+        PostMessage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/message
+            Method: post
+
+  ChatStreamFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: chat_stream_handler.handle_stream_message
+      Timeout: 300
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeAgent
+            Resource: '*'
+      Events:
+        PostStreamMessage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/stream
+            Method: post
+
+
+  CreateSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: session_handler.create_session
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        CreateSession:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+
+  GetSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: session_handler.get_session
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:ListUsers
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        GetSession:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}
+            Method: get
+
+
+  VerifySessionPinFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: session_handler.verify_session_pin
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        VerifySessionPin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/verify-pin
+            Method: post
+
+
+  ListSessionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.list_sessions
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        ListSessions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetSessionDetailsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.get_session_details
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetSessionDetails:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/details
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetReportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.get_session_report
+      Timeout: 300
+      MemorySize: 1024
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeAgent
+              - bedrock:InvokeModel
+            Resource: '*'
+      Events:
+        GetReport:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/report
+            Method: get
+            TimeoutInMillis: 29000
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  InactivateSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.inactivate_session
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        InactivateSession:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/inactivate
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  DeleteSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.delete_session
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+      Events:
+        DeleteSession:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  SignupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: auth_handler.signup
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:SignUp
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        Signup:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/auth/signup
+            Method: post
+
+  SigninFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: auth_handler.signin
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:AdminInitiateAuth
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        Signin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/auth/signin
+            Method: post
+
+
+  ConfirmSignupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: auth_handler.confirm_signup
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:ConfirmSignUp
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        ConfirmSignup:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/auth/confirm
+            Method: post
+
+  VerifyTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: auth_handler.verify_token
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:GetUser
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        VerifyToken:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/auth/verify
+            Method: get
+
+  ConfirmPhoneFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: auth_handler.confirm_phone
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:VerifyUserAttribute
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        ConfirmPhone:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/auth/confirm-phone
+            Method: post
+
+  # Bedrock Agent Functions
+  ListAgentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.list_agents
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:ListAgents
+              - bedrock:GetAgent
+            Resource: '*'
+      Events:
+        ListAgents:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CreateAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.create_agent
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:CreateAgent
+              - bedrock:GetAgent
+              - iam:PassRole
+            Resource: '*'
+      Events:
+        CreateAgent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  DeleteAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.delete_agent
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:DeleteAgent
+              - bedrock:GetAgent
+            Resource: '*'
+      Events:
+        DeleteAgent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents/{agentId}
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  PrepareAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.prepare_agent
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:PrepareAgent
+              - bedrock:GetAgent
+            Resource: '*'
+      Events:
+        PrepareAgent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents/{agentId}/prepare
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.get_agent
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:GetAgent
+            Resource: '*'
+      Events:
+        GetAgent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents/{agentId}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  UpdateAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_handler.update_agent
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:UpdateAgent
+              - bedrock:GetAgent
+            Resource: '*'
+      Events:
+        UpdateAgent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents/{agentId}
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  # SQS Queue for Analysis Jobs
+  AnalysisQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: mte-analysis-queue
+      VisibilityTimeout: 900
+      MessageRetentionPeriod: 1209600
+      KmsMasterKeyId: !Ref DynamoDBKMSKey
+
+  # SNS Topic for Slack Notifications
+  SlackNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${AWS::StackName}-slack-notification'
+      DisplayName: 'MTE PreChat Session Notifications'
+      KmsMasterKeyId: !Ref DynamoDBKMSKey
+
+
+
+  # Producer Function - Enqueues analysis request
+  RequestAnalysisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.request_analysis
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:UpdateItem
+            Resource: !GetAtt SessionsTable.Arn
+        - Statement:
+            Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt AnalysisQueue.Arn
+      Environment:
+        Variables:
+          ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
+      Events:
+        RequestAnalysis:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/analyze
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  # Consumer Function - Processes analysis from SQS
+  ProcessAnalysisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.process_analysis
+      Timeout: 900
+      MemorySize: 1024
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+            Resource: '*'
+      Events:
+        ProcessAnalysis:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt AnalysisQueue.Arn
+            BatchSize: 1
+
+  # Status Function - Check analysis status
+  GetAnalysisStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.get_analysis_status
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetAnalysisStatus:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/analysis-status
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  # Meeting Log Functions
+  SaveMeetingLogFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.save_meeting_log
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        SaveMeetingLog:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/meeting-log
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  ReanalyzeWithMeetingLogFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.reanalyze_with_meeting_log
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt AnalysisQueue.Arn
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Environment:
+        Variables:
+          ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
+      Events:
+        ReanalyzeWithMeetingLog:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/reanalyze
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  # Session Feedback Function
+  GetSessionFeedbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_handler.get_session_feedback
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetSessionFeedback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/feedback
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  # AWS Documentation Tools Action Group
+  AWSDocsActionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: aws_docs_handler.aws_docs_action_handler
+      MemorySize: 512
+      Timeout: 30
+      Events:
+        BedrockActionApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /bedrock/aws-docs-action
+            Method: post
+
+  # File Upload Functions
+  GenerateUploadUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: file_upload_handler.generate_presigned_url
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetBucketLocation
+            Resource: !GetAtt WebsiteBucket.Arn
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:PutObjectTagging
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        GenerateUploadUrl:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/upload-url
+            Method: post
+
+  ListSessionFilesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: file_upload_handler.list_session_files
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource: !GetAtt WebsiteBucket.Arn
+            Condition:
+              StringLike:
+                s3:prefix: "uploads/*"
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:HeadObject
+              - s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        ListSessionFiles:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/files
+            Method: get
+
+  DeleteSessionFileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: file_upload_handler.delete_session_file
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:DeleteObject
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        DeleteSessionFile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/files/{fileKey+}
+            Method: delete
+
+  # Customer Feedback Function
+  FeedbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: chat_handler.handle_feedback
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        SubmitFeedback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/feedback
+            Method: post
+
+  # Admin File Functions (no CSRF required)
+  ListSessionFilesAdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_file_handler.list_session_files_admin
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource: !GetAtt WebsiteBucket.Arn
+            Condition:
+              StringLike:
+                s3:prefix: "uploads/*"
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:HeadObject
+              - s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        ListSessionFilesAdmin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/files
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  DeleteSessionFileAdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_file_handler.delete_session_file_admin
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:DeleteObject
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        DeleteSessionFileAdmin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/files/{fileKey+}
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GenerateFilePresignedUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: admin_file_handler.generate_file_presigned_url
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:HeadObject
+              - s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+      Events:
+        GenerateFilePresignedUrl:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/files/presigned-url/{fileKey+}
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  # DynamoDB Streams Handler
+  SessionStreamHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: stream_handler.handle_session_stream
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt AnalysisQueue.Arn
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+              - s3:DeleteObject
+            Resource: 
+              - !GetAtt WebsiteBucket.Arn
+              - !Sub "${WebsiteBucket.Arn}/uploads/*"
+        - Statement:
+            Effect: Allow
+            Action:
+              - sns:Publish
+            Resource: !Ref SlackNotificationTopic
+      Environment:
+        Variables:
+          ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+          CLOUDFRONT_URL: !Sub "https://${CloudFrontDistribution.DomainName}"
+          # SNS Topic ARNs (comma-separated list)
+          SNS_TOPIC_ARNS: !Ref SlackNotificationTopic
+          # Slack Webhook URLs (comma-separated list)
+          SLACK_WEBHOOK_URLS: ""
+      Events:
+        SessionStream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt SessionsTable.StreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 5
+
+  # CloudWatch Log Group for S3 Bucket Notifications
+  S3WebsiteBucketLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/s3/${AWS::StackName}-website-bucket"
+      RetentionInDays: 30
+      KmsKeyId: !GetAtt DynamoDBKMSKey.Arn
+
+  # CloudWatch Log Group for API Gateway Access Logs
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/apigateway/${AWS::StackName}-api-access-logs"
+      RetentionInDays: 30
+      KmsKeyId: !GetAtt DynamoDBKMSKey.Arn
+
+  # IAM Role for API Gateway CloudWatch Logging
+  ApiGatewayCloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+
+  # API Gateway Account Configuration for CloudWatch Logging
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGatewayCloudWatchRole.Arn
+
+  # S3 Access Logging Bucket
+  AccessLoggingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-access-logs-${Stage}-${AWS::AccountId}"
+      ObjectLockEnabled: false
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+            BucketKeyEnabled: true
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-access-logs-${Stage}'
+        - Key: Environment
+          Value: !Ref Stage
+        - Key: Purpose
+          Value: AccessLogging
+    Metadata:
+      guard:
+        SuppressedRules:
+          - S3_BUCKET_DEFAULT_LOCK_ENABLED
+          - S3_BUCKET_LOGGING_ENABLED
+          - S3_BUCKET_NO_PUBLIC_RW_ACL
+          - S3_BUCKET_REPLICATION_ENABLED
+
+  # Bucket Policy for S3 Server Access Logs
+  AccessLoggingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AccessLoggingBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt AccessLoggingBucket.Arn
+              - !Sub "${AccessLoggingBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+          - Sid: S3ServerAccessLogsPolicy
+            Effect: Allow
+            Principal:
+              Service: logging.s3.amazonaws.com
+            Action:
+              - s3:PutObject
+            Resource: !Sub "${AccessLoggingBucket.Arn}/${AWS::StackName}/*"
+            Condition:
+              ArnLike:
+                "aws:SourceArn": !GetAtt WebsiteBucket.Arn
+              StringEquals:
+                "aws:SourceAccount": !Ref AWS::AccountId
+          - Sid: S3ServerAccessLogsDelivery
+            Effect: Allow
+            Principal:
+              Service: logging.s3.amazonaws.com
+            Action:
+              - s3:GetBucketAcl
+            Resource: !GetAtt AccessLoggingBucket.Arn
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Ref AWS::AccountId
+
+  # Bucket Policy for Failover Bucket TLS Enforcement
+  FailoverBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FailoverBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt FailoverBucket.Arn
+              - !Sub "${FailoverBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+          - Sid: AllowCloudFrontServicePrincipal
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            NotResource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 
+                  - "arn:aws:cloudfront::${AccountId}:distribution/${DistributionId}"
+                  - AccountId: !Ref AWS::AccountId
+                    DistributionId: !Ref CloudFrontDistribution
+
+  # S3 Failover/Replication Bucket (Different Region)
+  FailoverBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-failover-${Stage}-${AWS::AccountId}"
+      ObjectLockEnabled: false
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+            BucketKeyEnabled: true
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-failover-${Stage}'
+        - Key: Environment
+          Value: !Ref Stage
+        - Key: Purpose
+          Value: Failover
+    Metadata:
+      guard:
+        SuppressedRules:
+          - S3_BUCKET_DEFAULT_LOCK_ENABLED
+          - S3_BUCKET_LOGGING_ENABLED
+          - S3_BUCKET_NO_PUBLIC_RW_ACL
+          - S3_BUCKET_REPLICATION_ENABLED
+
+  # IAM Role for S3 Replication
+  S3ReplicationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref S3ReplicationPolicy
+
+  # S3 Bucket for Static Website (Enhanced Security)
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-website-${Stage}-${AWS::AccountId}"
+      ObjectLockEnabled: false
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+            BucketKeyEnabled: true
+      VersioningConfiguration:
+        Status: Enabled
+      LoggingConfiguration:
+        DestinationBucketName: !Ref AccessLoggingBucket
+        LogFilePrefix: !Sub "${AWS::StackName}/"
+      ReplicationConfiguration:
+        Role: !GetAtt S3ReplicationRole.Arn
+        Rules:
+          - Id: ReplicateToFailover
+            Status: Enabled
+            Destination:
+              Bucket: !Sub "arn:aws:s3:::${FailoverBucket}"
+              StorageClass: ONEZONE_IA
+      CorsConfiguration:
+        CorsRules:
+          - Id: FileUploadCorsRule
+            AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - PUT
+              - POST
+              - GET
+              - HEAD
+              - DELETE
+            AllowedOrigins:
+              - "*"
+            ExposedHeaders:
+              - ETag
+              - x-amz-meta-original-filename-encoded
+              - x-amz-version-id
+            MaxAge: 3600
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-website-${Stage}'
+        - Key: Environment
+          Value: !Ref Stage
+        - Key: Encryption
+          Value: SSE-S3
+        - Key: Versioning
+          Value: Enabled
+        - Key: Replication
+          Value: Enabled
+    Metadata:
+      guard:
+        SuppressedRules:
+          - S3_BUCKET_DEFAULT_LOCK_ENABLED
+          - S3_BUCKET_NO_PUBLIC_RW_ACL
+        
+  # CloudFront Origin Access Control
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${AWS::StackName}-oac-${Stage}"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # S3 Bucket Policy for CloudFront OAC and TLS Enforcement
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt WebsiteBucket.Arn
+              - !Sub "${WebsiteBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+          - Sid: AllowCloudFrontServicePrincipal
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            NotResource: !Sub "${WebsiteBucket.Arn}/uploads/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 
+                  - "arn:aws:cloudfront::${AccountId}:distribution/${DistributionId}"
+                  - AccountId: !Ref AWS::AccountId
+                    DistributionId: !Ref CloudFrontDistribution
+
+  # CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt WebsiteBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+            OriginAccessControlId: !Ref OriginAccessControl
+          - Id: S3FailoverOrigin
+            DomainName: !GetAtt FailoverBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+            OriginAccessControlId: !Ref OriginAccessControl
+        OriginGroups:
+          Quantity: 1
+          Items:
+            - Id: S3OriginGroup
+              FailoverCriteria:
+                StatusCodes:
+                  Quantity: 3
+                  Items:
+                    - 403
+                    - 404
+                    - 500
+              Members:
+                Quantity: 2
+                Items:
+                  - OriginId: S3Origin
+                  - OriginId: S3FailoverOrigin
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          TargetOriginId: S3OriginGroup
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # Managed-CachingOptimized
+          Compress: true
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        PriceClass: PriceClass_100
+        Comment: !Sub "MTE PreChat Website - ${Stage}"
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+          MinimumProtocolVersion: TLSv1.2_2021
+        HttpVersion: http2and3
+    Metadata:
+      guard:
+        SuppressedRules:
+          - CLOUDFRONT_ACCESSLOGS_ENABLED
+          - CLOUDFRONT_CUSTOM_SSL_CERTIFICATE
+          - CLOUDFRONT_MINIMUM_PROTOCOL_VERSION_RULE
+          - CLOUDFRONT_SNI_ENABLED
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway URL
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  ApiGatewayLogGroup:
+    Description: API Gateway CloudWatch Log Group
+    Value: !Ref ApiGatewayLogGroup
+  BedrockActionEndpoint:
+    Description: Bedrock Agent Action Group endpoint URL
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/bedrock/aws-docs-action"
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref AdminUserPool
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref AdminUserPoolClient
+  AnalysisQueueUrl:
+    Description: SQS Queue URL for analysis jobs
+    Value: !Ref AnalysisQueue
+  SlackNotificationTopicArn:
+    Description: SNS Topic ARN for Slack notifications
+    Value: !Ref SlackNotificationTopic
+  Stage:
+    Description: Deployment stage
+    Value: !Ref Stage
+  WebsiteBucket:
+    Description: S3 Bucket for static website
+    Value: !Ref WebsiteBucket
+  AccessLoggingBucket:
+    Description: S3 Bucket for access logging
+    Value: !Ref AccessLoggingBucket
+  FailoverBucket:
+    Description: S3 Bucket for failover/replication
+    Value: !Ref FailoverBucket
+  WebsiteURL:
+    Description: Website URL
+    Value: !Sub "https://${CloudFrontDistribution.DomainName}"
+  CloudFrontDistributionId:
+    Description: CloudFront Distribution ID
+    Value: !Ref CloudFrontDistribution
+  VPCId:
+    Description: VPC ID for Lambda functions
+    Value: !Ref VPC
+  DynamoDBKMSKeyId:
+    Description: Primary KMS Key ID for DynamoDB and Lambda encryption
+    Value: !Ref DynamoDBKMSKey
+  DynamoDBKMSKeyArn:
+    Description: Primary KMS Key ARN for DynamoDB and Lambda encryption
+    Value: !GetAtt DynamoDBKMSKey.Arn
+  S3ReplicationPolicyArn:
+    Description: Reusable IAM policy for S3 cross-region replication
+    Value: !Ref S3ReplicationPolicy
+  LambdaDeadLetterQueueUrl:
+    Description: Dead Letter Queue URL for Lambda functions
+    Value: !Ref LambdaDeadLetterQueue
