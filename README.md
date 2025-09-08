@@ -106,7 +106,7 @@ Ensure you have the following installed:
 1. **Clone the repository**:
    ```bash
    git clone <repository-url>
-   cd prechat-consultation-ai
+   cd sample-prechat-ai
    ```
 
 2. **Install dependencies**:
@@ -182,7 +182,7 @@ For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE
 ### Project Structure
 
 ```
-prechat-consultation-ai/
+sample-prechat-ai/
 ├── README.md                    # This file
 ├── DEPLOYMENT_GUIDE.md          # Detailed deployment instructions
 ├── LICENSE                      # MIT-0 license
