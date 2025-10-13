@@ -6,6 +6,8 @@ from utils import lambda_response, parse_body, get_timestamp, generate_id, get_t
 dynamodb = boto3.resource('dynamodb')
 cognito = boto3.client('cognito-idp')
 USER_POOL_ID = os.environ.get('USER_POOL_ID')
+SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
+MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
 
 def create_session(event, context):
     body = parse_body(event)
@@ -52,7 +54,7 @@ def create_session(event, context):
     }
     
     try:
-        sessions_table = dynamodb.Table('mte-sessions')
+        sessions_table = dynamodb.Table(SESSIONS_TABLE)
         sessions_table.put_item(Item=session_record)
         
         return lambda_response(200, {
@@ -68,7 +70,7 @@ def get_session(event, context):
     session_id = event['pathParameters']['sessionId']
     
     try:
-        sessions_table = dynamodb.Table('mte-sessions')
+        sessions_table = dynamodb.Table(SESSIONS_TABLE)
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         
         if 'Item' not in session_resp:
@@ -77,7 +79,7 @@ def get_session(event, context):
         session = session_resp['Item']
         
         # Get conversation history
-        messages_table = dynamodb.Table('mte-messages')
+        messages_table = dynamodb.Table(MESSAGES_TABLE)
         history_resp = messages_table.query(
             KeyConditionExpression='PK = :pk',
             ExpressionAttributeValues={':pk': f'SESSION#{session_id}'},
@@ -172,7 +174,7 @@ def verify_session_pin(event, context):
         return lambda_response(400, {'error': 'Privacy policy agreement is required'})
     
     try:
-        sessions_table = dynamodb.Table('mte-sessions')
+        sessions_table = dynamodb.Table(SESSIONS_TABLE)
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         
         if 'Item' not in session_resp:

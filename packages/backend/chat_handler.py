@@ -7,6 +7,8 @@ from utils import lambda_response, parse_body, get_timestamp, generate_id, get_t
 dynamodb = boto3.resource('dynamodb')
 bedrock_region = os.environ.get('BEDROCK_REGION', 'ap-northeast-2')
 bedrock_agent = boto3.client('bedrock-agent-runtime', region_name=bedrock_region)
+SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
+MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
 
 def handle_message(event, context):
     body = parse_body(event)
@@ -18,7 +20,7 @@ def handle_message(event, context):
         return lambda_response(400, {'error': 'Missing sessionId or message'})
     
     # Get session
-    sessions_table = dynamodb.Table('mte-sessions')
+    sessions_table = dynamodb.Table(SESSIONS_TABLE)
     try:
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         if 'Item' not in session_resp:
@@ -31,7 +33,7 @@ def handle_message(event, context):
         return lambda_response(500, {'error': 'Database error'})
     
     # Get conversation history
-    messages_table = dynamodb.Table('mte-messages')
+    messages_table = dynamodb.Table(MESSAGES_TABLE)
     try:
         history_resp = messages_table.query(
             KeyConditionExpression='PK = :pk',
@@ -182,7 +184,7 @@ def handle_feedback(event, context):
         return lambda_response(400, {'error': 'Invalid rating. Must be between 0.5 and 5.0'})
     
     # Get session to verify it exists
-    sessions_table = dynamodb.Table('mte-sessions')
+    sessions_table = dynamodb.Table(SESSIONS_TABLE)
     try:
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         if 'Item' not in session_resp:
