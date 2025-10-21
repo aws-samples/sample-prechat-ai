@@ -50,20 +50,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
         <div className="footer-license">
           <div className="license-info">
-            <img 
-              src="https://licensebuttons.net/l/by-nc/4.0/88x31.png" 
-              alt="Creative Commons License" 
-              className="cc-logo"
-            />
             <span className="license-text">
-              This work is licensed under a{' '}
+              This work is licensed under the{' '}
               <a 
-                href="https://creativecommons.org/licenses/by-nc/4.0/" 
+                href="https://opensource.org/licenses/MIT-0" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="license-link"
               >
-                Creative Commons Attribution-NonCommercial 4.0 International License
+                MIT-0 License
               </a>
             </span>
           </div>
