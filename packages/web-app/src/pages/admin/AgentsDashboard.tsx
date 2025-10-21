@@ -9,7 +9,14 @@ import {
   SpaceBetween,
   Badge,
   Box,
+<<<<<<< HEAD
   ButtonDropdown
+=======
+  ButtonDropdown,
+  Modal,
+  FormField,
+  Input
+>>>>>>> dev
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
 import type { BedrockAgent } from '../../types'
@@ -18,6 +25,12 @@ export default function AgentsDashboard() {
   const navigate = useNavigate()
   const [agents, setAgents] = useState<BedrockAgent[]>([])
   const [loading, setLoading] = useState(true)
+<<<<<<< HEAD
+=======
+  const [showMemoryModal, setShowMemoryModal] = useState(false)
+  const [selectedAgentId, setSelectedAgentId] = useState('')
+  const [memoryStorageDays, setMemoryStorageDays] = useState(30)
+>>>>>>> dev
 
   useEffect(() => {
     loadAgents()
@@ -73,6 +86,26 @@ export default function AgentsDashboard() {
     }
   }
 
+<<<<<<< HEAD
+=======
+  const handleEnableMemory = (agentId: string) => {
+    setSelectedAgentId(agentId)
+    setShowMemoryModal(true)
+  }
+
+  const confirmEnableMemory = async () => {
+    try {
+      await adminApi.enableAgentMemory(selectedAgentId, memoryStorageDays)
+      alert(`Memory가 성공적으로 활성화되었습니다 (${memoryStorageDays}일). 에이전트를 다시 준비해주세요.`)
+      setShowMemoryModal(false)
+      loadAgents()
+    } catch (err) {
+      console.error('Failed to enable memory:', err)
+      alert('Memory 활성화에 실패했습니다.')
+    }
+  }
+
+>>>>>>> dev
   return (
     <Container>
       <SpaceBetween size="l">
@@ -146,6 +179,21 @@ export default function AgentsDashboard() {
                 cell: (item) => getStatusBadge(item.agentStatus)
               },
               {
+<<<<<<< HEAD
+=======
+                id: 'memory',
+                header: 'Memory',
+                cell: (item) => (
+                  <Box>
+                    <Box>{item.memoryStorageDays}일</Box>
+                    <Box fontSize="body-s" color="text-status-inactive">
+                      Storage Days
+                    </Box>
+                  </Box>
+                )
+              },
+              {
+>>>>>>> dev
                 id: 'actions',
                 header: '작업',
                 cell: (item) => (
@@ -163,6 +211,14 @@ export default function AgentsDashboard() {
                         iconName: 'status-positive' as const
                       }] : []),
                       ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
+<<<<<<< HEAD
+=======
+                        text: 'Memory 활성화',
+                        id: 'enable-memory',
+                        iconName: 'refresh' as const
+                      }] : []),
+                      ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
+>>>>>>> dev
                         text: '에이전트 제거',
                         id: 'delete',
                         iconName: 'remove' as const
@@ -179,6 +235,12 @@ export default function AgentsDashboard() {
                         case 'delete':
                           handleDelete(item.agentId)
                           break
+<<<<<<< HEAD
+=======
+                        case 'enable-memory':
+                          handleEnableMemory(item.agentId)
+                          break
+>>>>>>> dev
                       }
                     }}
                   >
@@ -204,6 +266,49 @@ export default function AgentsDashboard() {
             }
           />
         </div>
+<<<<<<< HEAD
+=======
+
+        <Modal
+          visible={showMemoryModal}
+          onDismiss={() => setShowMemoryModal(false)}
+          header="Memory 설정"
+          footer={
+            <Box float="right">
+              <SpaceBetween direction="horizontal" size="xs">
+                <Button variant="link" onClick={() => setShowMemoryModal(false)}>
+                  취소
+                </Button>
+                <Button variant="primary" onClick={confirmEnableMemory}>
+                  Memory 활성화
+                </Button>
+              </SpaceBetween>
+            </Box>
+          }
+        >
+          <SpaceBetween size="m">
+            <Box>
+              에이전트의 Memory 기능을 활성화하여 대화 맥락을 유지할 수 있습니다.
+            </Box>
+            <FormField 
+              label="Memory Storage Days" 
+              description="에이전트가 대화 맥락을 기억할 기간 (일 단위, 1-365일)"
+            >
+              <Input
+                type="number"
+                value={memoryStorageDays.toString()}
+                onChange={({ detail }) => {
+                  const days = parseInt(detail.value) || 30
+                  if (days >= 1 && days <= 365) {
+                    setMemoryStorageDays(days)
+                  }
+                }}
+                placeholder="30"
+              />
+            </FormField>
+          </SpaceBetween>
+        </Modal>
+>>>>>>> dev
       </SpaceBetween>
     </Container>
   )

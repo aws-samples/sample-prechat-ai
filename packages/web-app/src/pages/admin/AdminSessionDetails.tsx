@@ -15,8 +15,15 @@ import {
 import AnimatedButton from '../../components/AnimatedButton'
 import MeetingLogView from '../../components/MeetingLogView'
 import SessionAttachments from '../../components/SessionAttachments'
+<<<<<<< HEAD
 import { adminApi, chatApi } from '../../services/api'
 import { Session } from '../../types'
+=======
+import DiscussionTab from '../../components/DiscussionTab'
+import { adminApi, chatApi } from '../../services/api'
+import { Session } from '../../types'
+import { formatPurposesForDisplay } from '../../components/ConsultationPurposeSelector'
+>>>>>>> dev
 
 
 export default function AdminSessionDetails() {
@@ -133,6 +140,18 @@ export default function AdminSessionDetails() {
           </Box>
         </ColumnLayout>
 
+<<<<<<< HEAD
+=======
+        {session.consultationPurposes && (
+          <ColumnLayout columns={1}>
+            <Box>
+              <Box variant="awsui-key-label">상담 목적</Box>
+              <Box>{formatPurposesForDisplay(session.consultationPurposes)}</Box>
+            </Box>
+          </ColumnLayout>
+        )}
+
+>>>>>>> dev
         <ColumnLayout columns={3}>
           <Box>
             <Box variant="awsui-key-label">Status</Box>
@@ -180,6 +199,14 @@ export default function AdminSessionDetails() {
               content: sessionId ? <MeetingLogView sessionId={sessionId} session={session} /> : null
             },
             {
+<<<<<<< HEAD
+=======
+              label: 'Discussion',
+              id: 'discussion',
+              content: sessionId ? <DiscussionTab sessionId={sessionId} /> : null
+            },
+            {
+>>>>>>> dev
               label: '첨부 파일',
               id: 'attachments',
               content: sessionId ? <SessionAttachments sessionId={sessionId} /> : null

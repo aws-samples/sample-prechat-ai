@@ -26,7 +26,12 @@ export default function CreateAgent() {
   const [formData, setFormData] = useState({
     agentName: '',
     foundationModel: '',
+<<<<<<< HEAD
     instruction: defaultPrompt
+=======
+    instruction: defaultPrompt,
+    memoryStorageDays: 30
+>>>>>>> dev
   })
 
   useEffect(() => {
@@ -50,7 +55,11 @@ export default function CreateAgent() {
     }
   }
 
+<<<<<<< HEAD
   const updateFormData = (field: string, value: string) => {
+=======
+  const updateFormData = (field: string, value: string | number) => {
+>>>>>>> dev
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -125,6 +134,27 @@ export default function CreateAgent() {
             </FormField>
 
             <FormField 
+<<<<<<< HEAD
+=======
+              label="Memory Storage Days" 
+              description="에이전트가 대화 맥락을 기억할 기간 (일 단위, 1-365일)"
+              stretch
+            >
+              <Input
+                type="number"
+                value={formData.memoryStorageDays.toString()}
+                onChange={({ detail }) => {
+                  const days = parseInt(detail.value) || 30
+                  if (days >= 1 && days <= 365) {
+                    updateFormData('memoryStorageDays', days)
+                  }
+                }}
+                placeholder="30"
+              />
+            </FormField>
+
+            <FormField 
+>>>>>>> dev
               label={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span>Agent Instructions</span>

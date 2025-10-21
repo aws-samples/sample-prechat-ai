@@ -6,6 +6,11 @@ from utils import lambda_response, parse_body, get_timestamp, generate_id, get_t
 dynamodb = boto3.resource('dynamodb')
 bedrock_region = os.environ.get('BEDROCK_REGION', 'ap-northeast-2')
 bedrock_agent = boto3.client('bedrock-agent-runtime', region_name=bedrock_region)
+<<<<<<< HEAD
+=======
+SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
+MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
+>>>>>>> dev
 
 def handle_stream_message(event, context):
     """Handle streaming chat messages with real-time agent responses"""
@@ -18,7 +23,11 @@ def handle_stream_message(event, context):
         return lambda_response(400, {'error': 'Missing sessionId or message'})
     
     # Get session
+<<<<<<< HEAD
     sessions_table = dynamodb.Table('mte-sessions')
+=======
+    sessions_table = dynamodb.Table(SESSIONS_TABLE)
+>>>>>>> dev
     try:
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         if 'Item' not in session_resp:
@@ -49,7 +58,11 @@ def handle_stream_message(event, context):
         'ttl': ttl_value
     }
     
+<<<<<<< HEAD
     messages_table = dynamodb.Table('mte-messages')
+=======
+    messages_table = dynamodb.Table(MESSAGES_TABLE)
+>>>>>>> dev
     try:
         messages_table.put_item(Item=customer_msg)
     except Exception as e:
@@ -80,7 +93,11 @@ def generate_streaming_response(message, session_id, agent_id, message_id, times
         
         full_response = ""
         chunks = []
+<<<<<<< HEAD
         messages_table = dynamodb.Table('mte-messages')
+=======
+        messages_table = dynamodb.Table(MESSAGES_TABLE)
+>>>>>>> dev
         bot_response_id = f"{int(message_id) + 1}"
         
         # Process streaming events and collect chunks
@@ -117,7 +134,11 @@ def generate_streaming_response(message, session_id, agent_id, message_id, times
         # Update session status if complete
         if is_complete:
             try:
+<<<<<<< HEAD
                 sessions_table = dynamodb.Table('mte-sessions')
+=======
+                sessions_table = dynamodb.Table(SESSIONS_TABLE)
+>>>>>>> dev
                 sessions_table.update_item(
                     Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
                     UpdateExpression='SET #status = :status, completedAt = :completed_at',

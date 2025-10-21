@@ -7,6 +7,11 @@ from utils import lambda_response, get_timestamp
 sqs = boto3.client('sqs')
 ANALYSIS_QUEUE_URL = os.environ.get('ANALYSIS_QUEUE_URL')
 DEFAULT_MODEL_ID = 'apac.anthropic.claude-3-5-sonnet-20241022-v2:0'
+<<<<<<< HEAD
+=======
+SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
+MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
+>>>>>>> dev
 
 # Notification configuration from environment variables
 SNS_TOPIC_ARNS = os.environ.get('SNS_TOPIC_ARNS', '').split(',') if os.environ.get('SNS_TOPIC_ARNS') else []
@@ -293,7 +298,11 @@ def get_session_details_for_notification(session_id):
         dynamodb = boto3.resource('dynamodb')
         
         # Get session metadata
+<<<<<<< HEAD
         sessions_table = dynamodb.Table('mte-sessions')
+=======
+        sessions_table = dynamodb.Table(SESSIONS_TABLE)
+>>>>>>> dev
         session_resp = sessions_table.get_item(
             Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
         )
@@ -313,7 +322,11 @@ def get_session_details_for_notification(session_id):
             print(f"Session data retrieved: {session_data}")
         
         # Get conversation messages
+<<<<<<< HEAD
         messages_table = dynamodb.Table('mte-messages')
+=======
+        messages_table = dynamodb.Table(MESSAGES_TABLE)
+>>>>>>> dev
         messages_resp = messages_table.query(
             KeyConditionExpression='PK = :pk',
             ExpressionAttributeValues={':pk': f'SESSION#{session_id}'},

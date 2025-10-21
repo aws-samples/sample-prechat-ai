@@ -26,7 +26,11 @@ Parameters:
     Description: Bedrock Agent Alias ID to use for invocations
   AllowedEmailDomains:
     Type: String
+<<<<<<< HEAD
     Default: amazon.com,nongshim.co.kr
+=======
+    Default: amazon.com,your-email-domain.com
+>>>>>>> dev
     Description: Comma-separated list of allowed email domains for user registration
   LambdaConcurrencyLimit:
     Type: Number
@@ -938,8 +942,17 @@ Resources:
             Action:
               - bedrock:CreateAgent
               - bedrock:GetAgent
+<<<<<<< HEAD
               - iam:PassRole
             Resource: '*'
+=======
+            Resource: '*'
+        - Statement:
+            Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource: !GetAtt BedrockAgentServiceRole.Arn
+>>>>>>> dev
       Events:
         CreateAgent:
           Type: Api
@@ -1027,6 +1040,14 @@ Resources:
               - bedrock:UpdateAgent
               - bedrock:GetAgent
             Resource: '*'
+<<<<<<< HEAD
+=======
+        - Statement:
+            Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource: !GetAtt BedrockAgentServiceRole.Arn
+>>>>>>> dev
       Events:
         UpdateAgent:
           Type: Api
@@ -1036,6 +1057,17 @@ Resources:
             Method: put
             Auth:
               Authorizer: CognitoAuthorizer
+<<<<<<< HEAD
+=======
+        EnableAgentMemory:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agents/{agentId}/enable-memory
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+>>>>>>> dev
 
   # SQS Queue for Analysis Jobs
   AnalysisQueue:
@@ -1195,6 +1227,82 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+<<<<<<< HEAD
+=======
+  # Discussion Functions
+  ListDiscussionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: discussion_handler.list_discussions
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        ListDiscussions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/discussions
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CreateDiscussionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: discussion_handler.create_discussion
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        CreateDiscussion:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/discussions
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  UpdateDiscussionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: discussion_handler.update_discussion
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        UpdateDiscussion:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/discussions/{discussionId}
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  DeleteDiscussionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: discussion_handler.delete_discussion
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        DeleteDiscussion:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/discussions/{discussionId}
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+>>>>>>> dev
   # AWS Documentation Tools Action Group
   AWSDocsActionFunction:
     Type: AWS::Serverless::Function
@@ -1316,6 +1424,26 @@ Resources:
             Path: /api/chat/session/{sessionId}/feedback
             Method: post
 
+<<<<<<< HEAD
+=======
+  # Update Consultation Purposes Function
+  UpdateConsultationPurposesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: chat_handler.update_consultation_purposes
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        UpdatePurposes:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/chat/session/{sessionId}/purposes
+            Method: put
+
+>>>>>>> dev
   # Admin File Functions (no CSRF required)
   ListSessionFilesAdminFunction:
     Type: AWS::Serverless::Function

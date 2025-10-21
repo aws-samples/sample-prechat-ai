@@ -1,0 +1,33 @@
+{
+  "name": "mte-pre-consultation-chatbot",
+  "version": "1.0.0",
+  "description": "A conversational AI web system for AWS sales team pre-meeting preparation",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "yarn workspaces run build",
+    "test": "yarn workspaces run test",
+    "lint": "yarn workspaces run lint",
+    "dev": "yarn workspace @mte-prechat/web-app dev",
+    "preview": "yarn workspace @mte-prechat/web-app preview",
+    "sam:build": "sam build --profile terraform",
+    "sam:deploy": "sam deploy --profile terraform",
+    "sam:local": "sam local start-api --profile terraform"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.1.6"
+  },
+  "engines": {
+    "node": ">=20.18.1",
+    "yarn": ">=1.22.22"
+  }
+}

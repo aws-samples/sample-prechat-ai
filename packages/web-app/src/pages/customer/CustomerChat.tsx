@@ -29,11 +29,23 @@ import {
   storePrivacyConsentForSession,
   getStoredPrivacyConsentForSession,
   removePinForSession,
+<<<<<<< HEAD
   storeConsultationPurposeForSession,
   getStoredConsultationPurposeForSession
 } from '../../utils/sessionStorage'
 import type { ConsultationPurpose } from '../../components/ConsultationPurposeSelector'
 import { CONSULTATION_PURPOSES } from '../../components/ConsultationPurposeSelector'
+=======
+  storeConsultationPurposesForSession,
+  getStoredConsultationPurposesForSession
+} from '../../utils/sessionStorage'
+import { 
+  ConsultationPurposeEnum, 
+  formatPurposesForDisplay, 
+  formatPurposesForStorage, 
+  parsePurposesFromStorage
+} from '../../components/ConsultationPurposeSelector'
+>>>>>>> dev
 
 export default function CustomerChat() {
   const { sessionId } = useParams<{ sessionId: string }>()
@@ -47,7 +59,11 @@ export default function CustomerChat() {
   const [showFileUpload, setShowFileUpload] = useState(false)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+<<<<<<< HEAD
   const [selectedPurpose, setSelectedPurpose] = useState<ConsultationPurpose | null>(null)
+=======
+  const [selectedPurposes, setSelectedPurposes] = useState<ConsultationPurposeEnum[]>([])
+>>>>>>> dev
   const [showPurposeSelector, setShowPurposeSelector] = useState(false)
   
   const {
@@ -105,6 +121,7 @@ export default function CustomerChat() {
   }, [sessionId])
 
   useEffect(() => {
+<<<<<<< HEAD
     // Check for stored purpose and show selector if needed
     if (sessionData && messages.length === 0 && !selectedPurpose && sessionId) {
       const storedPurpose = getStoredConsultationPurposeForSession(sessionId)
@@ -112,27 +129,54 @@ export default function CustomerChat() {
         const purpose = CONSULTATION_PURPOSES.find(p => p.value === storedPurpose)
         if (purpose) {
           setSelectedPurpose(purpose)
+=======
+    // Check for stored purposes and show selector if needed
+    if (sessionData && messages.length === 0 && selectedPurposes.length === 0 && sessionId) {
+      const storedPurposes = getStoredConsultationPurposesForSession(sessionId)
+      if (storedPurposes) {
+        const purposes = parsePurposesFromStorage(storedPurposes)
+        if (purposes.length > 0) {
+          setSelectedPurposes(purposes)
+>>>>>>> dev
         }
       } else {
         setShowPurposeSelector(true)
       }
     }
+<<<<<<< HEAD
   }, [sessionData, messages.length, selectedPurpose, sessionId])
 
   useEffect(() => {
     // If no conversation history and purpose is selected, pre-fill the input with greeting message
     if (sessionData && messages.length === 0 && selectedPurpose && !inputValue) {
+=======
+  }, [sessionData, messages.length, selectedPurposes.length, sessionId])
+
+  useEffect(() => {
+    // If no conversation history and purposes are selected, pre-fill the input with greeting message
+    if (sessionData && messages.length === 0 && selectedPurposes.length > 0 && !inputValue) {
+>>>>>>> dev
       const customerInfo = sessionData.customerInfo
       const company = customerInfo.company || '회사'
       const title = customerInfo.title || '담당자'
       const name = customerInfo.name || '고객'
 
+<<<<<<< HEAD
       const greetingMessage = `안녕하세요, 저는 ${company}에서 ${title}로 있는 ${name}이라 합니다. 
 
 이번에 ${selectedPurpose.label}와 관련하여 사전에 논의할 내용과 기대사항을 공유드리기 위해 PreChat 사전채팅에 참가하였습니다!`
       setInputValue(greetingMessage)
     }
   }, [sessionData, messages.length, selectedPurpose, inputValue, setInputValue])
+=======
+      const purposesText = formatPurposesForDisplay(formatPurposesForStorage(selectedPurposes))
+      const greetingMessage = `안녕하세요, 저는 ${company}에서 ${title}로 있는 ${name}이라 합니다. 
+
+이번에 ${purposesText}와 관련하여 사전에 논의할 내용과 기대사항을 공유드리기 위해 PreChat 사전채팅에 참가하였습니다!`
+      setInputValue(greetingMessage)
+    }
+  }, [sessionData, messages.length, selectedPurposes, inputValue, setInputValue])
+>>>>>>> dev
 
 
 
@@ -175,12 +219,31 @@ export default function CustomerChat() {
     }
   }
 
+<<<<<<< HEAD
   const handlePurposeSelect = (purpose: ConsultationPurpose) => {
     setSelectedPurpose(purpose)
     setShowPurposeSelector(false)
     // Store purpose in session storage
     if (sessionId) {
       storeConsultationPurposeForSession(sessionId, purpose.value)
+=======
+  const handlePurposesSelect = async (purposes: ConsultationPurposeEnum[]) => {
+    setSelectedPurposes(purposes)
+    setShowPurposeSelector(false)
+    
+    // Store purposes in session storage and server
+    if (sessionId) {
+      const purposesString = formatPurposesForStorage(purposes)
+      storeConsultationPurposesForSession(sessionId, purposesString)
+      
+      // Also save to server
+      try {
+        await chatApi.updateConsultationPurposes(sessionId, purposesString)
+      } catch (error) {
+        console.error('Failed to save consultation purposes to server:', error)
+        // Continue anyway since it's stored locally
+      }
+>>>>>>> dev
     }
   }
 
@@ -300,14 +363,25 @@ export default function CustomerChat() {
   if (showPurposeSelector) {
     return (
       <Modal
+<<<<<<< HEAD
         onDismiss={() => {}} // Prevent closing
+=======
+        onDismiss={() => setShowPurposeSelector(false)} // Allow closing when editing
+>>>>>>> dev
         visible={true}
         header="상담 목적 선택"
         size="large"
       >
         <ConsultationPurposeSelector
+<<<<<<< HEAD
           onSelect={handlePurposeSelect}
           selectedPurpose={selectedPurpose?.value}
+=======
+          onSelect={handlePurposesSelect}
+          selectedPurposes={selectedPurposes}
+          allowEdit={true}
+          onCancel={() => setShowPurposeSelector(false)}
+>>>>>>> dev
         />
       </Modal>
     )
@@ -323,11 +397,25 @@ export default function CustomerChat() {
           <div className="fade-in-up">
             <Header
               variant="h1"
+<<<<<<< HEAD
               description={selectedPurpose ? `상담 목적: ${selectedPurpose.label}` : ""}
+=======
+              description={selectedPurposes.length > 0 ? `상담 목적: ${formatPurposesForDisplay(formatPurposesForStorage(selectedPurposes))}` : "상담 목적을 선택해주세요"}
+>>>>>>> dev
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
                   <Button
                     variant="normal"
+<<<<<<< HEAD
+=======
+                    iconName={selectedPurposes.length > 0 ? "edit" : "add-plus"}
+                    onClick={() => setShowPurposeSelector(true)}
+                  >
+                    {selectedPurposes.length > 0 ? "상담 목적 수정" : "상담 목적 선택"}
+                  </Button>
+                  <Button
+                    variant="normal"
+>>>>>>> dev
                     iconName="upload"
                     onClick={() => setShowFileUpload(true)}
                   >
