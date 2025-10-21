@@ -16,6 +16,7 @@ import { adminApi } from '../../services/api'
 import { StatusBadge, BedrockQuotaNotification } from '../../components'
 import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
 import { authService } from '../../services/auth'
+import { formatPurposesForDisplay } from '../../components/ConsultationPurposeSelector'
 
 interface SessionSummary {
   sessionId: string
@@ -23,6 +24,7 @@ interface SessionSummary {
   customerEmail: string
   customerCompany: string
   customerTitle?: string
+  consultationPurposes?: string
   status: 'active' | 'completed' | 'expired' | 'inactive'
   createdAt: string
   completedAt?: string
@@ -193,6 +195,11 @@ export default function AdminDashboard() {
                     <Box fontSize="body-s" color="text-status-inactive">
                       {item.customerTitle && `${item.customerTitle} • `}{item.customerEmail}
                     </Box>
+                    {item.consultationPurposes && (
+                      <Box fontSize="body-s" color="text-status-info" margin={{ top: 'xxs' }}>
+                        상담목적: {formatPurposesForDisplay(item.consultationPurposes)}
+                      </Box>
+                    )}
                   </Box>
                 )
               },

@@ -1,7 +1,7 @@
 import json
 import boto3
 import os
-from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp, generate_csrf_token
+from utils import lambda_response, parse_body, get_timestamp, generate_id, generate_session_id, get_ttl_timestamp, generate_csrf_token
 
 dynamodb = boto3.resource('dynamodb')
 cognito = boto3.client('cognito-idp')
@@ -27,8 +27,11 @@ def create_session(event, context):
     if not pin_number.isdigit() or len(pin_number) != 6:
         return lambda_response(400, {'error': 'PIN must be exactly 6 digits'})
     
-    session_id = generate_id()
+    # Generate session ID with customer context
+    session_id = generate_session_id(customer_email)
     timestamp = get_timestamp()
+    
+    print(f"Creating session {session_id} for customer {customer_email}")
     
     csrf_token = generate_csrf_token()
     
@@ -112,6 +115,7 @@ def get_session(event, context):
             'salesRepEmail': sales_rep_email,
             'salesRepInfo': sales_rep_info,
             'agentId': session.get('agentId', ''),
+            'consultationPurposes': session.get('consultationPurposes', ''),
             'csrfToken': session.get('csrfToken', ''),
             'conversationHistory': conversation_history
         })
