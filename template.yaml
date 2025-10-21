@@ -26,7 +26,7 @@ Parameters:
     Description: Bedrock Agent Alias ID to use for invocations
   AllowedEmailDomains:
     Type: String
-    Default: amazon.com,nongshim.co.kr
+    Default: amazon.com,your-email-domain.com
     Description: Comma-separated list of allowed email domains for user registration
   LambdaConcurrencyLimit:
     Type: Number
