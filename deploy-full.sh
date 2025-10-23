@@ -33,11 +33,8 @@ sam deploy \
   --profile $PROFILE \
   --region $REGION \
   --stack-name $STACK_NAME \
-<<<<<<< HEAD
-=======
   --resolve-s3 \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
->>>>>>> dev
   --parameter-overrides "Stage=\"$STAGE\" BedrockRegion=\"$BEDROCK_REGION\""
 
 # Step 4: Update environment variables

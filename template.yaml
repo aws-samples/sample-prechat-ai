@@ -26,11 +26,7 @@ Parameters:
     Description: Bedrock Agent Alias ID to use for invocations
   AllowedEmailDomains:
     Type: String
-<<<<<<< HEAD
-    Default: amazon.com,nongshim.co.kr
-=======
     Default: amazon.com,your-email-domain.com
->>>>>>> dev
     Description: Comma-separated list of allowed email domains for user registration
   LambdaConcurrencyLimit:
     Type: Number
@@ -942,17 +938,12 @@ Resources:
             Action:
               - bedrock:CreateAgent
               - bedrock:GetAgent
-<<<<<<< HEAD
-              - iam:PassRole
-            Resource: '*'
-=======
             Resource: '*'
         - Statement:
             Effect: Allow
             Action:
               - iam:PassRole
             Resource: !GetAtt BedrockAgentServiceRole.Arn
->>>>>>> dev
       Events:
         CreateAgent:
           Type: Api
@@ -1040,14 +1031,11 @@ Resources:
               - bedrock:UpdateAgent
               - bedrock:GetAgent
             Resource: '*'
-<<<<<<< HEAD
-=======
         - Statement:
             Effect: Allow
             Action:
               - iam:PassRole
             Resource: !GetAtt BedrockAgentServiceRole.Arn
->>>>>>> dev
       Events:
         UpdateAgent:
           Type: Api
@@ -1057,8 +1045,6 @@ Resources:
             Method: put
             Auth:
               Authorizer: CognitoAuthorizer
-<<<<<<< HEAD
-=======
         EnableAgentMemory:
           Type: Api
           Properties:
@@ -1067,7 +1053,6 @@ Resources:
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
->>>>>>> dev
 
   # SQS Queue for Analysis Jobs
   AnalysisQueue:
@@ -1227,8 +1212,6 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-<<<<<<< HEAD
-=======
   # Discussion Functions
   ListDiscussionsFunction:
     Type: AWS::Serverless::Function
@@ -1302,7 +1285,6 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
->>>>>>> dev
   # AWS Documentation Tools Action Group
   AWSDocsActionFunction:
     Type: AWS::Serverless::Function
@@ -1424,8 +1406,6 @@ Resources:
             Path: /api/chat/session/{sessionId}/feedback
             Method: post
 
-<<<<<<< HEAD
-=======
   # Update Consultation Purposes Function
   UpdateConsultationPurposesFunction:
     Type: AWS::Serverless::Function
@@ -1443,7 +1423,6 @@ Resources:
             Path: /api/chat/session/{sessionId}/purposes
             Method: put
 
->>>>>>> dev
   # Admin File Functions (no CSRF required)
   ListSessionFilesAdminFunction:
     Type: AWS::Serverless::Function

@@ -1,10 +1,6 @@
 // nosemgrep
 import React, { useState } from 'react';
-<<<<<<< HEAD
-import { PrivacyTermsModal } from './PrivacyTermsM
-=======
 import { PrivacyTermsModal } from './PrivacyTermsModal';
->>>>>>> dev
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -54,31 +50,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
         <div className="footer-license">
           <div className="license-info">
-<<<<<<< HEAD
-            <img 
-              src="https://licensebuttons.net/l/by-nc/4.0/88x31.png" 
-              alt="Creative Commons License" 
-              className="cc-logo"
-            />
-            <span className="license-text">
-              This work is licensed under a{' '}
-              <a 
-                href="https://creativecommons.org/licenses/by/4.0/" 
-=======
             <span className="license-text">
               This work is licensed under the{' '}
               <a 
                 href="https://opensource.org/licenses/MIT-0" 
->>>>>>> dev
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="license-link"
               >
-<<<<<<< HEAD
-                Creative Commons Attribution 4.0 International License
-=======
                 MIT-0 License
->>>>>>> dev
               </a>
             </span>
           </div>

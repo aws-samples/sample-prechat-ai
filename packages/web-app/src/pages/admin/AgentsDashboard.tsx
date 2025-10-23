@@ -9,14 +9,10 @@ import {
   SpaceBetween,
   Badge,
   Box,
-<<<<<<< HEAD
-  ButtonDropdown
-=======
   ButtonDropdown,
   Modal,
   FormField,
   Input
->>>>>>> dev
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
 import type { BedrockAgent } from '../../types'
@@ -25,12 +21,9 @@ export default function AgentsDashboard() {
   const navigate = useNavigate()
   const [agents, setAgents] = useState<BedrockAgent[]>([])
   const [loading, setLoading] = useState(true)
-<<<<<<< HEAD
-=======
   const [showMemoryModal, setShowMemoryModal] = useState(false)
   const [selectedAgentId, setSelectedAgentId] = useState('')
   const [memoryStorageDays, setMemoryStorageDays] = useState(30)
->>>>>>> dev
 
   useEffect(() => {
     loadAgents()
@@ -86,8 +79,6 @@ export default function AgentsDashboard() {
     }
   }
 
-<<<<<<< HEAD
-=======
   const handleEnableMemory = (agentId: string) => {
     setSelectedAgentId(agentId)
     setShowMemoryModal(true)
@@ -105,7 +96,6 @@ export default function AgentsDashboard() {
     }
   }
 
->>>>>>> dev
   return (
     <Container>
       <SpaceBetween size="l">
@@ -179,8 +169,6 @@ export default function AgentsDashboard() {
                 cell: (item) => getStatusBadge(item.agentStatus)
               },
               {
-<<<<<<< HEAD
-=======
                 id: 'memory',
                 header: 'Memory',
                 cell: (item) => (
@@ -193,7 +181,6 @@ export default function AgentsDashboard() {
                 )
               },
               {
->>>>>>> dev
                 id: 'actions',
                 header: '작업',
                 cell: (item) => (
@@ -211,14 +198,11 @@ export default function AgentsDashboard() {
                         iconName: 'status-positive' as const
                       }] : []),
                       ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
-<<<<<<< HEAD
-=======
                         text: 'Memory 활성화',
                         id: 'enable-memory',
                         iconName: 'refresh' as const
                       }] : []),
                       ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
->>>>>>> dev
                         text: '에이전트 제거',
                         id: 'delete',
                         iconName: 'remove' as const
@@ -235,12 +219,9 @@ export default function AgentsDashboard() {
                         case 'delete':
                           handleDelete(item.agentId)
                           break
-<<<<<<< HEAD
-=======
                         case 'enable-memory':
                           handleEnableMemory(item.agentId)
                           break
->>>>>>> dev
                       }
                     }}
                   >
@@ -266,8 +247,6 @@ export default function AgentsDashboard() {
             }
           />
         </div>
-<<<<<<< HEAD
-=======
 
         <Modal
           visible={showMemoryModal}
@@ -308,7 +287,6 @@ export default function AgentsDashboard() {
             </FormField>
           </SpaceBetween>
         </Modal>
->>>>>>> dev
       </SpaceBetween>
     </Container>
   )

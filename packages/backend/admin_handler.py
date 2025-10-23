@@ -17,11 +17,8 @@ bedrock_region = os.environ.get('BEDROCK_REGION', 'ap-northeast-2')
 bedrock = boto3.client('bedrock-runtime', region_name=bedrock_region)
 sqs = boto3.client('sqs')
 ANALYSIS_QUEUE_URL = os.environ.get('ANALYSIS_QUEUE_URL')
-<<<<<<< HEAD
-=======
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
 MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
->>>>>>> dev
 
 def clean_llm_response(content):
     """Clean up LLM response by removing code block markers and trimming"""
@@ -52,11 +49,7 @@ def list_sessions(event, context):
         sales_rep_id = None
     
     try:
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
         
         if sales_rep_id:
             # Query by sales rep
@@ -85,10 +78,7 @@ def list_sessions(event, context):
                 'customerEmail': item['customerInfo']['email'],
                 'customerCompany': item['customerInfo']['company'],
                 'customerTitle': item['customerInfo'].get('title', ''),
-<<<<<<< HEAD
-=======
                 'consultationPurposes': item.get('consultationPurposes', ''),
->>>>>>> dev
                 'createdAt': item['createdAt'],
                 'completedAt': item.get('completedAt', ''),
                 'salesRepEmail': item.get('salesRepEmail', item.get('salesRepId', '')),
@@ -114,11 +104,7 @@ def inactivate_session(event, context):
         return lambda_response(400, {'error': 'Missing session ID parameter'})
     
     try:
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
         sessions_table.update_item(
             Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
             UpdateExpression='SET #status = :status',
@@ -149,13 +135,8 @@ def delete_session(event, context):
         return lambda_response(400, {'error': 'Missing session ID parameter'})
     
     try:
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-        messages_table = dynamodb.Table('mte-messages')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
         messages_table = dynamodb.Table(MESSAGES_TABLE)
->>>>>>> dev
         
         # Delete session metadata
         sessions_table.delete_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
@@ -194,11 +175,7 @@ def get_session_report(event, context):
     
     try:
         # Get session with aiAnalysis data
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         
         if 'Item' not in session_resp:
@@ -289,11 +266,7 @@ def get_analysis_status(event, context):
         return lambda_response(400, {'error': 'Missing session ID parameter'})
     
     try:
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         
         if 'Item' not in session_resp:
@@ -337,11 +310,7 @@ def get_session_details(event, context):
         return lambda_response(400, {'error': 'Missing session ID parameter'})
     
     try:
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         
         if 'Item' not in session_resp:
@@ -356,10 +325,7 @@ def get_session_details(event, context):
             'customerInfo': session['customerInfo'],
             'salesRepEmail': session.get('salesRepEmail', session.get('salesRepId', '')),
             'agentId': session.get('agentId', ''),
-<<<<<<< HEAD
-=======
             'consultationPurposes': session.get('consultationPurposes', ''),
->>>>>>> dev
             'pinNumber': session.get('pinNumber', ''),
             'createdAt': session['createdAt'],
             'completedAt': session.get('completedAt', ''),
@@ -398,11 +364,7 @@ def save_meeting_log(event, context):
         return lambda_response(400, {'error': 'Invalid request body'})
     
     try:
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
         
         # Check if session exists
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
@@ -462,11 +424,7 @@ def reanalyze_with_meeting_log(event, context):
     
     try:
         # Check if session exists and has meeting log
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         
         if 'Item' not in session_resp:
@@ -548,11 +506,7 @@ def request_analysis(event, context):
     
     try:
         # Check if session exists
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         
         if 'Item' not in session_resp:
@@ -637,11 +591,7 @@ def _perform_conversation_analysis(session_id, model_id, include_meeting_log=Fal
     
     try:
         # Update status to processing
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
         sessions_table.update_item(
             Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
             UpdateExpression='SET analysisStatus = :status',
@@ -663,11 +613,7 @@ def _perform_conversation_analysis(session_id, model_id, include_meeting_log=Fal
         logger.info(f"Retrieved session for customer: {session['customerInfo']['name']}")
         
         # Get messages with error handling
-<<<<<<< HEAD
-        messages_table = dynamodb.Table('mte-messages')
-=======
         messages_table = dynamodb.Table(MESSAGES_TABLE)
->>>>>>> dev
         try:
             messages_resp = messages_table.query(
                 KeyConditionExpression='PK = :pk',
@@ -792,19 +738,11 @@ def _perform_conversation_analysis(session_id, model_id, include_meeting_log=Fal
         
         # Generate fallback response for critical failures
         try:
-<<<<<<< HEAD
-            sessions_table = dynamodb.Table('mte-sessions')
-            session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
-            if 'Item' in session_resp:
-                session = session_resp['Item']
-                messages_table = dynamodb.Table('mte-messages')
-=======
             sessions_table = dynamodb.Table(SESSIONS_TABLE)
             session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
             if 'Item' in session_resp:
                 session = session_resp['Item']
                 messages_table = dynamodb.Table(MESSAGES_TABLE)
->>>>>>> dev
                 messages_resp = messages_table.query(
                     KeyConditionExpression='PK = :pk',
                     ExpressionAttributeValues={':pk': f'SESSION#{session_id}'},
@@ -833,11 +771,7 @@ def _perform_conversation_analysis(session_id, model_id, include_meeting_log=Fal
         
         # Update status to failed
         try:
-<<<<<<< HEAD
-            sessions_table = dynamodb.Table('mte-sessions')
-=======
             sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
             sessions_table.update_item(
                 Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
                 UpdateExpression='SET analysisStatus = :status',
@@ -1037,11 +971,7 @@ def _store_analysis_results(session_id, analysis_data, max_retries=3):
         try:
             logger.info(f"Storing analysis results for session {session_id} (attempt {attempt + 1}/{max_retries})")
             
-<<<<<<< HEAD
-            sessions_table = dynamodb.Table('mte-sessions')
-=======
             sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
             
             # Validate analysis data structure before storing
             _validate_analysis_data(analysis_data)
@@ -1126,11 +1056,7 @@ def _validate_analysis_data(analysis_data):
 def _get_stored_analysis(session_id):
     """Retrieve stored analysis results from DynamoDB"""
     try:
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
         response = sessions_table.get_item(
             Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
             ProjectionExpression='aiAnalysis'
@@ -1151,11 +1077,7 @@ def get_session_feedback(event, context):
     session_id = event['pathParameters']['sessionId']
     
     try:
-<<<<<<< HEAD
-        sessions_table = dynamodb.Table('mte-sessions')
-=======
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
         
         # Get feedback data
         response = sessions_table.get_item(
