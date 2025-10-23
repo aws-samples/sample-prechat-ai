@@ -87,9 +87,6 @@ export const chatApi = {
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
     })
     return response.data
-<<<<<<< HEAD
-  }
-=======
   },
 
   updateConsultationPurposes: async (sessionId: string, consultationPurposes: string) => {
@@ -103,7 +100,6 @@ export const chatApi = {
   },
 
 
->>>>>>> dev
 }
 
 export const adminApi = {
@@ -163,10 +159,7 @@ export const adminApi = {
     agentName: string
     foundationModel: string
     instruction: string
-<<<<<<< HEAD
-=======
     memoryStorageDays?: number
->>>>>>> dev
   }) => {
     const response = await api.post('/admin/agents', data)
     return response.data
@@ -190,17 +183,12 @@ export const adminApi = {
   updateAgent: async (agentId: string, data: {
     foundationModel: string
     instruction: string
-<<<<<<< HEAD
-=======
     memoryStorageDays?: number
->>>>>>> dev
   }) => {
     const response = await api.put(`/admin/agents/${agentId}`, data)
     return response.data
   },
 
-<<<<<<< HEAD
-=======
   enableAgentMemory: async (agentId: string, memoryStorageDays: number = 30) => {
     const response = await api.post(`/admin/agents/${agentId}/enable-memory`, {
       memoryStorageDays
@@ -208,7 +196,6 @@ export const adminApi = {
     return response.data
   },
 
->>>>>>> dev
 
 
   // Producer-Consumer Analysis API
@@ -262,8 +249,6 @@ export const adminApi = {
       }
       throw error
     }
-<<<<<<< HEAD
-=======
   },
 
   // Discussion operations
@@ -285,6 +270,5 @@ export const adminApi = {
   deleteDiscussion: async (sessionId: string, discussionId: string) => {
     const response = await api.delete(`/admin/sessions/${sessionId}/discussions/${discussionId}`)
     return response.data
->>>>>>> dev
   }
 }

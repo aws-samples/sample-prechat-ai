@@ -20,25 +20,19 @@ def list_agents(event, context):
                 agent_detail = bedrock_agent.get_agent(agentId=agent['agentId'])
                 agent_info = agent_detail['agent']
                 
-<<<<<<< HEAD
-=======
                 # Extract memory configuration if available
                 memory_config = agent_info.get('memoryConfiguration', {})
                 memory_storage_days = 30  # Default value
                 if memory_config and 'storageDays' in memory_config:
                     memory_storage_days = memory_config['storageDays']
                 
->>>>>>> dev
                 agents.append({
                     'agentId': agent['agentId'],
                     'agentName': agent['agentName'],
                     'agentStatus': agent['agentStatus'],
                     'foundationModel': agent_info.get('foundationModel', ''),
                     'instruction': agent_info.get('instruction', ''),
-<<<<<<< HEAD
-=======
                     'memoryStorageDays': memory_storage_days,
->>>>>>> dev
                     'createdAt': agent['createdAt'].isoformat() if 'createdAt' in agent else '',
                     'updatedAt': agent['updatedAt'].isoformat() if 'updatedAt' in agent else '',
                     'agentVersion': agent.get('latestAgentVersion', ''),
@@ -52,10 +46,7 @@ def list_agents(event, context):
                     'agentStatus': agent['agentStatus'],
                     'foundationModel': '',
                     'instruction': agent.get('description', ''),
-<<<<<<< HEAD
-=======
                     'memoryStorageDays': 30,  # Default when details unavailable
->>>>>>> dev
                     'createdAt': agent['createdAt'].isoformat() if 'createdAt' in agent else '',
                     'updatedAt': agent['updatedAt'].isoformat() if 'updatedAt' in agent else '',
                     'agentVersion': agent.get('latestAgentVersion', ''),
@@ -83,28 +74,20 @@ def create_agent(event, context):
         if not role_arn:
             return lambda_response(500, {'error': 'Bedrock Agent Role ARN not configured'})
         
-<<<<<<< HEAD
-        # Create the agent
-=======
         # Get memory configuration from request
         memory_storage_days = body.get('memoryStorageDays', 30)  # Default to 30 days
         
         # Create the agent with memory configuration
->>>>>>> dev
         response = bedrock_agent.create_agent(
             agentName=agent_name,
             foundationModel=foundation_model,
             instruction=instruction,
             idleSessionTTLInSeconds=1800,  # 30 minutes
-<<<<<<< HEAD
-            agentResourceRoleArn=role_arn
-=======
             agentResourceRoleArn=role_arn,
             memoryConfiguration={
                 'enabledMemoryTypes': ['SESSION_SUMMARY'],
                 'storageDays': memory_storage_days
             }
->>>>>>> dev
         )
         
         agent = response['agent']
@@ -165,25 +148,19 @@ def get_agent(event, context):
         response = bedrock_agent.get_agent(agentId=agent_id)
         agent = response['agent']
         
-<<<<<<< HEAD
-=======
         # Extract memory configuration if available
         memory_config = agent.get('memoryConfiguration', {})
         memory_storage_days = 30  # Default value
         if memory_config and 'storageDays' in memory_config:
             memory_storage_days = memory_config['storageDays']
         
->>>>>>> dev
         return lambda_response(200, {
             'agentId': agent['agentId'],
             'agentName': agent['agentName'],
             'agentStatus': agent['agentStatus'],
             'foundationModel': agent.get('foundationModel', ''),
             'instruction': agent.get('instruction', ''),
-<<<<<<< HEAD
-=======
             'memoryStorageDays': memory_storage_days,
->>>>>>> dev
             'createdAt': agent['createdAt'].isoformat(),
             'updatedAt': agent['updatedAt'].isoformat(),
             'agentArn': agent['agentArn']
@@ -193,15 +170,6 @@ def get_agent(event, context):
         return lambda_response(500, {'error': f'Failed to get agent: {str(e)}'})
 
 def update_agent(event, context):
-<<<<<<< HEAD
-    """Update a Bedrock agent"""
-    try:
-        agent_id = event['pathParameters']['agentId']
-        body = parse_body(event)
-        
-        foundation_model = body.get('foundationModel')
-        instruction = body.get('instruction')
-=======
     """Update a Bedrock agent or enable memory"""
     try:
         agent_id = event['pathParameters']['agentId']
@@ -220,18 +188,10 @@ def update_agent(event, context):
         foundation_model = body.get('foundationModel')
         instruction = body.get('instruction')
         memory_storage_days = body.get('memoryStorageDays', 30)  # Default to 30 days
->>>>>>> dev
         
         if not all([foundation_model, instruction]):
             return lambda_response(400, {'error': 'Missing required fields'})
         
-<<<<<<< HEAD
-        # Update the agent (agent name cannot be changed)
-        response = bedrock_agent.update_agent(
-            agentId=agent_id,
-            foundationModel=foundation_model,
-            instruction=instruction
-=======
         # Get current agent info to get the agent name and role ARN
         get_response = bedrock_agent.get_agent(agentId=agent_id)
         current_agent = get_response['agent']
@@ -252,7 +212,6 @@ def update_agent(event, context):
                 'enabledMemoryTypes': ['SESSION_SUMMARY'],
                 'storageDays': memory_storage_days
             }
->>>>>>> dev
         )
         
         agent = response['agent']
@@ -269,9 +228,6 @@ def update_agent(event, context):
         })
     except Exception as e:
         print(f"Error updating agent: {str(e)}")
-<<<<<<< HEAD
-        return lambda_response(500, {'error': f'Failed to update agent: {str(e)}'})
-=======
         return lambda_response(500, {'error': f'Failed to update agent: {str(e)}'})
 
 def enable_agent_memory_only(agent_id: str, event):
@@ -335,4 +291,3 @@ def enable_agent_memory_only(agent_id: str, event):
         import traceback
         print(f"Full traceback: {traceback.format_exc()}")
         return lambda_response(500, {'error': f'Failed to enable memory: {str(e)}'})
->>>>>>> dev

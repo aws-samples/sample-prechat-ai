@@ -29,12 +29,8 @@ export default function EditAgent() {
   const [formData, setFormData] = useState({
     agentName: '',
     foundationModel: '',
-<<<<<<< HEAD
-    instruction: ''
-=======
     instruction: '',
     memoryStorageDays: 30
->>>>>>> dev
   })
   const [agentStatus, setAgentStatus] = useState('')
 
@@ -53,12 +49,8 @@ export default function EditAgent() {
       setFormData({
         agentName: agent.agentName,
         foundationModel: agent.foundationModel,
-<<<<<<< HEAD
-        instruction: agent.instruction
-=======
         instruction: agent.instruction,
         memoryStorageDays: agent.memoryStorageDays
->>>>>>> dev
       })
       setAgentStatus(agent.agentStatus)
     } catch (err) {
@@ -78,12 +70,8 @@ export default function EditAgent() {
     try {
       await adminApi.updateAgent(agentId, {
         foundationModel: formData.foundationModel,
-<<<<<<< HEAD
-        instruction: formData.instruction
-=======
         instruction: formData.instruction,
         memoryStorageDays: formData.memoryStorageDays
->>>>>>> dev
       })
       setSuccess(`Agent "${formData.agentName}" updated successfully!`)
       setTimeout(() => navigate('/admin/agents'), 3000)
@@ -94,11 +82,7 @@ export default function EditAgent() {
     }
   }
 
-<<<<<<< HEAD
-  const updateFormData = (field: string, value: string) => {
-=======
   const updateFormData = (field: string, value: string | number) => {
->>>>>>> dev
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -195,8 +179,6 @@ export default function EditAgent() {
             </FormField>
 
             <FormField 
-<<<<<<< HEAD
-=======
               label="Memory Storage Days" 
               description="에이전트가 대화 맥락을 기억할 기간 (일 단위, 1-365일)"
               stretch
@@ -215,7 +197,6 @@ export default function EditAgent() {
             </FormField>
 
             <FormField 
->>>>>>> dev
               label={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span>Agent Instructions</span>

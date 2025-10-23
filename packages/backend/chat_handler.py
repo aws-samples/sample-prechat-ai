@@ -7,11 +7,8 @@ from utils import lambda_response, parse_body, get_timestamp, generate_id, get_t
 dynamodb = boto3.resource('dynamodb')
 bedrock_region = os.environ.get('BEDROCK_REGION', 'ap-northeast-2')
 bedrock_agent = boto3.client('bedrock-agent-runtime', region_name=bedrock_region)
-<<<<<<< HEAD
-=======
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
 MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
->>>>>>> dev
 
 def handle_message(event, context):
     body = parse_body(event)
@@ -22,16 +19,11 @@ def handle_message(event, context):
     if not session_id or not message:
         return lambda_response(400, {'error': 'Missing sessionId or message'})
     
-<<<<<<< HEAD
-    # Get session
-    sessions_table = dynamodb.Table('mte-sessions')
-=======
     # Log memory isolation info for debugging
     print(f"Processing message for session {session_id}")
     
     # Get session
     sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
     try:
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         if 'Item' not in session_resp:
@@ -44,11 +36,7 @@ def handle_message(event, context):
         return lambda_response(500, {'error': 'Database error'})
     
     # Get conversation history
-<<<<<<< HEAD
-    messages_table = dynamodb.Table('mte-messages')
-=======
     messages_table = dynamodb.Table(MESSAGES_TABLE)
->>>>>>> dev
     try:
         history_resp = messages_table.query(
             KeyConditionExpression='PK = :pk',
@@ -149,16 +137,6 @@ def handle_message(event, context):
     })
 
 def generate_agent_response(message, session_id, agent_id):
-<<<<<<< HEAD
-    """Generate response using Bedrock Agent"""
-    try:
-        print(f"Invoking Bedrock Agent {agent_id} for session {session_id}")
-        response = bedrock_agent.invoke_agent(
-            agentId=agent_id,
-            agentAliasId=os.environ.get('BEDROCK_AGENT_ALIAS_ID', 'TSTALIASID'),
-            sessionId=session_id,
-            inputText=message
-=======
     """Generate response using Bedrock Agent with memory support"""
     try:
         print(f"Invoking Bedrock Agent {agent_id} for session {session_id} with memory enabled")
@@ -171,7 +149,6 @@ def generate_agent_response(message, session_id, agent_id):
             inputText=message,
             enableTrace=False,  # Set to True for debugging if needed
             endSession=False    # Keep session alive for memory
->>>>>>> dev
         )
         
         # Extract response from agent
@@ -183,16 +160,6 @@ def generate_agent_response(message, session_id, agent_id):
                     response_text += chunk['bytes'].decode('utf-8')
         
         if response_text:
-<<<<<<< HEAD
-            print(f"Agent response generated successfully: {len(response_text)} characters")
-            return response_text
-        else:
-            print("Agent returned empty response")
-            return "죄송합니다. 다시 말씀해 주시겠어요?"
-            
-    except Exception as e:
-        print(f"Bedrock Agent error: {str(e)}")
-=======
             print(f"Agent response generated successfully for session {session_id}: {len(response_text)} characters")
             return response_text
         else:
@@ -201,23 +168,17 @@ def generate_agent_response(message, session_id, agent_id):
             
     except Exception as e:
         print(f"Bedrock Agent error for session {session_id}: {str(e)}")
->>>>>>> dev
         # Return a more specific error message
         if 'ResourceNotFoundException' in str(e):
             return "죄송합니다. 에이전트를 찾을 수 없습니다. 관리자에게 문의해 주세요."
         elif 'ValidationException' in str(e):
             return "죄송합니다. 요청이 올바르지 않습니다. 다시 시도해 주세요."
-<<<<<<< HEAD
-=======
         elif 'ThrottlingException' in str(e):
             return "죄송합니다. 현재 요청이 많아 잠시 대기가 필요합니다. 잠시 후 다시 시도해 주세요."
->>>>>>> dev
         else:
             return "죄송합니다. 시스템에 일시적인 문제가 있습니다. 잠시 후 다시 시도해 주세요."
 
 
-<<<<<<< HEAD
-=======
 def update_consultation_purposes(event, context):
     """Update consultation purposes for a session"""
     body = parse_body(event)
@@ -263,7 +224,6 @@ def update_consultation_purposes(event, context):
         print(f"Failed to update consultation purposes for session {session_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to update consultation purposes'})
 
->>>>>>> dev
 def handle_feedback(event, context):
     """Handle customer feedback submission"""
     body = parse_body(event)
@@ -278,11 +238,7 @@ def handle_feedback(event, context):
         return lambda_response(400, {'error': 'Invalid rating. Must be between 0.5 and 5.0'})
     
     # Get session to verify it exists
-<<<<<<< HEAD
-    sessions_table = dynamodb.Table('mte-sessions')
-=======
     sessions_table = dynamodb.Table(SESSIONS_TABLE)
->>>>>>> dev
     try:
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         if 'Item' not in session_resp:
