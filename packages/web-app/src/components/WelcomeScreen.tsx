@@ -1,10 +1,13 @@
 // nosemgrep
 import React from 'react';
+import { useI18n } from '../i18n';
 
 export const WelcomeScreen: React.FC = () => {
+  const { t } = useI18n();
+
   return (
     <p className="welcome-subtitle">
-      지능형 챗봇 어시스턴트로 미팅 사전 준비를 간소화해 보세요.
+      {t('korean_d15515d2')}
     </p>
   );
 };

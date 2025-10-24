@@ -23,20 +23,26 @@ import { useSession, useChat } from '../../hooks'
 import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload, MultilineChatInput, FeedbackModal, ConsultationPurposeSelector } from '../../components'
 import { MESSAGES } from '../../constants'
 import { chatApi } from '../../services/api'
-import { 
-  storePinForSession, 
-  getStoredPinForSession, 
+import { useI18n } from '../../i18n'
+import {
+  storePinForSession,
+  getStoredPinForSession,
   storePrivacyConsentForSession,
   getStoredPrivacyConsentForSession,
   removePinForSession,
-  storeConsultationPurposeForSession,
-  getStoredConsultationPurposeForSession
+  storeConsultationPurposesForSession,
+  getStoredConsultationPurposesForSession
 } from '../../utils/sessionStorage'
-import type { ConsultationPurpose } from '../../components/ConsultationPurposeSelector'
-import { CONSULTATION_PURPOSES } from '../../components/ConsultationPurposeSelector'
+import {
+  ConsultationPurposeEnum,
+  formatPurposesForDisplay,
+  formatPurposesForStorage,
+  parsePurposesFromStorage
+} from '../../components/ConsultationPurposeSelector'
 
 export default function CustomerChat() {
   const { sessionId } = useParams<{ sessionId: string }>()
+  const { t } = useI18n()
   const [showPinModal, setShowPinModal] = useState(true)
   const [pinInput, setPinInput] = useState('')
   const [pinError, setPinError] = useState('')
@@ -47,9 +53,9 @@ export default function CustomerChat() {
   const [showFileUpload, setShowFileUpload] = useState(false)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
-  const [selectedPurpose, setSelectedPurpose] = useState<ConsultationPurpose | null>(null)
+  const [selectedPurposes, setSelectedPurposes] = useState<ConsultationPurposeEnum[]>([])
   const [showPurposeSelector, setShowPurposeSelector] = useState(false)
-  
+
   const {
     sessionData,
     messages,
@@ -97,7 +103,7 @@ export default function CustomerChat() {
         // PIN은 있지만 개인정보 동의가 없는 경우, PIN만 미리 채워주기
         setPinInput(storedPin)
       }
-      
+
       setIsCheckingStoredPin(false)
     }
 
@@ -105,53 +111,54 @@ export default function CustomerChat() {
   }, [sessionId])
 
   useEffect(() => {
-    // Check for stored purpose and show selector if needed
-    if (sessionData && messages.length === 0 && !selectedPurpose && sessionId) {
-      const storedPurpose = getStoredConsultationPurposeForSession(sessionId)
-      if (storedPurpose) {
-        const purpose = CONSULTATION_PURPOSES.find(p => p.value === storedPurpose)
-        if (purpose) {
-          setSelectedPurpose(purpose)
+    // Check for stored purposes and show selector if needed
+    if (sessionData && messages.length === 0 && selectedPurposes.length === 0 && sessionId) {
+      const storedPurposes = getStoredConsultationPurposesForSession(sessionId)
+      if (storedPurposes) {
+        const purposes = parsePurposesFromStorage(storedPurposes)
+        if (purposes.length > 0) {
+          setSelectedPurposes(purposes)
         }
       } else {
         setShowPurposeSelector(true)
       }
     }
-  }, [sessionData, messages.length, selectedPurpose, sessionId])
+  }, [sessionData, messages.length, selectedPurposes.length, sessionId])
 
   useEffect(() => {
-    // If no conversation history and purpose is selected, pre-fill the input with greeting message
-    if (sessionData && messages.length === 0 && selectedPurpose && !inputValue) {
+    // If no conversation history and purposes are selected, pre-fill the input with greeting message
+    if (sessionData && messages.length === 0 && selectedPurposes.length > 0 && !inputValue) {
       const customerInfo = sessionData.customerInfo
       const company = customerInfo.company || '회사'
       const title = customerInfo.title || '담당자'
       const name = customerInfo.name || '고객'
 
-      const greetingMessage = `안녕하세요, 저는 ${company}에서 ${title}로 있는 ${name}이라 합니다. 
+      const purposesText = formatPurposesForDisplay(formatPurposesForStorage(selectedPurposes))
+      const greetingMessage = `${t('korean_20a761fe')} ${company}에서 ${title}${t('korean_6c4b973d')} ${name}이라 합니다. 
 
-이번에 ${selectedPurpose.label}와 관련하여 사전에 논의할 내용과 기대사항을 공유드리기 위해 PreChat 사전채팅에 참가하였습니다!`
+이번에 ${purposesText}${t('greeting_intro')}`
       setInputValue(greetingMessage)
     }
-  }, [sessionData, messages.length, selectedPurpose, inputValue, setInputValue])
+  }, [sessionData, messages.length, selectedPurposes, inputValue, setInputValue, t])
 
 
 
   const handlePinSubmit = async () => {
     if (!sessionId || !pinInput || !privacyAgreed) return
-    
+
     setPinLoading(true)
     setPinError('')
-    
+
     try {
       await chatApi.verifySessionPin(sessionId, pinInput, privacyAgreed)
-      
+
       // PIN 검증 성공 시 세션 저장소에 저장
       storePinForSession(sessionId, pinInput)
       storePrivacyConsentForSession(sessionId)
-      
+
       setShowPinModal(false)
     } catch (error: any) {
-      setPinError(error.response?.data?.error || 'PIN 번호가 올바르지 않습니다.')
+      setPinError(error.response?.data?.error || t('pin_error_message'))
     } finally {
       setPinLoading(false)
     }
@@ -175,12 +182,22 @@ export default function CustomerChat() {
     }
   }
 
-  const handlePurposeSelect = (purpose: ConsultationPurpose) => {
-    setSelectedPurpose(purpose)
+  const handlePurposesSelect = async (purposes: ConsultationPurposeEnum[]) => {
+    setSelectedPurposes(purposes)
     setShowPurposeSelector(false)
-    // Store purpose in session storage
+
+    // Store purposes in session storage and server
     if (sessionId) {
-      storeConsultationPurposeForSession(sessionId, purpose.value)
+      const purposesString = formatPurposesForStorage(purposes)
+      storeConsultationPurposesForSession(sessionId, purposesString)
+
+      // Also save to server
+      try {
+        await chatApi.updateConsultationPurposes(sessionId, purposesString)
+      } catch (error) {
+        console.error('Failed to save consultation purposes to server:', error)
+        // Continue anyway since it's stored locally
+      }
     }
   }
 
@@ -205,9 +222,9 @@ export default function CustomerChat() {
   if (showPinModal) {
     return (
       <Modal
-        onDismiss={() => {}} // Prevent closing
+        onDismiss={() => { }} // Prevent closing
         visible={true}
-        header="PIN 번호 입력"
+        header={t('text_6_pin_mixed_1d6166')}
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
@@ -217,7 +234,7 @@ export default function CustomerChat() {
                 loading={pinLoading}
                 disabled={!pinInput || pinInput.length !== 6 || !privacyAgreed}
               >
-                확인
+                {t('confirm_button')}
               </Button>
             </SpaceBetween>
           </Box>
@@ -225,16 +242,16 @@ export default function CustomerChat() {
       >
         <SpaceBetween size="m">
           <Box>
-            영업 담당자로부터 받은 6자리 PIN 번호를 입력해주세요.
+            {t('text_6_pin_mixed_1d6166')}
           </Box>
-          
+
           {pinError && (
             <Alert type="error">
               {pinError}
             </Alert>
           )}
-          
-          <FormField label="PIN 번호">
+
+          <FormField label={t('pin_mixed_56d5a8')}>
             <Input
               value={pinInput}
               onChange={({ detail }) => {
@@ -242,7 +259,7 @@ export default function CustomerChat() {
                 const numericValue = detail.value.replace(/\D/g, '').slice(0, 6)
                 setPinInput(numericValue)
               }}
-              placeholder="6자리 숫자 입력"
+              placeholder={t('korean_33fc10eb')}
               type="password"
               inputMode="numeric"
               onKeyDown={(e) => {
@@ -252,7 +269,7 @@ export default function CustomerChat() {
               }}
             />
           </FormField>
-          
+
           <FormField>
             <Checkbox
               checked={privacyAgreed}
@@ -266,9 +283,9 @@ export default function CustomerChat() {
                     setShowPrivacyModal(true)
                   }}
                 >
-                  개인정보 처리방침 및 서비스 이용약관
+                  {t('service_bece43ab')}
                 </Link>
-                에 동의합니다. (필수)
+                {t('korean_b1f9a872')}
               </Box>
             </Checkbox>
           </FormField>
@@ -286,7 +303,7 @@ export default function CustomerChat() {
     if (sessionId) {
       removePinForSession(sessionId)
     }
-    
+
     return (
       <Container>
         <Alert type="error" header="Session Error">
@@ -300,14 +317,16 @@ export default function CustomerChat() {
   if (showPurposeSelector) {
     return (
       <Modal
-        onDismiss={() => {}} // Prevent closing
+        onDismiss={() => setShowPurposeSelector(false)} // Allow closing when editing
         visible={true}
-        header="상담 목적 선택"
+        header={t('consultation_5e21ae53')}
         size="large"
       >
         <ConsultationPurposeSelector
-          onSelect={handlePurposeSelect}
-          selectedPurpose={selectedPurpose?.value}
+          onSelect={handlePurposesSelect}
+          selectedPurposes={selectedPurposes}
+          allowEdit={true}
+          onCancel={() => setShowPurposeSelector(false)}
         />
       </Modal>
     )
@@ -323,20 +342,27 @@ export default function CustomerChat() {
           <div className="fade-in-up">
             <Header
               variant="h1"
-              description={selectedPurpose ? `상담 목적: ${selectedPurpose.label}` : ""}
+              description={selectedPurposes.length > 0 ? `${t('chat_purpose')}: ${formatPurposesForDisplay(formatPurposesForStorage(selectedPurposes))}` : t('consultation_5e21ae53')}
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
+                  <Button
+                    variant="normal"
+                    iconName={selectedPurposes.length > 0 ? "edit" : "add-plus"}
+                    onClick={() => setShowPurposeSelector(true)}
+                  >
+                    {selectedPurposes.length > 0 ? t('consultation_purpose_edit') : t('consultation_purpose_select')}
+                  </Button>
                   <Button
                     variant="normal"
                     iconName="upload"
                     onClick={() => setShowFileUpload(true)}
                   >
-                    첨부파일 제공
+                    {t('btn_file_attach')}
                   </Button>
                 </SpaceBetween>
               }
             >
-              PreChat 에게 고민을 말씀해 보세요.
+              {t('chat_title')}
             </Header>
           </div>
 
@@ -353,12 +379,7 @@ export default function CustomerChat() {
             }
           >
             <ReactMarkdown>
-              {
-                `안녕하세요 저는 AWS PreChat 입니다. 저는 고객님의 클라우드 사용을 성공적으로 돕기위해 얘기를 나누고 싶습니다.
-
-  저희와 만남전에 논의할 내용과 기대하시는 내용을 알려주세요! 적합한 AWS 담당자께 전달해 드리겠습니다.
-  
-  아키텍처 다이어그램과 같이 미팅에 도움이 될 유첨파일을 제공해 주시면 함께 확인하겠습니다.`}
+              {t('aws_prechat_aws_mixed_3049d8')}
             </ReactMarkdown>
           </ChatBubble>
 
@@ -378,7 +399,7 @@ export default function CustomerChat() {
                 {messages.map((message) => {
                   // Check if this message is currently being streamed
                   const isCurrentlyStreaming = Boolean(streamingMessage && streamingMessage.id === message.id)
-                  
+
                   if (message.sender === 'customer') {
                     return (
                       <ChatMessage
@@ -420,7 +441,7 @@ export default function CustomerChat() {
                           <span></span>
                         </div>
                         <Box margin={{ left: 's' }} display="inline-block">
-                          {MESSAGES.AI_THINKING}
+                          {t(MESSAGES.AI_THINKING)}
                         </Box>
                       </Box>
                     </ChatBubble>
@@ -435,7 +456,7 @@ export default function CustomerChat() {
               value={inputValue}
               onChange={setInputValue}
               onSend={handleSendMessage}
-              placeholder={MESSAGES.CHAT_PLACEHOLDER}
+              placeholder={t(MESSAGES.CHAT_PLACEHOLDER)}
               disabled={chatLoading}
               onClear={clearInput}
             />
@@ -445,9 +466,9 @@ export default function CustomerChat() {
             <div className="fade-in-up success-animation">
               <Alert
                 type="success"
-                header={MESSAGES.CONSULTATION_COMPLETE}
+                header={t(MESSAGES.CONSULTATION_COMPLETE)}
               >
-                {MESSAGES.CONSULTATION_COMPLETE_DESC}
+                {t(MESSAGES.CONSULTATION_COMPLETE_DESC)}
               </Alert>
             </div>
           )}
@@ -456,7 +477,7 @@ export default function CustomerChat() {
       <Container>
         {sessionData?.salesRepInfo && (
           <Box margin={{ top: 'm' }}>
-            <Header variant="h3">담당자 정보</Header>
+            <Header variant="h3">{t('chat_sales_rep_info')}</Header>
             <div
               style={{
                 backgroundColor: 'var(--awsui-color-background-container-content)',
@@ -467,32 +488,32 @@ export default function CustomerChat() {
             >
               <SpaceBetween size="s">
                 <Box>
-                  <Box display="inline" fontWeight="bold">담당자: </Box>
+                  <Box display="inline" fontWeight="bold">{t('sales_rep')} </Box>
                   <Box display="inline">{sessionData.salesRepInfo.name}</Box>
                 </Box>
                 <Box>
-                  <Box display="inline" fontWeight="bold">이메일: </Box>
+                  <Box display="inline" fontWeight="bold">{t('email')} </Box>
                   <Box display="inline">{sessionData.salesRepInfo.email}</Box>
                 </Box>
                 <Box>
-                  <Box display="inline" fontWeight="bold">연락처: </Box>
+                  <Box display="inline" fontWeight="bold">{t('contact')} </Box>
                   <Box display="inline">{sessionData.salesRepInfo.phone}</Box>
                 </Box>
                 <Box fontSize="body-s" color="text-status-inactive">
-                  추가 문의사항이 있으시면 위 담당자에게 직접 연락해 주세요.
+                  {t('chat_sales_rep_cta')}
                 </Box>
               </SpaceBetween>
             </div>
           </Box>
         )}
       </Container>
-      
+
       <PrivacyTermsModal
         visible={showPrivacyModal}
         onDismiss={() => setShowPrivacyModal(false)}
         initialTab="privacy"
       />
-      
+
       {sessionId && (
         <FileUpload
           sessionId={sessionId}
@@ -500,7 +521,7 @@ export default function CustomerChat() {
           onDismiss={() => setShowFileUpload(false)}
         />
       )}
-      
+
       <FeedbackModal
         visible={showFeedbackModal}
         onSubmit={handleFeedbackSubmit}

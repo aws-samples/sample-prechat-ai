@@ -16,6 +16,8 @@ import { adminApi } from '../../services/api'
 import { StatusBadge, BedrockQuotaNotification } from '../../components'
 import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
 import { authService } from '../../services/auth'
+import { formatPurposesForDisplay } from '../../components/ConsultationPurposeSelector'
+import { useI18n } from '../../i18n'
 
 interface SessionSummary {
   sessionId: string
@@ -23,6 +25,7 @@ interface SessionSummary {
   customerEmail: string
   customerCompany: string
   customerTitle?: string
+  consultationPurposes?: string
   status: 'active' | 'completed' | 'expired' | 'inactive'
   createdAt: string
   completedAt?: string
@@ -32,6 +35,7 @@ interface SessionSummary {
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [showMySessionsOnly, setShowMySessionsOnly] = useState(true)
@@ -84,11 +88,11 @@ export default function AdminDashboard() {
 
   const handleDownloadCSV = (session: SessionSummary) => {
     const csvData = {
-      customerCompany: session.customerCompany || '미입력',
+      customerCompany: session.customerCompany || t('admin_no_input'),
       customerName: session.customerName,
-      customerTitle: session.customerTitle || '미입력',
+      customerTitle: session.customerTitle || t('admin_no_input'),
       chatUrl: `${window.location.origin}/customer/${session.sessionId}`,
-      pinNumber: `PIN 정보는 영업 담당(${session.salesRepEmail})에게 확인하세요`,
+      pinNumber: t('admin_pin_contact_sales', { email: session.salesRepEmail }),
       createdAt: new Date(session.createdAt).toLocaleString('ko-KR')
     }
 
@@ -147,31 +151,31 @@ export default function AdminDashboard() {
         <BedrockQuotaNotification />
         <Header
           variant="h1"
-          description="고객이 AI 에이전트와 대화할 수 있는 상담 세션을 관리합니다. 필요 정보가 획득되면 세션이 완료되고, 30일이 경과한 모든 세션은 파기됩니다."
+          description={t('admin_dashboard_description')}
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button
                 variant="normal"
                 onClick={() => navigate('/admin/agents')}
               >
-                PreChat 에이전트
+                {t('admin_prechat_agents')}
               </Button>
               <Button
                 variant="primary"
                 onClick={() => navigate('/admin/sessions/create')}
               >
-                세션 추가
+                {t('admin_add_session')}
               </Button>
             </SpaceBetween>
           }
         >
-          PreChat 세션 💬
+          {t('admin_prechat_sessions')}
         </Header>
 
         <Box>
           <FormField
             label=""
-            description="본인이 생성한 세션만 표시하기"
+            description={t('admin_show_my_sessions_only')}
           >
             <Toggle
               checked={showMySessionsOnly}
@@ -185,7 +189,7 @@ export default function AdminDashboard() {
             columnDefinitions={[
               {
                 id: 'customer',
-                header: '고객사/담당자명',
+                header: t('admin_customer_company_contact'),
                 sortingField: 'customer',
                 cell: (item) => (
                   <Box>
@@ -193,60 +197,65 @@ export default function AdminDashboard() {
                     <Box fontSize="body-s" color="text-status-inactive">
                       {item.customerTitle && `${item.customerTitle} • `}{item.customerEmail}
                     </Box>
+                    {item.consultationPurposes && (
+                      <Box fontSize="body-s" color="text-status-info" margin={{ top: 'xxs' }}>
+                        {t('admin_consultation_purpose')}: {formatPurposesForDisplay(item.consultationPurposes)}
+                      </Box>
+                    )}
                   </Box>
                 )
               },
               {
                 id: 'agent',
-                header: '대화 에이전트',
+                header: t('admin_conversation_agent'),
                 sortingField: 'agent',
                 cell: (item) => (
                   <Box fontSize="body-s" color="text-status-inactive">
-                    {item.agentId ? `Agent: ${item.agentId}` : 'No agent assigned'}
+                    {item.agentId ? `Agent: ${item.agentId}` : t('admin_no_agent_assigned')}
                   </Box>
                 )
               },
               {
                 id: 'status',
-                header: '세션 상태',
+                header: t('admin_session_status'),
                 sortingField: 'status',
                 cell: (item) => <StatusBadge status={item.status} type="session" />
               },
               {
                 id: 'created',
-                header: '생성일',
+                header: t('admin_created_date'),
                 sortingField: 'created',
                 cell: (item) => new Date(item.createdAt).toLocaleDateString()
               },
               {
                 id: 'completed',
-                header: '완료일',
+                header: t('admin_completed_date'),
                 sortingField: 'completed',
                 cell: (item) => item.completedAt ? new Date(item.completedAt).toLocaleDateString() : '-'
               },
               {
                 id: 'actions',
-                header: '작업',
+                header: t('admin_actions'),
                 cell: (item) => (
                   <ButtonDropdown
                     expandToViewport
                     items={[
                       {
-                        text: '대화 분석',
+                        text: t('admin_conversation_analysis'),
                         id: 'view',
                         iconName: 'external'
                       },
                       {
-                        text: '진입 정보 CSV',
+                        text: t('admin_entry_info_csv'),
                         id: 'download-csv',
                         iconName: 'download'
                       },
                       ...(item.status === 'active' ? [{
-                        text: 'Inactivate',
+                        text: t('admin_inactivate'),
                         id: 'inactivate', 
                       }] : []),
                       ...(item.status === 'inactive' ? [{
-                        text: 'Delete',
+                        text: t('admin_delete'),
                         id: 'delete'
                       }] : [])
                     ]}
@@ -267,7 +276,7 @@ export default function AdminDashboard() {
                       }
                     }}
                   >
-                    Actions
+                    {t('admin_actions')}
                   </ButtonDropdown>
                 )
               }
@@ -283,13 +292,13 @@ export default function AdminDashboard() {
             empty={
               <Box textAlign="center" color="inherit">
                 <Box variant="strong" textAlign="center" color="inherit">
-                  No sessions
+                  {t('admin_no_sessions')}
                 </Box>
                 <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                  No pre-consultation sessions found.
+                  {t('admin_no_sessions_found')}
                 </Box>
                 <Button onClick={() => navigate('/admin/sessions/create')}>
-                  세션 추가
+                  {t('admin_add_session')}
                 </Button>
               </Box>
             }

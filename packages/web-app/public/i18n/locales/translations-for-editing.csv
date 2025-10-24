@@ -1,0 +1,323 @@
+key,korean,english,context,files,status
+actions,Actions,,JSX text content in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx; pages/admin/AgentsDashboard.tsx,needs_translation
+active,Active,,JSX text content in components/StatusBadge.tsx,components/StatusBadge.tsx; pages/admin/AdminSessionDetails.tsx,needs_translation
+admin_portal,Admin Portal,,JSX text content in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+agent,"Agent """,,Template literal head in pages/admin/CreateAgent.tsx,pages/admin/CreateAgent.tsx; pages/admin/EditAgent.tsx,needs_translation
+agent_instructions,Agent Instructions,,JSX text content in pages/admin/CreateAgent.tsx,pages/admin/CreateAgent.tsx; pages/admin/EditAgent.tsx,needs_translation
+ai_mixed_4b9ad9,AI분석리포트_,,Template literal head in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx,needs_translation
+ai_mixed_59286a,"미팅 로그를 저장한 후 ""재분석"" 버튼을 클릭하면, 사전상담 대화 내용과 미팅 로그를 모두 고려하여 AI가 좌측의 분석 결과를 업데이트합니다.",,JSX text content in components/MeetingLogView.tsx,components/MeetingLogView.tsx,needs_translation
+ai_mixed_993127,AI 분석,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+ai_mixed_cd76bb,"위의 ""AI 분석 시작"" 버튼을 클릭하여 대화 내용을 분석해보세요.",,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx,needs_translation
+amazon_web_services,Amazon Web Services,,String literal in components/TopNavigation.tsx,components/TopNavigation.tsx,needs_translation
+analysis_23df3b00,)이 대화 내용을 분석하고 있습니다...,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx,needs_translation
+analysis_4c01fcdc,대화 분석,,String literal in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+analysis_6e75ac42,"""재분석"" 버튼을 클릭하여 대화 내용과 미팅 로그를 함께 분석해보세요.",,JSX text content in components/MeetingLogView.tsx,components/MeetingLogView.tsx,needs_translation
+analysis_7d2725cb,분석 모델 선택,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+analysis_bcfd38f9,)이 대화 내용과 미팅 로그를 함께 분석하고 있습니다...,,JSX text content in components/MeetingLogView.tsx,components/MeetingLogView.tsx,needs_translation
+analysis_fe53b01e,분석 완료:,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+assistant,Assistant,,String literal in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+assistant_at,Assistant at,,Template literal head in components/ChatMessage.tsx,components/ChatMessage.tsx; components/StreamingChatMessage.tsx,needs_translation
+authority_mixed_279d34,Authority (권한),,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+aws_ai_mixed_51e5ce,AWS 만남전에 AI 에이전트와 대화하여 논의 주제와 기대사항을 공유해 주세요.,,JSX text content in components/Layout.tsx,components/Layout.tsx,needs_translation
+aws_mixed_3e64ae,AWS 파트너 프로그램이나 파트너사와의 협업을 문의하시나요?,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+aws_mixed_5d79d8,💡 업로드된 파일은 AWS 담당자가 사전 검토하여 더욱 효과적인 미팅을 준비할 수 있습니다.,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+aws_mixed_64d754,AWS 클라우드 서비스 신규 도입을 검토하고 계신가요?,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+aws_mixed_67cd9d,현재 사용 중인 AWS 서비스의 기술적 이슈나 개선 방안을 문의하시나요?,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+aws_mixed_a22600,추천 AWS 서비스가 생성되지 않았습니다.,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+aws_mixed_acc690,기존 시스템을 AWS로 이전하는 방안을 논의하고 싶으신가요?,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+aws_mixed_bed119,추천 AWS 서비스,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+aws_mixed_f78bba,AWS 사용 비용을 최적화하고 효율성을 높이고 싶으신가요?,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+aws_prechat,AWS PreChat,,JSX text content in components/PageHeader.tsx,components/PageHeader.tsx,needs_translation
+aws_prechat_aws_mixed_3049d8,"안녕하세요 저는 AWS PreChat 입니다. 저는 고객님의 클라우드 사용을 성공적으로 돕기위해 얘기를 나누고 싶습니다.
+
+  저희와 만남전에 논의할 내용과 기대하시는 내용을 알려주세요! 적합한 AWS 담당자께 전달해 드리겠습니다.
+  
+  아키텍처 다이어그램과 같이 미팅에 도움이 될 유첨파일을 제공해 주시면 함께 확인하겠습니다.",,Template literal in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+aws_prechat_is_a_conversational_ai_web_s,"AWS PreChat is a conversational AI web system designed to streamline the pre-meeting preparation process between AWS sales teams and customers. The system replaces traditional Excel-based forms with an intuitive chatbot interface that guides customers through a structured conversation to collect business requirements, technical constraints, and project timelines. The collected information is then processed and presented to AWS sales representatives and engineers in an organized, actionable format.",,JSX text content in components/PageHeader.tsx,components/PageHeader.tsx,needs_translation
+aws_prechat_mixed_45e21b,AWS PreChat 서비스 이용과 관련된 개인정보 처리방침 및 서비스 이용약관입니다.,,JSX text content in components/PrivacyTermsModal.tsx,components/PrivacyTermsModal.tsx,needs_translation
+back_to_sign_up,Back to Sign Up,,JSX text content in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+bant_mixed_cdfa13,BANT 분석,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+bant_mixed_d35eff,BANT 분석 결과가 생성되지 않았습니다.,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+bearer,Bearer,,Template literal head in services/api.ts,services/api.ts; services/auth.ts,needs_translation
+bedrock_quota_mixed_159a7b,Bedrock Quota 가 한정된 환경이므로 어시스턴스 응답에 스로틀링이 발생할 수 있습니다.,,JSX text content in components/BedrockQuotaNotification.tsx,components/BedrockQuotaNotification.tsx,needs_translation
+budget_mixed_7317c4,Budget (예산),,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+company,Company,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+completed,Completed,,JSX text content in components/StatusBadge.tsx,components/StatusBadge.tsx; pages/admin/AdminSessionDetails.tsx,needs_translation
+confirm_75e0bcad,사전상담 내용을 확인합니다,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+confirm_a2770843,세션이 완료되면 고객 피드백을 확인할 수 있습니다.,,String literal in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+confirm_ca1175c3,)에게 확인하세요,,Template literal span in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+confirm_email,Confirm Email,,String literal in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+confirm_f32a7b34,: 기술적 제약사항과 선호사항을 확인,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+confirmation_code,Confirmation Code,,JSX attribute: label in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+consultation_0de1a081,상담 목적,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+consultation_214bbac5,사전상담 경험은 어떠셨나요? 소중한 피드백을 남겨주세요.,,JSX text content in components/FeedbackModal.tsx,components/FeedbackModal.tsx,needs_translation
+consultation_5a083bec,사전상담 피드백,,JSX text content in components/FeedbackModal.tsx,components/FeedbackModal.tsx,needs_translation
+consultation_5e21ae53,상담 목적을 선택해 주세요,,JSX text content in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+consultation_7cd438a4,마이그레이션 상담,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+consultation_a6e99d56,상담목적:,,JSX text content in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+consultation_b3a12a85,상담 목적:,,Template literal head in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+consultation_d976e307,선택된 상담 목적,,JSX text content in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+consultation_dafee129,더 정확한 상담을 위해 추가 자료를 제공해 주시면 도움이 됩니다.,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+consultation_e39c4579,새 상담 세션을 만듭니다 💬,,JSX text content in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+consultation_ef0d8ca4,비용 최적화 상담,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+consultation_f3d1727b,최소 하나 이상의 상담 목적을 선택해 주세요.,,JSX text content in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+consultation_f8076c11,사전상담 경험 점수,,JSX attribute: label in components/FeedbackModal.tsx,components/FeedbackModal.tsx,needs_translation
+conversation,Conversation,,String literal in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+copy,Copy,,String literal in components/ChatMessage.tsx,components/ChatMessage.tsx; components/StreamingChatMessage.tsx,needs_translation
+copy_pin,Copy PIN,,JSX text content in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+copy_url,Copy URL,,JSX text content in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+copyright_c_2025_aws_prechat,Copyright (c) 2025 AWS PreChat,,JSX text content in components/Layout.tsx,components/Layout.tsx,needs_translation
+create_a_password,Create a password,,JSX attribute: placeholder in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+create_account,Create Account,,JSX text content in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+created,Created,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+created_successfully,""" created successfully!",,Template literal span in pages/admin/CreateAgent.tsx,pages/admin/CreateAgent.tsx,needs_translation
+creating,Creating,,JSX text content in components/StatusBadge.tsx,components/StatusBadge.tsx; pages/admin/AgentsDashboard.tsx,needs_translation
+csat_mixed_1ff51e,고객 피드백 (CSAT),,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+csv_mixed_0e08ff,CSV 파일 다운로드:,,JSX text content in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+csv_mixed_48cb1e,CSV 파일이 자동으로 다운로드되었습니다.,,JSX text content in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+csv_mixed_9c9dbf,진입 정보 CSV,,String literal in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+current_user_email,Current user email,,String literal in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+customer,Customer,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+customer_company,Customer Company,,JSX attribute: label in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+customer_email,Customer Email,,JSX attribute: label in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+customer_name,Customer Name,,JSX attribute: label in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+customer_title,Customer Title,,JSX attribute: label in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+delete,Delete,,String literal in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+delete_b32553c0,이 댓글을 삭제하시겠습니까? 삭제된 댓글은 복구할 수 없습니다.,,JSX text content in components/DiscussionTab.tsx,components/DiscussionTab.tsx,needs_translation
+delete_c689deef,정말로 이 파일을 삭제하시겠습니까?,,String literal in components/FileUpload.tsx,components/FileUpload.tsx; components/SessionAttachments.tsx,needs_translation
+deleting,Deleting,,JSX text content in components/StatusBadge.tsx,components/StatusBadge.tsx; pages/admin/AgentsDashboard.tsx,needs_translation
+discussion,Discussion,,JSX text content in components/DiscussionTab.tsx,components/DiscussionTab.tsx; pages/admin/AdminSessionDetails.tsx,needs_translation
+edit_c864820a,에이전트 편집,,String literal in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx,needs_translation
+email,Email,,JSX attribute: label in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+end_of_file_mixed_b8d4bd,대화 종료 토큰 (End of File),,String literal in components/PlaceholderTooltip.tsx,components/PlaceholderTooltip.tsx,needs_translation
+enter_6_digit_code,Enter 6-digit code,,JSX attribute: placeholder in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+enter_agent_instructions,Enter agent instructions...,,JSX attribute: placeholder in pages/admin/CreateAgent.tsx,pages/admin/CreateAgent.tsx; pages/admin/EditAgent.tsx,needs_translation
+enter_agent_name,Enter agent name,,JSX attribute: placeholder in pages/admin/EditAgent.tsx,pages/admin/EditAgent.tsx,needs_translation
+enter_customer_company,Enter customer company,,JSX attribute: placeholder in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+enter_customer_email,Enter customer email,,JSX attribute: placeholder in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+enter_customer_name,Enter customer name,,JSX attribute: placeholder in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+enter_mixed_9a5744,"💡 Enter로 줄바꿈, 전송 버튼으로 메시지 전송",,JSX text content in components/MultilineChatInput.tsx,components/MultilineChatInput.tsx,needs_translation
+enter_mixed_e6782b,Enter 에이전트 이름,,JSX attribute: placeholder in pages/admin/CreateAgent.tsx,pages/admin/CreateAgent.tsx,needs_translation
+enter_your_email,Enter your email,,JSX attribute: placeholder in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+enter_your_email_address,Enter your email address,,JSX attribute: placeholder in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+enter_your_full_name,Enter your full name,,JSX attribute: placeholder in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+enter_your_password,Enter your password,,JSX attribute: placeholder in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+error_loading_translations_for,Error loading translations for,,Template literal head in i18n/TranslationManager.ts,i18n/TranslationManager.ts,needs_translation
+expired,Expired,,JSX text content in components/StatusBadge.tsx,components/StatusBadge.tsx; pages/admin/AdminSessionDetails.tsx,needs_translation
+failed,Failed,,JSX text content in components/StatusBadge.tsx,components/StatusBadge.tsx; pages/admin/AgentsDashboard.tsx,needs_translation
+failed_to_load_translations_for,Failed to load translations for,,Template literal head in i18n/TranslationManager.ts,i18n/TranslationManager.ts,needs_translation
+feedback,Feedback,,String literal in components/ChatMessage.tsx,components/ChatMessage.tsx; components/StreamingChatMessage.tsx,needs_translation
+file_0b7ade37,파일 준비,,JSX text content in components/FileList.tsx,components/FileList.tsx,needs_translation
+file_11f4a302,파일 선택,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+file_2c7da4c6,첨부파일 제공,,JSX text content in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+file_6a286723,이미지 파일이 없습니다.,,JSX text content in components/ImageGallery.tsx,components/ImageGallery.tsx,needs_translation
+file_b5df1518,첨부 파일,,String literal in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+foundation_model,Foundation Model,,JSX attribute: label in pages/admin/CreateAgent.tsx,pages/admin/CreateAgent.tsx; pages/admin/EditAgent.tsx,needs_translation
+full_name,Full Name,,JSX attribute: label in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+helpful,Helpful,,String literal in components/ChatMessage.tsx,components/ChatMessage.tsx; components/StreamingChatMessage.tsx,needs_translation
+html_mixed_660e1c,HTML 저장,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+inactivate,Inactivate,,String literal in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+inactive,Inactive,,JSX text content in components/StatusBadge.tsx,components/StatusBadge.tsx,needs_translation
+invalid_csv_format_for,Invalid CSV format for,,Template literal head in i18n/TranslationManager.ts,i18n/TranslationManager.ts,needs_translation
+ko_kr,ko-KR,,String literal in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_002acf23,어카운트 전략에 대한 의견을 작성해주세요...,,JSX attribute: placeholder in components/DiscussionTab.tsx,components/DiscussionTab.tsx,needs_translation
+korean_04823d40,피드백 제출 시간,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_0508c5f0,사례 설명,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_06584212,현재 아키텍처 다이어그램,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+korean_09350831,피드백 있음,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_09c04194,다시 시도,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_0d252f38,담당자 연락처,,String literal in components/PlaceholderTooltip.tsx,components/PlaceholderTooltip.tsx,needs_translation
+korean_1150aa68,예시:,,JSX text content in components/PlaceholderTooltip.tsx,components/PlaceholderTooltip.tsx,needs_translation
+korean_18e294dc,담당자:,,JSX text content in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+korean_200a2ac1,동의 시간,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_20a761fe,"안녕하세요, 저는",,Template literal head in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+korean_20ce916b,새 댓글 작성,,JSX attribute: label in components/DiscussionTab.tsx,components/DiscussionTab.tsx,needs_translation
+korean_21a4ed6d,담당자 이메일,,String literal in components/PlaceholderTooltip.tsx,components/PlaceholderTooltip.tsx,needs_translation
+korean_22dd3ccb,% 완료),,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_230caa8c,에이전트 준비,,String literal in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx,needs_translation
+korean_25f2f297,관련 고객 사례,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_25f3797a,: 예상 트래픽과 데이터량 등,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+korean_2693764c,원본 이미지,,JSX attribute: alt in components/ImageGallery.tsx,components/ImageGallery.tsx,needs_translation
+korean_2a03e24d,요약 보고서가 생성되지 않았습니다.,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_2a608448,💡 여러 줄 입력이 가능합니다. 전송하려면 아래 전송 버튼을 눌러주세요.,,JSX text content in components/MultilineChatInput.tsx,components/MultilineChatInput.tsx,needs_translation
+korean_2bd2b6c5,미팅 로그,,JSX text content in components/MeetingLogView.tsx,components/MeetingLogView.tsx; pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_2fb47fac,위 항목에 해당하지 않는 기타 문의사항이 있으신가요?,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+korean_332ec8fe,에이전트 제거,,String literal in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx,needs_translation
+korean_33fc10eb,6자리 숫자 입력,,JSX attribute: placeholder in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx; pages/customer/CustomerChat.tsx,needs_translation
+korean_36b9757a,수정됨,,JSX text content in components/DiscussionTab.tsx,components/DiscussionTab.tsx,needs_translation
+korean_36b9d3fb,신규 도입 문의,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+korean_41c09c7e,선택된 모델(,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_423c414d,새로고침,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; pages/admin/AgentsDashboard.tsx,needs_translation
+korean_4788ffcd,기본 에이전트 지침,,JSX text content in pages/admin/CreateAgent.tsx,pages/admin/CreateAgent.tsx; pages/admin/EditAgent.tsx,needs_translation
+korean_485312b9,사용 가능한 에이전트 🤖,,JSX text content in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+korean_49462616,기술 명세서,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+korean_4950989c,개 선택됨),,JSX text content in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+korean_50ea4ba0,"""수정"" 버튼을 클릭하여 초도미팅록을 작성해보세요.",,JSX text content in components/MeetingLogView.tsx,components/MeetingLogView.tsx,needs_translation
+korean_514fcbcd,이메일:,,JSX text content in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+korean_55f994e0,플레이스홀더 사전,,JSX text content in components/PlaceholderTooltip.tsx,components/PlaceholderTooltip.tsx,needs_translation
+korean_5b25d067,최대 5분까지 소요될 수 있습니다. (,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_60c989b4,: 비즈니스 요구사항 제공,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+korean_63c7603c,요약 보고서,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_646f933d,이미지 준비,,JSX text content in components/ImageGallery.tsx,components/ImageGallery.tsx,needs_translation
+korean_6c4b973d,로 있는,,Template literal span in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+korean_6ccbc25b,점 / 5점,,JSX text content in components/FeedbackModal.tsx,components/FeedbackModal.tsx,needs_translation
+korean_6d4a44dd,성능/용량 계획서,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+korean_6d8bf33f,담당자 정보,,JSX text content in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+korean_75eccdd6,에이전트 생성,,JSX text content in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx; pages/admin/CreateAgent.tsx; pages/admin/CreateSession.tsx,needs_translation
+korean_780fce17,추가 문의사항이 있으시면 위 담당자에게 직접 연락해 주세요.,,JSX text content in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+korean_7dd04027,랜덤 생성,,JSX text content in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+korean_84998217,피드백을 입력해주세요...,,JSX attribute: placeholder in components/FeedbackModal.tsx,components/FeedbackModal.tsx,needs_translation
+korean_850171d7,구현 방안,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_89d34ebd,세션 추가,,JSX text content in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx; pages/admin/CreateSession.tsx,needs_translation
+korean_8a0dfb9c,관련성,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_8b077219,아직 작성된 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!,,JSX text content in components/DiscussionTab.tsx,components/DiscussionTab.tsx,needs_translation
+korean_8bb6b000,: 기존 시스템 구성 정보 제공,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+korean_8cbafb60,고객이 아직 피드백을 제출하지 않았습니다.,,String literal in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_926ad4a6,연락처:,,JSX text content in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+korean_98670aac,담당자 이름,,String literal in components/PlaceholderTooltip.tsx,components/PlaceholderTooltip.tsx,needs_translation
+korean_988eb876,요구사항 문서,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+korean_9a9f5cbe,"| 
+                  사용 모델:",,JSX text content in components/MeetingLogView.tsx,components/MeetingLogView.tsx,needs_translation
+korean_9ab19a87,로그아웃,,String literal in components/TopNavigation.tsx,components/TopNavigation.tsx,needs_translation
+korean_9ab6848d,만족도 점수,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_9d6689cd,추천 이유,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_a1d01821,파트너 관련 문의,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+korean_a2125d4a,추가 피드백 (선택사항),,JSX attribute: label in components/FeedbackModal.tsx,components/FeedbackModal.tsx,needs_translation
+korean_a2974c58,"에이전트 지침에서 사용할 수 있는 플레이스홀더들입니다. 
+              고객과의 채팅에서 실제 값으로 자동 치환됩니다.",,JSX text content in components/PlaceholderTooltip.tsx,components/PlaceholderTooltip.tsx,needs_translation
+korean_a47e2a04,동의 완료,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_ab7b7914,댓글 작성,,JSX text content in components/DiscussionTab.tsx,components/DiscussionTab.tsx,needs_translation
+korean_ac2fe411,선택 완료 (,,JSX text content in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+korean_b1f9a872,에 동의합니다. (필수),,JSX text content in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+korean_b94b561e,에이전트 수정,,JSX text content in pages/admin/EditAgent.tsx,pages/admin/EditAgent.tsx,needs_translation
+korean_bbcea42e,대시보드로,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx; pages/admin/CreateAgent.tsx; pages/admin/CreateSession.tsx; pages/admin/EditAgent.tsx,needs_translation
+korean_bc32cf73,대화 내역,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_be293b7a,개인정보 처리방침,,String literal in components/PrivacyTermsModal.tsx,components/PrivacyTermsModal.tsx,needs_translation
+korean_c971d2e6,이미지 미리보기,,JSX text content in components/ImageGallery.tsx,components/ImageGallery.tsx,needs_translation
+korean_cc5a7cf6,일). 에이전트를 다시 준비해주세요.,,Template literal span in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx,needs_translation
+korean_d15515d2,지능형 챗봇 어시스턴트로 미팅 사전 준비를 간소화해 보세요.,,JSX text content in components/WelcomeScreen.tsx,components/WelcomeScreen.tsx,needs_translation
+korean_d4f71fac,프로필,,String literal in components/TopNavigation.tsx,components/TopNavigation.tsx,needs_translation
+korean_d702023b,"이라 합니다. 
+
+이번에",,Template literal span in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+korean_de547500,피드백 없음,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_e0bb057d,관련 고객 사례가 생성되지 않았습니다.,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+korean_e1a25d05,"| 
+            사용 모델:",,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx,needs_translation
+korean_e4690f13,고객 의견,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_e8806939,기타 문의,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+korean_edb18dd1,개인정보 동의,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+korean_ef9bfc9c,미팅로그리포트_,,Template literal head in components/MeetingLogView.tsx,components/MeetingLogView.tsx,needs_translation
+korean_efb36209,기술 지원 문의,,String literal in components/ConsultationPurposeSelector.tsx,components/ConsultationPurposeSelector.tsx,needs_translation
+korean_f3102cf1,고객에게 전달할 정보:,,JSX text content in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+korean_f36279c6,미팅 로그가 없습니다,,JSX text content in components/MeetingLogView.tsx,components/MeetingLogView.tsx,needs_translation
+korean_f43bcd49,초도미팅록 작성 (마크다운 형식 지원),,JSX text content in components/MeetingLogView.tsx,components/MeetingLogView.tsx,needs_translation
+korean_f6b57027,에이전트 이름,,JSX attribute: label in pages/admin/CreateAgent.tsx,pages/admin/CreateAgent.tsx; pages/admin/EditAgent.tsx,needs_translation
+korean_fbaf9f99,미동의,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+loading_057c3e17,다시 다운로드,,JSX text content in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+loading_0a4de75d,업로드 중...,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+loading_154127e6,파일 업로드가 필요한 이유,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+loading_3d28a7fc,파일을 업로드하여 상담에 필요한 자료를 제공해 주세요.,,JSX text content in components/FileList.tsx,components/FileList.tsx; components/FileUpload.tsx,needs_translation
+loading_5d37a8ec,업로드된 파일,,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx; components/SessionAttachments.tsx,needs_translation
+loading_612ca27b,다운로드,,JSX text content in components/FileList.tsx,components/FileList.tsx,needs_translation
+loading_agent_details,Loading agent details...,,JSX text content in pages/admin/EditAgent.tsx,pages/admin/EditAgent.tsx,needs_translation
+loading_current_user,Loading current user...,,String literal in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+loading_ec6095c4,업로드된 파일이 없습니다,,JSX text content in components/FileList.tsx,components/FileList.tsx; components/FileUpload.tsx,needs_translation
+memory_mixed_407778,Memory 활성화,,String literal in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx,needs_translation
+memory_mixed_79ef3b,Memory가 성공적으로 활성화되었습니다 (,,Template literal head in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx,needs_translation
+memory_mixed_ac75ee,에이전트의 Memory 기능을 활성화하여 대화 맥락을 유지할 수 있습니다.,,JSX text content in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx,needs_translation
+memory_mixed_d4032b,Memory 활성화에 실패했습니다.,,String literal in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx,needs_translation
+memory_storage_days,Memory Storage Days,,JSX attribute: label in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx; pages/admin/CreateAgent.tsx; pages/admin/EditAgent.tsx,needs_translation
+message_copied,Message copied,,JSX text content in components/ChatMessage.tsx,components/ChatMessage.tsx; components/StreamingChatMessage.tsx,needs_translation
+mit_0_license,MIT-0 License,,JSX text content in components/Layout.tsx,components/Layout.tsx,needs_translation
+need_mixed_b69ac1,Need (필요성),,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+no_agents,No agents,,JSX text content in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx; pages/admin/CreateSession.tsx,needs_translation
+no_bedrock_agents_found,No Bedrock agents found.,,JSX text content in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx; pages/admin/CreateSession.tsx,needs_translation
+no_messages_yet,No messages yet,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+no_pre_consultation_sessions_found,No pre-consultation sessions found.,,JSX text content in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+no_sessions,No sessions,,JSX text content in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+not_helpful,Not helpful,,String literal in components/ChatMessage.tsx,components/ChatMessage.tsx; components/StreamingChatMessage.tsx,needs_translation
+not_prepared,Not Prepared,,JSX text content in components/StatusBadge.tsx,components/StatusBadge.tsx; pages/admin/AgentsDashboard.tsx,needs_translation
+password,Password,,JSX attribute: label in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+phone_number,Phone Number,,JSX attribute: label in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+pin_mixed_56d5a8,PIN 번호,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx; pages/customer/CustomerChat.tsx,needs_translation
+pin_mixed_c7c99f,PIN 정보는 영업 담당(,,Template literal head in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+pin_mixed_ec350f,PIN 번호:,,JSX text content in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+please_check_your_email_and_enter_the_co,Please check your email and enter the confirmation code below.,,JSX text content in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+prechat_agent_mixed_73318e,새로운 PreChat Agent 를 등록합니다 🤖,,JSX text content in pages/admin/CreateAgent.tsx,pages/admin/CreateAgent.tsx,needs_translation
+prechat_mixed_2f5118,PreChat 에이전트를 수정합니다 🤖,,JSX text content in pages/admin/EditAgent.tsx,pages/admin/EditAgent.tsx,needs_translation
+prechat_mixed_312687,PreChat 세션,,JSX text content in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx,needs_translation
+prechat_mixed_4991e7,PreChat 에게 고민을 말씀해 보세요.,,JSX text content in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+prechat_mixed_4f8d6d,PreChat 에이전트 🤖,,JSX text content in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx,needs_translation
+prechat_mixed_6c3c9d,PreChat 세션 💬,,JSX text content in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+prechat_mixed_89992d,✨ PreChat에 오신 것을 환영합니다!,,JSX text content in components/Layout.tsx,components/Layout.tsx,needs_translation
+prechat_mixed_ee3bbd,와 관련하여 사전에 논의할 내용과 기대사항을 공유드리기 위해 PreChat 사전채팅에 참가하였습니다!,,Template literal span in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+prechat_mixed_f5ae5c,PreChat 에이전트,,JSX text content in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+prepared,Prepared,,JSX text content in components/StatusBadge.tsx,components/StatusBadge.tsx; pages/admin/AgentsDashboard.tsx,needs_translation
+preparing,Preparing,,JSX text content in components/StatusBadge.tsx,components/StatusBadge.tsx; pages/admin/AgentsDashboard.tsx,needs_translation
+privacy,Privacy,,JSX text content in components/Layout.tsx,components/Layout.tsx,needs_translation
+result_a4f1ffb1,분석 결과를 불러오는 중...,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx,needs_translation
+result_ba11502e,분석 결과가 없습니다,,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+sales_rep,Sales Rep,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+sales_representative_access,Sales Representative Access,,JSX text content in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+sales_representative_email,Sales Representative Email,,JSX attribute: label in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+save_da1f7e7f,미팅 로그가 성공적으로 저장되었습니다.,,JSX text content in components/MeetingLogView.tsx,components/MeetingLogView.tsx,needs_translation
+select_a_foundation_model,Select a foundation model,,JSX attribute: placeholder in pages/admin/CreateAgent.tsx,pages/admin/CreateAgent.tsx; pages/admin/EditAgent.tsx,needs_translation
+select_agent,Select Agent,,JSX attribute: label in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+select_an_agent,Select an agent,,JSX attribute: placeholder in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+service_b88abd5d,서비스 이용약관,,String literal in components/PrivacyTermsModal.tsx,components/PrivacyTermsModal.tsx,needs_translation
+service_bece43ab,개인정보 처리방침 및 서비스 이용약관,,JSX text content in components/PrivacyTermsModal.tsx,components/PrivacyTermsModal.tsx; pages/customer/CustomerChat.tsx,needs_translation
+sign_in,Sign In,,String literal in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+sign_up,Sign Up,,String literal in pages/auth/Login.tsx,pages/auth/Login.tsx,needs_translation
+status,Status,,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+status_mixed_719b2f,파일 업로드 중 오류가 발생했습니다. (Status:,,Template literal head in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+storage_days,Storage Days,,JSX text content in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx,needs_translation
+support,Support,,JSX text content in components/Layout.tsx,components/Layout.tsx,needs_translation
+terms,Terms,,JSX text content in components/Layout.tsx,components/Layout.tsx,needs_translation
+text_06723de2ceac,Enter customer title/position,,JSX attribute: placeholder in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+text_13e0647bd592,"•
+                              Stage:",,JSX text content in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+text_18b2be76a0b9,✅ Next steps will be shared via email within 24 hours.,,Template literal span in hooks/useChat.ts,hooks/useChat.ts,needs_translation
+text_2024_01_15_14_00_aws_mixed_9a58be,"미팅 내용을 자유롭게 작성해주세요. 마크다운 형식을 사용할 수 있습니다.
+
+예시:
+## 미팅 개요
+- 일시: 2024-01-15 14:00
+- 참석자: 홍길동 (고객), 김영희 (AWS)
+
+## 주요 논의사항
+1. 클라우드 마이그레이션 계획
+2. 예상 비용 및 일정
+3. 기술적 요구사항
+
+## 액션 아이템
+- [ ] POC 제안서 작성
+- [ ] 기술 검토 미팅 일정 조율",,JSX attribute: placeholder in components/MeetingLogView.tsx,components/MeetingLogView.tsx,needs_translation
+text_2a2a324df45c,AWSPreChat_,,Template literal head in utils/csvExport.ts,utils/csvExport.ts,needs_translation
+text_2d887157ce6f,/i18n/locales/,,Template literal head in i18n/TranslationManager.ts,i18n/TranslationManager.ts,needs_translation
+text_2px_dashed,2px dashed,,Template literal head in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+text_50mb_pdf_office_mixed_8cbfa2,"최대 50MB • 이미지, PDF, Office 문서, 텍스트 파일 지원",,JSX text content in components/FileUpload.tsx,components/FileUpload.tsx,needs_translation
+text_5732a8080e69,ConsultationPurposes_,,Template literal head in utils/sessionStorage.ts,utils/sessionStorage.ts,needs_translation
+text_6_pin_mixed_07511a,6자리 PIN 번호,,JSX attribute: label in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+text_6_pin_mixed_1d6166,영업 담당자로부터 받은 6자리 PIN 번호를 입력해주세요.,,JSX text content in pages/customer/CustomerChat.tsx,pages/customer/CustomerChat.tsx,needs_translation
+text_8c014e8cd52c,Agent:,,Template literal head in pages/admin/AdminDashboard.tsx,pages/admin/AdminDashboard.tsx,needs_translation
+text_95ebdf49c2cb,: missing required columns,,Template literal span in i18n/TranslationManager.ts,i18n/TranslationManager.ts,needs_translation
+text_aaa65816241e,| PIN:,,Template literal span in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+text_cdfd006442c8,csrf_,,Template literal head in services/api.ts,services/api.ts; utils/sessionStorage.ts,needs_translation
+text_d0481e643d75,Session created successfully! URL:,,Template literal head in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+text_d7d32746c65c,"🎯 **Consultation Complete!**
+
+Your AWS sales representative will contact you:
+
+👤 **",,Template literal head in hooks/useChat.ts,hooks/useChat.ts,needs_translation
+text_da12aff3dfb7,_session_url.csv,,Template literal span in utils/csvExport.ts,utils/csvExport.ts,needs_translation
+text_e0f0b0564d3d,ID:,,JSX text content in pages/admin/AgentsDashboard.tsx,pages/admin/AgentsDashboard.tsx; pages/admin/CreateSession.tsx,needs_translation
+text_f4dcaf69eaf9,PrivacyConsent_,,Template literal head in utils/sessionStorage.ts,utils/sessionStorage.ts,needs_translation
+this_agent_is_currently_prepared_and_dep,This agent is currently prepared and deployed. Updating it will require re-preparing the agent after changes are saved.,,JSX text content in pages/admin/EditAgent.tsx,pages/admin/EditAgent.tsx,needs_translation
+this_work_is_licensed_under_the,This work is licensed under the,,JSX text content in components/Layout.tsx,components/Layout.tsx,needs_translation
+timeline_mixed_f7ee2d,Timeline (일정),,JSX text content in components/AIAnalysisReport.tsx,components/AIAnalysisReport.tsx; components/MeetingLogView.tsx,needs_translation
+unknown,Unknown,,String literal in pages/admin/AdminSessionDetails.tsx,pages/admin/AdminSessionDetails.tsx,needs_translation
+updated_successfully,""" updated successfully!",,Template literal span in pages/admin/EditAgent.tsx,pages/admin/EditAgent.tsx,needs_translation
+updating,Updating,,JSX text content in components/StatusBadge.tsx,components/StatusBadge.tsx; pages/admin/AgentsDashboard.tsx,needs_translation
+url_mixed_d044c6,채팅 URL:,,JSX text content in pages/admin/CreateSession.tsx,pages/admin/CreateSession.tsx,needs_translation
+you_at,You at,,Template literal head in components/ChatMessage.tsx,components/ChatMessage.tsx,needs_translation

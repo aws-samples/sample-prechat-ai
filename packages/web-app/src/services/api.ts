@@ -87,7 +87,19 @@ export const chatApi = {
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
     })
     return response.data
-  }
+  },
+
+  updateConsultationPurposes: async (sessionId: string, consultationPurposes: string) => {
+    const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
+    const response = await api.put(`/chat/session/${sessionId}/purposes`, {
+      consultationPurposes
+    }, {
+      headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
+    })
+    return response.data
+  },
+
+
 }
 
 export const adminApi = {
@@ -147,6 +159,7 @@ export const adminApi = {
     agentName: string
     foundationModel: string
     instruction: string
+    memoryStorageDays?: number
   }) => {
     const response = await api.post('/admin/agents', data)
     return response.data
@@ -170,8 +183,16 @@ export const adminApi = {
   updateAgent: async (agentId: string, data: {
     foundationModel: string
     instruction: string
+    memoryStorageDays?: number
   }) => {
     const response = await api.put(`/admin/agents/${agentId}`, data)
+    return response.data
+  },
+
+  enableAgentMemory: async (agentId: string, memoryStorageDays: number = 30) => {
+    const response = await api.post(`/admin/agents/${agentId}/enable-memory`, {
+      memoryStorageDays
+    })
     return response.data
   },
 
@@ -228,5 +249,26 @@ export const adminApi = {
       }
       throw error
     }
+  },
+
+  // Discussion operations
+  listDiscussions: async (sessionId: string) => {
+    const response = await api.get(`/admin/sessions/${sessionId}/discussions`)
+    return response.data
+  },
+
+  createDiscussion: async (sessionId: string, content: string) => {
+    const response = await api.post(`/admin/sessions/${sessionId}/discussions`, { content })
+    return response.data
+  },
+
+  updateDiscussion: async (sessionId: string, discussionId: string, content: string) => {
+    const response = await api.put(`/admin/sessions/${sessionId}/discussions/${discussionId}`, { content })
+    return response.data
+  },
+
+  deleteDiscussion: async (sessionId: string, discussionId: string) => {
+    const response = await api.delete(`/admin/sessions/${sessionId}/discussions/${discussionId}`)
+    return response.data
   }
 }

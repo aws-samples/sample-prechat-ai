@@ -20,6 +20,17 @@ export interface CustomerFeedback {
   timestamp: string;
 }
 
+export interface Discussion {
+  id: string;
+  sessionId: string;
+  content: string;
+  authorEmail: string;
+  authorName: string;
+  timestamp: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface Session {
   sessionId: string;
   status: 'active' | 'completed' | 'expired' | 'inactive';
@@ -37,6 +48,7 @@ export interface Session {
     phone: string;
   };
   agentId: string;
+  consultationPurposes?: string;
   aiAnalysis?: AnalysisResults;
   pinNumber?: string;
   privacyConsentAgreed?: boolean;
@@ -80,6 +92,7 @@ export interface BedrockAgent {
   agentStatus: 'CREATING' | 'PREPARING' | 'PREPARED' | 'NOT_PREPARED' | 'DELETING' | 'FAILED' | 'VERSIONING' | 'UPDATING';
   foundationModel: string;
   instruction: string;
+  memoryStorageDays: number;
   createdAt: string;
   updatedAt: string;
   agentVersion?: string;

@@ -2,11 +2,14 @@
 import React, { useState } from 'react';
 import { PrivacyTermsModal } from './PrivacyTermsModal';
 
+import { useI18n } from '../i18n';
+
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const { t } = useI18n();
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [modalTab, setModalTab] = useState<'privacy' | 'terms'>('privacy');
 
@@ -27,10 +30,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <header className="header">
         <div className="header-content">
           <h1 className="welcome-title">
-            ✨ PreChat에 오신 것을 환영합니다!
+            {t('welcome_title')}
           </h1>
           <p className="header-subtitle">
-            AWS 만남전에 AI 에이전트와 대화하여 논의 주제와 기대사항을 공유해 주세요.
+            {t('header_subtitle')}
           </p>
         </div>
         <div className="header-controls">
@@ -44,32 +47,27 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       
       <footer className="footer">
         <div className="footer-links">
-          <a href="#" onClick={handlePrivacyClick}>Privacy</a>
-          <a href="#" onClick={handleTermsClick}>Terms</a>
-          <a href="mailto:aws-prechat@amazon.com">Support</a>
+          <a href="#" onClick={handlePrivacyClick}>{t('privacy_link')}</a>
+          <a href="#" onClick={handleTermsClick}>{t('terms_link')}</a>
+          <a href="mailto:aws-prechat@amazon.com">{t('support_link')}</a>
         </div>
         <div className="footer-license">
           <div className="license-info">
-            <img 
-              src="https://licensebuttons.net/l/by-nc/4.0/88x31.png" 
-              alt="Creative Commons License" 
-              className="cc-logo"
-            />
             <span className="license-text">
-              This work is licensed under a{' '}
+              {t('license_text')}{' '}
               <a 
-                href="https://creativecommons.org/licenses/by-nc/4.0/" 
+                href="https://opensource.org/licenses/MIT-0" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="license-link"
               >
-                Creative Commons Attribution-NonCommercial 4.0 International License
+                {t('mit_license_link')}
               </a>
             </span>
           </div>
         </div>
         <div className="footer-copyright">
-          <p className="copyright-text">Copyright (c) 2025 AWS PreChat</p>
+          <p className="copyright-text">{t('copyright_text')}</p>
         </div>
       </footer>
 
