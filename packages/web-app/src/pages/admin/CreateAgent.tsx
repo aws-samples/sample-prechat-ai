@@ -17,9 +17,11 @@ import { adminApi } from '../../services/api'
 import { BEDROCK_MODELS } from '../../types'
 import { PlaceholderTooltip } from '../../components'
 import defaultPrompt from '../../assets/prechat-agent-prompt.md?raw'
+import { useI18n } from '../../i18n'
 
 export default function CreateAgent() {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -42,10 +44,10 @@ export default function CreateAgent() {
 
     try {
       await adminApi.createAgent(formData)
-      setSuccess(`Agent "${formData.agentName}" created successfully!`)
+      setSuccess(t('agents_created_success', { name: formData.agentName }))
       setTimeout(() => navigate('/admin/agents'), 3000)
     } catch (err) {
-      setError('Failed to 에이전트 생성')
+      setError(t('agents_failed_create'))
     } finally {
       setLoading(false)
     }
@@ -67,11 +69,11 @@ export default function CreateAgent() {
           variant="h1"
           actions={
             <Button variant="normal" onClick={() => navigate('/admin/agents')}>
-              대시보드로
+              {t('admin_to_dashboard')}
             </Button>
           }
         >
-          새로운 PreChat Agent 를 등록합니다 🤖
+          {t('agents_create_new_agent')}
         </Header>
 
         {error && <Alert type="error">{error}</Alert>}
@@ -81,7 +83,7 @@ export default function CreateAgent() {
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="link" onClick={() => navigate('/admin/agents')}>
-                취소
+                {t('cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -89,27 +91,27 @@ export default function CreateAgent() {
                 loading={loading}
                 disabled={!formData.agentName || !formData.foundationModel || !formData.instruction}
               >
-                에이전트 생성
+                {t('admin_create_agent')}
               </Button>
             </SpaceBetween>
           }
         >
           <SpaceBetween size="l">
             <FormField 
-              label="에이전트 이름" 
-              description="에이전트 이름"
+              label={t('admin_agent_name')} 
+              description={t('agents_agent_name_description')}
               stretch
             >
               <Input
                 value={formData.agentName}
                 onChange={({ detail }) => updateFormData('agentName', detail.value)}
-                placeholder="Enter 에이전트 이름"
+                placeholder={t('agents_enter_agent_name')}
               />
             </FormField>
 
             <FormField 
-              label="Foundation Model" 
-              description="에이전트의 기반 Foundation Model"
+              label={t('foundation_model')} 
+              description={t('agents_foundation_model_description')}
               stretch
             >
               <Select
@@ -121,13 +123,13 @@ export default function CreateAgent() {
                   updateFormData('foundationModel', detail.selectedOption?.value || '')
                 }
                 options={modelOptions}
-                placeholder="Select a foundation model"
+                placeholder={t('select_a_foundation_model')}
               />
             </FormField>
 
             <FormField 
-              label="Memory Storage Days" 
-              description="에이전트가 대화 맥락을 기억할 기간 (일 단위, 1-365일)"
+              label={t('memory_storage_days')} 
+              description={t('admin_memory_storage_description')}
               stretch
             >
               <Input
@@ -146,11 +148,11 @@ export default function CreateAgent() {
             <FormField 
               label={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>Agent Instructions</span>
+                  <span>{t('agent_instructions')}</span>
                   <PlaceholderTooltip />
                 </div>
               }
-              description="에이전트 행동에 대한 지침을 상세하게 작성합니다. 플레이스홀더를 사용하여 동적 정보를 포함할 수 있습니다."
+              description={t('admin_agent_instructions_description')}
               stretch
               secondaryControl={
                 <Button
@@ -158,14 +160,14 @@ export default function CreateAgent() {
                   iconName="refresh"
                   onClick={() => updateFormData('instruction', defaultPrompt)}
                 >
-                  기본 에이전트 지침
+                  {t('admin_default_agent_instructions')}
                 </Button>
               }
             >
               <Textarea
                 value={formData.instruction}
                 onChange={({ detail }) => updateFormData('instruction', detail.value)}
-                placeholder="Enter agent instructions..."
+                placeholder={t('enter_agent_instructions')}
                 rows={15}
               />
             </FormField>

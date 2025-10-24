@@ -16,6 +16,7 @@ import ReactMarkdown from 'react-markdown'
 import { adminApi } from '../services/api'
 import { BEDROCK_MODELS, AnalysisResults, BedrockModel, Session } from '../types'
 import { generateAnalysisReportHTML, downloadHTMLFile } from '../utils/htmlExport'
+import { useI18n } from '../i18n'
 
 interface AIAnalysisReportProps {
   sessionId: string
@@ -23,6 +24,7 @@ interface AIAnalysisReportProps {
 }
 
 export default function AIAnalysisReport({ sessionId, session }: AIAnalysisReportProps) {
+  const { t } = useI18n()
   const [selectedModel, setSelectedModel] = useState<BedrockModel>(BEDROCK_MODELS[0])
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -50,7 +52,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
       console.error('Failed to load existing analysis:', err)
       // Don't show error for missing analysis - it's expected
       if (err.response?.status !== 404 && err.response?.status !== 202) {
-        setError('기존 분석 결과를 불러오는데 실패했습니다.')
+        setError(t('ai_analysis_load_failed'))
       }
     } finally {
       setIsLoading(false)
@@ -70,7 +72,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
       pollAnalysisStatus()
     } catch (err: any) {
       console.error('Failed to start analysis:', err)
-      setError(err.response?.data?.error || '분석 요청에 실패했습니다. 다시 시도해주세요.')
+      setError(err.response?.data?.error || t('ai_analysis_request_failed'))
       setIsAnalyzing(false)
     }
   }
@@ -91,7 +93,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
           setTimeoutProgress(100)
         } else if (statusResponse.status === 'failed') {
           clearInterval(pollInterval)
-          setError('AI 분석에 실패했습니다. 다시 시도해주세요.')
+          setError(t('ai_analysis_failed'))
           setIsAnalyzing(false)
           setTimeoutProgress(0)
         } else if (statusResponse.status === 'processing') {
@@ -101,7 +103,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
       } catch (err: any) {
         console.error('Failed to check analysis status:', err)
         clearInterval(pollInterval)
-        setError('분석 상태 확인에 실패했습니다.')
+        setError(t('ai_analysis_status_check_failed'))
         setIsAnalyzing(false)
       }
     }, 15000) // Poll every 15 seconds
@@ -110,7 +112,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
     setTimeout(() => {
       clearInterval(pollInterval)
       if (isAnalyzing) {
-        setError('분석 시간이 초과되었습니다. 다시 시도해주세요.')
+        setError(t('ai_analysis_timeout'))
         setIsAnalyzing(false)
         setTimeoutProgress(0)
       }
@@ -136,7 +138,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
     }
 
     const htmlContent = generateAnalysisReportHTML(exportData)
-    const filename = `AI분석리포트_${session.customerInfo.company}_${session.customerInfo.name}_${new Date().toISOString().split('T')[0]}.html`
+    const filename = `${t('ai_mixed_4b9ad9')}${session.customerInfo.company}_${session.customerInfo.name}_${new Date().toISOString().split('T')[0]}.html`
     
     downloadHTMLFile(htmlContent, filename)
   }
@@ -145,13 +147,13 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
     <Container>
       <SpaceBetween size="l">
         <Header variant="h3">
-          AI 분석
+          {t('ai_mixed_993127')}
         </Header>
 
         <ColumnLayout columns={2}>
           <Box>
             <Box variant="awsui-key-label" margin={{ bottom: 's' }}>
-              분석 모델 선택
+              {t('analysis_7d2725cb')}
             </Box>
             <Select
               selectedOption={{
@@ -178,7 +180,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
                 loading={isAnalyzing}
                 disabled={isAnalyzing}
               >
-                {isAnalyzing ? 'AI 분석 중...' : 'AI 분석 시작'}
+                {isAnalyzing ? t('ai_analysis_in_progress') : t('ai_analysis_start')}
               </Button>
               
               {analysisResults && (
@@ -190,7 +192,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
                     loading={isLoading}
                     disabled={isAnalyzing || isLoading}
                   >
-                    새로고침
+                    {t('korean_423c414d')}
                   </Button>
                   <Button
                     variant="normal"
@@ -198,7 +200,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
                     onClick={exportToHTML}
                     disabled={isAnalyzing || isLoading || !session}
                   >
-                    HTML 저장
+                    {t('html_mixed_660e1c')}
                   </Button>
                 </>
               )}
@@ -215,7 +217,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
                 onClick={startAnalysis}
                 disabled={isAnalyzing}
               >
-                다시 시도
+                {t('korean_09c04194')}
               </Button>
             }
           >
@@ -228,10 +230,10 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
             <SpaceBetween size="s">
               <LoadingBar variant="gen-ai" />
               <Box>
-                선택된 모델({selectedModel.name})이 대화 내용을 분석하고 있습니다...
+                {t('analysis_23df3b00', { model: selectedModel.name })}
                 <br />
                 <Box fontSize="body-s" color="text-status-inactive">
-                  최대 5분까지 소요될 수 있습니다. ({Math.round(timeoutProgress)}% 완료)
+                  {t('korean_5b25d067')}{Math.round(timeoutProgress)}{t('korean_22dd3ccb')}
                 </Box>
               </Box>
             </SpaceBetween>
@@ -247,7 +249,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
         <Container>
           <Box textAlign="center" padding="xl">
             <Spinner size="large" />
-            <Box margin={{ top: 's' }}>분석 결과를 불러오는 중...</Box>
+            <Box margin={{ top: 's' }}>{t('result_a4f1ffb1')}</Box>
           </Box>
         </Container>
       )
@@ -258,10 +260,10 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
         <Container>
           <Box textAlign="center" padding="xl">
             <Box variant="h3" margin={{ bottom: 's' }}>
-              분석 결과가 없습니다
+              {t('result_ba11502e')}
             </Box>
             <Box color="text-status-inactive" margin={{ bottom: 'l' }}>
-              위의 "AI 분석 시작" 버튼을 클릭하여 대화 내용을 분석해보세요.
+              {t('ai_mixed_cd76bb')}
             </Box>
           </Box>
         </Container>
@@ -277,8 +279,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
         
         <Container>
           <Box fontSize="body-s" color="text-status-inactive" textAlign="center">
-            분석 완료: {new Date(analysisResults.analyzedAt).toLocaleString('ko-KR')} | 
-            사용 모델: {BEDROCK_MODELS.find(m => m.id === analysisResults.modelUsed)?.name || analysisResults.modelUsed}
+            {t('analysis_fe53b01e')} {new Date(analysisResults.analyzedAt).toLocaleString()} {t('korean_9a9f5cbe')} {BEDROCK_MODELS.find(m => m.id === analysisResults.modelUsed)?.name || analysisResults.modelUsed}
           </Box>
         </Container>
       </SpaceBetween>
@@ -299,12 +300,14 @@ interface MarkdownSummaryContainerProps {
 }
 
 function MarkdownSummaryContainer({ summary }: MarkdownSummaryContainerProps) {
+  const { t } = useI18n()
+  
   if (!summary) {
     return (
       <Container>
-        <Header variant="h3">요약 보고서</Header>
+        <Header variant="h3">{t('korean_63c7603c')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          요약 보고서가 생성되지 않았습니다.
+          {t('korean_2a03e24d')}
         </Box>
       </Container>
     )
@@ -312,7 +315,7 @@ function MarkdownSummaryContainer({ summary }: MarkdownSummaryContainerProps) {
 
   return (
     <Container>
-      <Header variant="h3">요약 보고서</Header>
+      <Header variant="h3">{t('korean_63c7603c')}</Header>
       <Box padding="l">
         <div 
           style={{ 
@@ -360,14 +363,15 @@ interface BANTAnalysisContainerProps {
 }
 
 function BANTAnalysisContainer({ bantAnalysis }: BANTAnalysisContainerProps) {
+  const { t } = useI18n()
   const isEmpty = !bantAnalysis || (!bantAnalysis.budget && !bantAnalysis.authority && !bantAnalysis.need && !bantAnalysis.timeline)
 
   if (isEmpty) {
     return (
       <Container>
-        <Header variant="h3">BANT 분석</Header>
+        <Header variant="h3">{t('bant_mixed_cdfa13')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          BANT 분석 결과가 생성되지 않았습니다.
+          {t('bant_mixed_d35eff')}
         </Box>
       </Container>
     )
@@ -375,30 +379,30 @@ function BANTAnalysisContainer({ bantAnalysis }: BANTAnalysisContainerProps) {
 
   return (
     <Container>
-      <Header variant="h3">BANT 분석</Header>
+      <Header variant="h3">{t('bant_mixed_cdfa13')}</Header>
       <ColumnLayout columns={2}>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>Budget (예산)</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('budget_mixed_7317c4')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.budget || '정보 없음'}
+            {bantAnalysis.budget || t('ai_analysis_no_info')}
           </div>
         </Box>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>Authority (권한)</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('authority_mixed_279d34')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.authority || '정보 없음'}
+            {bantAnalysis.authority || t('ai_analysis_no_info')}
           </div>
         </Box>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>Need (필요성)</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('need_mixed_b69ac1')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.need || '정보 없음'}
+            {bantAnalysis.need || t('ai_analysis_no_info')}
           </div>
         </Box>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>Timeline (일정)</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('timeline_mixed_f7ee2d')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.timeline || '정보 없음'}
+            {bantAnalysis.timeline || t('ai_analysis_no_info')}
           </div>
         </Box>
       </ColumnLayout>
@@ -416,12 +420,14 @@ interface AWSServicesContainerProps {
 }
 
 function AWSServicesContainer({ awsServices }: AWSServicesContainerProps) {
+  const { t } = useI18n()
+  
   if (!awsServices || awsServices.length === 0) {
     return (
       <Container>
-        <Header variant="h3">추천 AWS 서비스</Header>
+        <Header variant="h3">{t('aws_mixed_bed119')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          추천 AWS 서비스가 생성되지 않았습니다.
+          {t('aws_mixed_a22600')}
         </Box>
       </Container>
     )
@@ -429,18 +435,18 @@ function AWSServicesContainer({ awsServices }: AWSServicesContainerProps) {
 
   return (
     <Container>
-      <Header variant="h3">추천 AWS 서비스</Header>
+      <Header variant="h3">{t('aws_mixed_bed119')}</Header>
       <ColumnLayout columns={awsServices.length > 2 ? 2 : 1}>
         {awsServices.map((service, index) => (
           <div key={index} style={{ border: '1px solid #e1e4e8', borderRadius: '8px', padding: '12px' }}>
             <SpaceBetween size="s">
               <Box variant="h4">{service.service}</Box>
               <Box>
-                <Box variant="awsui-key-label">추천 이유</Box>
+                <Box variant="awsui-key-label">{t('korean_9d6689cd')}</Box>
                 <Box fontSize="body-s">{service.reason}</Box>
               </Box>
               <Box>
-                <Box variant="awsui-key-label">구현 방안</Box>
+                <Box variant="awsui-key-label">{t('korean_850171d7')}</Box>
                 <Box fontSize="body-s">{service.implementation}</Box>
               </Box>
             </SpaceBetween>
@@ -461,12 +467,14 @@ interface CustomerCasesContainerProps {
 }
 
 function CustomerCasesContainer({ customerCases }: CustomerCasesContainerProps) {
+  const { t } = useI18n()
+  
   if (!customerCases || customerCases.length === 0) {
     return (
       <Container>
-        <Header variant="h3">관련 고객 사례</Header>
+        <Header variant="h3">{t('korean_25f2f297')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          관련 고객 사례가 생성되지 않았습니다.
+          {t('korean_e0bb057d')}
         </Box>
       </Container>
     )
@@ -474,18 +482,18 @@ function CustomerCasesContainer({ customerCases }: CustomerCasesContainerProps) 
 
   return (
     <Container>
-      <Header variant="h3">관련 고객 사례</Header>
+      <Header variant="h3">{t('korean_25f2f297')}</Header>
       <SpaceBetween size="m">
         {customerCases.map((customerCase, index) => (
           <div key={index} style={{ border: '1px solid #e1e4e8', borderRadius: '8px', backgroundColor: '#fafbfc', padding: '24px' }}>
             <SpaceBetween size="s">
               <Box variant="h4">{customerCase.title}</Box>
               <Box>
-                <Box variant="awsui-key-label">사례 설명</Box>
+                <Box variant="awsui-key-label">{t('korean_0508c5f0')}</Box>
                 <Box>{customerCase.description}</Box>
               </Box>
               <Box>
-                <Box variant="awsui-key-label">관련성</Box>
+                <Box variant="awsui-key-label">{t('korean_8a0dfb9c')}</Box>
                 <Box fontSize="body-s" color="text-status-info">{customerCase.relevance}</Box>
               </Box>
             </SpaceBetween>

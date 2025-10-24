@@ -1,7 +1,10 @@
 // nosemgrep
 import { Box, Header } from '@cloudscape-design/components'
+import { useI18n } from '../i18n'
 
 export default function PageHeader() {
+  const { t } = useI18n();
+
   return (
     <div
       style={{
@@ -12,11 +15,11 @@ export default function PageHeader() {
       }}
     >
       <Header variant="h1" className="typewriter fade-in-up">
-        <span style={{ color: 'white' }}>AWS PreChat</span>
+        <span style={{ color: 'white' }}>{t('aws_prechat')}</span>
       </Header>
       <Box fontSize="body-m" padding={{ top: 's' }} textAlign="left">
         <span style={{ color: 'white' }}>
-          AWS PreChat is a conversational AI web system designed to streamline the pre-meeting preparation process between AWS sales teams and customers. The system replaces traditional Excel-based forms with an intuitive chatbot interface that guides customers through a structured conversation to collect business requirements, technical constraints, and project timelines. The collected information is then processed and presented to AWS sales representatives and engineers in an organized, actionable format.
+          {t('aws_prechat_is_a_conversational_ai_web_s')}
         </span>
       </Box>
     </div>

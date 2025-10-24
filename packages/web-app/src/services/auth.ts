@@ -58,8 +58,6 @@ class AuthService {
     localStorage.setItem('idToken', authData.idToken)
     localStorage.setItem('refreshToken', authData.refreshToken)
     
-<<<<<<< HEAD
-=======
     // JWT 토큰에서 사용자 정보를 추출하여 localStorage에 저장
     try {
       const payload = JSON.parse(atob(authData.idToken.split('.')[1]))
@@ -69,7 +67,6 @@ class AuthService {
       console.error('Error parsing JWT token for user info:', error)
     }
     
->>>>>>> dev
     return authData
   }
 
@@ -92,11 +89,8 @@ class AuthService {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('idToken')
     localStorage.removeItem('refreshToken')
-<<<<<<< HEAD
-=======
     localStorage.removeItem('userEmail')
     localStorage.removeItem('userName')
->>>>>>> dev
   }
 
   isAuthenticated(): boolean {

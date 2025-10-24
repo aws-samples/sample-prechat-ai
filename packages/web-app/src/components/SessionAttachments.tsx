@@ -12,12 +12,14 @@ import { adminApi } from '../services/api'
 import FileList from './FileList'
 import ImageGallery from './ImageGallery'
 import { UploadedFile } from '../utils/fileUtils'
+import { useI18n } from '../i18n'
 
 interface SessionAttachmentsProps {
   sessionId: string
 }
 
 export default function SessionAttachments({ sessionId }: SessionAttachmentsProps) {
+  const { t } = useI18n();
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -79,7 +81,7 @@ export default function SessionAttachments({ sessionId }: SessionAttachmentsProp
     <SpaceBetween size="l">
       {/* File List Table */}
       <Container>
-        <Header variant="h3">업로드된 파일</Header>
+        <Header variant="h3">{t('loading_5d37a8ec')}</Header>
         <FileList 
           files={files} 
           loading={loading || deleting !== null}

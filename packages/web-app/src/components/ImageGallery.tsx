@@ -11,6 +11,7 @@ import {
 } from '@cloudscape-design/components'
 import { UploadedFile, getDisplayFileName, formatFileSize, isImageFile } from '../utils/fileUtils'
 import { adminApi } from '../services/api'
+import { useI18n } from '../i18n'
 
 interface ImageGalleryProps {
   files: UploadedFile[]
@@ -19,6 +20,7 @@ interface ImageGalleryProps {
 }
 
 export default function ImageGallery({ files, onDelete, sessionId }: ImageGalleryProps) {
+  const { t } = useI18n();
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [imageModalVisible, setImageModalVisible] = useState(false)
   const [preparingFiles, setPreparingFiles] = useState<Set<string>>(new Set())
@@ -28,7 +30,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
 
   const handlePrepareFile = async (fileKey: string) => {
     if (!sessionId) return
-    
+
     setPreparingFiles(prev => new Set(prev).add(fileKey))
     try {
       const response = await adminApi.generateFilePresignedUrl(sessionId, fileKey)
@@ -70,9 +72,9 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
     console.log('ImageGallery - No image files found, returning null')
     return (
       <Container>
-        <Header variant="h3">이미지 미리보기</Header>
+        <Header variant="h3">{t('korean_c971d2e6')}</Header>
         <Box textAlign="center" color="text-status-inactive">
-          이미지 파일이 없습니다.
+          {t('image_gallery_no_images')}
         </Box>
       </Container>
     )
@@ -81,7 +83,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
   return (
     <>
       <Container>
-        <Header variant="h3">이미지 미리보기</Header>
+        <Header variant="h3">{t('korean_c971d2e6')}</Header>
         <Grid gridDefinition={[
           { colspan: { default: 12, xs: 6, s: 4, m: 3, l: 2 } },
           { colspan: { default: 12, xs: 6, s: 4, m: 3, l: 2 } },
@@ -93,7 +95,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
           {imageFiles.map((file) => {
             const isPreparing = preparingFiles.has(file.fileKey)
             const preparedUrl = preparedUrls.get(file.fileKey)
-            
+
             return (
               <Box key={file.fileKey} padding="xs">
                 <div
@@ -136,7 +138,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
                         onClick={() => handlePrepareFile(file.fileKey)}
                         disabled={!sessionId}
                       >
-                        이미지 준비
+                        {t('image_gallery_prepare_image')}
                       </Button>
                     )}
                   </div>
@@ -156,7 +158,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
                             href={preparedUrl}
                             target="_blank"
                             download={getDisplayFileName(file)}
-                            ariaLabel="다운로드"
+                            ariaLabel={t('image_gallery_download_aria')}
                           />
                         )}
                         {onDelete && (
@@ -164,7 +166,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
                             variant="icon"
                             iconName="remove"
                             onClick={() => onDelete(file.fileKey)}
-                            ariaLabel="삭제"
+                            ariaLabel={t('image_gallery_delete_aria')}
                           />
                         )}
                       </SpaceBetween>
@@ -181,12 +183,12 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
       <Modal
         onDismiss={closeImageModal}
         visible={imageModalVisible}
-        header="이미지 원본 보기"
+        header={t('image_gallery_modal_title')}
         size="large"
         footer={
           <Box float="right">
             <Button variant="primary" onClick={closeImageModal}>
-              닫기
+              {t('image_gallery_modal_close')}
             </Button>
           </Box>
         }
@@ -195,7 +197,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
           <Box textAlign="center">
             <img
               src={selectedImage}
-              alt="원본 이미지"
+              alt={t('image_gallery_modal_alt')}
               style={{
                 maxWidth: '100%',
                 maxHeight: '70vh',

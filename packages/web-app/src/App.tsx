@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { AppTopNavigation } from './components/TopNavigation'
 import { WelcomeScreen } from './components/WelcomeScreen'
+import { TranslationTest } from './components/TranslationTest'
 import ProtectedRoute from './components/ProtectedRoute'
 import CustomerChat from './pages/customer/CustomerChat'
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -11,15 +12,17 @@ import AgentsDashboard from './pages/admin/AgentsDashboard'
 import CreateAgent from './pages/admin/CreateAgent'
 import EditAgent from './pages/admin/EditAgent'
 import Login from './pages/auth/Login'
+import { I18nProvider } from './i18n/I18nContext'
 import './styles/animations.css'
 
 function App() {
   return (
-    <>
+    <I18nProvider>
       <AppTopNavigation />
       <Layout>
         <Routes>
         <Route path="/" element={<WelcomeScreen />} />
+        <Route path="/test-translations" element={<TranslationTest />} />
         <Route path="/customer/:sessionId" element={<CustomerChat />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={
@@ -54,7 +57,7 @@ function App() {
         } />
         </Routes>
       </Layout>
-    </>
+    </I18nProvider>
   )
 }
 

@@ -19,11 +19,13 @@ import DiscussionTab from '../../components/DiscussionTab'
 import { adminApi, chatApi } from '../../services/api'
 import { Session } from '../../types'
 import { formatPurposesForDisplay } from '../../components/ConsultationPurposeSelector'
+import { useI18n } from '../../i18n'
 
 
 export default function AdminSessionDetails() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const navigate = useNavigate()
+  const { t } = useI18n()
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -62,7 +64,7 @@ export default function AdminSessionDetails() {
         customerFeedback: feedbackData
       } : null)
     } catch (err) {
-      setError('Failed to load session details')
+      setError(t('session_failed_load_details'))
     } finally {
       setLoading(false)
     }
@@ -71,11 +73,11 @@ export default function AdminSessionDetails() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge color="blue">Active</Badge>
+        return <Badge color="blue">{t('active')}</Badge>
       case 'completed':
-        return <Badge color="green">Completed</Badge>
+        return <Badge color="green">{t('completed')}</Badge>
       case 'expired':
-        return <Badge color="red">Expired</Badge>
+        return <Badge color="red">{t('expired')}</Badge>
       default:
         return <Badge>{status}</Badge>
     }
@@ -96,8 +98,8 @@ export default function AdminSessionDetails() {
   if (error || !session) {
     return (
       <Container>
-        <Alert type="error" header="Error">
-          {error || 'Session not found'}
+        <Alert type="error" header={t('error_occurred')}>
+          {error || t('session_not_found')}
         </Alert>
       </Container>
     )
@@ -111,26 +113,26 @@ export default function AdminSessionDetails() {
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <AnimatedButton variant="normal" onClick={() => navigate('/admin')} animation="pulse">
-                대시보드로
+                {t('admin_to_dashboard')}
               </AnimatedButton>
             </SpaceBetween>
           }
         >
-          사전상담 내용을 확인합니다
+          {t('session_review_consultation')}
         </Header>
 
         <ColumnLayout columns={3}>
           <Box>
-            <Box variant="awsui-key-label">Customer</Box>
+            <Box variant="awsui-key-label">{t('customer')}</Box>
             <Box>{session.customerInfo.name}</Box>
             <Box fontSize="body-s" color="text-status-inactive">{session.customerInfo.email}</Box>
           </Box>
           <Box>
-            <Box variant="awsui-key-label">Company</Box>
+            <Box variant="awsui-key-label">{t('company')}</Box>
             <Box>{session.customerInfo.company}</Box>
           </Box>
           <Box>
-            <Box variant="awsui-key-label">Sales Rep</Box>
+            <Box variant="awsui-key-label">{t('sales_rep')}</Box>
             <Box>{session.salesRepInfo?.name} / {session.salesRepEmail}</Box>
           </Box>
         </ColumnLayout>
@@ -138,7 +140,7 @@ export default function AdminSessionDetails() {
         {session.consultationPurposes && (
           <ColumnLayout columns={1}>
             <Box>
-              <Box variant="awsui-key-label">상담 목적</Box>
+              <Box variant="awsui-key-label">{t('admin_consultation_purpose')}</Box>
               <Box>{formatPurposesForDisplay(session.consultationPurposes)}</Box>
             </Box>
           </ColumnLayout>
@@ -146,34 +148,34 @@ export default function AdminSessionDetails() {
 
         <ColumnLayout columns={3}>
           <Box>
-            <Box variant="awsui-key-label">Status</Box>
+            <Box variant="awsui-key-label">{t('status')}</Box>
             {getStatusBadge(session.status)}
           </Box>
           <Box>
-            <Box variant="awsui-key-label">PIN 번호</Box>
+            <Box variant="awsui-key-label">{t('admin_pin_number')}</Box>
             <Box fontWeight="bold" fontSize="body-s">
               {session.pinNumber || 'N/A'}
             </Box>
           </Box>
           <Box>
-            <Box variant="awsui-key-label">Created</Box>
+            <Box variant="awsui-key-label">{t('created')}</Box>
             <Box>{session.createdAt ? new Date(session.createdAt).toLocaleDateString() : 'N/A'}</Box>
           </Box>
         </ColumnLayout>
 
         <ColumnLayout columns={2}>
           <Box>
-            <Box variant="awsui-key-label">개인정보 동의</Box>
+            <Box variant="awsui-key-label">{t('session_privacy_consent')}</Box>
             <Box>
               {session.privacyConsentAgreed ? (
-                <Badge color="green">동의 완료</Badge>
+                <Badge color="green">{t('session_consent_agreed')}</Badge>
               ) : (
-                <Badge color="grey">미동의</Badge>
+                <Badge color="grey">{t('session_consent_not_agreed')}</Badge>
               )}
             </Box>
           </Box>
           <Box>
-            <Box variant="awsui-key-label">동의 시간</Box>
+            <Box variant="awsui-key-label">{t('session_consent_time')}</Box>
             <Box>
               {session.privacyConsentTimestamp ?
                 new Date(session.privacyConsentTimestamp).toLocaleString('ko-KR') :
@@ -186,22 +188,22 @@ export default function AdminSessionDetails() {
         <Tabs
           tabs={[
             {
-              label: '미팅 로그',
+              label: t('session_meeting_log'),
               id: 'meeting-log',
               content: sessionId ? <MeetingLogView sessionId={sessionId} session={session} /> : null
             },
             {
-              label: 'Discussion',
+              label: t('discussion'),
               id: 'discussion',
               content: sessionId ? <DiscussionTab sessionId={sessionId} /> : null
             },
             {
-              label: '첨부 파일',
+              label: t('session_attachments'),
               id: 'attachments',
               content: sessionId ? <SessionAttachments sessionId={sessionId} /> : null
             },
             {
-              label: 'Conversation',
+              label: t('conversation'),
               id: 'conversation',
               content: (
                 <SpaceBetween size="l">
@@ -209,15 +211,15 @@ export default function AdminSessionDetails() {
                   {session.customerFeedback ? (
                     <Container>
                       <Header variant="h3">
-                        고객 피드백 (CSAT){' '}
+                        {t('session_customer_feedback')}{' '}
                         <Badge color="green">
-                          피드백 있음
+                          {t('session_feedback_available')}
                         </Badge>
                       </Header>
                       <SpaceBetween size="m">
                         <ColumnLayout columns={2}>
                           <Box>
-                            <Box variant="awsui-key-label">만족도 점수</Box>
+                            <Box variant="awsui-key-label">{t('session_satisfaction_score')}</Box>
                             <Box>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <div style={{ display: 'flex', gap: '0.1rem' }}>
@@ -255,7 +257,7 @@ export default function AdminSessionDetails() {
                             </Box>
                           </Box>
                           <Box>
-                            <Box variant="awsui-key-label">피드백 제출 시간</Box>
+                            <Box variant="awsui-key-label">{t('session_feedback_time')}</Box>
                             <Box>
                               {new Date(session.customerFeedback.timestamp).toLocaleString('ko-KR')}
                             </Box>
@@ -264,7 +266,7 @@ export default function AdminSessionDetails() {
 
                         {session.customerFeedback.feedback && (
                           <Box>
-                            <Box variant="awsui-key-label">고객 의견</Box>
+                            <Box variant="awsui-key-label">{t('session_customer_opinion')}</Box>
                             <Box padding="s" variant="awsui-value-large">
                               {session.customerFeedback.feedback}
                             </Box>
@@ -275,15 +277,15 @@ export default function AdminSessionDetails() {
                   ) : (
                     <Container>
                       <Header variant="h3">
-                        고객 피드백 (CSAT){' '}
+                        {t('session_customer_feedback')}{' '}
                         <Badge color="grey">
-                          피드백 없음
+                          {t('session_no_feedback')}
                         </Badge>
                       </Header>
                       <Box color="text-status-inactive" textAlign="center" padding="l">
                         {session.status === 'completed' 
-                          ? '고객이 아직 피드백을 제출하지 않았습니다.'
-                          : '세션이 완료되면 고객 피드백을 확인할 수 있습니다.'
+                          ? t('session_no_feedback_submitted')
+                          : t('session_feedback_after_completion')
                         }
                       </Box>
                     </Container>
@@ -291,7 +293,7 @@ export default function AdminSessionDetails() {
 
                   {/* Conversation History */}
                   <Container>
-                    <Header variant="h3">대화 내역</Header>
+                    <Header variant="h3">{t('session_conversation_history')}</Header>
                     <SpaceBetween size="m">
                       {session.conversationHistory.map((message) => (
                         <Box
@@ -300,9 +302,9 @@ export default function AdminSessionDetails() {
                         >
                           <SpaceBetween size="xs">
                             <Box fontSize="body-s" color="text-status-inactive">
-                              {message.sender === 'customer' ? 'Customer' : 'Assistant'} •
+                              {message.sender === 'customer' ? t('customer') : t('assistant')} •
                               {new Date(message.timestamp).toLocaleString()} •
-                              Stage: {message.stage?.replace('_', ' ').toUpperCase() || 'Unknown'}
+                              {t('session_stage')}: {message.stage?.replace('_', ' ').toUpperCase() || t('unknown')}
                             </Box>
                             <Box>{message.content}</Box>
                           </SpaceBetween>
@@ -310,7 +312,7 @@ export default function AdminSessionDetails() {
                       ))}
                       {session.conversationHistory.length === 0 && (
                         <Box textAlign="center" color="text-status-inactive">
-                          No messages yet
+                          {t('no_messages_yet')}
                         </Box>
                       )}
                     </SpaceBetween>

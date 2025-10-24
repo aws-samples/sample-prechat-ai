@@ -8,6 +8,7 @@ import {
 import { useState } from 'react'
 import { UploadedFile, getDisplayFileName, formatFileSize } from '../utils/fileUtils'
 import { adminApi } from '../services/api'
+import { useI18n } from '../i18n'
 
 interface FileListProps {
   files: UploadedFile[]
@@ -18,6 +19,7 @@ interface FileListProps {
 }
 
 export default function FileList({ files, loading = false, showActions = true, onDelete, sessionId }: FileListProps) {
+  const { t } = useI18n();
   const [preparingFiles, setPreparingFiles] = useState<Set<string>>(new Set())
   const [preparedUrls, setPreparedUrls] = useState<Map<string, string>>(new Map())
 
@@ -41,22 +43,22 @@ export default function FileList({ files, loading = false, showActions = true, o
   const columnDefinitions: any[] = [
     {
       id: 'fileName',
-      header: '파일명',
+      header: t('file_name_header'),
       cell: (item: UploadedFile) => getDisplayFileName(item)
     },
     {
       id: 'fileSize',
-      header: '크기',
+      header: t('file_size_header'),
       cell: (item: UploadedFile) => formatFileSize(item.fileSize)
     },
     {
       id: 'contentType',
-      header: '타입',
+      header: t('file_type_header'),
       cell: (item: UploadedFile) => item.contentType
     },
     {
       id: 'uploadedAt',
-      header: '업로드 시간',
+      header: t('upload_time_header'),
       cell: (item: UploadedFile) => new Date(item.uploadedAt).toLocaleString('ko-KR')
     }
   ]
@@ -64,7 +66,7 @@ export default function FileList({ files, loading = false, showActions = true, o
   if (showActions) {
     columnDefinitions.push({
       id: 'actions',
-      header: '작업',
+      header: t('actions'),
       cell: (item: UploadedFile) => {
         const isPreparing = preparingFiles.has(item.fileKey)
         const preparedUrl = preparedUrls.get(item.fileKey)
@@ -79,7 +81,7 @@ export default function FileList({ files, loading = false, showActions = true, o
                 target="_blank"
                 download={getDisplayFileName(item)}
               >
-                다운로드
+                {t('loading_612ca27b')}
               </Button>
             ) : (
               <Button
@@ -89,7 +91,7 @@ export default function FileList({ files, loading = false, showActions = true, o
                 onClick={() => handlePrepareFile(item.fileKey)}
                 disabled={!sessionId}
               >
-                파일 준비
+                {t('file_0b7ade37')}
               </Button>
             )}
             {onDelete && (
@@ -98,7 +100,7 @@ export default function FileList({ files, loading = false, showActions = true, o
                 iconName="remove"
                 onClick={() => onDelete(item.fileKey)}
               >
-                삭제
+                {t('delete')}
               </Button>
             )}
           </SpaceBetween>
@@ -115,10 +117,10 @@ export default function FileList({ files, loading = false, showActions = true, o
       empty={
         <Box textAlign="center" color="inherit">
           <Box variant="strong" textAlign="center" color="inherit">
-            업로드된 파일이 없습니다
+            {t('loading_ec6095c4')}
           </Box>
           <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-            파일을 업로드하여 상담에 필요한 자료를 제공해 주세요.
+            {t('loading_3d28a7fc')}
           </Box>
         </Box>
       }

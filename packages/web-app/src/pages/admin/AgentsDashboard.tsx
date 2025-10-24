@@ -16,9 +16,11 @@ import {
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
 import type { BedrockAgent } from '../../types'
+import { useI18n } from '../../i18n'
 
 export default function AgentsDashboard() {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const [agents, setAgents] = useState<BedrockAgent[]>([])
   const [loading, setLoading] = useState(true)
   const [showMemoryModal, setShowMemoryModal] = useState(false)
@@ -43,19 +45,19 @@ export default function AgentsDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PREPARED':
-        return <Badge color="green">Prepared</Badge>
+        return <Badge color="green">{t('prepared')}</Badge>
       case 'PREPARING':
-        return <Badge color="blue">Preparing</Badge>
+        return <Badge color="blue">{t('preparing')}</Badge>
       case 'NOT_PREPARED':
-        return <Badge color="grey">Not Prepared</Badge>
+        return <Badge color="grey">{t('not_prepared')}</Badge>
       case 'CREATING':
-        return <Badge color="blue">Creating</Badge>
+        return <Badge color="blue">{t('creating')}</Badge>
       case 'UPDATING':
-        return <Badge color="blue">Updating</Badge>
+        return <Badge color="blue">{t('updating')}</Badge>
       case 'DELETING':
-        return <Badge color="red">Deleting</Badge>
+        return <Badge color="red">{t('deleting')}</Badge>
       case 'FAILED':
-        return <Badge color="red">Failed</Badge>
+        return <Badge color="red">{t('failed')}</Badge>
       default:
         return <Badge>{status}</Badge>
     }
@@ -87,12 +89,12 @@ export default function AgentsDashboard() {
   const confirmEnableMemory = async () => {
     try {
       await adminApi.enableAgentMemory(selectedAgentId, memoryStorageDays)
-      alert(`Memory가 성공적으로 활성화되었습니다 (${memoryStorageDays}일). 에이전트를 다시 준비해주세요.`)
+      alert(t('agents_memory_success', { days: memoryStorageDays }))
       setShowMemoryModal(false)
       loadAgents()
     } catch (err) {
       console.error('Failed to enable memory:', err)
-      alert('Memory 활성화에 실패했습니다.')
+      alert(t('agents_memory_failed'))
     }
   }
 
@@ -101,14 +103,14 @@ export default function AgentsDashboard() {
       <SpaceBetween size="l">
         <Header
           variant="h1"
-          description="고객과 상담을 담당하는 AI 에이전트(Amazon Bedrock Agents)를 관리합니다. 구성한 에이전트는 준비(Prepared)되어야 합니다."
+          description={t('agents_dashboard_description')}
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button
                 variant="normal"
                 onClick={() => navigate('/admin')}
               >
-                PreChat 세션
+                {t('admin_prechat_sessions')}
               </Button>
               <Button
                 variant="normal"
@@ -116,18 +118,18 @@ export default function AgentsDashboard() {
                 onClick={loadAgents}
                 loading={loading}
               >
-                새로고침
+                {t('agents_refresh')}
               </Button>
               <Button
                 variant="primary"
                 onClick={() => navigate('/admin/agents/create')}
               >
-                에이전트 생성
+                {t('admin_create_agent')}
               </Button>
             </SpaceBetween>
           }
         >
-          PreChat 에이전트 🤖
+          {t('admin_prechat_agents')}
         </Header>
 
         <div style={{ minHeight: '50vh' }}>
@@ -135,7 +137,7 @@ export default function AgentsDashboard() {
             columnDefinitions={[
               {
                 id: 'name',
-                header: '에이전트 이름',
+                header: t('admin_agent_name'),
                 cell: (item) => (
                   <Box>
                     <Box fontWeight="bold">{item.agentName}</Box>
@@ -147,7 +149,7 @@ export default function AgentsDashboard() {
               },
               {
                 id: 'model',
-                header: 'Foundation Model',
+                header: t('foundation_model'),
                 cell: (item) => {
                   // Extract model name from ARN
                   const modelArn = item.foundationModel
@@ -160,50 +162,50 @@ export default function AgentsDashboard() {
                   if (modelArn.includes('nova-micro')) return 'Nova Micro'
                   if (modelArn.includes('nova-lite')) return 'Nova Lite'
                   if (modelArn.includes('nova-pro')) return 'Nova Pro'
-                  return 'Unknown Model'
+                  return t('unknown')
                 }
               },
               {
                 id: 'status',
-                header: '상태',
+                header: t('status'),
                 cell: (item) => getStatusBadge(item.agentStatus)
               },
               {
                 id: 'memory',
-                header: 'Memory',
+                header: t('agents_memory'),
                 cell: (item) => (
                   <Box>
-                    <Box>{item.memoryStorageDays}일</Box>
+                    <Box>{item.memoryStorageDays}{t('agents_days')}</Box>
                     <Box fontSize="body-s" color="text-status-inactive">
-                      Storage Days
+                      {t('storage_days')}
                     </Box>
                   </Box>
                 )
               },
               {
                 id: 'actions',
-                header: '작업',
+                header: t('admin_actions'),
                 cell: (item) => (
                   <ButtonDropdown
                     expandToViewport
                     items={[
                       ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
-                        text: '에이전트 편집',
+                        text: t('agents_edit_agent'),
                         id: 'edit',
                         iconName: 'edit' as const
                       }] : []),
                       ...(item.agentStatus === 'NOT_PREPARED' ? [{
-                        text: '에이전트 준비',
+                        text: t('agents_prepare_agent'),
                         id: 'prepare',
                         iconName: 'status-positive' as const
                       }] : []),
                       ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
-                        text: 'Memory 활성화',
+                        text: t('agents_enable_memory'),
                         id: 'enable-memory',
                         iconName: 'refresh' as const
                       }] : []),
                       ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
-                        text: '에이전트 제거',
+                        text: t('agents_remove_agent'),
                         id: 'delete',
                         iconName: 'remove' as const
                       }] : [])
@@ -225,7 +227,7 @@ export default function AgentsDashboard() {
                       }
                     }}
                   >
-                    Actions
+                    {t('admin_actions')}
                   </ButtonDropdown>
                 )
               }
@@ -235,13 +237,13 @@ export default function AgentsDashboard() {
             empty={
               <Box textAlign="center" color="inherit">
                 <Box variant="strong" textAlign="center" color="inherit">
-                  No agents
+                  {t('no_agents')}
                 </Box>
                 <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                  No Bedrock agents found.
+                  {t('no_bedrock_agents_found')}
                 </Box>
                 <Button onClick={() => navigate('/admin/agents/create')}>
-                  에이전트 생성
+                  {t('admin_create_agent')}
                 </Button>
               </Box>
             }
@@ -251,15 +253,15 @@ export default function AgentsDashboard() {
         <Modal
           visible={showMemoryModal}
           onDismiss={() => setShowMemoryModal(false)}
-          header="Memory 설정"
+          header={t('agents_memory_settings')}
           footer={
             <Box float="right">
               <SpaceBetween direction="horizontal" size="xs">
                 <Button variant="link" onClick={() => setShowMemoryModal(false)}>
-                  취소
+                  {t('cancel')}
                 </Button>
                 <Button variant="primary" onClick={confirmEnableMemory}>
-                  Memory 활성화
+                  {t('agents_enable_memory')}
                 </Button>
               </SpaceBetween>
             </Box>
@@ -267,11 +269,11 @@ export default function AgentsDashboard() {
         >
           <SpaceBetween size="m">
             <Box>
-              에이전트의 Memory 기능을 활성화하여 대화 맥락을 유지할 수 있습니다.
+              {t('agents_memory_description')}
             </Box>
             <FormField 
-              label="Memory Storage Days" 
-              description="에이전트가 대화 맥락을 기억할 기간 (일 단위, 1-365일)"
+              label={t('memory_storage_days')} 
+              description={t('admin_memory_storage_description')}
             >
               <Input
                 type="number"

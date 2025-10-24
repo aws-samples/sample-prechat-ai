@@ -14,6 +14,7 @@ import {
 } from '@cloudscape-design/components'
 import { adminApi } from '../services/api'
 import { Discussion } from '../types'
+import { useI18n } from '../i18n'
 
 
 
@@ -22,6 +23,7 @@ interface DiscussionTabProps {
 }
 
 export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
+  const { t } = useI18n()
   const [discussions, setDiscussions] = useState<Discussion[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -47,7 +49,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
       const response = await adminApi.listDiscussions(sessionId)
       setDiscussions(response.discussions || [])
     } catch (err) {
-      setError('Failed to load discussions')
+      setError(t('discussion_failed_load'))
       console.error('Error loading discussions:', err)
     } finally {
       setLoading(false)
@@ -64,7 +66,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
       setNewComment('')
       await loadDiscussions()
     } catch (err) {
-      setError('Failed to create discussion')
+      setError(t('discussion_failed_create'))
       console.error('Error creating discussion:', err)
     } finally {
       setSubmitting(false)
@@ -91,7 +93,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
       setEditContent('')
       await loadDiscussions()
     } catch (err) {
-      setError('Failed to update discussion')
+      setError(t('discussion_failed_update'))
       console.error('Error updating discussion:', err)
     }
   }
@@ -111,7 +113,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
       setDeleteTargetId(null)
       await loadDiscussions()
     } catch (err) {
-      setError('Failed to delete discussion')
+      setError(t('discussion_failed_delete'))
       console.error('Error deleting discussion:', err)
     }
   }
@@ -141,8 +143,8 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
   return (
     <Container>
       <SpaceBetween size="l">
-        <Header variant="h3" description="팀원들과 어카운트 전략을 논의하세요">
-          Discussion
+        <Header variant="h3" description={t('discussion_description')}>
+          {t('discussion')}
         </Header>
 
         {error && (
@@ -154,11 +156,11 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
         {/* New Comment Form */}
         <Container>
           <SpaceBetween size="m">
-            <FormField label="새 댓글 작성">
+            <FormField label={t('discussion_new_comment')}>
               <Textarea
                 value={newComment}
                 onChange={({ detail }) => setNewComment(detail.value)}
-                placeholder="어카운트 전략에 대한 의견을 작성해주세요..."
+                placeholder={t('discussion_comment_placeholder')}
                 rows={3}
                 disabled={submitting}
               />
@@ -170,7 +172,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
                 disabled={!newComment.trim() || submitting}
                 loading={submitting}
               >
-                댓글 작성
+                {t('discussion_submit_comment')}
               </Button>
             </Box>
           </SpaceBetween>
@@ -179,7 +181,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
         {/* Discussion List */}
         {discussions.length === 0 ? (
           <Box textAlign="center" color="text-status-inactive" padding="xxl">
-            아직 작성된 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!
+            {t('discussion_no_comments')}
           </Box>
         ) : (
           <SpaceBetween size="m">
@@ -191,7 +193,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
                     <Box fontWeight="bold">{item.authorName}</Box>
                     <Badge color="grey">{item.authorEmail}</Badge>
                     {item.updatedAt && (
-                      <Badge color="blue">수정됨</Badge>
+                      <Badge color="blue">{t('discussion_edited')}</Badge>
                     )}
                   </SpaceBetween>
 
@@ -209,12 +211,12 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
                           onClick={() => handleSaveEdit(item.id)}
                           disabled={!editContent.trim()}
                         >
-                          저장
+                          {t('save')}
                         </Button>
                         <Button
                           onClick={handleCancelEdit}
                         >
-                          취소
+                          {t('cancel')}
                         </Button>
                       </SpaceBetween>
                     </SpaceBetween>
@@ -234,13 +236,13 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
                               variant="icon"
                               iconName="edit"
                               onClick={() => handleStartEdit(item)}
-                              ariaLabel="댓글 수정"
+                              ariaLabel={t('discussion_edit_comment')}
                             />
                             <Button
                               variant="icon"
                               iconName="remove"
                               onClick={() => handleDeleteClick(item.id)}
-                              ariaLabel="댓글 삭제"
+                              ariaLabel={t('discussion_delete_comment')}
                             />
                           </SpaceBetween>
                         )}
@@ -257,22 +259,22 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
         <Modal
           visible={deleteModalVisible}
           onDismiss={() => setDeleteModalVisible(false)}
-          header="댓글 삭제"
+          header={t('discussion_delete_comment')}
           footer={
             <Box float="right">
               <SpaceBetween direction="horizontal" size="xs">
                 <Button onClick={() => setDeleteModalVisible(false)}>
-                  취소
+                  {t('cancel')}
                 </Button>
                 <Button variant="primary" onClick={handleConfirmDelete}>
-                  삭제
+                  {t('delete')}
                 </Button>
               </SpaceBetween>
             </Box>
           }
         >
           <Box>
-            이 댓글을 삭제하시겠습니까? 삭제된 댓글은 복구할 수 없습니다.
+            {t('discussion_delete_confirmation')}
           </Box>
         </Modal>
       </SpaceBetween>
