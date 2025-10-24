@@ -10,14 +10,16 @@ import {
   Box,
   ButtonDropdown,
   Toggle,
-  FormField
+  FormField,
+  Select
 } from '@cloudscape-design/components'
-import { adminApi } from '../../services/api'
+import { adminApi, campaignApi } from '../../services/api'
 import { StatusBadge, BedrockQuotaNotification } from '../../components'
 import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
 import { authService } from '../../services/auth'
 import { formatPurposesForDisplay } from '../../components/ConsultationPurposeSelector'
 import { useI18n } from '../../i18n'
+import type { Campaign } from '../../types'
 
 interface SessionSummary {
   sessionId: string
@@ -31,6 +33,8 @@ interface SessionSummary {
   completedAt?: string
   salesRepEmail: string
   agentId: string
+  campaignId?: string
+  campaignName?: string
 }
 
 export default function AdminDashboard() {
@@ -42,10 +46,14 @@ export default function AdminDashboard() {
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('')
   const [sortingColumn, setSortingColumn] = useState<any>({})
   const [sortingDescending, setSortingDescending] = useState(false)
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [selectedCampaign, setSelectedCampaign] = useState<{ label: string; value: string } | null>(null)
+  const [campaignsLoading, setCampaignsLoading] = useState(false)
 
   useEffect(() => {
     loadCurrentUser()
     loadSessions()
+    loadCampaigns()
   }, [])
 
   const loadCurrentUser = async () => {
@@ -65,6 +73,18 @@ export default function AdminDashboard() {
       console.error('Failed to load sessions:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadCampaigns = async () => {
+    setCampaignsLoading(true)
+    try {
+      const response = await campaignApi.listCampaigns()
+      setCampaigns(response.campaigns || [])
+    } catch (err) {
+      console.error('Failed to load campaigns:', err)
+    } finally {
+      setCampaignsLoading(false)
     }
   }
 
@@ -103,9 +123,18 @@ export default function AdminDashboard() {
   }
 
   // Filter and sort sessions
-  const filteredSessions = showMySessionsOnly 
+  let filteredSessions = showMySessionsOnly 
     ? sessions.filter(session => session.salesRepEmail === currentUserEmail)
     : sessions
+
+  // Apply campaign filter
+  if (selectedCampaign && selectedCampaign.value !== 'all') {
+    if (selectedCampaign.value === 'none') {
+      filteredSessions = filteredSessions.filter(session => !session.campaignId)
+    } else {
+      filteredSessions = filteredSessions.filter(session => session.campaignId === selectedCampaign.value)
+    }
+  }
 
   // Sort sessions based on current sorting state
   const sortedSessions = [...filteredSessions].sort((a, b) => {
@@ -135,6 +164,10 @@ export default function AdminDashboard() {
       case 'agent':
         aValue = (a.agentId || '').toLowerCase()
         bValue = (b.agentId || '').toLowerCase()
+        break
+      case 'campaign':
+        aValue = (a.campaignName || '').toLowerCase()
+        bValue = (b.campaignName || '').toLowerCase()
         break
       default:
         return 0
@@ -172,17 +205,39 @@ export default function AdminDashboard() {
           {t('admin_prechat_sessions')}
         </Header>
 
-        <Box>
-          <FormField
-            label=""
-            description={t('admin_show_my_sessions_only')}
-          >
-            <Toggle
-              checked={showMySessionsOnly}
-              onChange={({ detail }) => setShowMySessionsOnly(detail.checked)}
-            />
-          </FormField>
-        </Box>
+        <SpaceBetween direction="horizontal" size="l">          
+          <Box>
+            <FormField
+              label={t('campaign_association')}
+            >
+              <Select
+                selectedOption={selectedCampaign}
+                onChange={({ detail }) => setSelectedCampaign(detail.selectedOption as { label: string; value: string } | null)}
+                options={[
+                  { label: t('all_campaigns'), value: 'all' },
+                  { label: t('no_campaign'), value: 'none' },
+                  ...campaigns.map(campaign => ({
+                    label: campaign.campaignName,
+                    value: campaign.campaignId
+                  }))
+                ]}
+                loadingText={t('loading_campaigns')}
+                statusType={campaignsLoading ? 'loading' : 'finished'}
+              />
+            </FormField>
+          </Box>
+          <Box>
+            <FormField
+              label=""
+              description={t('admin_show_my_sessions_only')}
+            >
+              <Toggle
+                checked={showMySessionsOnly}
+                onChange={({ detail }) => setShowMySessionsOnly(detail.checked)}
+              />
+            </FormField>
+          </Box>
+        </SpaceBetween>
 
         <div style={{ minHeight: '50vh' }}>
           <Table
@@ -201,6 +256,25 @@ export default function AdminDashboard() {
                       <Box fontSize="body-s" color="text-status-info" margin={{ top: 'xxs' }}>
                         {t('admin_consultation_purpose')}: {formatPurposesForDisplay(item.consultationPurposes)}
                       </Box>
+                    )}
+                    {item.campaignName && (
+                      <Box fontSize="body-s" color="text-status-success" margin={{ top: 'xxs' }}>
+                        {t('campaign_association')}: {item.campaignName}
+                      </Box>
+                    )}
+                  </Box>
+                )
+              },
+              {
+                id: 'campaign',
+                header: t('campaign_association'),
+                sortingField: 'campaign',
+                cell: (item) => (
+                  <Box fontSize="body-s">
+                    {item.campaignName ? (
+                      <Box color="text-status-success">{item.campaignName}</Box>
+                    ) : (
+                      <Box color="text-status-inactive">{t('no_campaign')}</Box>
                     )}
                   </Box>
                 )

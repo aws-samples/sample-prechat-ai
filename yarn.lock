@@ -206,9 +206,9 @@
     "@babel/helper-validator-identifier" "^7.27.1"
 
 "@cloudscape-design/chat-components@^1.0.0":
-  version "1.0.69"
-  resolved "https://registry.npmjs.org/@cloudscape-design/chat-components/-/chat-components-1.0.69.tgz"
-  integrity sha512-M0bKj0EdAvMprLuyhKfeYT17CY3if4NNjG865u0CJj6pvP/j7KJu3z3724bfXLti9/aWZC7z3t6bYST7aFqCWg==
+  version "1.0.70"
+  resolved "https://registry.npmjs.org/@cloudscape-design/chat-components/-/chat-components-1.0.70.tgz#9d8354c4eb36e3fdadc2c087bec0d4667b8f9ac4"
+  integrity sha512-YpGLMTta3V/+77pw93R9e3pAAXflzTHOkwco3I/ksD3PoTUqdR5iTFnQ3KufFTN2x2MYMXekJqx/W5v5fzpjLQ==
   dependencies:
     "@cloudscape-design/component-toolkit" "^1.0.0-beta"
     "@cloudscape-design/test-utils-core" "^1.0.0"
@@ -219,12 +219,11 @@
   resolved "https://registry.npmjs.org/@cloudscape-design/collection-hooks/-/collection-hooks-1.0.74.tgz"
   integrity sha512-yAcD7vjFqbwqMCamUcKRXp403u8RcmC9izyPEYiWod9elt7x0GT1ypPyo9ZRyQuFrBsv2nwubBUrChcYaWooZw==
 
-"@cloudscape-design/component-toolkit@^1.0.0-beta":
-  version "1.0.0-beta.110"
-  resolved "https://registry.npmjs.org/@cloudscape-design/component-toolkit/-/component-toolkit-1.0.0-beta.110.tgz"
-  integrity sha512-aKIFCci+DtYN5mKGQ9kdoScVY9xMPFD8LNxKGTmEhmNkySBlKg9yyo4UlSabCAfonha8hDLoRjuBHpIJ1esd3Q==
+"@cloudscape-design/component-toolkit@1.0.0-beta.124", "@cloudscape-design/component-toolkit@^1.0.0-beta", "@cloudscape-design/component-toolkit@^1.0.0-beta.124":
+  version "1.0.0-beta.124"
+  resolved "https://registry.npmjs.org/@cloudscape-design/component-toolkit/-/component-toolkit-1.0.0-beta.124.tgz#9e3f5893d0dc058d6d59490c0312258e55760128"
+  integrity sha512-QB6IK9yubn+5XDKXvWJKmyZRd/ZuZsfTK/EpU6usgTVqiYcdjQ4ojhTir6n9KC8Ha/IvRM7D4E8br2Nw8C2cgw==
   dependencies:
-    "@juggle/resize-observer" "^3.3.1"
     tslib "^2.3.1"
 
 "@cloudscape-design/components@^3.0.0":

@@ -272,3 +272,64 @@ export const adminApi = {
     return response.data
   }
 }
+
+export const campaignApi = {
+  listCampaigns: async () => {
+    const response = await api.get('/admin/campaigns')
+    return response.data
+  },
+
+  createCampaign: async (data: {
+    campaignName: string
+    campaignCode: string
+    description: string
+    startDate: string
+    endDate: string
+    ownerId: string
+    ownerEmail: string
+    ownerName: string
+  }) => {
+    const response = await api.post('/admin/campaigns', data)
+    return response.data
+  },
+
+  getCampaign: async (campaignId: string) => {
+    const response = await api.get(`/admin/campaigns/${campaignId}`)
+    return response.data
+  },
+
+  updateCampaign: async (campaignId: string, data: {
+    campaignName?: string
+    campaignCode?: string
+    description?: string
+    startDate?: string
+    endDate?: string
+    ownerId?: string
+    ownerEmail?: string
+    ownerName?: string
+    status?: 'active' | 'completed' | 'paused' | 'cancelled'
+  }) => {
+    const response = await api.put(`/admin/campaigns/${campaignId}`, data)
+    return response.data
+  },
+
+  deleteCampaign: async (campaignId: string) => {
+    const response = await api.delete(`/admin/campaigns/${campaignId}`)
+    return response.data
+  },
+
+  getCampaignSessions: async (campaignId: string) => {
+    const response = await api.get(`/admin/campaigns/${campaignId}/sessions`)
+    return response.data
+  },
+
+  getCampaignAnalytics: async (campaignId: string) => {
+    const response = await api.get(`/admin/campaigns/${campaignId}/analytics`)
+    return response.data
+  },
+
+  associateSessionWithCampaign: async (sessionId: string, campaignId: string) => {
+    const response = await api.put(`/admin/sessions/${sessionId}/campaign`, { campaignId })
+    return response.data
+  }
+}

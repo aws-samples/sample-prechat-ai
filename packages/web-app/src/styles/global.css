@@ -240,6 +240,100 @@ p {
   padding-left: 0 !important;
 }
 
+/* Admin Layout Background Transparency */
+.awsui-app-layout {
+  background: transparent !important;
+}
+
+.awsui-app-layout-content {
+  background: transparent !important;
+}
+
+.awsui-app-layout-main {
+  background: transparent !important;
+}
+
+/* Side Navigation Glass Effect */
+.awsui-side-navigation {
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(15px) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.awsui-side-navigation-header {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.awsui-side-navigation-header a {
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+}
+
+.awsui-side-navigation-item {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+.awsui-side-navigation-item:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.awsui-side-navigation-item-active {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-left: 3px solid var(--amazon-orange) !important;
+}
+
+.awsui-side-navigation-section-header {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.awsui-side-navigation-link {
+  color: var(--text-primary) !important;
+}
+
+.awsui-side-navigation-link:hover {
+  color: var(--text-primary) !important;
+}
+
+/* Target the specific CloudScape layout selector that causes white background */
+[class*="awsui_layout_"]:not(#\9),
+div[class*="awsui_layout_"]:not(#\9) {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* More aggressive targeting for any CloudScape layout with white background */
+[class*="awsui_layout_"] {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Target any element with the specific CloudScape layout pattern */
+div[class*="awsui"][class*="layout"] {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Use CSS attribute selector to target any class containing "awsui" and "layout" */
+[class*="awsui"][class*="layout"]:not(#\9) {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Ensure containers in admin pages have glass effect */
+.awsui-container {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
 /* File Upload Modal Z-Index Fix */
 [data-awsui-polaris-modal] {
   z-index: 9999 !important;

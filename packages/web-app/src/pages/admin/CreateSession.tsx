@@ -14,12 +14,12 @@ import {
   Box,
   Table
 } from '@cloudscape-design/components'
-import { adminApi } from '../../services/api'
+import { adminApi, campaignApi } from '../../services/api'
 import { authService } from '../../services/auth'
 import { StatusBadge } from '../../components'
 import { extractModelName } from '../../constants'
 import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
-import type { BedrockAgent } from '../../types'
+import type { BedrockAgent, Campaign } from '../../types'
 import { useI18n } from '../../i18n'
 
 export default function CreateSession() {
@@ -28,9 +28,11 @@ export default function CreateSession() {
   const [loading, setLoading] = useState(false)
   const [loadingAgents, setLoadingAgents] = useState(true)
   const [loadingUser, setLoadingUser] = useState(true)
+  const [loadingCampaigns, setLoadingCampaigns] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [agents, setAgents] = useState<BedrockAgent[]>([])
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [formData, setFormData] = useState({
     customerName: '',
     customerEmail: '',
@@ -38,13 +40,15 @@ export default function CreateSession() {
     customerTitle: '',
     salesRepEmail: '',
     agentId: '',
-    pinNumber: ''
+    pinNumber: '',
+    campaignId: ''
   })
   const [showPin, setShowPin] = useState(false)
 
   useEffect(() => {
     loadAgents()
     loadCurrentUser()
+    loadCampaigns()
   }, [])
 
   const loadCurrentUser = async () => {
@@ -70,6 +74,17 @@ export default function CreateSession() {
     }
   }
 
+  const loadCampaigns = async () => {
+    try {
+      const response = await campaignApi.listCampaigns()
+      setCampaigns(response.campaigns || [])
+    } catch (err) {
+      console.error('Failed to load campaigns:', err)
+    } finally {
+      setLoadingCampaigns(false)
+    }
+  }
+
   const generateRandomPin = () => {
     const pin = Math.floor(100000 + Math.random() * 900000).toString()
     setFormData(prev => ({ ...prev, pinNumber: pin }))
@@ -82,6 +97,17 @@ export default function CreateSession() {
 
     try {
       const response = await adminApi.createSession(formData)
+      
+      // Associate session with campaign if selected
+      if (formData.campaignId) {
+        try {
+          await campaignApi.associateSessionWithCampaign(response.sessionId, formData.campaignId)
+        } catch (campaignErr) {
+          console.error('Failed to associate session with campaign:', campaignErr)
+          // Continue with session creation even if campaign association fails
+        }
+      }
+      
       const fullUrl = `${window.location.origin}/customer/${response.sessionId}`
       setSuccess(t('admin_session_created_success', { url: fullUrl, pin: formData.pinNumber }))
       
@@ -288,6 +314,35 @@ export default function CreateSession() {
                 }
                 placeholder={t('select_an_agent')}
                 empty={t('admin_no_prepared_agents')}
+              />
+            </FormField>
+
+            <FormField
+              label={t('campaign_association')}
+              description={t('select_campaign')}
+              stretch
+            >
+              <Select
+                selectedOption={
+                  formData.campaignId ?
+                    { label: campaigns.find(c => c.campaignId === formData.campaignId)?.campaignName || '', value: formData.campaignId } : null
+                }
+                onChange={({ detail }) =>
+                  updateFormData('campaignId', detail.selectedOption?.value || '')
+                }
+                options={[
+                  { label: t('no_campaign'), value: '' },
+                  ...campaigns
+                    .filter(campaign => campaign.status === 'active')
+                    .map(campaign => ({
+                      label: campaign.campaignName,
+                      value: campaign.campaignId
+                    }))
+                ]}
+                placeholder={t('select_campaign')}
+                empty={t('no_campaigns_found')}
+                loadingText={t('loading_campaigns')}
+                statusType={loadingCampaigns ? 'loading' : 'finished'}
               />
             </FormField>
 

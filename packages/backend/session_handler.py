@@ -19,6 +19,7 @@ def create_session(event, context):
     sales_rep_email = body.get('salesRepEmail', '')
     agent_id = body.get('agentId', '')
     pin_number = body.get('pinNumber', '')
+    campaign_id = body.get('campaignId', '')  # Optional campaign association
     
     if not all([customer_name, customer_email, sales_rep_email, agent_id, pin_number]):
         return lambda_response(400, {'error': 'Missing required fields'})
@@ -56,16 +57,51 @@ def create_session(event, context):
         'GSI1SK': f'SESSION#{timestamp}'
     }
     
+    # Add campaign association if provided
+    if campaign_id:
+        try:
+            sessions_table = dynamodb.Table(SESSIONS_TABLE)
+            # Validate campaign exists
+            campaign_resp = sessions_table.get_item(
+                Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
+            )
+            
+            if 'Item' in campaign_resp:
+                campaign = campaign_resp['Item']
+                session_record['campaignId'] = campaign_id
+                session_record['campaignName'] = campaign['campaignName']
+                session_record['GSI2PK'] = f'CAMPAIGN#{campaign_id}'
+                session_record['GSI2SK'] = f'SESSION#{timestamp}'
+            else:
+                return lambda_response(400, {'error': 'Invalid campaign ID'})
+        except Exception as e:
+            print(f"Error validating campaign: {str(e)}")
+            return lambda_response(500, {'error': 'Failed to validate campaign'})
+    
     try:
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
         sessions_table.put_item(Item=session_record)
         
-        return lambda_response(200, {
+        # Update campaign session count if associated
+        if campaign_id:
+            try:
+                from campaign_analytics import update_campaign_session_counts
+                update_campaign_session_counts(campaign_id)
+            except Exception as e:
+                print(f"Warning: Failed to update campaign session counts: {str(e)}")
+        
+        response_data = {
             'sessionId': session_id,
             'sessionUrl': f'/chat/{session_id}',
             'csrfToken': csrf_token,
             'createdAt': timestamp
-        })
+        }
+        
+        if campaign_id:
+            response_data['campaignId'] = campaign_id
+            response_data['campaignName'] = session_record.get('campaignName', '')
+        
+        return lambda_response(200, response_data)
     except Exception as e:
         return lambda_response(500, {'error': 'Failed to create session'})
 

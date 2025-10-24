@@ -495,6 +495,10 @@ Resources:
           AttributeType: S
         - AttributeName: GSI1SK
           AttributeType: S
+        - AttributeName: GSI2PK
+          AttributeType: S
+        - AttributeName: GSI2SK
+          AttributeType: S
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -506,6 +510,14 @@ Resources:
             - AttributeName: GSI1PK
               KeyType: HASH
             - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GSI2
+          KeySchema:
+            - AttributeName: GSI2PK
+              KeyType: HASH
+            - AttributeName: GSI2SK
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -1405,6 +1417,200 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/chat/session/{sessionId}/feedback
             Method: post
+
+  # Campaign Management Functions
+  CreateCampaignFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: campaign_handler.create_campaign
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:AdminGetUser
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        CreateCampaign:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/campaigns
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  ListCampaignsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: campaign_handler.list_campaigns
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        ListCampaigns:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/campaigns
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetCampaignFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: campaign_handler.get_campaign
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetCampaign:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/campaigns/{campaignId}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  UpdateCampaignFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: campaign_handler.update_campaign
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:AdminGetUser
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        UpdateCampaign:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/campaigns/{campaignId}
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  DeleteCampaignFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: campaign_handler.delete_campaign
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        DeleteCampaign:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/campaigns/{campaignId}
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetCampaignSessionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: campaign_handler.get_campaign_sessions
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetCampaignSessions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/campaigns/{campaignId}/sessions
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  AssociateSessionWithCampaignFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: campaign_handler.associate_session_with_campaign
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        AssociateSessionWithCampaign:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/campaign
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  # Campaign Analytics Functions
+  GetCampaignAnalyticsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: campaign_analytics.get_campaign_analytics
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+      Events:
+        GetCampaignAnalytics:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/campaigns/{campaignId}/analytics
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetCampaignsSummaryAnalyticsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: campaign_analytics.get_campaigns_summary_analytics
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetCampaignsSummaryAnalytics:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/campaigns/analytics/summary
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetCampaignComparisonAnalyticsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: campaign_analytics.get_campaign_comparison_analytics
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetCampaignComparisonAnalytics:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/campaigns/analytics/comparison
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   # Update Consultation Purposes Function
   UpdateConsultationPurposesFunction:

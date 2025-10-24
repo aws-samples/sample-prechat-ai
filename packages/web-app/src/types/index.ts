@@ -57,6 +57,47 @@ export interface Session {
   createdAt?: string;
   completedAt?: string;
   customerFeedback?: CustomerFeedback;
+  // Campaign association fields
+  campaignId?: string;
+  campaignName?: string;
+}
+
+export interface Campaign {
+  campaignId: string;
+  campaignName: string;
+  campaignCode: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  ownerId: string; // Cognito User ID
+  ownerEmail: string;
+  ownerName: string;
+  status: 'active' | 'completed' | 'paused' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+  sessionCount: number;
+  completedSessionCount: number;
+}
+
+export interface CampaignAnalytics {
+  campaignId: string;
+  totalSessions: number;
+  activeSessions: number;
+  completedSessions: number;
+  completionRate: number;
+  averageSessionDuration: number;
+  topConsultationPurposes: Array<{
+    purpose: string;
+    count: number;
+  }>;
+  sessionsByDate: Array<{
+    date: string;
+    count: number;
+  }>;
+  customerCompanies: Array<{
+    company: string;
+    sessionCount: number;
+  }>;
 }
 
 export interface ChatMessageRequest {
@@ -133,6 +174,57 @@ export interface AnalysisResults {
 export interface AnalysisRequest {
   sessionId: string;
   modelId: string;
+}
+
+// Campaign API Types
+export interface CreateCampaignRequest {
+  campaignName: string;
+  campaignCode: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  ownerId: string;
+  ownerEmail: string;
+  ownerName: string;
+}
+
+export interface UpdateCampaignRequest {
+  campaignName?: string;
+  campaignCode?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  ownerId?: string;
+  ownerEmail?: string;
+  ownerName?: string;
+  status?: 'active' | 'completed' | 'paused' | 'cancelled';
+}
+
+export interface CampaignListResponse {
+  campaigns: Campaign[];
+  nextToken?: string;
+}
+
+export interface SessionSummary {
+  sessionId: string;
+  status: 'active' | 'completed' | 'expired' | 'inactive';
+  customerInfo: {
+    name: string;
+    email: string;
+    company: string;
+  };
+  createdAt: string;
+  completedAt?: string;
+  consultationPurposes?: string;
+}
+
+export interface CampaignSessionsResponse {
+  sessions: SessionSummary[];
+  nextToken?: string;
+}
+
+export interface AssociateCampaignRequest {
+  campaignId: string;
 }
 
 

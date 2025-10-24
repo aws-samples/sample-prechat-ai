@@ -1,0 +1,368 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  Container,
+  Header,
+  Table,
+  Button,
+  SpaceBetween,
+  Box,
+  ButtonDropdown,
+  Badge,
+  TextFilter,
+  Pagination,
+  CollectionPreferences
+} from '@cloudscape-design/components'
+import { useI18n } from '../../i18n'
+import { Campaign } from '../../types'
+
+// Mock API function - will be replaced with actual API call
+const mockCampaignApi = {
+  listCampaigns: async (): Promise<{ campaigns: Campaign[] }> => {
+    // Mock data for development
+    return {
+      campaigns: [
+        {
+          campaignId: 'camp-001',
+          campaignName: 'Q1 2025 Enterprise Migration',
+          campaignCode: 'Q1-ENT-MIG',
+          description: 'Enterprise customer migration campaign for Q1 2025',
+          startDate: '2025-01-01',
+          endDate: '2025-03-31',
+          ownerId: 'user-001',
+          ownerEmail: 'john.doe@company.com',
+          ownerName: 'John Doe',
+          status: 'active',
+          createdAt: '2024-12-01T00:00:00Z',
+          updatedAt: '2024-12-01T00:00:00Z',
+          sessionCount: 15,
+          completedSessionCount: 8
+        },
+        {
+          campaignId: 'camp-002',
+          campaignName: 'SMB Cost Optimization',
+          campaignCode: 'SMB-COST-OPT',
+          description: 'Small and medium business cost optimization initiative',
+          startDate: '2024-11-01',
+          endDate: '2025-01-31',
+          ownerId: 'user-002',
+          ownerEmail: 'jane.smith@company.com',
+          ownerName: 'Jane Smith',
+          status: 'completed',
+          createdAt: '2024-10-15T00:00:00Z',
+          updatedAt: '2024-12-01T00:00:00Z',
+          sessionCount: 25,
+          completedSessionCount: 25
+        }
+      ]
+    }
+  }
+}
+
+interface CampaignTableItem extends Campaign {
+  completionRate: number
+}
+
+export default function CampaignDashboard() {
+  const navigate = useNavigate()
+  const { t } = useI18n()
+  const [campaigns, setCampaigns] = useState<CampaignTableItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedItems, setSelectedItems] = useState<CampaignTableItem[]>([])
+  const [filteringText, setFilteringText] = useState('')
+  const [currentPageIndex, setCurrentPageIndex] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [sortingColumn, setSortingColumn] = useState<any>({})
+  const [sortingDescending, setSortingDescending] = useState(false)
+
+  useEffect(() => {
+    loadCampaigns()
+  }, [])
+
+  const loadCampaigns = async () => {
+    try {
+      setLoading(true)
+      const response = await mockCampaignApi.listCampaigns()
+      const campaignsWithRate = response.campaigns.map(campaign => ({
+        ...campaign,
+        completionRate: campaign.sessionCount > 0 
+          ? Math.round((campaign.completedSessionCount / campaign.sessionCount) * 100)
+          : 0
+      }))
+      setCampaigns(campaignsWithRate)
+    } catch (err) {
+      console.error('Failed to load campaigns:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (campaignId: string) => {
+    try {
+      // TODO: Implement actual delete API call
+      console.log('Delete campaign:', campaignId)
+      loadCampaigns()
+    } catch (err) {
+      console.error('Failed to delete campaign:', err)
+    }
+  }
+
+  const getStatusBadge = (status: Campaign['status']) => {
+    const statusConfig = {
+      active: { type: 'green' as const, text: t('campaign_status_active') },
+      completed: { type: 'blue' as const, text: t('campaign_status_completed') },
+      paused: { type: 'grey' as const, text: t('campaign_status_paused') },
+      cancelled: { type: 'red' as const, text: t('campaign_status_cancelled') }
+    }
+    
+    const config = statusConfig[status]
+    return <Badge color={config.type}>{config.text}</Badge>
+  }
+
+  // Filter campaigns based on search text
+  const filteredCampaigns = campaigns.filter(campaign =>
+    campaign.campaignName.toLowerCase().includes(filteringText.toLowerCase()) ||
+    campaign.campaignCode.toLowerCase().includes(filteringText.toLowerCase()) ||
+    campaign.ownerName.toLowerCase().includes(filteringText.toLowerCase()) ||
+    campaign.description.toLowerCase().includes(filteringText.toLowerCase())
+  )
+
+  // Sort campaigns
+  const sortedCampaigns = [...filteredCampaigns].sort((a, b) => {
+    if (!sortingColumn.sortingField) return 0
+    
+    let aValue: any, bValue: any
+    
+    switch (sortingColumn.sortingField) {
+      case 'campaignName':
+        aValue = a.campaignName.toLowerCase()
+        bValue = b.campaignName.toLowerCase()
+        break
+      case 'status':
+        const statusPriority = { active: 1, paused: 2, completed: 3, cancelled: 4 }
+        aValue = statusPriority[a.status] || 5
+        bValue = statusPriority[b.status] || 5
+        break
+      case 'startDate':
+        aValue = new Date(a.startDate).getTime()
+        bValue = new Date(b.startDate).getTime()
+        break
+      case 'endDate':
+        aValue = new Date(a.endDate).getTime()
+        bValue = new Date(b.endDate).getTime()
+        break
+      case 'sessionCount':
+        aValue = a.sessionCount
+        bValue = b.sessionCount
+        break
+      case 'completionRate':
+        aValue = a.completionRate
+        bValue = b.completionRate
+        break
+      default:
+        return 0
+    }
+    
+    if (aValue < bValue) return sortingDescending ? 1 : -1
+    if (aValue > bValue) return sortingDescending ? -1 : 1
+    return 0
+  })
+
+  // Paginate campaigns
+  const startIndex = (currentPageIndex - 1) * pageSize
+  const paginatedCampaigns = sortedCampaigns.slice(startIndex, startIndex + pageSize)
+
+  return (
+    <Container>
+      <SpaceBetween size="l">
+        <Header
+          variant="h1"
+          description={t('campaign_list_title')}
+          actions={
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                variant="primary"
+                onClick={() => navigate('/admin/campaigns/create')}
+              >
+                {t('create_campaign')}
+              </Button>
+            </SpaceBetween>
+          }
+        >
+          {t('campaigns')}
+        </Header>
+
+        <Table
+          columnDefinitions={[
+            {
+              id: 'campaignName',
+              header: t('campaign_name'),
+              sortingField: 'campaignName',
+              cell: (item) => (
+                <Box>
+                  <Box fontWeight="bold">{item.campaignName}</Box>
+                  <Box fontSize="body-s" color="text-status-inactive">
+                    {item.campaignCode}
+                  </Box>
+                  <Box fontSize="body-s" color="text-status-info" margin={{ top: 'xxs' }}>
+                    {item.description}
+                  </Box>
+                </Box>
+              )
+            },
+            {
+              id: 'owner',
+              header: t('campaign_owner'),
+              cell: (item) => (
+                <Box>
+                  <Box fontWeight="bold">{item.ownerName}</Box>
+                  <Box fontSize="body-s" color="text-status-inactive">
+                    {item.ownerEmail}
+                  </Box>
+                </Box>
+              )
+            },
+            {
+              id: 'status',
+              header: t('campaign_status'),
+              sortingField: 'status',
+              cell: (item) => getStatusBadge(item.status)
+            },
+            {
+              id: 'dates',
+              header: 'Period',
+              cell: (item) => (
+                <Box>
+                  <Box fontSize="body-s">
+                    {t('start_date_label')}: {new Date(item.startDate).toLocaleDateString()}
+                  </Box>
+                  <Box fontSize="body-s">
+                    {t('end_date_label')}: {new Date(item.endDate).toLocaleDateString()}
+                  </Box>
+                </Box>
+              )
+            },
+            {
+              id: 'sessions',
+              header: t('campaign_sessions'),
+              sortingField: 'sessionCount',
+              cell: (item) => (
+                <Box>
+                  <Box fontWeight="bold">{item.sessionCount} {t('total_sessions')}</Box>
+                  <Box fontSize="body-s" color="text-status-info">
+                    {item.completedSessionCount} {t('completed_sessions')} ({item.completionRate}%)
+                  </Box>
+                </Box>
+              )
+            },
+            {
+              id: 'actions',
+              header: t('admin_actions'),
+              cell: (item) => (
+                <ButtonDropdown
+                  expandToViewport
+                  items={[
+                    {
+                      text: t('campaign_details'),
+                      id: 'view',
+                      iconName: 'external'
+                    },
+                    {
+                      text: t('edit_campaign'),
+                      id: 'edit',
+                      iconName: 'edit'
+                    },
+                    {
+                      text: t('view_sessions'),
+                      id: 'sessions',
+                      iconName: 'view-horizontal'
+                    },
+                    {
+                      text: t('delete_campaign'),
+                      id: 'delete',
+                      iconName: 'remove'
+                    }
+                  ]}
+                  onItemClick={({ detail }) => {
+                    switch (detail.id) {
+                      case 'view':
+                        navigate(`/admin/campaigns/${item.campaignId}`)
+                        break
+                      case 'edit':
+                        navigate(`/admin/campaigns/${item.campaignId}/edit`)
+                        break
+                      case 'sessions':
+                        navigate(`/admin/campaigns/${item.campaignId}/sessions`)
+                        break
+                      case 'delete':
+                        handleDelete(item.campaignId)
+                        break
+                    }
+                  }}
+                >
+                  {t('admin_actions')}
+                </ButtonDropdown>
+              )
+            }
+          ]}
+          items={paginatedCampaigns}
+          loading={loading}
+          loadingText={t('loading_campaigns')}
+          selectedItems={selectedItems}
+          onSelectionChange={({ detail }) => setSelectedItems(detail.selectedItems)}
+          sortingColumn={sortingColumn}
+          sortingDescending={sortingDescending}
+          onSortingChange={({ detail }) => {
+            setSortingColumn(detail.sortingColumn)
+            setSortingDescending(detail.isDescending || false)
+          }}
+          filter={
+            <TextFilter
+              filteringText={filteringText}
+              onChange={({ detail }) => setFilteringText(detail.filteringText)}
+              filteringPlaceholder="Search campaigns..."
+            />
+          }
+          pagination={
+            <Pagination
+              currentPageIndex={currentPageIndex}
+              pagesCount={Math.ceil(filteredCampaigns.length / pageSize)}
+              onChange={({ detail }) => setCurrentPageIndex(detail.currentPageIndex)}
+            />
+          }
+          preferences={
+            <CollectionPreferences
+              title="Preferences"
+              confirmLabel="Confirm"
+              cancelLabel="Cancel"
+              pageSizePreference={{
+                title: "Page size",
+                options: [
+                  { value: 10, label: "10 campaigns" },
+                  { value: 20, label: "20 campaigns" },
+                  { value: 50, label: "50 campaigns" }
+                ]
+              }}
+              onConfirm={({ detail }) => {
+                setPageSize(detail.pageSize || 10)
+              }}
+            />
+          }
+          empty={
+            <Box textAlign="center" color="inherit">
+              <Box variant="strong" textAlign="center" color="inherit">
+                {t('no_campaigns_found')}
+              </Box>
+              <Box variant="p" padding={{ bottom: 's' }} color="inherit">
+                {t('no_campaigns_found')}
+              </Box>
+              <Button onClick={() => navigate('/admin/campaigns/create')}>
+                {t('create_campaign')}
+              </Button>
+            </Box>
+          }
+        />
+      </SpaceBetween>
+    </Container>
+  )
+}

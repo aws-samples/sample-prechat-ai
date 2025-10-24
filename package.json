@@ -29,5 +29,11 @@
   "engines": {
     "node": ">=20.18.1",
     "yarn": ">=1.22.22"
+  },
+  "dependencies": {
+    "@cloudscape-design/component-toolkit": "^1.0.0-beta.124"
+  },
+  "resolutions": {
+    "@cloudscape-design/component-toolkit": "1.0.0-beta.124"
   }
 }

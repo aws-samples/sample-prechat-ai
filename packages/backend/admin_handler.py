@@ -44,9 +44,12 @@ def clean_llm_response(content):
 
 def list_sessions(event, context):
     try:
-        sales_rep_id = event['queryStringParameters'].get('salesRepId') if event.get('queryStringParameters') else None
+        query_params = event.get('queryStringParameters') or {}
+        sales_rep_id = query_params.get('salesRepId')
+        campaign_id = query_params.get('campaignId')
     except (KeyError, TypeError, AttributeError):
         sales_rep_id = None
+        campaign_id = None
     
     try:
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
@@ -62,16 +65,27 @@ def list_sessions(event, context):
         else:
             # Scan all sessions
             response = sessions_table.scan(
-                FilterExpression='SK = :sk',
-                ExpressionAttributeValues={':sk': 'METADATA'}
+                FilterExpression='SK = :sk AND begins_with(PK, :pk_prefix)',
+                ExpressionAttributeValues={
+                    ':sk': 'METADATA',
+                    ':pk_prefix': 'SESSION#'
+                }
             )
         
         sessions = []
         for item in response.get('Items', []):
+            # Skip non-session items (like campaigns)
+            if not item['PK'].startswith('SESSION#'):
+                continue
+                
+            # Filter by campaign if specified
+            if campaign_id and item.get('campaignId') != campaign_id:
+                continue
+            
             # Extract sessionId from PK (format: SESSION#sessionId)
             session_id = item.get('sessionId') or item['PK'].replace('SESSION#', '')
             
-            sessions.append({
+            session_data = {
                 'sessionId': session_id,
                 'status': item['status'],
                 'customerName': item['customerInfo']['name'],
@@ -82,9 +96,13 @@ def list_sessions(event, context):
                 'createdAt': item['createdAt'],
                 'completedAt': item.get('completedAt', ''),
                 'salesRepEmail': item.get('salesRepEmail', item.get('salesRepId', '')),
-                'agentId': item.get('agentId', '')
+                'agentId': item.get('agentId', ''),
+                'campaignId': item.get('campaignId', ''),
+                'campaignName': item.get('campaignName', '')
                 # PIN 번호는 보안상 세션 목록에서 제외
-            })
+            }
+            
+            sessions.append(session_data)
         
         return lambda_response(200, {'sessions': sessions})
     except ClientError as e:
