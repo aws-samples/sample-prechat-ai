@@ -15,6 +15,16 @@ def lambda_response(status_code, body):
 def generate_id():
     return str(uuid.uuid4())
 
+def generate_session_id(customer_email=None):
+    """Generate a session ID with optional customer context for better isolation"""
+    base_id = str(uuid.uuid4())
+    if customer_email:
+        # Add customer email hash for better traceability (but still unique)
+        import hashlib
+        email_hash = hashlib.md5(customer_email.encode()).hexdigest()[:8]
+        return f"{base_id}-{email_hash}"
+    return base_id
+
 def generate_csrf_token():
     """Generate a secure CSRF token"""
     import secrets
@@ -23,6 +33,7 @@ def generate_csrf_token():
 def verify_csrf_token(event, session_id):
     """Verify CSRF token for session operations"""
     import boto3
+    import os
     
     # Get CSRF token from request headers or body
     headers = event.get('headers', {})
@@ -41,7 +52,12 @@ def verify_csrf_token(event, session_id):
     try:
         # Get session from DynamoDB to verify token
         dynamodb = boto3.resource('dynamodb')
-        sessions_table = dynamodb.Table('mte-sessions')
+        sessions_table_name = os.environ.get('SESSIONS_TABLE')
+        if not sessions_table_name:
+            print("CSRF - SESSIONS_TABLE environment variable not set")
+            return False
+            
+        sessions_table = dynamodb.Table(sessions_table_name)
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         
         if 'Item' not in session_resp:

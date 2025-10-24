@@ -9,6 +9,7 @@ import {
   Header
 } from '@cloudscape-design/components'
 import ReactMarkdown from 'react-markdown'
+import { useI18n } from '../i18n'
 
 interface PrivacyTermsModalProps {
   visible: boolean
@@ -16,274 +17,14 @@ interface PrivacyTermsModalProps {
   initialTab?: 'privacy' | 'terms'
 }
 
-const PRIVACY_POLICY = `
-# 개인정보 처리방침
 
-**최종 업데이트: 2025년 8월**
-
-## 1. 개인정보 수집 및 이용 목적
-
-PreChat 서비스는 다음 목적으로 개인정보를 수집 및 이용합니다:
-
-### 수집 목적
-
-- 상담 서비스 진행을 위한 사전 정보 수집
-- 고객 요구사항 분석 및 맞춤형 솔루션 제안
-- 영업 담당자와의 효율적인 미팅 준비
-- 서비스 품질 향상 및 통계 분석
-
-### 법적 근거
-
-- 개인정보보호법 제15조 (정보주체의 동의)
-- 정보통신망 이용촉진 및 정보보호 등에 관한 법률 제22조
-
-## 2. 수집하는 개인정보 항목
-
-### 필수 수집 정보
-
-- **고객 정보**: 성명, 이메일 주소, 회사명, 직책
-- **대화 내용**: AI 에이전트와의 상담 대화 기록
-- **기술 정보**: IP 주소, 접속 시간, 브라우저 정보
-
-### 자동 수집 정보
-
-- 서비스 이용 기록
-- 접속 로그 및 쿠키 정보
-
-## 3. 개인정보 처리 및 보유 기간
-
-### 보유 기간
-
-- **상담 세션 데이터**: 30일 (자동 삭제)
-- **대화 기록**: 상담 완료 후 30일
-- **통계 분석 데이터**: 개인식별정보 제거 후 1년
-
-### 삭제 방법
-
-- 보유 기간 만료 시 자동 삭제
-- 정보주체 요청 시 즉시 삭제
-
-## 4. 개인정보 제3자 제공
-
-### 제공 범위
-
-- **영업 담당자**: 상담 목적으로 제한적 제공
-- **Amazon Bedrock**: AI 응답 생성을 위한 대화 내용 처리
-
-### 제공 조건
-
-- 정보주체의 사전 동의
-- 최소한의 정보만 제공
-- 목적 달성 후 즉시 삭제 요청
-
-## 5. 개인정보 처리 위탁
-
-### 위탁 업체
-
-- **Amazon Web Services**: 클라우드 인프라 및 AI 서비스
-- **위탁 업무**: 데이터 저장, AI 모델 처리, 시스템 운영
-
-### 위탁 관리
-
-- 위탁계약서 체결 및 관리·감독
-- 개인정보보호법 준수 의무 부과
-
-## 6. 정보주체의 권리
-
-### 행사 가능한 권리
-
-- **열람권**: 개인정보 처리 현황 확인
-- **정정·삭제권**: 잘못된 정보의 수정·삭제 요구
-- **처리정지권**: 개인정보 처리 중단 요구
-- **손해배상청구권**: 피해 발생 시 배상 청구
-
-### 권리 행사 방법
-
-- 이메일: aws-prechat@amazon.com
-
-## 7. 개인정보 보호 조치
-
-### 기술적 조치
-
-- 개인정보 암호화 저장
-- 접근 권한 관리 시스템
-- 침입 탐지 및 차단 시스템
-
-### 관리적 조치
-
-- 개인정보보호 담당자 지정
-- 정기적 보안 교육 실시
-- 개인정보 처리 현황 점검
-
-## 8. 개인정보보호 담당자
-
-### 개인정보보호책임자
-
-- **성명**: 주재빈
-- **부서**: Amazon Web Services / Cloud Sales Center
-- **연락처**: jaebin@amazon.com
-
-## 9. 고지 의무
-
-본 개인정보 처리방침은 시행일로부터 적용되며, 법령 및 방침에 따른 변경내용의 추가, 삭제 및 정정이 있는 경우에는 변경사항의 시행 7일 전부터 공지사항을 통하여 고지할 것입니다.
-
-**시행일자**: 2025년 8월 13일
-`
-
-const TERMS_OF_SERVICE = `
-# 서비스 이용약관
-
-**최종 업데이트: 2025년 8월**
-
-## 1. 총칙
-
-### 목적
-
-본 약관은 PreChat 서비스(이하 "서비스")의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
-
-### 정의
-
-- **"회사"**: PreChat 서비스를 제공하는 Amazon Web Services, Inc.
-- **"이용자"**: 본 약관에 따라 서비스를 이용하는 개인 또는 법인
-- **"서비스"**: 클라우드 사전 상담을 위한 AI 채팅 플랫폼
-
-## 2. 서비스 제공 및 이용
-
-### 서비스 내용
-
-- AI 에이전트를 통한 클라우드 사전 상담
-- 영업 담당자와의 미팅 준비 지원
-- 고객 요구사항 수집과 분석 및 솔루션 제안
-
-### 이용 조건
-
-- 만 14세 이상 개인 또는 법인
-- 유효한 이메일 주소 보유
-- 본 약관 및 개인정보 처리방침 동의
-
-### 서비스 제공 시간
-
-- 연중무휴 24시간 제공
-- 시스템 점검 시 사전 공지 후 일시 중단 가능
-
-## 3. 이용자의 의무
-
-### 금지 행위
-
-- 타인의 개인정보 도용 또는 허위 정보 입력
-- 서비스의 안정적 운영을 방해하는 행위
-- 법령에 위반되는 내용의 전송
-- 상업적 목적의 광고 또는 스팸 발송
-- 시스템 해킹 또는 악성코드 유포
-
-### 정보 제공 의무
-
-- 정확하고 최신의 정보 제공
-- 개인정보 변경 시 즉시 수정
-- 서비스 이용 목적에 부합하는 상담 내용
-
-## 4. 회사의 의무
-
-### 서비스 제공 의무
-
-- 안정적이고 지속적인 서비스 제공
-- 개인정보보호법 등 관련 법령 준수
-- 이용자 문의에 대한 신속한 응답
-
-### 면책 사항
-
-- 천재지변, 전쟁, 파업 등 불가항력적 사유
-- 이용자의 귀책사유로 인한 서비스 이용 장애
-- 제3자가 제공하는 서비스의 장애
-
-## 5. 개인정보 보호
-
-### 수집 및 이용
-
-- 서비스 제공에 필요한 최소한의 정보만 수집
-- 수집 목적 달성 후 지체 없이 삭제
-- 이용자 동의 없는 제3자 제공 금지
-
-### 보안 조치
-
-- 개인정보 암호화 및 접근 권한 관리
-- 정기적 보안 점검 및 취약점 개선
-- 개인정보 유출 시 즉시 통지
-
-## 6. 지적재산권
-
-### 저작권
-
-- 서비스 내 모든 콘텐츠의 저작권은 회사에 귀속
-- 이용자는 서비스 이용 목적으로만 사용 가능
-- 무단 복제, 배포, 전송 금지
-
-### 이용자 생성 콘텐츠
-
-- 대화 내용에 대한 권리는 이용자에게 귀속
-- 회사는 서비스 개선 목적으로 익명화하여 활용 가능
-
-## 7. 서비스 이용 제한
-
-### 제한 사유
-
-- 본 약관 위반 시
-- 법령 위반 또는 공공질서 위배 시
-- 서비스 운영에 심각한 지장을 초래하는 경우
-
-### 제한 절차
-
-- 사전 경고 및 시정 요구
-- 제한 사유 및 기간 통지
-- 이의제기 기회 제공
-
-## 8. 손해배상 및 면책
-
-### 손해배상
-
-- 회사의 고의 또는 중과실로 인한 손해 배상
-- 배상 범위는 통상손해에 한정
-- 간접손해, 특별손해, 결과적 손해 제외
-
-### 면책 조건
-
-- 이용자의 고의 또는 과실로 인한 손해
-- 제3자의 불법행위로 인한 손해
-- 서비스 이용으로 얻은 정보의 활용 결과
-
-## 9. 분쟁 해결
-
-### 준거법
-
-- 대한민국 법률을 준거법으로 함
-- 개인정보보호법, 정보통신망법 등 관련 법령 적용
-
-### 관할법원
-
-- 회사 소재지 관할법원을 전속관할로 함
-- 조정 및 중재를 통한 분쟁 해결 우선
-
-## 10. 기타
-
-### 약관 변경
-
-- 약관 변경 시 7일 전 공지
-- 중요한 변경사항은 30일 전 공지
-- 변경 약관에 동의하지 않을 경우 서비스 이용 중단 가능
-
-### 연락처
-
-- **이메일**: aws-prechat@amazon.com
-- **주소**: 서울특별시 강남구 테헤란로 231 (역삼동, 센터필드) East 건물12층
-
-**시행일자**: 2025년 8월 13일
-`
 
 export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
   visible,
   onDismiss,
   initialTab = 'privacy'
 }) => {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState(initialTab)
 
   return (
@@ -293,20 +34,20 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
       size="large"
       header={
         <Header variant="h1">
-          개인정보 처리방침 및 서비스 이용약관
+          {t('privacy_terms_modal_title')}
         </Header>
       }
       footer={
         <Box float="right">
           <Button variant="primary" onClick={onDismiss}>
-            확인
+            {t('modal_confirm_button')}
           </Button>
         </Box>
       }
     >
       <SpaceBetween size="l">
         <Box>
-          AWS PreChat 서비스 이용과 관련된 개인정보 처리방침 및 서비스 이용약관입니다.
+          {t('privacy_terms_modal_description')}
         </Box>
         
         <Tabs
@@ -314,7 +55,7 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
           onChange={({ detail }) => setActiveTab(detail.activeTabId as 'privacy' | 'terms')}
           tabs={[
             {
-              label: '개인정보 처리방침',
+              label: t('privacy_policy_tab'),
               id: 'privacy',
               content: (
                 <Box padding="s">
@@ -323,13 +64,13 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
                     overflowY: 'auto',
                     lineHeight: '1.6'
                   }}>
-                    <ReactMarkdown>{PRIVACY_POLICY}</ReactMarkdown>
+                    <ReactMarkdown>{t('privacy_policy_content')}</ReactMarkdown>
                   </div>
                 </Box>
               )
             },
             {
-              label: '서비스 이용약관',
+              label: t('terms_of_service_tab'),
               id: 'terms',
               content: (
                 <Box padding="s">
@@ -338,7 +79,7 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
                     overflowY: 'auto',
                     lineHeight: '1.6'
                   }}>
-                    <ReactMarkdown>{TERMS_OF_SERVICE}</ReactMarkdown>
+                    <ReactMarkdown>{t('terms_of_service_content')}</ReactMarkdown>
                   </div>
                 </Box>
               )

@@ -101,26 +101,35 @@ export const getStoredPrivacyConsentForSession = (sessionId: string): boolean =>
 }
 
 /**
- * 세션 ID에 대한 상담 목적을 세션 저장소에 저장
+ * 세션 ID에 대한 상담 목적들을 세션 저장소에 저장 ("|"로 구분된 문자열)
  */
-export const storeConsultationPurposeForSession = (sessionId: string, purpose: string): void => {
+export const storeConsultationPurposesForSession = (sessionId: string, purposes: string): void => {
   try {
-    const key = `ConsultationPurpose_${sessionId}`
-    sessionStorage.setItem(key, purpose)
+    const key = `ConsultationPurposes_${sessionId}`
+    sessionStorage.setItem(key, purposes)
   } catch (error) {
-    console.warn('Failed to store consultation purpose in session storage:', error)
+    console.warn('Failed to store consultation purposes in session storage:', error)
   }
 }
 
 /**
- * 세션 ID에 대한 저장된 상담 목적을 가져옴
+ * 세션 ID에 대한 저장된 상담 목적들을 가져옴 ("|"로 구분된 문자열)
  */
-export const getStoredConsultationPurposeForSession = (sessionId: string): string | null => {
+export const getStoredConsultationPurposesForSession = (sessionId: string): string | null => {
   try {
-    const key = `ConsultationPurpose_${sessionId}`
+    const key = `ConsultationPurposes_${sessionId}`
     return sessionStorage.getItem(key)
   } catch (error) {
-    console.warn('Failed to get consultation purpose from session storage:', error)
+    console.warn('Failed to get consultation purposes from session storage:', error)
     return null
   }
+}
+
+// 하위 호환성을 위한 기존 함수들 (deprecated)
+export const storeConsultationPurposeForSession = (sessionId: string, purpose: string): void => {
+  storeConsultationPurposesForSession(sessionId, purpose)
+}
+
+export const getStoredConsultationPurposeForSession = (sessionId: string): string | null => {
+  return getStoredConsultationPurposesForSession(sessionId)
 }

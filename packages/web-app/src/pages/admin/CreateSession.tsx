@@ -20,9 +20,11 @@ import { StatusBadge } from '../../components'
 import { extractModelName } from '../../constants'
 import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
 import type { BedrockAgent } from '../../types'
+import { useI18n } from '../../i18n'
 
 export default function CreateSession() {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [loadingAgents, setLoadingAgents] = useState(true)
   const [loadingUser, setLoadingUser] = useState(true)
@@ -51,7 +53,7 @@ export default function CreateSession() {
       setFormData(prev => ({ ...prev, salesRepEmail: user.email }))
     } catch (err) {
       console.error('Failed to load current user:', err)
-      setError('Failed to load current user. Please login again.')
+      setError(t('admin_failed_load_user'))
     } finally {
       setLoadingUser(false)
     }
@@ -81,14 +83,14 @@ export default function CreateSession() {
     try {
       const response = await adminApi.createSession(formData)
       const fullUrl = `${window.location.origin}/customer/${response.sessionId}`
-      setSuccess(`Session created successfully! URL: ${fullUrl} | PIN: ${formData.pinNumber}`)
+      setSuccess(t('admin_session_created_success', { url: fullUrl, pin: formData.pinNumber }))
       
       // CSV 파일 생성 및 다운로드
       generateAndDownloadCSV(fullUrl)
       
       setTimeout(() => navigate('/admin'), 3000)
     } catch (err) {
-      setError('Failed to create session')
+      setError(t('admin_failed_create_session'))
     } finally {
       setLoading(false)
     }
@@ -96,9 +98,9 @@ export default function CreateSession() {
 
   const generateAndDownloadCSV = (chatUrl: string) => {
     const csvData = {
-      customerCompany: formData.customerCompany || '미입력',
+      customerCompany: formData.customerCompany || t('admin_no_input'),
       customerName: formData.customerName,
-      customerTitle: formData.customerTitle || '미입력',
+      customerTitle: formData.customerTitle || t('admin_no_input'),
       chatUrl: chatUrl,
       pinNumber: formData.pinNumber,
       createdAt: new Date().toLocaleString('ko-KR')
@@ -121,11 +123,11 @@ export default function CreateSession() {
           variant="h1"
           actions={
             <Button variant="normal" onClick={() => navigate('/admin')}>
-              대시보드로
+              {t('admin_to_dashboard')}
             </Button>
           }
         >
-          새 상담 세션을 만듭니다 💬
+          {t('admin_create_new_session')}
         </Header>
 
         {error && <Alert type="error">{error}</Alert>}
@@ -134,11 +136,11 @@ export default function CreateSession() {
         {success && (
           <SpaceBetween size="m">
             <Box>
-              <Box fontWeight="bold" fontSize="heading-s">고객에게 전달할 정보:</Box>
+              <Box fontWeight="bold" fontSize="heading-s">{t('admin_customer_info_to_share')}:</Box>
             </Box>
             <SpaceBetween size="s">
               <Box>
-                <Box fontWeight="bold">채팅 URL:</Box>
+                <Box fontWeight="bold">{t('admin_chat_url')}:</Box>
                 <SpaceBetween size="xs" direction="horizontal">
                   <Input
                     value={success.split('URL: ')[1]?.split(' | PIN: ')[0] || ''}
@@ -148,12 +150,12 @@ export default function CreateSession() {
                     onClick={() => navigator.clipboard.writeText(success.split('URL: ')[1]?.split(' | PIN: ')[0] || '')}
                     iconName="copy"
                   >
-                    Copy URL
+                    {t('admin_copy_url')}
                   </Button>
                 </SpaceBetween>
               </Box>
               <Box>
-                <Box fontWeight="bold">PIN 번호:</Box>
+                <Box fontWeight="bold">{t('admin_pin_number')}:</Box>
                 <SpaceBetween size="xs" direction="horizontal">
                   <Input
                     value={formData.pinNumber}
@@ -163,22 +165,22 @@ export default function CreateSession() {
                     onClick={() => navigator.clipboard.writeText(formData.pinNumber)}
                     iconName="copy"
                   >
-                    Copy PIN
+                    {t('admin_copy_pin')}
                   </Button>
                 </SpaceBetween>
               </Box>
               <Box>
-                <Box fontWeight="bold">CSV 파일 다운로드:</Box>
+                <Box fontWeight="bold">{t('admin_csv_download')}:</Box>
                 <SpaceBetween size="xs" direction="horizontal">
                   <Box fontSize="body-s" color="text-status-inactive">
-                    CSV 파일이 자동으로 다운로드되었습니다.
+                    {t('admin_csv_auto_downloaded')}
                   </Box>
                   <Button
                     onClick={() => generateAndDownloadCSV(success.split('URL: ')[1]?.split(' | PIN: ')[0] || '')}
                     iconName="download"
                     variant="normal"
                   >
-                    다시 다운로드
+                    {t('admin_download_again')}
                   </Button>
                 </SpaceBetween>
               </Box>
@@ -190,7 +192,7 @@ export default function CreateSession() {
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="link" onClick={() => navigate('/admin')}>
-                취소
+                {t('cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -198,66 +200,66 @@ export default function CreateSession() {
                 loading={loading}
                 disabled={!formData.customerName || !formData.customerEmail || !formData.salesRepEmail || !formData.agentId || !formData.pinNumber}
               >
-                세션 추가
+                {t('admin_add_session')}
               </Button>
             </SpaceBetween>
           }
         >
           <SpaceBetween size="l">
             <FormField
-              label="Customer Name"
-              description="고객 담당자 이름"
+              label={t('customer_name')}
+              description={t('admin_customer_contact_name')}
               stretch>
               <Input
                 value={formData.customerName}
                 onChange={({ detail }) => updateFormData('customerName', detail.value)}
-                placeholder="Enter customer name"
+                placeholder={t('enter_customer_name')}
               />
             </FormField>
 
             <FormField
-              label="Customer Email"
-              description="고객 담당자 이메일"
+              label={t('customer_email')}
+              description={t('admin_customer_contact_email')}
               stretch>
               <Input
                 value={formData.customerEmail}
                 onChange={({ detail }) => updateFormData('customerEmail', detail.value)}
-                placeholder="Enter customer email"
+                placeholder={t('enter_customer_email')}
                 type="email"
               />
             </FormField>
 
             <FormField
-              label="Customer Company"
-              description="고객사 이름"
+              label={t('customer_company')}
+              description={t('admin_customer_company_name')}
               stretch>
               <Input
                 value={formData.customerCompany}
                 onChange={({ detail }) => updateFormData('customerCompany', detail.value)}
-                placeholder="Enter customer company"
+                placeholder={t('enter_customer_company')}
               />
             </FormField>
 
             <FormField
-              label="Customer Title"
-              description="고객 직책"
+              label={t('customer_title')}
+              description={t('admin_customer_position')}
               stretch>
               <Input
                 value={formData.customerTitle}
                 onChange={({ detail }) => updateFormData('customerTitle', detail.value)}
-                placeholder="Enter customer title/position"
+                placeholder={t('enter_customer_title')}
               />
             </FormField>
 
             <FormField
-              label="Sales Representative Email"
-              description="영업 담당자(자동 입력)"
+              label={t('sales_representative_email')}
+              description={t('admin_sales_rep_auto_filled')}
               stretch
             >
               <Input
                 value={formData.salesRepEmail}
                 onChange={({ detail }) => updateFormData('salesRepEmail', detail.value)}
-                placeholder={loadingUser ? "Loading current user..." : "Current user email"}
+                placeholder={loadingUser ? t('loading_current_user') : t('current_user_email')}
                 type="email"
                 readOnly={true}
                 disabled={true}
@@ -265,8 +267,8 @@ export default function CreateSession() {
             </FormField>
 
             <FormField
-              label="Select Agent"
-              description="고객과 대화를 담당할 PreChat Agent 를 선택합니다."
+              label={t('select_agent')}
+              description={t('admin_select_prechat_agent')}
               stretch
             >
               <Select
@@ -284,21 +286,21 @@ export default function CreateSession() {
                     value: agent.agentId
                   }))
                 }
-                placeholder="Select an agent"
-                empty="No prepared agents available"
+                placeholder={t('select_an_agent')}
+                empty={t('admin_no_prepared_agents')}
               />
             </FormField>
 
             <FormField
-              label="6자리 PIN 번호"
-              description="고객이 채팅에 접속할 때 사용할 PIN 번호입니다."
+              label={t('admin_six_digit_pin')}
+              description={t('admin_pin_description')}
               stretch
             >
               <SpaceBetween direction="horizontal" size="xs">
                 <Input
                   value={formData.pinNumber}
                   onChange={({ detail }) => updateFormData('pinNumber', detail.value)}
-                  placeholder="6자리 숫자 입력"
+                  placeholder={t('admin_enter_six_digits')}
                   type={showPin ? "text" : "password"}
                   inputMode="numeric"
     
@@ -308,14 +310,14 @@ export default function CreateSession() {
                   onClick={() => setShowPin(!showPin)}
                   iconName={showPin ? "lock-private" : "security"}
                 >
-                  {showPin ? "숨기기" : "보기"}
+                  {showPin ? t('admin_hide') : t('admin_show')}
                 </Button>
                 <Button
                   variant="normal"
                   onClick={generateRandomPin}
                   iconName="refresh"
                 >
-                  랜덤 생성
+                  {t('admin_random_generate')}
                 </Button>
               </SpaceBetween>
             </FormField>
@@ -324,13 +326,13 @@ export default function CreateSession() {
           </SpaceBetween>
         </Form>
 
-        <Header variant="h2">사용 가능한 에이전트 🤖</Header>
+        <Header variant="h2">{t('admin_available_agents')}</Header>
         <div style={{ minHeight: '30vh' }}>
           <Table
             columnDefinitions={[
               {
                 id: 'name',
-                header: '에이전트 이름',
+                header: t('admin_agent_name'),
                 cell: (item) => (
                   <Box>
                     <Box fontWeight="bold">{item.agentName}</Box>
@@ -342,12 +344,12 @@ export default function CreateSession() {
               },
               {
                 id: 'model',
-                header: 'Foundation Model',
+                header: t('foundation_model'),
                 cell: (item) => extractModelName(item.foundationModel)
               },
               {
                 id: 'status',
-                header: '상태',
+                header: t('status'),
                 cell: (item) => <StatusBadge status={item.agentStatus} type="agent" />
               }
             ]}
@@ -356,13 +358,13 @@ export default function CreateSession() {
             empty={
               <Box textAlign="center" color="inherit">
                 <Box variant="strong" textAlign="center" color="inherit">
-                  No agents
+                  {t('no_agents')}
                 </Box>
                 <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                  No Bedrock agents found.
+                  {t('no_bedrock_agents_found')}
                 </Box>
                 <Button onClick={() => navigate('/admin/agents/create')}>
-                  에이전트 생성
+                  {t('admin_create_agent')}
                 </Button>
               </Box>
             }
