@@ -1,6 +1,6 @@
 // nosemgrep
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Container,
   Header,
@@ -39,6 +39,7 @@ interface SessionSummary {
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { t } = useI18n()
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [loading, setLoading] = useState(true)
@@ -47,14 +48,46 @@ export default function AdminDashboard() {
   const [sortingColumn, setSortingColumn] = useState<any>({})
   const [sortingDescending, setSortingDescending] = useState(false)
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
-  const [selectedCampaign, setSelectedCampaign] = useState<{ label: string; value: string } | null>(null)
+  const [selectedCampaign, setSelectedCampaign] = useState<{ label: string; value: string } | null>({ label: t('all_campaigns'), value: 'all' })
   const [campaignsLoading, setCampaignsLoading] = useState(false)
 
   useEffect(() => {
     loadCurrentUser()
     loadSessions()
     loadCampaigns()
+    
+    // Handle URL query parameters
+    const mySessionParam = searchParams.get('mySession')
+    
+    // Set mySession filter based on query parameter
+    if (mySessionParam === 'y') {
+      setShowMySessionsOnly(true)
+    } else if (mySessionParam === 'n') {
+      setShowMySessionsOnly(false)
+    }
+    
+    // Campaign code will be handled after campaigns are loaded
   }, [])
+
+  // Handle campaignCode parameter after campaigns are loaded
+  useEffect(() => {
+    const campaignCodeParam = searchParams.get('campaignCode')
+    if (campaignCodeParam && campaigns.length > 0) {
+      const matchingCampaign = campaigns.find(campaign => campaign.campaignCode === campaignCodeParam)
+      if (matchingCampaign) {
+        setSelectedCampaign({
+          label: matchingCampaign.campaignName,
+          value: matchingCampaign.campaignId
+        })
+      } else {
+        // Campaign code not found, reset to all campaigns
+        setSelectedCampaign({ label: t('all_campaigns'), value: 'all' })
+      }
+    } else if (!campaignCodeParam && campaigns.length > 0) {
+      // No campaign code parameter, ensure "all campaigns" is selected
+      setSelectedCampaign({ label: t('all_campaigns'), value: 'all' })
+    }
+  }, [campaigns, searchParams, t])
 
   const loadCurrentUser = async () => {
     try {
@@ -136,6 +169,8 @@ export default function AdminDashboard() {
     }
   }
 
+
+
   // Sort sessions based on current sorting state
   const sortedSessions = [...filteredSessions].sort((a, b) => {
     if (!sortingColumn.sortingField) return 0
@@ -212,7 +247,26 @@ export default function AdminDashboard() {
             >
               <Select
                 selectedOption={selectedCampaign}
-                onChange={({ detail }) => setSelectedCampaign(detail.selectedOption as { label: string; value: string } | null)}
+                onChange={({ detail }) => {
+                  const selectedOption = detail.selectedOption as { label: string; value: string } | null
+                  setSelectedCampaign(selectedOption)
+                  
+                  // Update URL query parameter
+                  const newSearchParams = new URLSearchParams(searchParams)
+                  if (selectedOption && selectedOption.value !== 'all') {
+                    if (selectedOption.value === 'none') {
+                      newSearchParams.delete('campaignCode')
+                    } else {
+                      const selectedCampaign = campaigns.find(c => c.campaignId === selectedOption.value)
+                      if (selectedCampaign) {
+                        newSearchParams.set('campaignCode', selectedCampaign.campaignCode)
+                      }
+                    }
+                  } else {
+                    newSearchParams.delete('campaignCode')
+                  }
+                  setSearchParams(newSearchParams)
+                }}
                 options={[
                   { label: t('all_campaigns'), value: 'all' },
                   { label: t('no_campaign'), value: 'none' },
@@ -233,7 +287,13 @@ export default function AdminDashboard() {
             >
               <Toggle
                 checked={showMySessionsOnly}
-                onChange={({ detail }) => setShowMySessionsOnly(detail.checked)}
+                onChange={({ detail }) => {
+                  setShowMySessionsOnly(detail.checked)
+                  // Update URL query parameter
+                  const newSearchParams = new URLSearchParams(searchParams)
+                  newSearchParams.set('mySession', detail.checked ? 'y' : 'n')
+                  setSearchParams(newSearchParams)
+                }}
               />
             </FormField>
           </Box>

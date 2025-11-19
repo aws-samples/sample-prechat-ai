@@ -13,3 +13,12 @@ export { default as BedrockQuotaNotification } from './BedrockQuotaNotification'
 export { default as FileUpload } from './FileUpload'
 export { default as ConsultationPurposeSelector } from './ConsultationPurposeSelector'
 export { TranslationPerformanceMonitor } from './TranslationPerformanceMonitor'
+
+// Campaign Analytics Components
+export { CampaignMetricsCards } from './CampaignMetricsCards'
+export { CampaignSessionsChart } from './CampaignSessionsChart'
+export { CampaignPurposesChart } from './CampaignPurposesChart'
+export { CampaignCompaniesTable } from './CampaignCompaniesTable'
+export { CampaignCSATTable } from './CampaignCSATTable'
+export { CampaignComparisonTable } from './CampaignComparisonTable'
+export { CampaignReportExport } from './CampaignReportExport'

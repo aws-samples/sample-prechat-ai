@@ -184,8 +184,6 @@ export interface CreateCampaignRequest {
   startDate: string;
   endDate: string;
   ownerId: string;
-  ownerEmail: string;
-  ownerName: string;
 }
 
 export interface UpdateCampaignRequest {
@@ -225,6 +223,23 @@ export interface CampaignSessionsResponse {
 
 export interface AssociateCampaignRequest {
   campaignId: string;
+}
+
+export interface CognitoUser {
+  userId: string;
+  email: string;
+  name: string;
+  phone?: string;
+  status: 'CONFIRMED' | 'UNCONFIRMED' | 'ARCHIVED' | 'COMPROMISED' | 'UNKNOWN' | 'RESET_REQUIRED' | 'FORCE_CHANGE_PASSWORD';
+  enabled: boolean;
+  createdDate?: string;
+  lastModifiedDate?: string;
+}
+
+export interface CognitoUsersResponse {
+  users: CognitoUser[];
+  totalUsers: number;
+  nextPaginationToken?: string;
 }
 
 

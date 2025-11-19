@@ -133,10 +133,11 @@ export default function CustomerChat() {
       const title = customerInfo.title || '담당자'
       const name = customerInfo.name || '고객'
 
-      const purposesText = formatPurposesForDisplay(formatPurposesForStorage(selectedPurposes))
-      const greetingMessage = `${t('korean_20a761fe')} ${company}에서 ${title}${t('korean_6c4b973d')} ${name}이라 합니다. 
-
-이번에 ${purposesText}${t('greeting_intro')}`
+      const greetingMessage = t('customer_greeting_message', {
+        companyName: company,
+        customerTitle: title,
+        customerName: name
+      })
       setInputValue(greetingMessage)
     }
   }, [sessionData, messages.length, selectedPurposes, inputValue, setInputValue, t])

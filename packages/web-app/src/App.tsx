@@ -15,7 +15,7 @@ import CampaignDashboard from './pages/admin/CampaignDashboard'
 import CreateCampaign from './pages/admin/CreateCampaign'
 import EditCampaign from './pages/admin/EditCampaign'
 import CampaignDetails from './pages/admin/CampaignDetails'
-import CampaignAnalytics from './pages/admin/CampaignAnalytics'
+
 import Login from './pages/auth/Login'
 import { I18nProvider } from './i18n/I18nContext'
 import './styles/animations.css'
@@ -65,11 +65,7 @@ function App() {
             <EditCampaign />
           </ProtectedRoute>
         } />
-        <Route path="/admin/campaigns/analytics" element={
-          <ProtectedRoute>
-            <CampaignAnalytics />
-          </ProtectedRoute>
-        } />
+
         <Route path="/admin/agents" element={
           <ProtectedRoute>
             <AgentsDashboard />

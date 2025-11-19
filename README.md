@@ -74,7 +74,7 @@ Built on AWS serverless services for scalability, security, and cost-effectivene
 ### Technology Stack
 - **Frontend**: React with AWS Cloudscape Design System
 - **Backend**: AWS Lambda (Python 3.13)
-- **Database**: Amazon DynamoDB with KMS encryption
+- **Database**: Amazon DynamoDB with KMS encryption (3 tables: Sessions, Messages, Campaigns)
 - **AI/ML**: Amazon Bedrock (Claude, Nova models)
 - **Authentication**: Amazon Cognito
 - **API**: Amazon API Gateway with caching
@@ -207,6 +207,76 @@ sam build
 # Deploy to AWS
 sam deploy --guided
 ```
+
+## 📊 Database Schema & Migration
+
+### DynamoDB Tables
+
+The application uses three DynamoDB tables:
+
+1. **SessionsTable**: Stores consultation session data and customer information
+2. **MessagesTable**: Stores chat messages and conversation history
+3. **CampaignsTable**: Stores campaign information and metadata (newly separated)
+
+### Campaign Data Migration
+
+If you're upgrading from a previous version where campaign data was stored in the SessionsTable, you'll need to migrate the data to the new CampaignsTable.
+
+#### Automatic Migration
+
+After deploying the updated stack, use the migration API endpoints:
+
+```bash
+# Run the migration
+curl -X POST "https://your-api-gateway-url/api/admin/migrate/campaigns" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Verify the migration
+curl -X GET "https://your-api-gateway-url/api/admin/migrate/campaigns/verify" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+#### Manual Migration Script
+
+Alternatively, you can run the migration script directly:
+
+```bash
+cd packages/backend/migration_scripts
+python migrate_campaigns.py YOUR_SESSIONS_TABLE_NAME YOUR_CAMPAIGNS_TABLE_NAME
+```
+
+#### Migration Process
+
+1. **Backup**: The migration process automatically scans for campaign records in SessionsTable
+2. **Copy**: Campaign data is copied to the new CampaignsTable with proper indexing
+3. **Verify**: The system verifies all campaigns were migrated successfully
+4. **Cleanup**: Original campaign records are removed from SessionsTable only after successful migration
+
+#### Benefits of Separate Campaign Table
+
+- **Better Performance**: Dedicated indexes for campaign queries
+- **Improved Scalability**: Separate read/write capacity for campaigns
+- **Enhanced Security**: Granular access control for campaign data
+- **Cleaner Architecture**: Logical separation of concerns
+
+#### New API Endpoints
+
+After the migration, the following new endpoints are available:
+
+- `GET /api/campaigns/code/{campaignCode}` - Get campaign information by campaign code
+- `POST /api/admin/migrate/campaigns` - Run campaign data migration
+- `GET /api/admin/migrate/campaigns/verify` - Verify migration status
+- `GET /api/admin/cognito/users` - List Cognito users for campaign owner selection
+- `GET /api/admin/cognito/users/{userId}` - Get specific Cognito user details
+
+#### Enhanced Session Management
+
+Sessions now include detailed campaign information:
+- Campaign metadata in session details
+- Campaign validation during session creation (supports both campaignId and campaignCode)
+- Campaign status checking (only active campaigns allow new sessions)
+- Improved session listing with campaign context
+- Unified session creation API that handles both campaign ID and campaign code
 
 ### � Cusrtomizing Privacy & Terms Documents
 

@@ -1,5 +1,16 @@
 import axios from 'axios'
-import type { ChatMessageRequest, ChatMessageResponse, Session, AnalysisResults } from '../types'
+import type { 
+  ChatMessageRequest, 
+  ChatMessageResponse, 
+  Session, 
+  AnalysisResults,
+  Campaign,
+  CampaignAnalytics,
+  CreateCampaignRequest,
+  UpdateCampaignRequest,
+  CampaignListResponse,
+  CampaignSessionsResponse
+} from '../types'
 import { API_BASE_URL } from '../config/api'
 
 const api = axios.create({
@@ -15,6 +26,57 @@ api.interceptors.request.use((config) => {
   }
   return config
 })
+
+// Retry configuration
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  retryDelay: 1000, // Base delay in ms
+  retryableStatusCodes: [408, 429, 500, 502, 503, 504]
+}
+
+// Exponential backoff retry utility
+const retryWithBackoff = async <T>(
+  operation: () => Promise<T>,
+  retries: number = RETRY_CONFIG.maxRetries
+): Promise<T> => {
+  try {
+    return await operation()
+  } catch (error) {
+    if (retries > 0 && axios.isAxiosError(error)) {
+      const statusCode = error.response?.status
+      if (statusCode && RETRY_CONFIG.retryableStatusCodes.includes(statusCode)) {
+        const delay = RETRY_CONFIG.retryDelay * Math.pow(2, RETRY_CONFIG.maxRetries - retries)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        return retryWithBackoff(operation, retries - 1)
+      }
+    }
+    throw error
+  }
+}
+
+// Enhanced error handling utility
+const handleApiError = (error: unknown, context: string): never => {
+  if (axios.isAxiosError(error)) {
+    const message = error.response?.data?.message || error.message
+    const statusCode = error.response?.status
+    
+    console.error(`API Error in ${context}:`, {
+      message,
+      statusCode,
+      url: error.config?.url,
+      method: error.config?.method
+    })
+    
+    // Throw enhanced error with context
+    const enhancedError = new Error(`${context}: ${message}`)
+    ;(enhancedError as any).statusCode = statusCode
+    ;(enhancedError as any).originalError = error
+    throw enhancedError
+  }
+  
+  console.error(`Unexpected error in ${context}:`, error)
+  throw new Error(`${context}: An unexpected error occurred`)
+}
 
 export const chatApi = {
   sendMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse> => {
@@ -111,14 +173,29 @@ export const adminApi = {
     salesRepEmail: string
     agentId: string
     pinNumber: string
-  }) => {
-    const response = await api.post('/admin/sessions', data)
-    return response.data
+    campaignId?: string
+    campaignCode?: string
+  }): Promise<any> => {
+    try {
+      return await retryWithBackoff(async () => {
+        const response = await api.post('/admin/sessions', data)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Create Session')
+    }
   },
 
-  listSessions: async () => {
-    const response = await api.get('/admin/sessions')
-    return response.data
+  listSessions: async (campaignId?: string): Promise<any> => {
+    try {
+      return await retryWithBackoff(async () => {
+        const params = campaignId ? { campaignId } : {}
+        const response = await api.get('/admin/sessions', { params })
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'List Sessions')
+    }
   },
 
   getSessionDetails: async (sessionId: string) => {
@@ -270,66 +347,266 @@ export const adminApi = {
   deleteDiscussion: async (sessionId: string, discussionId: string) => {
     const response = await api.delete(`/admin/sessions/${sessionId}/discussions/${discussionId}`)
     return response.data
+  },
+
+  // Cognito User Management
+  listCognitoUsers: async (paginationToken?: string, limit: number = 60) => {
+    try {
+      return await retryWithBackoff(async () => {
+        const params: any = { limit }
+        if (paginationToken) {
+          params.paginationToken = paginationToken
+        }
+        const response = await api.get('/admin/cognito/users', { params })
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'List Cognito Users')
+    }
+  },
+
+  getCognitoUser: async (userId: string) => {
+    try {
+      if (!userId?.trim()) {
+        throw new Error('User ID is required')
+      }
+
+      return await retryWithBackoff(async () => {
+        const response = await api.get(`/admin/cognito/users/${userId}`)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Get Cognito User')
+    }
   }
 }
 
 export const campaignApi = {
-  listCampaigns: async () => {
-    const response = await api.get('/admin/campaigns')
-    return response.data
+  /**
+   * List all campaigns with optional pagination
+   */
+  listCampaigns: async (nextToken?: string): Promise<CampaignListResponse> => {
+    try {
+      return await retryWithBackoff(async () => {
+        const params = nextToken ? { nextToken } : {}
+        const response = await api.get('/admin/campaigns', { params })
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'List Campaigns')
+    }
   },
 
-  createCampaign: async (data: {
-    campaignName: string
-    campaignCode: string
-    description: string
-    startDate: string
-    endDate: string
-    ownerId: string
-    ownerEmail: string
-    ownerName: string
-  }) => {
-    const response = await api.post('/admin/campaigns', data)
-    return response.data
+  /**
+   * Create a new campaign
+   */
+  createCampaign: async (data: CreateCampaignRequest): Promise<Campaign> => {
+    try {
+      // Validate required fields
+      if (!data.campaignName?.trim()) {
+        throw new Error('Campaign name is required')
+      }
+      if (!data.campaignCode?.trim()) {
+        throw new Error('Campaign code is required')
+      }
+      if (!data.startDate || !data.endDate) {
+        throw new Error('Start date and end date are required')
+      }
+      if (new Date(data.endDate) <= new Date(data.startDate)) {
+        throw new Error('End date must be after start date')
+      }
+
+      return await retryWithBackoff(async () => {
+        const response = await api.post('/admin/campaigns', data)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Create Campaign')
+    }
   },
 
-  getCampaign: async (campaignId: string) => {
-    const response = await api.get(`/admin/campaigns/${campaignId}`)
-    return response.data
+  /**
+   * Get campaign details by ID
+   */
+  getCampaign: async (campaignId: string): Promise<Campaign> => {
+    try {
+      if (!campaignId?.trim()) {
+        throw new Error('Campaign ID is required')
+      }
+
+      return await retryWithBackoff(async () => {
+        const response = await api.get(`/admin/campaigns/${campaignId}`)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Get Campaign')
+    }
   },
 
-  updateCampaign: async (campaignId: string, data: {
-    campaignName?: string
-    campaignCode?: string
-    description?: string
-    startDate?: string
-    endDate?: string
-    ownerId?: string
-    ownerEmail?: string
-    ownerName?: string
-    status?: 'active' | 'completed' | 'paused' | 'cancelled'
-  }) => {
-    const response = await api.put(`/admin/campaigns/${campaignId}`, data)
-    return response.data
+  /**
+   * Update campaign details
+   */
+  updateCampaign: async (campaignId: string, data: UpdateCampaignRequest): Promise<Campaign> => {
+    try {
+      if (!campaignId?.trim()) {
+        throw new Error('Campaign ID is required')
+      }
+
+      // Validate date range if both dates are provided
+      if (data.startDate && data.endDate && new Date(data.endDate) <= new Date(data.startDate)) {
+        throw new Error('End date must be after start date')
+      }
+
+      return await retryWithBackoff(async () => {
+        const response = await api.put(`/admin/campaigns/${campaignId}`, data)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Update Campaign')
+    }
   },
 
-  deleteCampaign: async (campaignId: string) => {
-    const response = await api.delete(`/admin/campaigns/${campaignId}`)
-    return response.data
+  /**
+   * Delete a campaign
+   */
+  deleteCampaign: async (campaignId: string): Promise<void> => {
+    try {
+      if (!campaignId?.trim()) {
+        throw new Error('Campaign ID is required')
+      }
+
+      await retryWithBackoff(async () => {
+        const response = await api.delete(`/admin/campaigns/${campaignId}`)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Delete Campaign')
+    }
   },
 
-  getCampaignSessions: async (campaignId: string) => {
-    const response = await api.get(`/admin/campaigns/${campaignId}/sessions`)
-    return response.data
+  /**
+   * Get sessions associated with a campaign
+   */
+  getCampaignSessions: async (campaignId: string, nextToken?: string): Promise<CampaignSessionsResponse> => {
+    try {
+      if (!campaignId?.trim()) {
+        throw new Error('Campaign ID is required')
+      }
+
+      return await retryWithBackoff(async () => {
+        const params = nextToken ? { nextToken } : {}
+        const response = await api.get(`/admin/campaigns/${campaignId}/sessions`, { params })
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Get Campaign Sessions')
+    }
   },
 
-  getCampaignAnalytics: async (campaignId: string) => {
-    const response = await api.get(`/admin/campaigns/${campaignId}/analytics`)
-    return response.data
+  /**
+   * Get campaign analytics and metrics
+   */
+  getCampaignAnalytics: async (campaignId: string): Promise<CampaignAnalytics> => {
+    try {
+      if (!campaignId?.trim()) {
+        throw new Error('Campaign ID is required')
+      }
+
+      return await retryWithBackoff(async () => {
+        const response = await api.get(`/admin/campaigns/${campaignId}/analytics`)
+        
+        // Transform and validate analytics data
+        const analytics = response.data
+        return {
+          campaignId: analytics.campaignId,
+          totalSessions: analytics.totalSessions || 0,
+          activeSessions: analytics.activeSessions || 0,
+          completedSessions: analytics.completedSessions || 0,
+          completionRate: analytics.completionRate || 0,
+          averageSessionDuration: analytics.averageSessionDuration || 0,
+          topConsultationPurposes: analytics.topConsultationPurposes || [],
+          sessionsByDate: analytics.sessionsByDate || [],
+          customerCompanies: analytics.customerCompanies || []
+        }
+      })
+    } catch (error) {
+      return handleApiError(error, 'Get Campaign Analytics')
+    }
   },
 
-  associateSessionWithCampaign: async (sessionId: string, campaignId: string) => {
-    const response = await api.put(`/admin/sessions/${sessionId}/campaign`, { campaignId })
-    return response.data
+  /**
+   * Associate a session with a campaign
+   */
+  associateSessionWithCampaign: async (sessionId: string, campaignId: string): Promise<void> => {
+    try {
+      if (!sessionId?.trim()) {
+        throw new Error('Session ID is required')
+      }
+      if (!campaignId?.trim()) {
+        throw new Error('Campaign ID is required')
+      }
+
+      await retryWithBackoff(async () => {
+        const response = await api.put(`/admin/sessions/${sessionId}/campaign`, { campaignId })
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Associate Session with Campaign')
+    }
+  },
+
+  /**
+   * Remove campaign association from a session
+   */
+  dissociateSessionFromCampaign: async (sessionId: string): Promise<void> => {
+    try {
+      if (!sessionId?.trim()) {
+        throw new Error('Session ID is required')
+      }
+
+      await retryWithBackoff(async () => {
+        const response = await api.delete(`/admin/sessions/${sessionId}/campaign`)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Dissociate Session from Campaign')
+    }
+  },
+
+  /**
+   * Get summary analytics across all campaigns
+   */
+  getCampaignsSummaryAnalytics: async (ownerId?: string): Promise<any> => {
+    try {
+      return await retryWithBackoff(async () => {
+        const params = ownerId ? { ownerId } : {}
+        const response = await api.get('/admin/campaigns/analytics/summary', { params })
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Get Campaigns Summary Analytics')
+    }
+  },
+
+  /**
+   * Get comparative analytics between multiple campaigns
+   */
+  getCampaignComparisonAnalytics: async (campaignIds: string[]): Promise<any> => {
+    try {
+      if (!campaignIds?.length) {
+        throw new Error('Campaign IDs are required')
+      }
+
+      if (campaignIds.length > 10) {
+        throw new Error('Maximum 10 campaigns can be compared at once')
+      }
+
+      return await retryWithBackoff(async () => {
+        const response = await api.post('/admin/campaigns/analytics/comparison', { campaignIds })
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Get Campaign Comparison Analytics')
+    }
   }
 }

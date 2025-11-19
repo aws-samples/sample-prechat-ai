@@ -19,11 +19,30 @@ export {
   useTranslationPerformance,
   type TranslationPerformanceMetrics 
 } from './useTranslationPerformance';
+export {
+  formatCampaignDate,
+  formatCampaignDateRange,
+  formatCampaignDuration,
+  formatCampaignStatus,
+  formatCampaignMetric,
+  validateCampaignDateRange,
+  type CampaignDateFormatOptions
+} from './dateFormatting';
+export {
+  validateCampaignForm,
+  formatValidationErrors,
+  getFieldValidationError,
+  hasValidationErrors,
+  getValidationErrorStats,
+  type CampaignValidationError,
+  type CampaignFormData
+} from './campaignValidation';
 export type { 
   TranslationEntry, 
   LocaleConfig, 
   TranslationContext, 
   SupportedLocale,
-  UseI18nReturn 
+  UseI18nReturn,
+  CampaignTranslations
 } from './types';
 export { SUPPORTED_LOCALES, DEFAULT_LOCALE } from './types';

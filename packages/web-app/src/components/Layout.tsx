@@ -67,11 +67,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           text: t('create_campaign'),
           href: '/admin/campaigns/create'
         },
-        {
-          type: 'link',
-          text: t('campaign_analytics'),
-          href: '/admin/campaigns/analytics'
-        }
+
       ]
     },
     {
@@ -105,7 +101,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     // Campaign routes
     if (path.startsWith('/admin/campaigns/create')) return '/admin/campaigns/create';
-    if (path.startsWith('/admin/campaigns/analytics')) return '/admin/campaigns/analytics';
     if (path.startsWith('/admin/campaigns')) return '/admin/campaigns';
 
     // Session routes

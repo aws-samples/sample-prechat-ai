@@ -53,6 +53,7 @@ Globals:
       Variables:
         SESSIONS_TABLE: !Ref SessionsTable
         MESSAGES_TABLE: !Ref MessagesTable
+        CAMPAIGNS_TABLE: !Ref CampaignsTable
         BEDROCK_REGION: !Ref BedrockRegion
         USER_POOL_ID: !Ref AdminUserPool
         CLIENT_ID: !Ref AdminUserPoolClient
@@ -571,6 +572,58 @@ Resources:
         - Key: Encryption
           Value: KMS
 
+  CampaignsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
+        - AttributeName: campaignCode
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: CampaignCodeIndex
+          KeySchema:
+            - AttributeName: campaignCode
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref DynamoDBKMSKey
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-campaigns-${Stage}'
+        - Key: Environment
+          Value: !Ref Stage
+        - Key: Encryption
+          Value: KMS
+
   # API Gateway
   ApiGateway:
     Type: AWS::Serverless::Api
@@ -665,6 +718,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
       Events:
         CreateSession:
           Type: Api
@@ -686,6 +741,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref MessagesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
         - Statement:
             Effect: Allow
             Action:
@@ -716,6 +773,67 @@ Resources:
             Path: /api/chat/session/{sessionId}/verify-pin
             Method: post
 
+  GetCampaignByCodeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: session_handler.get_campaign_by_code
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
+      Events:
+        GetCampaignByCode:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/campaigns/code/{campaignCode}
+            Method: get
+
+
+
+  # Cognito User Management Functions
+  ListCognitoUsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: cognito_handler.list_cognito_users
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:ListUsers
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        ListCognitoUsers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/cognito/users
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetCognitoUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: cognito_handler.get_cognito_user
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:AdminGetUser
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        GetCognitoUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/cognito/users/{userId}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
 
   ListSessionsFunction:
     Type: AWS::Serverless::Function
@@ -725,6 +843,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
       Events:
         ListSessions:
           Type: Api
@@ -743,6 +863,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
       Events:
         GetSessionDetails:
           Type: Api
@@ -1427,6 +1549,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
         - Statement:
             Effect: Allow
             Action:
@@ -1450,6 +1574,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
       Events:
         ListCampaigns:
           Type: Api
@@ -1468,6 +1594,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
       Events:
         GetCampaign:
           Type: Api
@@ -1486,6 +1614,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
         - Statement:
             Effect: Allow
             Action:
@@ -1509,6 +1639,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
       Events:
         DeleteCampaign:
           Type: Api
@@ -1527,6 +1659,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
       Events:
         GetCampaignSessions:
           Type: Api
@@ -1545,6 +1679,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
       Events:
         AssociateSessionWithCampaign:
           Type: Api
@@ -1566,6 +1702,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref MessagesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
       Events:
         GetCampaignAnalytics:
           Type: Api
@@ -1584,6 +1722,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
       Events:
         GetCampaignsSummaryAnalytics:
           Type: Api
@@ -1602,6 +1742,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
       Events:
         GetCampaignComparisonAnalytics:
           Type: Api
@@ -1628,6 +1770,62 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/chat/session/{sessionId}/purposes
             Method: put
+
+  # Migration Functions
+  MigrateCampaignsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: migration_handler.migrate_campaigns_handler
+      Timeout: 900
+      MemorySize: 512
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
+      Events:
+        MigrateCampaigns:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/migrate/campaigns
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  FixCampaignSessionCountsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: fix_campaign_session_counts.fix_campaign_session_counts
+      Timeout: 900
+      MemorySize: 512
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CampaignsTable
+
+  VerifyMigrationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: migration_handler.verify_migration_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
+      Events:
+        VerifyMigration:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/migrate/campaigns/verify
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   # Admin File Functions (no CSRF required)
   ListSessionFilesAdminFunction:
@@ -2169,3 +2367,6 @@ Outputs:
   LambdaDeadLetterQueueUrl:
     Description: Dead Letter Queue URL for Lambda functions
     Value: !Ref LambdaDeadLetterQueue
+  CampaignsTable:
+    Description: DynamoDB table for campaigns
+    Value: !Ref CampaignsTable

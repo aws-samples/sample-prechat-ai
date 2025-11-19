@@ -7,7 +7,7 @@ from decimal import Decimal
 from datetime import datetime, timezone
 from collections import defaultdict, Counter
 from botocore.exceptions import ClientError
-from utils import lambda_response, get_timestamp
+from utils import lambda_response, get_timestamp, convert_decimal_to_int, serialize_dynamodb_item
 
 # Configure logging
 logger = logging.getLogger()
@@ -16,6 +16,7 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource('dynamodb')
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
 MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
+CAMPAIGNS_TABLE = os.environ.get('CAMPAIGNS_TABLE')
 
 def get_campaign_analytics(event, context):
     """Get analytics for a specific campaign"""
@@ -27,10 +28,11 @@ def get_campaign_analytics(event, context):
         return lambda_response(400, {'error': 'Missing campaign ID parameter'})
     
     try:
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
         
         # Check if campaign exists
-        campaign_resp = sessions_table.get_item(
+        campaign_resp = campaigns_table.get_item(
             Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
         )
         
@@ -101,14 +103,16 @@ def calculate_campaign_analytics(campaign_id, sessions):
             for purpose, count in purposes_counter.most_common(5)
         ]
         
-        # Analyze sessions by date
+        # Analyze completed sessions by completion date
         sessions_by_date = defaultdict(int)
         for session in sessions:
-            try:
-                created_date = datetime.fromisoformat(session['createdAt'].replace('Z', '+00:00')).date()
-                sessions_by_date[created_date.isoformat()] += 1
-            except (ValueError, TypeError):
-                continue
+            # Only count completed sessions
+            if session.get('status') == 'completed' and session.get('completedAt'):
+                try:
+                    completed_date = datetime.fromisoformat(session['completedAt'].replace('Z', '+00:00')).date()
+                    sessions_by_date[completed_date.isoformat()] += 1
+                except (ValueError, TypeError):
+                    continue
         
         sessions_timeline = [
             {'date': date, 'count': count}
@@ -130,6 +134,30 @@ def calculate_campaign_analytics(campaign_id, sessions):
         # Calculate status distribution
         status_distribution = Counter(session.get('status', 'unknown') for session in sessions)
         
+        # Analyze CSAT feedback
+        csat_feedback = []
+        csat_ratings = []
+        
+        for session in sessions:
+            feedback = session.get('feedback')
+            if feedback:
+                rating = feedback.get('rating')
+                narrative = feedback.get('narrative', '')
+                
+                if rating is not None:
+                    csat_ratings.append(int(rating))
+                    csat_feedback.append({
+                        'sessionId': session.get('sessionId', session['PK'].replace('SESSION#', '')),
+                        'customerName': session.get('customerInfo', {}).get('name', 'Unknown'),
+                        'customerCompany': session.get('customerInfo', {}).get('company', 'Unknown'),
+                        'rating': int(rating),
+                        'narrative': narrative,
+                        'completedAt': session.get('completedAt', '')
+                    })
+        
+        # Calculate average CSAT rating
+        average_csat = round(sum(csat_ratings) / len(csat_ratings), 1) if csat_ratings else 0
+        
         analytics = {
             'campaignId': campaign_id,
             'totalSessions': total_sessions,
@@ -141,6 +169,9 @@ def calculate_campaign_analytics(campaign_id, sessions):
             'sessionsByDate': sessions_timeline,
             'customerCompanies': customer_companies,
             'statusDistribution': dict(status_distribution),
+            'csatFeedback': csat_feedback,
+            'averageCSAT': average_csat,
+            'totalCSATResponses': len(csat_ratings),
             'calculatedAt': get_timestamp()
         }
         
@@ -169,7 +200,8 @@ def update_campaign_session_counts(campaign_id):
         completed_sessions = len([s for s in sessions if s.get('status') == 'completed'])
         
         # Update campaign record
-        sessions_table.update_item(
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
+        campaigns_table.update_item(
             Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'},
             UpdateExpression='SET sessionCount = :total, completedSessionCount = :completed, updatedAt = :timestamp',
             ExpressionAttributeValues={
@@ -192,17 +224,17 @@ def get_campaigns_summary_analytics(event, context):
     try:
         owner_id = event.get('queryStringParameters', {}).get('ownerId') if event.get('queryStringParameters') else None
         
-        sessions_table = dynamodb.Table(SESSIONS_TABLE)
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
         
         # Get all campaigns
         if owner_id:
-            campaigns_resp = sessions_table.query(
+            campaigns_resp = campaigns_table.query(
                 IndexName='GSI1',
                 KeyConditionExpression='GSI1PK = :pk',
                 ExpressionAttributeValues={':pk': f'OWNER#{owner_id}'}
             )
         else:
-            campaigns_resp = sessions_table.scan(
+            campaigns_resp = campaigns_table.scan(
                 FilterExpression='SK = :sk AND begins_with(PK, :pk_prefix)',
                 ExpressionAttributeValues={
                     ':sk': 'METADATA',
@@ -281,13 +313,14 @@ def get_campaign_comparison_analytics(event, context):
         if len(campaign_ids) > 10:
             return lambda_response(400, {'error': 'Maximum 10 campaigns can be compared at once'})
         
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
         
         comparison_data = []
         
         for campaign_id in campaign_ids:
             # Get campaign info
-            campaign_resp = sessions_table.get_item(
+            campaign_resp = campaigns_table.get_item(
                 Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
             )
             

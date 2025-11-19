@@ -102,3 +102,58 @@ def parse_body(event):
         return {}
     except Exception:
         return {}
+def convert_decimal_to_int(value):
+    """Convert DynamoDB Decimal to int, handling None values"""
+    from decimal import Decimal
+    if value is None:
+        return 0
+    if isinstance(value, Decimal):
+        return int(value)
+    return int(value) if value else 0
+
+def serialize_dynamodb_item(item):
+    """Convert DynamoDB item with Decimal values to JSON-serializable format"""
+    from decimal import Decimal
+    
+    if isinstance(item, dict):
+        return {key: serialize_dynamodb_item(value) for key, value in item.items()}
+    elif isinstance(item, list):
+        return [serialize_dynamodb_item(value) for value in item]
+    elif isinstance(item, Decimal):
+        # Convert Decimal to int if it's a whole number, otherwise to float
+        if item % 1 == 0:
+            return int(item)
+        else:
+            return float(item)
+    else:
+        return item
+
+def build_update_expression(update_data, reserved_keywords=None):
+    """
+    Build DynamoDB UpdateExpression with proper handling of reserved keywords
+    
+    Args:
+        update_data (dict): Dictionary of field names and values to update
+        reserved_keywords (set): Set of reserved keywords that need ExpressionAttributeNames
+    
+    Returns:
+        tuple: (update_expression, expression_values, expression_names)
+    """
+    if reserved_keywords is None:
+        reserved_keywords = {'status', 'name', 'description', 'date', 'timestamp', 'type', 'order', 'size'}
+    
+    update_expression = 'SET updatedAt = :timestamp'
+    expression_values = {':timestamp': get_timestamp()}
+    expression_names = {}
+    
+    for field, value in update_data.items():
+        if field.lower() in reserved_keywords:
+            # Use ExpressionAttributeNames for reserved keywords
+            attr_name = f'#{field}'
+            update_expression += f', {attr_name} = :{field}'
+            expression_names[attr_name] = field
+        else:
+            update_expression += f', {field} = :{field}'
+        expression_values[f':{field}'] = value
+    
+    return update_expression, expression_values, expression_names

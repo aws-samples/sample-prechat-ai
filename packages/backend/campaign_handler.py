@@ -117,11 +117,11 @@ def list_campaigns(event, context):
     try:
         owner_id = event.get('queryStringParameters', {}).get('ownerId') if event.get('queryStringParameters') else None
         
-        sessions_table = dynamodb.Table(SESSIONS_TABLE)
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
         
         if owner_id:
             # Query campaigns by owner
-            response = sessions_table.query(
+            response = campaigns_table.query(
                 IndexName='GSI1',
                 KeyConditionExpression='GSI1PK = :pk',
                 ExpressionAttributeValues={':pk': f'OWNER#{owner_id}'},
@@ -129,7 +129,7 @@ def list_campaigns(event, context):
             )
         else:
             # Scan all campaigns
-            response = sessions_table.scan(
+            response = campaigns_table.scan(
                 FilterExpression='SK = :sk AND begins_with(PK, :pk_prefix)',
                 ExpressionAttributeValues={
                     ':sk': 'METADATA',
@@ -152,8 +152,8 @@ def list_campaigns(event, context):
                 'status': item['status'],
                 'createdAt': item['createdAt'],
                 'updatedAt': item.get('updatedAt', item['createdAt']),
-                'sessionCount': item.get('sessionCount', 0),
-                'completedSessionCount': item.get('completedSessionCount', 0)
+                'sessionCount': convert_decimal_to_int(item.get('sessionCount', 0)),
+                'completedSessionCount': convert_decimal_to_int(item.get('completedSessionCount', 0))
             })
         
         return lambda_response(200, {'campaigns': campaigns})

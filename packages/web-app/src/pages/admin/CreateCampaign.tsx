@@ -15,32 +15,19 @@ import {
 } from '@cloudscape-design/components'
 import { useI18n } from '../../i18n'
 import { authService } from '../../services/auth'
-import type { CreateCampaignRequest } from '../../types'
-
-// Mock API function - will be replaced with actual API call
-const mockCampaignApi = {
-  createCampaign: async (data: CreateCampaignRequest) => {
-    // Mock implementation
-    console.log('Creating campaign:', data)
-    return { campaignId: 'camp-' + Date.now() }
-  }
-}
-
-// Mock Cognito users - will be replaced with actual Cognito API call
-const mockCognitoUsers = [
-  { userId: 'user-001', email: 'john.doe@company.com', name: 'John Doe' },
-  { userId: 'user-002', email: 'jane.smith@company.com', name: 'Jane Smith' },
-  { userId: 'user-003', email: 'bob.wilson@company.com', name: 'Bob Wilson' }
-]
+import { campaignApi, adminApi } from '../../services/api'
+import type { CreateCampaignRequest, CognitoUser } from '../../types'
 
 export default function CreateCampaign() {
   const navigate = useNavigate()
   const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [loadingUser, setLoadingUser] = useState(true)
+  const [loadingUsers, setLoadingUsers] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [, setCurrentUserEmail] = useState('')
+  const [currentUserEmail, setCurrentUserEmail] = useState('')
+  const [cognitoUsers, setCognitoUsers] = useState<CognitoUser[]>([])
   const [formData, setFormData] = useState({
     campaignName: '',
     campaignCode: '',
@@ -55,14 +42,51 @@ export default function CreateCampaign() {
 
   useEffect(() => {
     loadCurrentUser()
+    loadCognitoUsers()
   }, [])
 
   const loadCurrentUser = async () => {
     try {
       const user = await authService.verifyToken()
       setCurrentUserEmail(user.email)
-      // Auto-select current user as default owner
-      const currentUser = mockCognitoUsers.find(u => u.email === user.email)
+    } catch (err) {
+      console.error('Failed to load current user:', err)
+      setError('Failed to load current user. Please login again.')
+    } finally {
+      setLoadingUser(false)
+    }
+  }
+
+  const loadCognitoUsers = async () => {
+    try {
+      setLoadingUsers(true)
+      const response = await adminApi.listCognitoUsers()
+      setCognitoUsers(response.users || [])
+      
+      // Auto-select current user as default owner if available
+      if (currentUserEmail) {
+        const currentUser = response.users.find((u: CognitoUser) => u.email === currentUserEmail)
+        if (currentUser) {
+          setFormData(prev => ({
+            ...prev,
+            ownerId: currentUser.userId,
+            ownerEmail: currentUser.email,
+            ownerName: currentUser.name
+          }))
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load Cognito users:', err)
+      setError('Failed to load users. Some features may not work properly.')
+    } finally {
+      setLoadingUsers(false)
+    }
+  }
+
+  // Update auto-selection when current user email is loaded
+  useEffect(() => {
+    if (currentUserEmail && cognitoUsers.length > 0 && !formData.ownerId) {
+      const currentUser = cognitoUsers.find(u => u.email === currentUserEmail)
       if (currentUser) {
         setFormData(prev => ({
           ...prev,
@@ -71,13 +95,8 @@ export default function CreateCampaign() {
           ownerName: currentUser.name
         }))
       }
-    } catch (err) {
-      console.error('Failed to load current user:', err)
-      setError('Failed to load current user. Please login again.')
-    } finally {
-      setLoadingUser(false)
     }
-  }
+  }, [currentUserEmail, cognitoUsers, formData.ownerId])
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
@@ -129,12 +148,39 @@ export default function CreateCampaign() {
     setSuccess('')
 
     try {
-      await mockCampaignApi.createCampaign(formData)
+      const campaignData: CreateCampaignRequest = {
+        campaignName: formData.campaignName.trim(),
+        campaignCode: formData.campaignCode.trim(),
+        description: formData.description.trim(),
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        ownerId: formData.ownerId
+      }
+
+      const result = await campaignApi.createCampaign(campaignData)
       setSuccess(t('campaign_created_successfully'))
-      setTimeout(() => navigate('/admin/campaigns'), 2000)
-    } catch (err) {
+      
+      // Navigate to campaign details or campaigns list after a short delay
+      setTimeout(() => {
+        if (result.campaignId) {
+          navigate(`/admin/campaigns/${result.campaignId}`)
+        } else {
+          navigate('/admin/campaigns')
+        }
+      }, 2000)
+    } catch (err: any) {
       console.error('Failed to create campaign:', err)
-      setError('Failed to create campaign. Please try again.')
+      
+      // Handle specific error messages
+      if (err.message?.includes('Campaign code already exists')) {
+        setValidationErrors(prev => ({ ...prev, campaignCode: 'Campaign code already exists' }))
+        setError('Campaign code already exists. Please choose a different code.')
+      } else if (err.message?.includes('Invalid owner ID')) {
+        setValidationErrors(prev => ({ ...prev, owner: 'Invalid owner selected' }))
+        setError('Invalid owner selected. Please choose a valid user.')
+      } else {
+        setError(err.message || 'Failed to create campaign. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -149,7 +195,7 @@ export default function CreateCampaign() {
   }
 
   const handleOwnerChange = (selectedOption: any) => {
-    const selectedUser = mockCognitoUsers.find(u => u.userId === selectedOption?.value)
+    const selectedUser = cognitoUsers.find(u => u.userId === selectedOption?.value)
     if (selectedUser) {
       setFormData(prev => ({
         ...prev,
@@ -198,7 +244,7 @@ export default function CreateCampaign() {
                 variant="primary"
                 onClick={handleSubmit}
                 loading={loading}
-                disabled={loadingUser}
+                disabled={loadingUser || loadingUsers}
               >
                 {t('save_campaign')}
               </Button>
@@ -295,13 +341,18 @@ export default function CreateCampaign() {
                     : null
                 }
                 onChange={({ detail }) => handleOwnerChange(detail.selectedOption)}
-                options={mockCognitoUsers.map(user => ({
-                  label: `${user.name} (${user.email})`,
-                  value: user.userId
-                }))}
+                options={cognitoUsers
+                  .filter(user => user.status === 'CONFIRMED' && user.enabled)
+                  .map(user => ({
+                    label: `${user.name} (${user.email})`,
+                    value: user.userId,
+                    description: `Status: ${user.status}`
+                  }))}
                 placeholder="Select campaign owner..."
                 invalid={!!validationErrors.owner}
-                loadingText={loadingUser ? "Loading users..." : undefined}
+                loadingText={loadingUsers ? "Loading users..." : undefined}
+                disabled={loadingUsers}
+                empty={cognitoUsers.length === 0 ? "No users available" : undefined}
               />
             </FormField>
           </SpaceBetween>

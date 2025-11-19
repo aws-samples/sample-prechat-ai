@@ -11,63 +11,21 @@ import {
   Badge,
   TextFilter,
   Pagination,
-  CollectionPreferences
+  CollectionPreferences,
+  Alert
 } from '@cloudscape-design/components'
 import { useI18n } from '../../i18n'
+import { campaignApi } from '../../services/api'
 import { Campaign } from '../../types'
 
-// Mock API function - will be replaced with actual API call
-const mockCampaignApi = {
-  listCampaigns: async (): Promise<{ campaigns: Campaign[] }> => {
-    // Mock data for development
-    return {
-      campaigns: [
-        {
-          campaignId: 'camp-001',
-          campaignName: 'Q1 2025 Enterprise Migration',
-          campaignCode: 'Q1-ENT-MIG',
-          description: 'Enterprise customer migration campaign for Q1 2025',
-          startDate: '2025-01-01',
-          endDate: '2025-03-31',
-          ownerId: 'user-001',
-          ownerEmail: 'john.doe@company.com',
-          ownerName: 'John Doe',
-          status: 'active',
-          createdAt: '2024-12-01T00:00:00Z',
-          updatedAt: '2024-12-01T00:00:00Z',
-          sessionCount: 15,
-          completedSessionCount: 8
-        },
-        {
-          campaignId: 'camp-002',
-          campaignName: 'SMB Cost Optimization',
-          campaignCode: 'SMB-COST-OPT',
-          description: 'Small and medium business cost optimization initiative',
-          startDate: '2024-11-01',
-          endDate: '2025-01-31',
-          ownerId: 'user-002',
-          ownerEmail: 'jane.smith@company.com',
-          ownerName: 'Jane Smith',
-          status: 'completed',
-          createdAt: '2024-10-15T00:00:00Z',
-          updatedAt: '2024-12-01T00:00:00Z',
-          sessionCount: 25,
-          completedSessionCount: 25
-        }
-      ]
-    }
-  }
-}
-
-interface CampaignTableItem extends Campaign {
-  completionRate: number
-}
+interface CampaignTableItem extends Campaign {}
 
 export default function CampaignDashboard() {
   const navigate = useNavigate()
   const { t } = useI18n()
   const [campaigns, setCampaigns] = useState<CampaignTableItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [selectedItems, setSelectedItems] = useState<CampaignTableItem[]>([])
   const [filteringText, setFilteringText] = useState('')
   const [currentPageIndex, setCurrentPageIndex] = useState(1)
@@ -82,16 +40,12 @@ export default function CampaignDashboard() {
   const loadCampaigns = async () => {
     try {
       setLoading(true)
-      const response = await mockCampaignApi.listCampaigns()
-      const campaignsWithRate = response.campaigns.map(campaign => ({
-        ...campaign,
-        completionRate: campaign.sessionCount > 0 
-          ? Math.round((campaign.completedSessionCount / campaign.sessionCount) * 100)
-          : 0
-      }))
-      setCampaigns(campaignsWithRate)
-    } catch (err) {
+      setError('')
+      const response = await campaignApi.listCampaigns()
+      setCampaigns(response.campaigns)
+    } catch (err: any) {
       console.error('Failed to load campaigns:', err)
+      setError(err.message || 'Failed to load campaigns. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -99,11 +53,15 @@ export default function CampaignDashboard() {
 
   const handleDelete = async (campaignId: string) => {
     try {
-      // TODO: Implement actual delete API call
-      console.log('Delete campaign:', campaignId)
-      loadCampaigns()
-    } catch (err) {
+      setError('')
+      await campaignApi.deleteCampaign(campaignId)
+      // Remove the deleted campaign from the local state
+      setCampaigns(prev => prev.filter(campaign => campaign.campaignId !== campaignId))
+      // Also remove from selected items if it was selected
+      setSelectedItems(prev => prev.filter(campaign => campaign.campaignId !== campaignId))
+    } catch (err: any) {
       console.error('Failed to delete campaign:', err)
+      setError(err.message || 'Failed to delete campaign. Please try again.')
     }
   }
 
@@ -151,14 +109,7 @@ export default function CampaignDashboard() {
         aValue = new Date(a.endDate).getTime()
         bValue = new Date(b.endDate).getTime()
         break
-      case 'sessionCount':
-        aValue = a.sessionCount
-        bValue = b.sessionCount
-        break
-      case 'completionRate':
-        aValue = a.completionRate
-        bValue = b.completionRate
-        break
+
       default:
         return 0
     }
@@ -191,6 +142,8 @@ export default function CampaignDashboard() {
         >
           {t('campaigns')}
         </Header>
+
+        {error && <Alert type="error" dismissible onDismiss={() => setError('')}>{error}</Alert>}
 
         <Table
           columnDefinitions={[
@@ -242,19 +195,7 @@ export default function CampaignDashboard() {
                 </Box>
               )
             },
-            {
-              id: 'sessions',
-              header: t('campaign_sessions'),
-              sortingField: 'sessionCount',
-              cell: (item) => (
-                <Box>
-                  <Box fontWeight="bold">{item.sessionCount} {t('total_sessions')}</Box>
-                  <Box fontSize="body-s" color="text-status-info">
-                    {item.completedSessionCount} {t('completed_sessions')} ({item.completionRate}%)
-                  </Box>
-                </Box>
-              )
-            },
+
             {
               id: 'actions',
               header: t('admin_actions'),

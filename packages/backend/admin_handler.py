@@ -6,7 +6,7 @@ import logging
 import os
 from decimal import Decimal
 from botocore.exceptions import ClientError, ReadTimeoutError
-from utils import lambda_response, parse_body, get_timestamp
+from utils import lambda_response, parse_body, get_timestamp, convert_decimal_to_int, serialize_dynamodb_item
 
 # Configure logging
 logger = logging.getLogger()
@@ -19,6 +19,7 @@ sqs = boto3.client('sqs')
 ANALYSIS_QUEUE_URL = os.environ.get('ANALYSIS_QUEUE_URL')
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
 MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
+CAMPAIGNS_TABLE = os.environ.get('CAMPAIGNS_TABLE')
 
 def clean_llm_response(content):
     """Clean up LLM response by removing code block markers and trimming"""
@@ -98,9 +99,32 @@ def list_sessions(event, context):
                 'salesRepEmail': item.get('salesRepEmail', item.get('salesRepId', '')),
                 'agentId': item.get('agentId', ''),
                 'campaignId': item.get('campaignId', ''),
-                'campaignName': item.get('campaignName', '')
+                'campaignName': ''  # Will be populated from campaign table if available
                 # PIN 번호는 보안상 세션 목록에서 제외
             }
+            
+            # Get detailed campaign info if campaign is associated
+            if item.get('campaignId') and CAMPAIGNS_TABLE:
+                try:
+                    campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
+                    campaign_resp = campaigns_table.get_item(
+                        Key={'PK': f'CAMPAIGN#{item["campaignId"]}', 'SK': 'METADATA'}
+                    )
+                    
+                    if 'Item' in campaign_resp:
+                        campaign = campaign_resp['Item']
+                        # Update campaignName with latest value from campaigns table
+                        session_data['campaignName'] = campaign['campaignName']
+                        session_data['campaignInfo'] = {
+                            'campaignCode': campaign['campaignCode'],
+                            'description': campaign.get('description', ''),
+                            'status': campaign['status'],
+                            'ownerName': campaign['ownerName'],
+                            'ownerEmail': campaign['ownerEmail']
+                        }
+                except Exception as e:
+                    logger.warning(f"Failed to get campaign info for session {session_id}: {str(e)}")
+                    # Continue without campaign info
             
             sessions.append(session_data)
         
@@ -336,8 +360,33 @@ def get_session_details(event, context):
         
         session = session_resp['Item']
         
-        # Return session details including PIN for the owner
-        return lambda_response(200, {
+        # Get campaign info if associated
+        campaign_info = None
+        campaign_id = session.get('campaignId')
+        if campaign_id and CAMPAIGNS_TABLE:
+            try:
+                campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
+                campaign_resp = campaigns_table.get_item(
+                    Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
+                )
+                
+                if 'Item' in campaign_resp:
+                    campaign = campaign_resp['Item']
+                    campaign_info = {
+                        'campaignId': campaign['campaignId'],
+                        'campaignName': campaign['campaignName'],
+                        'campaignCode': campaign['campaignCode'],
+                        'description': campaign.get('description', ''),
+                        'status': campaign['status'],
+                        'ownerName': campaign['ownerName'],
+                        'ownerEmail': campaign['ownerEmail'],
+                        'startDate': campaign['startDate'],
+                        'endDate': campaign['endDate']
+                    }
+            except Exception as e:
+                logger.warning(f"Failed to get campaign info for session {session_id}: {str(e)}")
+        
+        response_data = {
             'sessionId': session['sessionId'],
             'status': session['status'],
             'customerInfo': session['customerInfo'],
@@ -349,8 +398,16 @@ def get_session_details(event, context):
             'completedAt': session.get('completedAt', ''),
             'privacyConsentAgreed': session.get('privacyConsentAgreed', False),
             'privacyConsentTimestamp': session.get('privacyConsentTimestamp', ''),
-            'meetingLog': session.get('meetingLog', '')
-        })
+            'meetingLog': session.get('meetingLog', ''),
+            'campaignId': session.get('campaignId', ''),
+            'campaignName': campaign_info['campaignName'] if campaign_info else session.get('campaignName', '')
+        }
+        
+        # Add detailed campaign info if available
+        if campaign_info:
+            response_data['campaignInfo'] = campaign_info
+        
+        return lambda_response(200, response_data)
         
     except ClientError as e:
         error_code = e.response['Error']['Code']

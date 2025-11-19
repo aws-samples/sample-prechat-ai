@@ -65,6 +65,7 @@ export interface CampaignTranslations {
   
   // Campaign List
   'campaign_list_title': string;
+  'campaign_list_info': string;
   'campaign_name': string;
   'campaign_code': string;
   'campaign_owner': string;
@@ -90,6 +91,11 @@ export interface CampaignTranslations {
   // Campaign Details
   'campaign_details_title': string;
   'campaign_details': string;
+  'campaign_description': string;
+  'campaign_metadata': string;
+  'campaign_performance': string;
+  'campaign_overview': string;
+  'campaign_statistics': string;
   'associated_sessions': string;
   'total_sessions': string;
   'completion_rate': string;
@@ -102,6 +108,53 @@ export interface CampaignTranslations {
   'edit_campaign': string;
   'delete_campaign': string;
   'view_sessions': string;
+  
+  // Campaign Dates and Duration
+  'campaign_start_date': string;
+  'campaign_end_date': string;
+  'campaign_duration': string;
+  'campaign_created_date': string;
+  'campaign_updated_date': string;
+  
+  // Campaign Metrics
+  'campaign_session_count': string;
+  'campaign_active_count': string;
+  'campaign_completed_count': string;
+  'campaign_success_rate': string;
+  'campaign_conversion_rate': string;
+  'campaign_engagement_rate': string;
+  
+  // Campaign Filtering and Sorting
+  'campaign_filter_by_status': string;
+  'campaign_filter_by_owner': string;
+  'campaign_filter_by_date': string;
+  'campaign_sort_by_name': string;
+  'campaign_sort_by_date': string;
+  'campaign_sort_by_sessions': string;
+  
+  // Campaign Actions
+  'campaign_export_data': string;
+  'campaign_import_data': string;
+  'campaign_bulk_actions': string;
+  'campaign_select_all': string;
+  'campaign_deselect_all': string;
+  'campaign_archive': string;
+  'campaign_restore': string;
+  'campaign_duplicate': string;
+  'campaign_share': string;
+  
+  // Campaign Permissions
+  'campaign_permissions': string;
+  'campaign_access_control': string;
+  'campaign_visibility': string;
+  'campaign_public': string;
+  'campaign_private': string;
+  'campaign_team_only': string;
+  'campaign_owner_only': string;
+  'campaign_readonly': string;
+  'campaign_edit_access': string;
+  'campaign_full_access': string;
+  'campaign_no_access': string;
   
   // Validation Messages
   'campaign_name_required': string;
@@ -136,4 +189,21 @@ export interface CampaignTranslations {
   'no_campaign': string;
   'campaign_association': string;
   'remove_campaign_association': string;
+  
+  // Date Formatting
+  'campaign_date_format': string;
+  'campaign_datetime_format': string;
+  'campaign_time_format': string;
+  'campaign_date_range_format': string;
+  
+  // Relative Date Formatting
+  'campaign_relative_date_today': string;
+  'campaign_relative_date_yesterday': string;
+  'campaign_relative_date_this_week': string;
+  'campaign_relative_date_last_week': string;
+  'campaign_relative_date_this_month': string;
+  'campaign_relative_date_last_month': string;
+  'campaign_relative_date_days_ago': string;
+  'campaign_relative_date_weeks_ago': string;
+  'campaign_relative_date_months_ago': string;
 }

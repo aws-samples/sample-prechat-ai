@@ -11,112 +11,22 @@ import {
   Badge,
   ColumnLayout,
   Button,
-  Table,
   ButtonDropdown,
-  Modal,
-  BarChart,
-  PieChart,
-  LineChart
+  Modal
 } from '@cloudscape-design/components'
 import { useI18n } from '../../i18n'
+import { campaignApi } from '../../services/api'
+import {
+  CampaignMetricsCards,
+  CampaignSessionsChart,
+  CampaignPurposesChart,
+  CampaignCompaniesTable,
+  CampaignCSATTable,
+  CampaignReportExport
+} from '../../components'
 import type { Campaign, CampaignAnalytics, SessionSummary } from '../../types'
 
-// Mock API functions - will be replaced with actual API calls
-const mockCampaignApi = {
-  getCampaign: async (_campaignId: string): Promise<Campaign> => {
-    return {
-      campaignId: 'camp-001',
-      campaignName: 'Q1 2025 Enterprise Migration',
-      campaignCode: 'Q1-ENT-MIG',
-      description: 'Enterprise customer migration campaign for Q1 2025. This campaign focuses on helping large enterprise customers migrate their existing infrastructure to AWS cloud services.',
-      startDate: '2025-01-01',
-      endDate: '2025-03-31',
-      ownerId: 'user-001',
-      ownerEmail: 'john.doe@company.com',
-      ownerName: 'John Doe',
-      status: 'active',
-      createdAt: '2024-12-01T00:00:00Z',
-      updatedAt: '2024-12-01T00:00:00Z',
-      sessionCount: 15,
-      completedSessionCount: 8
-    }
-  },
 
-  getCampaignAnalytics: async (campaignId: string): Promise<CampaignAnalytics> => {
-    return {
-      campaignId: campaignId,
-      totalSessions: 15,
-      activeSessions: 7,
-      completedSessions: 8,
-      completionRate: 53.3,
-      averageSessionDuration: 45.2,
-      topConsultationPurposes: [
-        { purpose: 'Migration Consultation', count: 8 },
-        { purpose: 'Cost Optimization', count: 4 },
-        { purpose: 'Technical Support', count: 3 }
-      ],
-      sessionsByDate: [
-        { date: '2025-01-01', count: 2 },
-        { date: '2025-01-02', count: 3 },
-        { date: '2025-01-03', count: 1 },
-        { date: '2025-01-04', count: 4 },
-        { date: '2025-01-05', count: 2 },
-        { date: '2025-01-06', count: 3 }
-      ],
-      customerCompanies: [
-        { company: 'TechCorp Inc', sessionCount: 5 },
-        { company: 'Global Solutions Ltd', sessionCount: 3 },
-        { company: 'Enterprise Systems', sessionCount: 4 },
-        { company: 'Digital Innovations', sessionCount: 3 }
-      ]
-    }
-  },
-
-  getCampaignSessions: async (_campaignId: string): Promise<SessionSummary[]> => {
-    return [
-      {
-        sessionId: 'sess-001',
-        status: 'completed',
-        customerInfo: {
-          name: 'John Smith',
-          email: 'john.smith@techcorp.com',
-          company: 'TechCorp Inc'
-        },
-        createdAt: '2025-01-01T10:00:00Z',
-        completedAt: '2025-01-01T11:30:00Z',
-        consultationPurposes: 'Migration Consultation'
-      },
-      {
-        sessionId: 'sess-002',
-        status: 'active',
-        customerInfo: {
-          name: 'Sarah Johnson',
-          email: 'sarah.j@globalsolutions.com',
-          company: 'Global Solutions Ltd'
-        },
-        createdAt: '2025-01-02T14:00:00Z',
-        consultationPurposes: 'Cost Optimization'
-      },
-      {
-        sessionId: 'sess-003',
-        status: 'completed',
-        customerInfo: {
-          name: 'Mike Wilson',
-          email: 'mike.w@enterprise.com',
-          company: 'Enterprise Systems'
-        },
-        createdAt: '2025-01-03T09:00:00Z',
-        completedAt: '2025-01-03T10:45:00Z',
-        consultationPurposes: 'Technical Support'
-      }
-    ]
-  },
-
-  deleteCampaign: async (campaignId: string) => {
-    console.log('Deleting campaign:', campaignId)
-    return { success: true }
-  }
-}
 
 export default function CampaignDetails() {
   const { campaignId } = useParams<{ campaignId: string }>()
@@ -142,14 +52,14 @@ export default function CampaignDetails() {
     try {
       setLoading(true)
       const [campaignData, analyticsData, sessionsData] = await Promise.all([
-        mockCampaignApi.getCampaign(campaignId),
-        mockCampaignApi.getCampaignAnalytics(campaignId),
-        mockCampaignApi.getCampaignSessions(campaignId)
+        campaignApi.getCampaign(campaignId),
+        campaignApi.getCampaignAnalytics(campaignId),
+        campaignApi.getCampaignSessions(campaignId)
       ])
 
       setCampaign(campaignData)
       setAnalytics(analyticsData)
-      setSessions(sessionsData)
+      setSessions(sessionsData.sessions || [])
     } catch (err) {
       console.error('Failed to load campaign data:', err)
       setError('Failed to load campaign details. Please try again.')
@@ -163,7 +73,7 @@ export default function CampaignDetails() {
 
     try {
       setDeleting(true)
-      await mockCampaignApi.deleteCampaign(campaignId)
+      await campaignApi.deleteCampaign(campaignId)
       navigate('/admin/campaigns')
     } catch (err) {
       console.error('Failed to delete campaign:', err)
@@ -186,20 +96,7 @@ export default function CampaignDetails() {
     return <Badge color={config.type}>{config.text}</Badge>
   }
 
-  const getSessionStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge color="blue">{t('active')}</Badge>
-      case 'completed':
-        return <Badge color="green">{t('completed')}</Badge>
-      case 'expired':
-        return <Badge color="red">{t('expired')}</Badge>
-      case 'inactive':
-        return <Badge color="grey">{t('inactive')}</Badge>
-      default:
-        return <Badge>{status}</Badge>
-    }
-  }
+
 
   if (loading) {
     return (
@@ -228,6 +125,13 @@ export default function CampaignDetails() {
           variant="h1"
           actions={
             <SpaceBetween direction="horizontal" size="xs">
+              {analytics && (
+                <CampaignReportExport 
+                  campaign={campaign}
+                  analytics={analytics}
+                  sessions={sessions}
+                />
+              )}
               <Button variant="normal" onClick={() => navigate('/admin/campaigns')}>
                 Back to Campaigns
               </Button>
@@ -296,22 +200,10 @@ export default function CampaignDetails() {
           </Box>
         </ColumnLayout>
 
-        <ColumnLayout columns={3}>
+        <ColumnLayout columns={1}>
           <Box>
             <Box variant="awsui-key-label">Campaign Period</Box>
             <Box>{new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}</Box>
-          </Box>
-          <Box>
-            <Box variant="awsui-key-label">{t('total_sessions')}</Box>
-            <Box fontWeight="bold" fontSize="heading-m">{campaign.sessionCount}</Box>
-          </Box>
-          <Box>
-            <Box variant="awsui-key-label">{t('completion_rate')}</Box>
-            <Box fontWeight="bold" fontSize="heading-m">
-              {campaign.sessionCount > 0 
-                ? Math.round((campaign.completedSessionCount / campaign.sessionCount) * 100)
-                : 0}%
-            </Box>
           </Box>
         </ColumnLayout>
 
@@ -322,176 +214,16 @@ export default function CampaignDetails() {
               id: 'analytics',
               content: analytics ? (
                 <SpaceBetween size="l">
-                  {/* Key Metrics */}
-                  <ColumnLayout columns={4}>
-                    <Box>
-                      <Box variant="awsui-key-label">{t('total_sessions')}</Box>
-                      <Box fontWeight="bold" fontSize="display-l">{analytics.totalSessions}</Box>
-                    </Box>
-                    <Box>
-                      <Box variant="awsui-key-label">{t('active_sessions')}</Box>
-                      <Box fontWeight="bold" fontSize="display-l">{analytics.activeSessions}</Box>
-                    </Box>
-                    <Box>
-                      <Box variant="awsui-key-label">{t('completed_sessions')}</Box>
-                      <Box fontWeight="bold" fontSize="display-l">{analytics.completedSessions}</Box>
-                    </Box>
-                    <Box>
-                      <Box variant="awsui-key-label">{t('average_session_duration')}</Box>
-                      <Box fontWeight="bold" fontSize="display-l">{analytics.averageSessionDuration}min</Box>
-                    </Box>
-                  </ColumnLayout>
-
-                  {/* Charts */}
+                  <CampaignMetricsCards analytics={analytics} loading={loading} />
+                  
                   <ColumnLayout columns={2}>
-                    <Container header={<Header variant="h3">{t('top_consultation_purposes')}</Header>}>
-                      <PieChart
-                        data={analytics.topConsultationPurposes.map(item => ({
-                          title: item.purpose,
-                          value: item.count
-                        }))}
-                        detailPopoverContent={(datum) => [
-                          { key: "Purpose", value: datum.title },
-                          { key: "Sessions", value: datum.value }
-                        ]}
-                        segmentDescription={(datum, sum) => 
-                          `${datum.value} sessions, ${((datum.value / sum) * 100).toFixed(0)}%`
-                        }
-                        i18nStrings={{
-                          filterLabel: "Filter displayed data",
-                          filterPlaceholder: "Filter data",
-                          filterSelectedAriaLabel: "selected",
-                          detailPopoverDismissAriaLabel: "Dismiss",
-                          legendAriaLabel: "Legend",
-                          chartAriaRoleDescription: "pie chart",
-                          segmentAriaRoleDescription: "segment"
-                        }}
-                        ariaDescription="Pie chart showing distribution of consultation purposes"
-                        ariaLabel="Consultation purposes distribution"
-                        errorText="Error loading chart"
-                        loadingText="Loading chart"
-                        recoveryText="Retry"
-                        empty={
-                          <Box textAlign="center" color="inherit">
-                            <b>No data available</b>
-                            <Box variant="p" color="inherit">
-                              There is no data available
-                            </Box>
-                          </Box>
-                        }
-                        noMatch={
-                          <Box textAlign="center" color="inherit">
-                            <b>No matching data</b>
-                            <Box variant="p" color="inherit">
-                              There is no matching data to display
-                            </Box>
-                          </Box>
-                        }
-                      />
-                    </Container>
-
-                    <Container header={<Header variant="h3">{t('customer_companies')}</Header>}>
-                      <BarChart
-                        series={[
-                          {
-                            title: "Sessions",
-                            type: "bar",
-                            data: analytics.customerCompanies.map(item => ({
-                              x: item.company,
-                              y: item.sessionCount
-                            }))
-                          }
-                        ]}
-                        xDomain={analytics.customerCompanies.map(item => item.company)}
-                        yDomain={[0, Math.max(...analytics.customerCompanies.map(item => item.sessionCount)) + 1]}
-                        i18nStrings={{
-                          filterLabel: "Filter displayed data",
-                          filterPlaceholder: "Filter data",
-                          filterSelectedAriaLabel: "selected",
-                          detailPopoverDismissAriaLabel: "Dismiss",
-                          legendAriaLabel: "Legend",
-                          chartAriaRoleDescription: "bar chart",
-                          xTickFormatter: (e) => e.toString(),
-                          yTickFormatter: (e) => e.toString()
-                        }}
-                        ariaLabel="Sessions by customer company"
-                        errorText="Error loading chart"
-                        loadingText="Loading chart"
-                        recoveryText="Retry"
-                        empty={
-                          <Box textAlign="center" color="inherit">
-                            <b>No data available</b>
-                            <Box variant="p" color="inherit">
-                              There is no data available
-                            </Box>
-                          </Box>
-                        }
-                        noMatch={
-                          <Box textAlign="center" color="inherit">
-                            <b>No matching data</b>
-                            <Box variant="p" color="inherit">
-                              There is no matching data to display
-                            </Box>
-                          </Box>
-                        }
-                      />
-                    </Container>
+                    <CampaignSessionsChart analytics={analytics} loading={loading} />
+                    <CampaignPurposesChart analytics={analytics} loading={loading} />
                   </ColumnLayout>
-
-                  {/* Sessions Timeline */}
-                  <Container header={<Header variant="h3">{t('sessions_by_date')}</Header>}>
-                    <LineChart
-                      series={[
-                        {
-                          title: "Sessions",
-                          type: "line",
-                          data: analytics.sessionsByDate.map(item => ({
-                            x: new Date(item.date),
-                            y: item.count
-                          }))
-                        }
-                      ]}
-                      xDomain={[
-                        new Date(Math.min(...analytics.sessionsByDate.map(item => new Date(item.date).getTime()))),
-                        new Date(Math.max(...analytics.sessionsByDate.map(item => new Date(item.date).getTime())))
-                      ]}
-                      yDomain={[0, Math.max(...analytics.sessionsByDate.map(item => item.count)) + 1]}
-                      i18nStrings={{
-                        filterLabel: "Filter displayed data",
-                        filterPlaceholder: "Filter data",
-                        filterSelectedAriaLabel: "selected",
-                        detailPopoverDismissAriaLabel: "Dismiss",
-                        legendAriaLabel: "Legend",
-                        chartAriaRoleDescription: "line chart",
-                        xTickFormatter: (e) => 
-                          e.toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "numeric"
-                          }),
-                        yTickFormatter: (e) => e.toString()
-                      }}
-                      ariaLabel="Sessions over time"
-                      errorText="Error loading chart"
-                      loadingText="Loading chart"
-                      recoveryText="Retry"
-                      empty={
-                        <Box textAlign="center" color="inherit">
-                          <b>No data available</b>
-                          <Box variant="p" color="inherit">
-                            There is no data available
-                          </Box>
-                        </Box>
-                      }
-                      noMatch={
-                        <Box textAlign="center" color="inherit">
-                          <b>No matching data</b>
-                          <Box variant="p" color="inherit">
-                            There is no matching data to display
-                          </Box>
-                        </Box>
-                      }
-                    />
-                  </Container>
+                  
+                  <CampaignCompaniesTable analytics={analytics} loading={loading} />
+                  
+                  <CampaignCSATTable analytics={analytics} loading={loading} />
                 </SpaceBetween>
               ) : (
                 <Box textAlign="center" padding="l">
@@ -503,70 +235,15 @@ export default function CampaignDetails() {
               label: t('associated_sessions'),
               id: 'sessions',
               content: (
-                <Table
-                  columnDefinitions={[
-                    {
-                      id: 'customer',
-                      header: 'Customer',
-                      cell: (item) => (
-                        <Box>
-                          <Box fontWeight="bold">{item.customerInfo.name}</Box>
-                          <Box fontSize="body-s" color="text-status-inactive">
-                            {item.customerInfo.company}
-                          </Box>
-                          <Box fontSize="body-s" color="text-status-inactive">
-                            {item.customerInfo.email}
-                          </Box>
-                        </Box>
-                      )
-                    },
-                    {
-                      id: 'purpose',
-                      header: 'Consultation Purpose',
-                      cell: (item) => item.consultationPurposes || '-'
-                    },
-                    {
-                      id: 'status',
-                      header: 'Status',
-                      cell: (item) => getSessionStatusBadge(item.status)
-                    },
-                    {
-                      id: 'created',
-                      header: 'Created',
-                      cell: (item) => new Date(item.createdAt).toLocaleDateString()
-                    },
-                    {
-                      id: 'completed',
-                      header: 'Completed',
-                      cell: (item) => item.completedAt ? new Date(item.completedAt).toLocaleDateString() : '-'
-                    },
-                    {
-                      id: 'actions',
-                      header: 'Actions',
-                      cell: (item) => (
-                        <Button
-                          variant="normal"
-                          onClick={() => navigate(`/admin/sessions/${item.sessionId}`)}
-                          iconName="external"
-                        >
-                          View Details
-                        </Button>
-                      )
-                    }
-                  ]}
-                  items={sessions}
-                  loading={false}
-                  empty={
-                    <Box textAlign="center" color="inherit">
-                      <Box variant="strong" textAlign="center" color="inherit">
-                        {t('no_sessions_found')}
-                      </Box>
-                      <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                        No sessions are associated with this campaign yet.
-                      </Box>
-                    </Box>
-                  }
-                />
+                <Box textAlign="center" padding="l">
+                    <Button
+                      variant="primary"
+                      onClick={() => navigate(`/admin?mySession=n&campaignCode=${campaign.campaignCode}`)}
+                      iconName="external"
+                    >
+                      {t('view_all_sessions_for_campaign')}
+                    </Button>
+                </Box>
               )
             }
           ]}
