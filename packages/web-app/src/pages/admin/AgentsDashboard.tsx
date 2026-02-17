@@ -9,92 +9,46 @@ import {
   SpaceBetween,
   Badge,
   Box,
-  ButtonDropdown,
-  Modal,
-  FormField,
-  Input
+  ButtonDropdown
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
-import type { AgentCoreAgent } from '../../types'
+import type { AgentConfiguration } from '../../types'
 import { useI18n } from '../../i18n'
+import { extractModelName } from '../../constants'
+
+const ROLE_LABELS: Record<string, string> = {
+  prechat: 'Consultation',
+  summary: 'Analysis',
+  planning: 'Planning'
+}
 
 export default function AgentsDashboard() {
   const navigate = useNavigate()
   const { t } = useI18n()
-  const [agents, setAgents] = useState<AgentCoreAgent[]>([])
+  const [configs, setConfigs] = useState<AgentConfiguration[]>([])
   const [loading, setLoading] = useState(true)
-  const [showMemoryModal, setShowMemoryModal] = useState(false)
-  const [selectedAgentId, setSelectedAgentId] = useState('')
-  const [memoryStorageDays, setMemoryStorageDays] = useState(30)
 
   useEffect(() => {
-    loadAgents()
+    loadConfigs()
   }, [])
 
-  const loadAgents = async () => {
+  const loadConfigs = async () => {
     try {
-      const response = await adminApi.listAgents()
-      setAgents(response.agents || [])
+      const response = await adminApi.listAgentConfigs()
+      setConfigs(response.configs || [])
     } catch (err) {
-      console.error('Failed to load agents:', err)
+      console.error('Failed to load agent configs:', err)
     } finally {
       setLoading(false)
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PREPARED':
-        return <Badge color="green">{t('prepared')}</Badge>
-      case 'PREPARING':
-        return <Badge color="blue">{t('preparing')}</Badge>
-      case 'NOT_PREPARED':
-        return <Badge color="grey">{t('not_prepared')}</Badge>
-      case 'CREATING':
-        return <Badge color="blue">{t('creating')}</Badge>
-      case 'UPDATING':
-        return <Badge color="blue">{t('updating')}</Badge>
-      case 'DELETING':
-        return <Badge color="red">{t('deleting')}</Badge>
-      case 'FAILED':
-        return <Badge color="red">{t('failed')}</Badge>
-      default:
-        return <Badge>{status}</Badge>
-    }
-  }
-
-  const handlePrepare = async (agentId: string) => {
+  const handleDelete = async (configId: string) => {
     try {
-      await adminApi.prepareAgent(agentId)
-      loadAgents()
+      await adminApi.deleteAgentConfig(configId)
+      loadConfigs()
     } catch (err) {
-      console.error('Failed to prepare agent:', err)
-    }
-  }
-
-  const handleDelete = async (agentId: string) => {
-    try {
-      await adminApi.deleteAgent(agentId)
-      loadAgents()
-    } catch (err) {
-      console.error('Failed to delete agent:', err)
-    }
-  }
-
-  const handleEnableMemory = (agentId: string) => {
-    setSelectedAgentId(agentId)
-    setShowMemoryModal(true)
-  }
-
-  const confirmEnableMemory = async () => {
-    try {
-      await adminApi.enableAgentMemory(selectedAgentId, memoryStorageDays)
-      alert(t('agents_memory_success', { days: memoryStorageDays }))
-      setShowMemoryModal(false)
-      loadAgents()
-    } catch (err) {
-      console.error('Failed to enable memory:', err)
-      alert(t('agents_memory_failed'))
+      console.error('Failed to delete agent config:', err)
     }
   }
 
@@ -115,7 +69,7 @@ export default function AgentsDashboard() {
               <Button
                 variant="normal"
                 iconName="refresh"
-                onClick={loadAgents}
+                onClick={loadConfigs}
                 loading={loading}
               >
                 {t('agents_refresh')}
@@ -140,47 +94,43 @@ export default function AgentsDashboard() {
                 header: t('admin_agent_name'),
                 cell: (item) => (
                   <Box>
-                    <Box fontWeight="bold">{item.agentName}</Box>
+                    <Box fontWeight="bold">{item.agentName || `${ROLE_LABELS[item.agentRole] || item.agentRole} Agent`}</Box>
                     <Box fontSize="body-s" color="text-status-inactive">
-                      ID: {item.agentId}
+                      ID: {item.configId}
                     </Box>
                   </Box>
+                )
+              },
+              {
+                id: 'role',
+                header: t('agent_role'),
+                cell: (item) => (
+                  <Badge color={
+                    item.agentRole === 'prechat' ? 'blue' :
+                    item.agentRole === 'summary' ? 'green' : 'grey'
+                  }>
+                    {ROLE_LABELS[item.agentRole] || item.agentRole}
+                  </Badge>
                 )
               },
               {
                 id: 'model',
                 header: t('foundation_model'),
-                cell: (item) => {
-                  // Extract model name from ARN
-                  const modelArn = item.foundationModel
-                  if (modelArn.includes('claude-3-haiku')) return 'Claude 3 Haiku'
-                  if (modelArn.includes('claude-3-sonnet')) return 'Claude 3 Sonnet'
-                  if (modelArn.includes('claude-3-5-sonnet-20240620')) return 'Claude 3.5 Sonnet (June)'
-                  if (modelArn.includes('claude-3-5-sonnet-20241022')) return 'Claude 3.5 Sonnet (Oct)'
-                  if (modelArn.includes('claude-3-7-sonnet')) return 'Claude 3.7 Sonnet'
-                  if (modelArn.includes('claude-sonnet-4')) return 'Claude Sonnet 4'
-                  if (modelArn.includes('nova-micro')) return 'Nova Micro'
-                  if (modelArn.includes('nova-lite')) return 'Nova Lite'
-                  if (modelArn.includes('nova-pro')) return 'Nova Pro'
-                  return t('unknown')
-                }
+                cell: (item) => extractModelName(item.modelId)
               },
               {
                 id: 'status',
                 header: t('status'),
-                cell: (item) => getStatusBadge(item.agentStatus)
+                cell: (item) => (
+                  <Badge color={item.status === 'active' ? 'green' : 'grey'}>
+                    {item.status}
+                  </Badge>
+                )
               },
               {
-                id: 'memory',
-                header: t('agents_memory'),
-                cell: (item) => (
-                  <Box>
-                    <Box>{item.memoryStorageDays}{t('agents_days')}</Box>
-                    <Box fontSize="body-s" color="text-status-inactive">
-                      {t('storage_days')}
-                    </Box>
-                  </Box>
-                )
+                id: 'campaign',
+                header: t('campaign_association') || 'Campaign',
+                cell: (item) => item.campaignId || '-'
               },
               {
                 id: 'actions',
@@ -189,40 +139,24 @@ export default function AgentsDashboard() {
                   <ButtonDropdown
                     expandToViewport
                     items={[
-                      ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
+                      {
                         text: t('agents_edit_agent'),
                         id: 'edit',
                         iconName: 'edit' as const
-                      }] : []),
-                      ...(item.agentStatus === 'NOT_PREPARED' ? [{
-                        text: t('agents_prepare_agent'),
-                        id: 'prepare',
-                        iconName: 'status-positive' as const
-                      }] : []),
-                      ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
-                        text: t('agents_enable_memory'),
-                        id: 'enable-memory',
-                        iconName: 'refresh' as const
-                      }] : []),
-                      ...(item.agentStatus !== 'DELETING' && item.agentStatus !== 'CREATING' ? [{
+                      },
+                      {
                         text: t('agents_remove_agent'),
                         id: 'delete',
                         iconName: 'remove' as const
-                      }] : [])
+                      }
                     ]}
                     onItemClick={({ detail }) => {
                       switch (detail.id) {
                         case 'edit':
-                          navigate(`/admin/agents/${item.agentId}/edit`)
-                          break
-                        case 'prepare':
-                          handlePrepare(item.agentId)
+                          navigate(`/admin/agents/${item.configId}/edit`)
                           break
                         case 'delete':
-                          handleDelete(item.agentId)
-                          break
-                        case 'enable-memory':
-                          handleEnableMemory(item.agentId)
+                          handleDelete(item.configId)
                           break
                       }
                     }}
@@ -232,7 +166,7 @@ export default function AgentsDashboard() {
                 )
               }
             ]}
-            items={agents}
+            items={configs}
             loading={loading}
             empty={
               <Box textAlign="center" color="inherit">
@@ -249,46 +183,6 @@ export default function AgentsDashboard() {
             }
           />
         </div>
-
-        <Modal
-          visible={showMemoryModal}
-          onDismiss={() => setShowMemoryModal(false)}
-          header={t('agents_memory_settings')}
-          footer={
-            <Box float="right">
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button variant="link" onClick={() => setShowMemoryModal(false)}>
-                  {t('cancel')}
-                </Button>
-                <Button variant="primary" onClick={confirmEnableMemory}>
-                  {t('agents_enable_memory')}
-                </Button>
-              </SpaceBetween>
-            </Box>
-          }
-        >
-          <SpaceBetween size="m">
-            <Box>
-              {t('agents_memory_description')}
-            </Box>
-            <FormField 
-              label={t('memory_storage_days')} 
-              description={t('admin_memory_storage_description')}
-            >
-              <Input
-                type="number"
-                value={memoryStorageDays.toString()}
-                onChange={({ detail }) => {
-                  const days = parseInt(detail.value) || 30
-                  if (days >= 1 && days <= 365) {
-                    setMemoryStorageDays(days)
-                  }
-                }}
-                placeholder="30"
-              />
-            </FormField>
-          </SpaceBetween>
-        </Modal>
       </SpaceBetween>
     </Container>
   )

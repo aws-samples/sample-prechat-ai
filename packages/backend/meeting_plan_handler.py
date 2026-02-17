@@ -57,9 +57,10 @@ def generate_meeting_plan(event, context):
 
     # KB RAG 검색은 이제 Planning Agent 내부의 @tool로 수행됨
     # AgentCore Planning Agent가 배포되어 있으면 호출
-    from agent_runtime import AgentCoreClient, get_agent_config_for_campaign
+    from agent_runtime import AgentCoreClient, get_agent_config_for_session
 
-    planning_config = get_agent_config_for_campaign(campaign_id, 'planning') if campaign_id else None
+    campaign_id = session.get('campaignId', '')
+    planning_config = get_agent_config_for_session(session_id, 'planning')
     references = []
 
     if planning_config and planning_config.agent_runtime_arn:
@@ -70,6 +71,7 @@ def generate_meeting_plan(event, context):
                 agent_runtime_arn=planning_config.agent_runtime_arn,
                 session_id=session_id,
                 session_summary=conversation_text[:3000],
+                config=planning_config,
             )
             # Planning Agent 결과에서 references 추출
             result_text = plan_result.get('result', '')
@@ -96,7 +98,7 @@ def generate_meeting_plan(event, context):
 
     # Meeting Plan 생성
     timestamp = get_timestamp()
-    campaign_id = session.get('campaignId', '')
+    campaign_id = campaign_id or session.get('campaignId', '')
 
     plan = MeetingPlan(
         session_id=session_id,

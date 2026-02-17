@@ -621,6 +621,8 @@ Resources:
         KMSMasterKeyId: !Ref DynamoDBKMSKey
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-campaigns-${Stage}'
@@ -686,7 +688,7 @@ Resources:
         - Statement:
             Effect: Allow
             Action:
-              - bedrock:InvokeAgent
+              - bedrock-agentcore:InvokeAgentRuntime
             Resource: '*'
       Events:
         SendMessage:
@@ -794,21 +796,8 @@ Resources:
               Authorizer: CognitoAuthorizer
 
 
-  VerifySessionPinFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: session_handler.verify_session_pin
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-      Events:
-        VerifySessionPin:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/chat/session/{sessionId}/verify-pin
-            Method: post
+  # [REMOVED] Legacy VerifySessionPinFunction (/api/chat/session/{sessionId}/verify-pin)
+  # Migrated to VerifySessionPinNewFunction at /api/sessions/{sessionId}/verify-pin
 
   GetCampaignByCodeFunction:
     Type: AWS::Serverless::Function
@@ -845,7 +834,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/admin/cognito/users
+            Path: /api/admin/users
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -866,7 +855,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/admin/cognito/users/{userId}
+            Path: /api/admin/users/{userId}
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -927,8 +916,8 @@ Resources:
         - Statement:
             Effect: Allow
             Action:
-              - bedrock:InvokeAgent
               - bedrock:InvokeModel
+              - bedrock-agentcore:InvokeAgentRuntime
             Resource: '*'
       Events:
         GetReport:
@@ -945,17 +934,19 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/
-      Handler: admin_handler.inactivate_session
+      Handler: admin_handler.patch_session
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
       Events:
-        InactivateSession:
+        PatchSession:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/admin/sessions/{sessionId}/inactivate
-            Method: put
+            Path: /api/admin/sessions/{sessionId}
+            Method: patch
             Auth:
               Authorizer: CognitoAuthorizer
 
@@ -1075,155 +1066,9 @@ Resources:
             Path: /api/auth/confirm-phone
             Method: post
 
-  # AgentCore Agent Functions
-  ListAgentsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: agent_handler.list_agents
-      Policies:
-        - Statement:
-            Effect: Allow
-            Action:
-              - bedrock:ListAgents
-              - bedrock:GetAgent
-            Resource: '*'
-      Events:
-        ListAgents:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/agents
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  CreateAgentFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: agent_handler.create_agent
-      Policies:
-        - Statement:
-            Effect: Allow
-            Action:
-              - bedrock:CreateAgent
-              - bedrock:GetAgent
-            Resource: '*'
-        - Statement:
-            Effect: Allow
-            Action:
-              - iam:PassRole
-            Resource: !GetAtt BedrockAgentServiceRole.Arn
-      Events:
-        CreateAgent:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/agents
-            Method: post
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  DeleteAgentFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: agent_handler.delete_agent
-      Policies:
-        - Statement:
-            Effect: Allow
-            Action:
-              - bedrock:DeleteAgent
-              - bedrock:GetAgent
-            Resource: '*'
-      Events:
-        DeleteAgent:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/agents/{agentId}
-            Method: delete
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  PrepareAgentFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: agent_handler.prepare_agent
-      Policies:
-        - Statement:
-            Effect: Allow
-            Action:
-              - bedrock:PrepareAgent
-              - bedrock:GetAgent
-            Resource: '*'
-      Events:
-        PrepareAgent:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/agents/{agentId}/prepare
-            Method: post
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  GetAgentFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: agent_handler.get_agent
-      Policies:
-        - Statement:
-            Effect: Allow
-            Action:
-              - bedrock:GetAgent
-            Resource: '*'
-      Events:
-        GetAgent:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/agents/{agentId}
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  UpdateAgentFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: agent_handler.update_agent
-      Policies:
-        - Statement:
-            Effect: Allow
-            Action:
-              - bedrock:UpdateAgent
-              - bedrock:GetAgent
-            Resource: '*'
-        - Statement:
-            Effect: Allow
-            Action:
-              - iam:PassRole
-            Resource: !GetAtt BedrockAgentServiceRole.Arn
-      Events:
-        UpdateAgent:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/agents/{agentId}
-            Method: put
-            Auth:
-              Authorizer: CognitoAuthorizer
-        EnableAgentMemory:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/agents/{agentId}/enable-memory
-            Method: post
-            Auth:
-              Authorizer: CognitoAuthorizer
+  # [REMOVED] Bedrock Agent direct CRUD endpoints
+  # Agent infrastructure is managed by system admin via deploy_agent.py
+  # PreChat users manage agent configurations via /api/admin/agent-configs
 
   # ============================================
   # Trigger Management API (New)
@@ -1451,6 +1296,7 @@ Resources:
             Action:
               - bedrock:Retrieve
               - bedrock:InvokeModel
+              - bedrock-agentcore:InvokeAgentRuntime
             Resource: '*'
       Events:
         GenerateMeetingPlan:
@@ -1535,12 +1381,12 @@ Resources:
 
 
 
-  # Producer Function - Enqueues analysis request
+  # Unified Analysis Function (analyze + reanalyze merged)
   RequestAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/
-      Handler: admin_handler.request_analysis
+      Handler: admin_handler.submit_analysis
       Policies:
         - Statement:
             Effect: Allow
@@ -1557,11 +1403,11 @@ Resources:
         Variables:
           ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
       Events:
-        RequestAnalysis:
+        SubmitAnalysis:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/admin/sessions/{sessionId}/analyze
+            Path: /api/admin/sessions/{sessionId}/analysis
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1629,31 +1475,8 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  ReanalyzeWithMeetingLogFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: admin_handler.reanalyze_with_meeting_log
-      Policies:
-        - Statement:
-            Effect: Allow
-            Action:
-              - sqs:SendMessage
-            Resource: !GetAtt AnalysisQueue.Arn
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-      Environment:
-        Variables:
-          ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
-      Events:
-        ReanalyzeWithMeetingLog:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/sessions/{sessionId}/reanalyze
-            Method: post
-            Auth:
-              Authorizer: CognitoAuthorizer
+  # [REMOVED] ReanalyzeWithMeetingLogFunction - merged into POST /api/admin/sessions/{sessionId}/analysis
+  # Client should include { includeMeetingLog: true } in the request body
 
   # Session Feedback Function
   GetSessionFeedbackFunction:
@@ -1763,7 +1586,16 @@ Resources:
             Path: /bedrock/aws-docs-action
             Method: post
 
-  # File Upload Functions
+  # [REMOVED] Legacy GenerateUploadUrlFunction (/api/chat/session/{sessionId}/upload-url)
+  # File upload should use domain-based endpoint /api/sessions/{sessionId}/files/upload-url
+
+  # [REMOVED] Legacy ListSessionFilesFunction (/api/chat/session/{sessionId}/files)
+  # File listing should use domain-based endpoint /api/sessions/{sessionId}/files
+
+  # [REMOVED] Legacy DeleteSessionFileFunction (/api/chat/session/{sessionId}/files/{fileKey+})
+  # File deletion should use domain-based endpoint /api/sessions/{sessionId}/files/{fileKey+}
+
+  # Customer-facing file operations (domain-based)
   GenerateUploadUrlFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -1791,7 +1623,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/chat/session/{sessionId}/upload-url
+            Path: /api/sessions/{sessionId}/files/upload-url
             Method: post
 
   ListSessionFilesFunction:
@@ -1824,7 +1656,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/chat/session/{sessionId}/files
+            Path: /api/sessions/{sessionId}/files
             Method: get
 
   DeleteSessionFileFunction:
@@ -1848,25 +1680,11 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/chat/session/{sessionId}/files/{fileKey+}
+            Path: /api/sessions/{sessionId}/files/{fileKey+}
             Method: delete
 
-  # Customer Feedback Function
-  FeedbackFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: chat_handler.handle_feedback
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-      Events:
-        SubmitFeedback:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/chat/session/{sessionId}/feedback
-            Method: post
+  # [REMOVED] Legacy FeedbackFunction (/api/chat/session/{sessionId}/feedback)
+  # Migrated to SessionFeedbackFunction at /api/sessions/{sessionId}/feedback
 
   # Campaign Management Functions
   CreateCampaignFunction:
@@ -1999,25 +1817,8 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  AssociateSessionWithCampaignFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: campaign_handler.associate_session_with_campaign
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CampaignsTable
-      Events:
-        AssociateSessionWithCampaign:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/sessions/{sessionId}/campaign
-            Method: put
-            Auth:
-              Authorizer: CognitoAuthorizer
+  # [REMOVED] AssociateSessionWithCampaignFunction - merged into PATCH /api/admin/sessions/{sessionId}
+  # Client should include { campaignId: "..." } in the PATCH body
 
   # Campaign Analytics Functions
   GetCampaignAnalyticsFunction:
@@ -2057,7 +1858,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/admin/campaigns/analytics/summary
+            Path: /api/admin/analytics/summary
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -2077,27 +1878,13 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /api/admin/campaigns/analytics/comparison
-            Method: post
+            Path: /api/admin/analytics/comparison
+            Method: get
             Auth:
               Authorizer: CognitoAuthorizer
 
-  # Update Consultation Purposes Function
-  UpdateConsultationPurposesFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: chat_handler.update_consultation_purposes
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-      Events:
-        UpdatePurposes:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/chat/session/{sessionId}/purposes
-            Method: put
+  # [REMOVED] Legacy UpdateConsultationPurposesFunction (/api/chat/session/{sessionId}/purposes)
+  # Migrated to domain-based endpoint at /api/sessions/{sessionId}/consultation-purposes
 
   # Migration Functions
   MigrateCampaignsFunction:
@@ -2272,6 +2059,26 @@ Resources:
           Type: DynamoDB
           Properties:
             Stream: !GetAtt SessionsTable.StreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 5
+
+  # DynamoDB Streams Handler for Campaign lifecycle events
+  CampaignStreamHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: stream_handler.handle_campaign_stream
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        CampaignStream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt CampaignsTable.StreamArn
             StartingPosition: TRIM_HORIZON
             BatchSize: 10
             MaximumBatchingWindowInSeconds: 5

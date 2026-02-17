@@ -33,7 +33,7 @@ def create_config(event, context):
         agent_role=body.get('agentRole', ''),
         campaign_id=body.get('campaignId', ''),
         agent_runtime_arn=body.get('agentRuntimeArn', ''),
-        model_id=body.get('modelId', 'us.anthropic.claude-sonnet-4-20250514-v1:0'),
+        model_id=body.get('modelId', 'global.anthropic.claude-sonnet-4-5-20250929-v1:0'),
         system_prompt=body.get('systemPrompt', ''),
         agent_name=body.get('agentName', ''),
         capabilities=AgentCapabilities.from_dict(body.get('capabilities', {})),

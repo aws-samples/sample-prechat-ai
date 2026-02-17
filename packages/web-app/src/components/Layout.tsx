@@ -85,6 +85,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           href: '/admin/agents/create'
         }
       ]
+    },
+    {
+      type: 'section',
+      text: '트리거',
+      items: [
+        {
+          type: 'link',
+          text: '트리거 관리',
+          href: '/admin/triggers',
+        }
+      ]
     }
   ];
 
@@ -110,6 +121,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     // Agent routes
     if (path.startsWith('/admin/agents/create')) return '/admin/agents/create';
     if (path.startsWith('/admin/agents')) return '/admin/agents';
+
+    // Trigger routes
+    if (path.startsWith('/admin/triggers')) return '/admin/triggers';
 
     return '/admin';
   };

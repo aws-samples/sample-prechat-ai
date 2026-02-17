@@ -14,15 +14,9 @@
 #   ./deploy-agents.sh default dev ap-northeast-2 ABCDEFGHIJ
 #
 # BEDROCK_KB_ID:
-#   사전 생성된 Bedrock Knowledge Base의 ID입니다.
 #   Consultation Agent와 Planning Agent가 유사 고객사례 검색에 사용합니다.
-#   KB가 없으면 생략 가능하며, 해당 @tool은 "KB가 설정되지 않았습니다"를 반환합니다.
-#
-#   KB 생성 방법:
-#     1. AWS Console > Amazon Bedrock > Knowledge bases > Create
-#     2. S3에 고객 레퍼런스 문서 업로드
-#     3. Data source 연결 및 Sync
-#     4. 생성된 KB ID를 이 스크립트의 4번째 인자로 전달
+#   deploy_agent.py → launch(env_vars={BEDROCK_KB_ID: ...})로 컨테이너에 주입됩니다.
+#   KB가 없으면 생략 가능 (NONE으로 전달).
 #
 # 사전 요구사항:
 #   pip install bedrock-agentcore-starter-toolkit
@@ -35,12 +29,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROFILE=${1:-default}
 STAGE=${2:-dev}
 REGION=${3:-ap-northeast-2}
+BEDROCK_KB_ID=${4:-"NONE"}
 
 # SSM 파라미터 경로 prefix
 SSM_PREFIX="/prechat/${STAGE}/agents"
-
-# Bedrock KB ID (선택 - 사전 생성된 Knowledge Base가 있는 경우)
-BEDROCK_KB_ID=${4:-""}
 
 echo "============================================"
 echo "  PreChat Strands Agents 배포"
@@ -49,21 +41,22 @@ echo "  AWS Profile  : $PROFILE"
 echo "  Stage        : $STAGE"
 echo "  Region       : $REGION"
 echo "  SSM Prefix   : $SSM_PREFIX"
-echo "  Bedrock KB ID: ${BEDROCK_KB_ID:-"(없음 - KB RAG 비활성)"}"
+echo "  Bedrock KB ID: ${BEDROCK_KB_ID}"
 echo "============================================"
 echo ""
 
-# KB ID를 SSM에 등록 (빈 값이라도 등록 - SAM의 resolve:ssm이 실패하지 않도록)
+# KB ID를 SSM에 등록 (SAM template의 resolve:ssm 용)
 echo "📝 Registering Bedrock KB ID in SSM..."
 aws ssm put-parameter \
     --name "${SSM_PREFIX}/bedrock-kb-id" \
-    --value "${BEDROCK_KB_ID:-NONE}" \
+    --value "${BEDROCK_KB_ID}" \
     --type "String" \
     --overwrite \
     --region "${REGION}" \
     --profile "${PROFILE}" \
-    --description "Bedrock Knowledge Base ID for PreChat agents (${STAGE}). NONE if not configured."
-if [ -n "$BEDROCK_KB_ID" ]; then
+    --description "Bedrock Knowledge Base ID for PreChat agents (${STAGE})"
+
+if [ "$BEDROCK_KB_ID" != "NONE" ]; then
     echo "✅ KB ID registered: ${BEDROCK_KB_ID}"
 else
     echo "ℹ️  KB ID not provided - registered as NONE (KB RAG will be inactive)"
@@ -84,16 +77,17 @@ deploy_agent() {
 
     cd "${SCRIPT_DIR}/${AGENT_DIR}"
 
-    # deploy_agent.py 실행 (stderr에 로그, stdout에 JSON 결과)
-    # BEDROCK_KB_ID를 환경 변수로 전달 → AgentCore 런타임에서 agent.py가 참조
-    DEPLOY_OUTPUT=$(AWS_PROFILE=$PROFILE AWS_DEFAULT_REGION=$REGION BEDROCK_KB_ID=$BEDROCK_KB_ID python deploy_agent.py 2>&1 | tee /dev/stderr | tail -1)
+    # deploy_agent.py 실행
+    # BEDROCK_KB_ID, STAGE를 환경변수로 전달 → deploy_agent.py가 launch(env_vars=...)로 컨테이너에 주입
+    DEPLOY_OUTPUT=$(AWS_PROFILE=$PROFILE AWS_DEFAULT_REGION=$REGION STAGE=$STAGE BEDROCK_KB_ID=$BEDROCK_KB_ID python deploy_agent.py 2>&1 | tee /dev/stderr | tail -1)
 
     # JSON에서 ARN 추출
     AGENT_ARN=$(echo "$DEPLOY_OUTPUT" | python3 -c "
 import sys, json
 try:
     data = json.loads(sys.stdin.read())
-    print(data.get('agent_runtime_arn', ''))
+    arn = data.get('agent_runtime_arn', '')
+    print(arn)
 except:
     print('')
 " 2>/dev/null)
@@ -107,7 +101,7 @@ except:
     echo ""
     echo "✅ ${AGENT_ROLE} agent deployed: ${AGENT_ARN}"
 
-    # SSM Parameter Store에 ARN 등록
+    # SSM Parameter Store에 ARN만 등록
     echo "📝 Registering ARN in SSM: ${SSM_KEY}"
     aws ssm put-parameter \
         --name "${SSM_KEY}" \
@@ -118,24 +112,24 @@ except:
         --profile "${PROFILE}" \
         --description "PreChat ${AGENT_ROLE} agent runtime ARN (${STAGE})"
 
-    echo "✅ SSM parameter registered: ${SSM_KEY}"
+    echo "✅ SSM parameter registered: ${SSM_KEY} = ${AGENT_ARN}"
     echo ""
 
     cd "${SCRIPT_DIR}"
 }
 
 # ============================================
-# 1. Consultation Agent (STM_ONLY)
+# 1. Consultation Agent (STM_ONLY + KB)
 # ============================================
 deploy_agent "consultation-agent" "consultation"
 
 # ============================================
-# 2. Analysis Agent (NO_MEMORY)
+# 2. Analysis Agent (NO_MEMORY, no KB)
 # ============================================
 deploy_agent "analysis-agent" "analysis"
 
 # ============================================
-# 3. Planning Agent (NO_MEMORY)
+# 3. Planning Agent (NO_MEMORY + KB)
 # ============================================
 deploy_agent "planning-agent" "planning"
 
@@ -156,14 +150,5 @@ aws ssm get-parameters-by-path \
     --output table 2>/dev/null || echo "(SSM 조회 실패 - 권한을 확인하세요)"
 
 echo ""
-echo "============================================"
-echo "  ✅ 모든 에이전트 배포 완료!"
-echo "============================================"
-echo ""
-echo "Lambda 함수에서 에이전트를 사용하려면:"
-echo "  환경 변수에 SSM 파라미터 경로를 설정하세요."
-echo ""
-echo "  CONSULTATION_AGENT_ARN_SSM: ${SSM_PREFIX}/consultation/runtime-arn"
-echo "  ANALYSIS_AGENT_ARN_SSM    : ${SSM_PREFIX}/analysis/runtime-arn"
-echo "  PLANNING_AGENT_ARN_SSM    : ${SSM_PREFIX}/planning/runtime-arn"
+echo "✅ 모든 에이전트 배포 완료!"
 echo ""

@@ -17,6 +17,10 @@ SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
 CAMPAIGNS_TABLE = os.environ.get('CAMPAIGNS_TABLE')
 USER_POOL_ID = os.environ.get('USER_POOL_ID')
 
+# Campaign 도메인 이벤트 트리거
+from trigger_manager import TriggerManager
+trigger_manager = TriggerManager()
+
 def create_campaign(event, context):
     """Create a new campaign"""
     try:
@@ -94,6 +98,22 @@ def create_campaign(event, context):
         campaigns_table.put_item(Item=campaign_record)
         
         logger.info(f"Created campaign {campaign_id} with code {campaign_code}")
+        
+        # CampaignCreated 도메인 이벤트 트리거 실행
+        try:
+            event_data = {
+                'event_type': 'CampaignCreated',
+                'campaign_id': campaign_id,
+                'campaign_name': campaign_name,
+                'campaign_code': campaign_code,
+                'owner_email': owner_info['email'],
+                'created_at': timestamp,
+                'start_date': start_date,
+                'end_date': end_date,
+            }
+            trigger_manager.execute_triggers('CampaignCreated', event_data, campaign_id)
+        except Exception as trigger_err:
+            logger.warning(f"Trigger execution failed for campaign {campaign_id}: {str(trigger_err)}")
         
         return lambda_response(201, {
             'campaignId': campaign_id,
@@ -306,6 +326,22 @@ def update_campaign(event, context):
         updated_campaign = updated_resp['Item']
         
         logger.info(f"Updated campaign {campaign_id}")
+        
+        # CampaignClosed 도메인 이벤트 트리거 실행 (status가 inactive로 변경된 경우)
+        old_status = current_campaign.get('status', '')
+        new_status = update_data.get('status', old_status)
+        if old_status == 'active' and new_status == 'inactive':
+            try:
+                event_data = {
+                    'event_type': 'CampaignClosed',
+                    'campaign_id': campaign_id,
+                    'campaign_name': updated_campaign.get('campaignName', ''),
+                    'closed_at': get_timestamp(),
+                    'total_sessions': convert_decimal_to_int(updated_campaign.get('sessionCount', 0)),
+                }
+                trigger_manager.execute_triggers('CampaignClosed', event_data, campaign_id)
+            except Exception as trigger_err:
+                logger.warning(f"Trigger execution failed for campaign close {campaign_id}: {str(trigger_err)}")
         
         # Serialize the updated campaign data to handle Decimal types
         campaign_data = {

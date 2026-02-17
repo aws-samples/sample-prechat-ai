@@ -19,19 +19,19 @@ import { authService } from '../../services/auth'
 import { StatusBadge } from '../../components'
 import { extractModelName } from '../../constants'
 import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
-import type { AgentCoreAgent, Campaign } from '../../types'
+import type { Campaign, AgentConfiguration } from '../../types'
 import { useI18n } from '../../i18n'
 
 export default function CreateSession() {
   const navigate = useNavigate()
   const { t } = useI18n()
   const [loading, setLoading] = useState(false)
-  const [loadingAgents, setLoadingAgents] = useState(true)
+  const [loadingAgents, setLoadingAgents] = useState(false)
   const [loadingUser, setLoadingUser] = useState(true)
   const [loadingCampaigns, setLoadingCampaigns] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [agents, setAgents] = useState<AgentCoreAgent[]>([])
+  const [agentConfigs, setAgentConfigs] = useState<AgentConfiguration[]>([])
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [formData, setFormData] = useState({
     customerName: '',
@@ -46,7 +46,6 @@ export default function CreateSession() {
   const [showPin, setShowPin] = useState(false)
 
   useEffect(() => {
-    loadAgents()
     loadCurrentUser()
     loadCampaigns()
   }, [])
@@ -63,12 +62,24 @@ export default function CreateSession() {
     }
   }
 
-  const loadAgents = async () => {
+  const loadAgentConfigs = async (campaignId: string) => {
+    if (!campaignId) {
+      setAgentConfigs([])
+      return
+    }
     try {
-      const response = await adminApi.listAgents()
-      setAgents(response.agents || [])
+      setLoadingAgents(true)
+      const response = await adminApi.listAgentConfigs(campaignId)
+      const configs = (response.configs || []).filter(
+        (c: AgentConfiguration) => c.agentRole === 'prechat' && c.status === 'active'
+      )
+      setAgentConfigs(configs)
+      // Auto-select if only one prechat config
+      if (configs.length === 1) {
+        setFormData(prev => ({ ...prev, agentId: configs[0].configId }))
+      }
     } catch (err) {
-      console.error('Failed to load agents:', err)
+      console.error('Failed to load agent configs:', err)
     } finally {
       setLoadingAgents(false)
     }
@@ -300,20 +311,20 @@ export default function CreateSession() {
               <Select
                 selectedOption={
                   formData.agentId ?
-                    { label: agents.find(a => a.agentId === formData.agentId)?.agentName || '', value: formData.agentId } : null
+                    { label: agentConfigs.find(c => c.configId === formData.agentId)?.agentName || '', value: formData.agentId } : null
                 }
                 onChange={({ detail }) =>
                   updateFormData('agentId', detail.selectedOption?.value || '')
                 }
-                options={agents
-                  .filter(agent => agent.agentStatus === 'PREPARED')
-                  .map(agent => ({
-                    label: agent.agentName,
-                    value: agent.agentId
-                  }))
-                }
-                placeholder={t('select_an_agent')}
-                empty={t('admin_no_prepared_agents')}
+                options={agentConfigs.map(config => ({
+                  label: config.agentName || `Consultation Agent (${config.configId.slice(0, 8)})`,
+                  value: config.configId,
+                  description: extractModelName(config.modelId)
+                }))}
+                placeholder={formData.campaignId ? t('select_an_agent') : t('select_campaign_first')}
+                empty={formData.campaignId ? t('admin_no_prepared_agents') : t('select_campaign_to_see_agents')}
+                disabled={!formData.campaignId}
+                statusType={loadingAgents ? 'loading' : 'finished'}
               />
             </FormField>
 
@@ -327,9 +338,12 @@ export default function CreateSession() {
                   formData.campaignId ?
                     { label: campaigns.find(c => c.campaignId === formData.campaignId)?.campaignName || '', value: formData.campaignId } : null
                 }
-                onChange={({ detail }) =>
-                  updateFormData('campaignId', detail.selectedOption?.value || '')
-                }
+                onChange={({ detail }) => {
+                  const campaignId = detail.selectedOption?.value || ''
+                  updateFormData('campaignId', campaignId)
+                  updateFormData('agentId', '')
+                  loadAgentConfigs(campaignId)
+                }}
                 options={[
                   { label: t('no_campaign'), value: '' },
                   ...campaigns
@@ -390,9 +404,9 @@ export default function CreateSession() {
                 header: t('admin_agent_name'),
                 cell: (item) => (
                   <Box>
-                    <Box fontWeight="bold">{item.agentName}</Box>
+                    <Box fontWeight="bold">{item.agentName || `Consultation Agent`}</Box>
                     <Box fontSize="body-s" color="text-status-inactive">
-                      ID: {item.agentId}
+                      ID: {item.configId}
                     </Box>
                   </Box>
                 )
@@ -400,15 +414,15 @@ export default function CreateSession() {
               {
                 id: 'model',
                 header: t('foundation_model'),
-                cell: (item) => extractModelName(item.foundationModel)
+                cell: (item) => extractModelName(item.modelId)
               },
               {
                 id: 'status',
                 header: t('status'),
-                cell: (item) => <StatusBadge status={item.agentStatus} type="agent" />
+                cell: (item) => <StatusBadge status={item.status} type="session" />
               }
             ]}
-            items={agents}
+            items={agentConfigs}
             loading={loadingAgents}
             empty={
               <Box textAlign="center" color="inherit">
@@ -416,7 +430,7 @@ export default function CreateSession() {
                   {t('no_agents')}
                 </Box>
                 <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                  {t('no_bedrock_agents_found')}
+                  {formData.campaignId ? t('no_bedrock_agents_found') : t('select_campaign_to_see_configs')}
                 </Box>
                 <Button onClick={() => navigate('/admin/agents/create')}>
                   {t('admin_create_agent')}

@@ -9,7 +9,12 @@ import type {
   CreateCampaignRequest,
   UpdateCampaignRequest,
   CampaignListResponse,
-  CampaignSessionsResponse
+  CampaignSessionsResponse,
+  Trigger,
+  CreateTriggerRequest,
+  UpdateTriggerRequest,
+  TriggerListResponse,
+  TriggerTemplatesResponse
 } from '../types'
 import { API_BASE_URL } from '../config/api'
 
@@ -118,7 +123,7 @@ export const chatApi = {
     fileSize: number
   }) => {
     const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
-    const response = await api.post(`/chat/session/${sessionId}/upload-url`, fileInfo, {
+    const response = await api.post(`/sessions/${sessionId}/files/upload-url`, fileInfo, {
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
     })
     return response.data
@@ -126,7 +131,7 @@ export const chatApi = {
 
   listSessionFiles: async (sessionId: string) => {
     const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
-    const response = await api.get(`/chat/session/${sessionId}/files`, {
+    const response = await api.get(`/sessions/${sessionId}/files`, {
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
     })
     return response.data
@@ -135,7 +140,7 @@ export const chatApi = {
   deleteSessionFile: async (sessionId: string, fileKey: string) => {
     const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
     const encodedFileKey = encodeURIComponent(fileKey)
-    const response = await api.delete(`/chat/session/${sessionId}/files/${encodedFileKey}`, {
+    const response = await api.delete(`/sessions/${sessionId}/files/${encodedFileKey}`, {
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
     })
     return response.data
@@ -218,7 +223,7 @@ export const adminApi = {
   },
 
   inactivateSession: async (sessionId: string) => {
-    const response = await api.put(`/admin/sessions/${sessionId}/inactivate`)
+    const response = await api.patch(`/admin/sessions/${sessionId}`, { status: 'inactive' })
     return response.data
   },
 
@@ -227,58 +232,55 @@ export const adminApi = {
     return response.data
   },
 
-  // AgentCore Agents API
-  listAgents: async () => {
-    const response = await api.get('/admin/agents')
+  // Agent Configuration API
+  listAgentConfigs: async (campaignId?: string) => {
+    const params = campaignId ? { campaignId } : {}
+    const response = await api.get('/admin/agent-configs', { params })
     return response.data
   },
 
-  createAgent: async (data: {
+  createAgentConfig: async (data: {
+    agentRole: string
+    campaignId: string
+    agentRuntimeArn?: string
+    modelId: string
+    systemPrompt: string
     agentName: string
-    foundationModel: string
-    instruction: string
-    memoryStorageDays?: number
+    capabilities?: Record<string, boolean | string>
   }) => {
-    const response = await api.post('/admin/agents', data)
+    const response = await api.post('/admin/agent-configs', data)
     return response.data
   },
 
-  deleteAgent: async (agentId: string) => {
-    const response = await api.delete(`/admin/agents/${agentId}`)
+  getAgentConfig: async (configId: string) => {
+    const response = await api.get(`/admin/agent-configs/${configId}`)
     return response.data
   },
 
-  prepareAgent: async (agentId: string) => {
-    const response = await api.post(`/admin/agents/${agentId}/prepare`)
-    return response.data
-  },
-
-  getAgent: async (agentId: string) => {
-    const response = await api.get(`/admin/agents/${agentId}`)
-    return response.data
-  },
-
-  updateAgent: async (agentId: string, data: {
-    foundationModel: string
-    instruction: string
-    memoryStorageDays?: number
+  updateAgentConfig: async (configId: string, data: {
+    modelId?: string
+    systemPrompt?: string
+    agentName?: string
+    capabilities?: Record<string, boolean | string>
+    status?: string
   }) => {
-    const response = await api.put(`/admin/agents/${agentId}`, data)
+    const response = await api.put(`/admin/agent-configs/${configId}`, data)
     return response.data
   },
 
-  enableAgentMemory: async (agentId: string, memoryStorageDays: number = 30) => {
-    const response = await api.post(`/admin/agents/${agentId}/enable-memory`, {
-      memoryStorageDays
+  deleteAgentConfig: async (configId: string) => {
+    const response = await api.delete(`/admin/agent-configs/${configId}`)
+    return response.data
+  },
+
+
+
+  // Unified Analysis API
+  requestAnalysis: async (sessionId: string, modelId: string, includeMeetingLog: boolean = false) => {
+    const response = await api.post(`/admin/sessions/${sessionId}/analysis`, {
+      modelId,
+      includeMeetingLog
     })
-    return response.data
-  },
-
-
-
-  // Producer-Consumer Analysis API
-  requestAnalysis: async (sessionId: string, modelId: string) => {
-    const response = await api.post(`/admin/sessions/${sessionId}/analyze`, { modelId })
     return response.data
   },
 
@@ -312,7 +314,11 @@ export const adminApi = {
   },
 
   reanalyzeWithMeetingLog: async (sessionId: string, modelId: string) => {
-    const response = await api.post(`/admin/sessions/${sessionId}/reanalyze`, { modelId })
+    // Uses unified analysis endpoint with includeMeetingLog flag
+    const response = await api.post(`/admin/sessions/${sessionId}/analysis`, {
+      modelId,
+      includeMeetingLog: true
+    })
     return response.data
   },
 
@@ -350,7 +356,7 @@ export const adminApi = {
     return response.data
   },
 
-  // Cognito User Management
+  // User Management
   listCognitoUsers: async (paginationToken?: string, limit: number = 60) => {
     try {
       return await retryWithBackoff(async () => {
@@ -358,11 +364,11 @@ export const adminApi = {
         if (paginationToken) {
           params.paginationToken = paginationToken
         }
-        const response = await api.get('/admin/cognito/users', { params })
+        const response = await api.get('/admin/users', { params })
         return response.data
       })
     } catch (error) {
-      return handleApiError(error, 'List Cognito Users')
+      return handleApiError(error, 'List Users')
     }
   },
 
@@ -373,11 +379,11 @@ export const adminApi = {
       }
 
       return await retryWithBackoff(async () => {
-        const response = await api.get(`/admin/cognito/users/${userId}`)
+        const response = await api.get(`/admin/users/${userId}`)
         return response.data
       })
     } catch (error) {
-      return handleApiError(error, 'Get Cognito User')
+      return handleApiError(error, 'Get User')
     }
   }
 }
@@ -536,7 +542,7 @@ export const campaignApi = {
   },
 
   /**
-   * Associate a session with a campaign
+   * Associate a session with a campaign (via PATCH)
    */
   associateSessionWithCampaign: async (sessionId: string, campaignId: string): Promise<void> => {
     try {
@@ -548,7 +554,7 @@ export const campaignApi = {
       }
 
       await retryWithBackoff(async () => {
-        const response = await api.put(`/admin/sessions/${sessionId}/campaign`, { campaignId })
+        const response = await api.patch(`/admin/sessions/${sessionId}`, { campaignId })
         return response.data
       })
     } catch (error) {
@@ -557,7 +563,7 @@ export const campaignApi = {
   },
 
   /**
-   * Remove campaign association from a session
+   * Remove campaign association from a session (via PATCH)
    */
   dissociateSessionFromCampaign: async (sessionId: string): Promise<void> => {
     try {
@@ -566,7 +572,7 @@ export const campaignApi = {
       }
 
       await retryWithBackoff(async () => {
-        const response = await api.delete(`/admin/sessions/${sessionId}/campaign`)
+        const response = await api.patch(`/admin/sessions/${sessionId}`, { campaignId: '' })
         return response.data
       })
     } catch (error) {
@@ -581,7 +587,7 @@ export const campaignApi = {
     try {
       return await retryWithBackoff(async () => {
         const params = ownerId ? { ownerId } : {}
-        const response = await api.get('/admin/campaigns/analytics/summary', { params })
+        const response = await api.get('/admin/analytics/summary', { params })
         return response.data
       })
     } catch (error) {
@@ -603,11 +609,82 @@ export const campaignApi = {
       }
 
       return await retryWithBackoff(async () => {
-        const response = await api.post('/admin/campaigns/analytics/comparison', { campaignIds })
+        const response = await api.get('/admin/analytics/comparison', {
+          params: { campaignIds: campaignIds.join(',') }
+        })
         return response.data
       })
     } catch (error) {
       return handleApiError(error, 'Get Campaign Comparison Analytics')
+    }
+  }
+}
+
+
+export const triggerApi = {
+  listTriggers: async (params?: { campaignId?: string; eventType?: string }): Promise<TriggerListResponse> => {
+    try {
+      return await retryWithBackoff(async () => {
+        const response = await api.get('/admin/triggers', { params })
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'List Triggers')
+    }
+  },
+
+  createTrigger: async (data: CreateTriggerRequest): Promise<Trigger> => {
+    try {
+      return await retryWithBackoff(async () => {
+        const response = await api.post('/admin/triggers', data)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Create Trigger')
+    }
+  },
+
+  getTrigger: async (triggerId: string): Promise<Trigger> => {
+    try {
+      return await retryWithBackoff(async () => {
+        const response = await api.get(`/admin/triggers/${triggerId}`)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Get Trigger')
+    }
+  },
+
+  updateTrigger: async (triggerId: string, data: UpdateTriggerRequest): Promise<Trigger> => {
+    try {
+      return await retryWithBackoff(async () => {
+        const response = await api.put(`/admin/triggers/${triggerId}`, data)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Update Trigger')
+    }
+  },
+
+  deleteTrigger: async (triggerId: string): Promise<void> => {
+    try {
+      await retryWithBackoff(async () => {
+        const response = await api.delete(`/admin/triggers/${triggerId}`)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Delete Trigger')
+    }
+  },
+
+  getDefaultTemplates: async (): Promise<TriggerTemplatesResponse> => {
+    try {
+      return await retryWithBackoff(async () => {
+        const response = await api.get('/admin/triggers/templates')
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Get Default Templates')
     }
   }
 }

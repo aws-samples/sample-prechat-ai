@@ -302,33 +302,47 @@ def get_campaigns_summary_analytics(event, context):
         return lambda_response(500, {'error': 'Failed to get campaigns summary analytics'})
 
 def get_campaign_comparison_analytics(event, context):
-    """Get comparative analytics between multiple campaigns"""
+    """Get comparative analytics between multiple campaigns
+
+    GET /api/admin/analytics/comparison?campaignIds=id1,id2,id3
+    (Also supports legacy POST with body { campaignIds: [...] })
+    """
     try:
-        body = json.loads(event.get('body', '{}'))
-        campaign_ids = body.get('campaignIds', [])
-        
+        campaign_ids = []
+
+        # Support GET with query params (new) and POST with body (legacy)
+        http_method = event.get('httpMethod', 'GET')
+        if http_method == 'GET':
+            params = event.get('queryStringParameters') or {}
+            campaign_ids_str = params.get('campaignIds', '')
+            if campaign_ids_str:
+                campaign_ids = [cid.strip() for cid in campaign_ids_str.split(',') if cid.strip()]
+        else:
+            body = json.loads(event.get('body', '{}'))
+            campaign_ids = body.get('campaignIds', [])
+
         if not campaign_ids or not isinstance(campaign_ids, list):
             return lambda_response(400, {'error': 'Campaign IDs list is required'})
-        
+
         if len(campaign_ids) > 10:
             return lambda_response(400, {'error': 'Maximum 10 campaigns can be compared at once'})
-        
+
         campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
-        
+
         comparison_data = []
-        
+
         for campaign_id in campaign_ids:
             # Get campaign info
             campaign_resp = campaigns_table.get_item(
                 Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
             )
-            
+
             if 'Item' not in campaign_resp:
                 continue  # Skip non-existent campaigns
-            
+
             campaign = campaign_resp['Item']
-            
+
             # Get sessions for this campaign using GSI2
             sessions_resp = sessions_table.query(
                 IndexName='GSI2',
@@ -336,14 +350,14 @@ def get_campaign_comparison_analytics(event, context):
                 ExpressionAttributeValues={':pk': f'CAMPAIGN#{campaign_id}'},
                 ScanIndexForward=False
             )
-            
+
             sessions = sessions_resp.get('Items', [])
-            
+
             # Calculate basic metrics
             total_sessions = len(sessions)
             completed_sessions = len([s for s in sessions if s.get('status') == 'completed'])
             completion_rate = (completed_sessions / total_sessions * 100) if total_sessions > 0 else 0
-            
+
             comparison_data.append({
                 'campaignId': campaign_id,
                 'campaignName': campaign['campaignName'],
@@ -356,15 +370,15 @@ def get_campaign_comparison_analytics(event, context):
                 'completionRate': round(completion_rate, 2),
                 'ownerName': campaign['ownerName']
             })
-        
+
         # Sort by completion rate descending
         comparison_data.sort(key=lambda x: x['completionRate'], reverse=True)
-        
+
         return lambda_response(200, {
             'campaigns': comparison_data,
             'comparedAt': get_timestamp()
         })
-        
+
     except json.JSONDecodeError:
         return lambda_response(400, {'error': 'Invalid JSON in request body'})
     except ClientError as e:

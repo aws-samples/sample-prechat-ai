@@ -70,10 +70,31 @@ SLACK_TEMPLATE_SESSION_CREATED = """{
   "admin_url": "{{ admin_url | default('') }}"
 }"""
 
+SLACK_TEMPLATE_CAMPAIGN_CREATED = """{
+  "campaign_id": "{{ campaign_id }}",
+  "campaign_name": "{{ campaign_name }}",
+  "campaign_code": "{{ campaign_code }}",
+  "owner": "{{ owner_email | default('N/A') }}",
+  "event_type": "CampaignCreated",
+  "start_date": "{{ start_date | default('') }}",
+  "end_date": "{{ end_date | default('') }}",
+  "created_at": "{{ created_at }}"
+}"""
+
+SLACK_TEMPLATE_CAMPAIGN_CLOSED = """{
+  "campaign_id": "{{ campaign_id }}",
+  "campaign_name": "{{ campaign_name }}",
+  "event_type": "CampaignClosed",
+  "closed_at": "{{ closed_at }}",
+  "total_sessions": "{{ total_sessions | default(0) }}"
+}"""
+
 # 이벤트 타입별 기본 템플릿 매핑
 DEFAULT_SLACK_TEMPLATES = {
     EventType.SESSION_COMPLETED.value: SLACK_TEMPLATE_SESSION_COMPLETED,
     EventType.SESSION_CREATED.value: SLACK_TEMPLATE_SESSION_CREATED,
+    EventType.CAMPAIGN_CREATED.value: SLACK_TEMPLATE_CAMPAIGN_CREATED,
+    EventType.CAMPAIGN_CLOSED.value: SLACK_TEMPLATE_CAMPAIGN_CLOSED,
 }
 
 

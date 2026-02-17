@@ -10,7 +10,7 @@ import boto3
 import os
 from decimal import Decimal
 from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp
-from agent_runtime import AgentCoreClient, get_agent_config_for_campaign
+from agent_runtime import AgentCoreClient, get_agent_config_for_campaign, get_agent_config_for_session
 
 dynamodb = boto3.resource('dynamodb')
 bedrock_region = os.environ.get('BEDROCK_REGION', 'ap-northeast-2')
@@ -96,16 +96,18 @@ def send_message(event, context):
         return lambda_response(500, {'error': 'Failed to save customer message'})
 
     # AgentCore Agent 응답 생성
+    # Session ID → Campaign → AgentConfiguration 조회하여 config를 payload에 주입
     campaign_id = session.get('campaignId', '')
     try:
-        # Campaign의 Agent Configuration에서 AgentCore Runtime ARN 조회
-        config = get_agent_config_for_campaign(campaign_id, 'prechat') if campaign_id else None
+        config = get_agent_config_for_session(session_id, 'prechat') if campaign_id else \
+                 get_agent_config_for_campaign('', 'prechat')
         if config and config.agent_runtime_arn:
-            # Strands Agent (AgentCore Runtime) 호출
+            # Strands Agent (AgentCore Runtime) 호출 - config를 payload에 포함
             ai_response = agentcore_client.invoke_consultation(
                 agent_runtime_arn=config.agent_runtime_arn,
                 session_id=session_id,
                 message=message,
+                config=config,
             )
         else:
             # 폴백: 기존 Bedrock Agent 직접 호출 (레거시 호환)

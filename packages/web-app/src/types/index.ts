@@ -133,11 +133,36 @@ export interface AgentCoreAgent {
   agentStatus: 'CREATING' | 'PREPARING' | 'PREPARED' | 'NOT_PREPARED' | 'DELETING' | 'FAILED' | 'VERSIONING' | 'UPDATING';
   foundationModel: string;
   instruction: string;
-  memoryStorageDays: number;
   createdAt: string;
   updatedAt: string;
   agentVersion?: string;
   agentArn?: string;
+}
+
+export type AgentRole = 'prechat' | 'summary' | 'planning';
+
+export interface AgentCapabilities {
+  memoryEnabled: boolean;
+  memoryType: string;
+  tracingEnabled: boolean;
+  ragEnabled: boolean;
+  ragKnowledgeBaseId: string;
+  toolsEnabled: boolean;
+}
+
+export interface AgentConfiguration {
+  configId: string;
+  agentRole: AgentRole;
+  campaignId: string;
+  agentRuntimeArn: string;
+  modelId: string;
+  systemPrompt: string;
+  agentName: string;
+  capabilities: AgentCapabilities;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
 }
 
 
@@ -242,6 +267,56 @@ export interface CognitoUsersResponse {
   nextPaginationToken?: string;
 }
 
+// Trigger Types
+export type TriggerType = 'slack' | 'sns' | 'webhook';
+export type TriggerEventType = 'SessionCreated' | 'SessionCompleted' | 'SessionInactivated' | 'CampaignCreated' | 'CampaignClosed';
+export type TriggerStatus = 'active' | 'inactive';
+
+export interface Trigger {
+  triggerId: string;
+  triggerType: TriggerType;
+  eventType: TriggerEventType;
+  messageTemplate: string;
+  deliveryEndpoint: string;
+  status: TriggerStatus;
+  campaignId?: string;
+  isGlobal: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+}
+
+export interface CreateTriggerRequest {
+  triggerType: TriggerType;
+  eventType: TriggerEventType;
+  messageTemplate?: string;
+  deliveryEndpoint: string;
+  campaignId?: string;
+  isGlobal: boolean;
+}
+
+export interface UpdateTriggerRequest {
+  messageTemplate?: string;
+  deliveryEndpoint?: string;
+  status?: TriggerStatus;
+  eventType?: TriggerEventType;
+  isGlobal?: boolean;
+  campaignId?: string;
+}
+
+export interface TriggerListResponse {
+  triggers: Trigger[];
+  count: number;
+}
+
+export interface TriggerTemplatesResponse {
+  templates: Record<string, {
+    template: string;
+    description: string;
+    variables: string[];
+  }>;
+}
+
 
 
 export const BEDROCK_MODELS: BedrockModel[] = [
@@ -250,7 +325,7 @@ export const BEDROCK_MODELS: BedrockModel[] = [
   { id: 'apac.anthropic.claude-3-5-sonnet-20240620-v1:0', name: 'Claude 3.5 Sonnet (June)', provider: 'Anthropic', region: 'ap-northeast-2' },
   { id: 'apac.anthropic.claude-3-5-sonnet-20241022-v2:0', name: 'Claude 3.5 Sonnet (Oct)', provider: 'Anthropic', region: 'ap-northeast-2' },
   { id: 'apac.anthropic.claude-3-7-sonnet-20250219-v1:0', name: 'Claude 3.7 Sonnet', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'apac.anthropic.claude-sonnet-4-20250514-v1:0', name: 'Claude Sonnet 4', provider: 'Anthropic', region: 'ap-northeast-2' },
+  { id: 'global.anthropic.claude-sonnet-4-5-20250929-v1:0', name: 'Claude Sonnet 4', provider: 'Anthropic', region: 'ap-northeast-2' },
   { id: 'apac.amazon.nova-micro-v1:0', name: 'Nova Micro', provider: 'Amazon', region: 'ap-northeast-2' },
   { id: 'apac.amazon.nova-lite-v1:0', name: 'Nova Lite', provider: 'Amazon', region: 'ap-northeast-2' },
   { id: 'apac.amazon.nova-pro-v1:0', name: 'Nova Pro', provider: 'Amazon', region: 'ap-northeast-2' }

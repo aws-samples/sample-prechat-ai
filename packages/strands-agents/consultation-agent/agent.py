@@ -4,9 +4,14 @@ PreChat Consultation Agent
 미팅 전 고객의 사전 요구사항을 청취하는 상담 에이전트입니다.
 Session 도메인의 대화 이력의 주축이 됩니다.
 
+구성 주입 방식:
+  - 환경변수 기반 고정 구성 (X) → 폐기
+  - payload 기반 동적 구성 (O) → 호출 시마다 AgentConfiguration 주입
+  - 백엔드 Lambda가 DynamoDB에서 AgentConfiguration을 조회하여 payload.config에 포함
+
 부가 능력:
   - STM (AgentCore Memory; 기간 30일) - 세션 대화 보전
-  - Bedrock KB retrieve - 유사 고객사례 문의 대응
+  - Bedrock KB retrieve - 유사 고객사례 문의 대응 (strands_tools.retrieve)
   - Div Return - 프론트엔드에서 동적 렌더링되는 HTML Form 응답
 
 배포: Bedrock AgentCore Runtime (bedrock-agentcore SDK)
@@ -15,58 +20,19 @@ Session 도메인의 대화 이력의 주축이 됩니다.
 
 import os
 import json
+import logging
 from strands import Agent
 from strands.tools import tool
-from strands.telemetry import StrandsTelemetry
+from strands_tools import retrieve
+from bedrock_agentcore.runtime import BedrockAgentCoreApp
 
-# OTLP 트레이스 설정
-os.environ.setdefault("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
-strands_telemetry = StrandsTelemetry()
-strands_telemetry.setup_otlp_exporter()
+app = BedrockAgentCoreApp()
+logging.getLogger("strands").setLevel(logging.INFO)
 
-# Bedrock KB 검색 도구
-import boto3
-
-kb_client = boto3.client('bedrock-agent-runtime', region_name=os.environ.get('AWS_REGION', 'ap-northeast-2'))
-KB_ID = os.environ.get('BEDROCK_KB_ID', '')
-if KB_ID == 'NONE':
-    KB_ID = ''
-
-
-@tool
-def search_customer_references(query: str) -> str:
-    """고객 문의와 관련된 유사 고객사례를 Bedrock Knowledge Base에서 검색합니다.
-
-    Args:
-        query: 검색할 고객 문의 내용
-
-    Returns:
-        관련 고객사례 요약 텍스트
-    """
-    if not KB_ID:
-        return "Knowledge Base가 설정되지 않았습니다."
-
-    try:
-        resp = kb_client.retrieve(
-            knowledgeBaseId=KB_ID,
-            retrievalQuery={'text': query},
-            retrievalConfiguration={
-                'vectorSearchConfiguration': {'numberOfResults': 3}
-            }
-        )
-
-        results = []
-        for item in resp.get('retrievalResults', []):
-            content = item.get('content', {}).get('text', '')
-            if content:
-                results.append(content[:500])
-
-        if results:
-            return "\n\n---\n\n".join(results)
-        return "관련 고객사례를 찾지 못했습니다."
-
-    except Exception as e:
-        return f"검색 중 오류가 발생했습니다: {str(e)}"
+# Bedrock KB ID: deploy 시 launch(env_vars=...)로 컨테이너에 주입됨
+_kb_id = os.environ.get('BEDROCK_KB_ID', '')
+if _kb_id and _kb_id != 'NONE':
+    os.environ['STRANDS_KNOWLEDGE_BASE_ID'] = _kb_id
 
 
 @tool
@@ -86,7 +52,7 @@ def render_form(form_title: str, fields: str) -> str:
     try:
         field_list = json.loads(fields)
     except json.JSONDecodeError:
-        return f"<div><p>폼 필드 정의가 올바르지 않습니다.</p></div>"
+        return '<div><p>폼 필드 정의가 올바르지 않습니다.</p></div>'
 
     form_html = f'<div class="prechat-form" data-form-type="div-return">'
     form_html += f'<h3>{form_title}</h3>'
@@ -149,7 +115,7 @@ AWS의 MSP 파트너인 NDS 미팅 전 고객정보 수집 대화형 AI
 **8단계:** "정리해드리겠습니다:
 
 - 회사: [입력내용]
-- AWS현황: [입력내용] 
+- AWS현황: [입력내용]
 - 문의사항: [입력내용]
 - 참석자: [입력내용]
 - 희망일정: [입력내용]
@@ -157,6 +123,8 @@ AWS의 MSP 파트너인 NDS 미팅 전 고객정보 수집 대화형 AI
 수정할 내용 있나요?"
 
 ## 특수상황 대응
+
+**유사 고객사례 문의:** 고객이 "다른 회사는 어떻게 했나요?", "비슷한 사례가 있나요?" 등 유사사례를 물으면 `retrieve` 도구를 사용하여 지식베이스에서 관련 사례를 검색하세요. 검색 결과를 자연스럽게 요약하여 고객에게 전달하되, 구체적인 고객사명은 익명 처리하세요.
 
 **일정확정 문의:** "사전상담 완료 후 1-2일내 담당자가 이메일로 일정 안내드립니다"
 
@@ -180,52 +148,68 @@ EOF 토큰 반드시 출력하기
 - 담당자 정보를 요구할 경우 플레이스 홀더로 표시하세요: {{sales_rep.name}} {{sales_rep.phone}} {{sales_rep.email}}
 - 대화 종료시 반드시(MUST) "EOF" 토큰을 넣어주셔야 합니다.
 
+## 사용 가능한 도구
+
+1. `retrieve`: Bedrock Knowledge Base에서 유사 고객사례를 검색합니다. 고객이 사례를 물으면 `retrieve(text="고객 질문 키워드")` 형태로 호출하세요.
+2. `render_form`: 고객이 구조화된 정보를 입력해야 할 때 HTML Form을 생성합니다. 참석자 정보, 인프라 현황 등 여러 필드를 한번에 수집할 때 활용하세요.
+
 **핵심: 8회내 필수정보 수집, 단계별 세분화, 정확한 담당자 정보 제공**
 """
 
+DEFAULT_MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+DEFAULT_AGENT_NAME = "prechatConsultationAgent"
+
 
 def create_consultation_agent(
-    system_prompt: str = "",
-    model_id: str = "",
-    agent_name: str = "",
+    system_prompt: str | None = None,
+    model_id: str | None = None,
+    agent_name: str | None = None,
 ) -> Agent:
     """PreChat User의 구성을 주입하여 Consultation Agent를 생성합니다.
 
     Args:
-        system_prompt: 사용자 정의 시스템 프롬프트 (빈 문자열이면 기본값 사용)
-        model_id: 사용자 정의 모델 ID (빈 문자열이면 기본값 사용)
-        agent_name: 사용자 정의 에이전트 이름
+        system_prompt: 사용자 정의 시스템 프롬프트 (None이면 DEFAULT 사용)
+        model_id: 사용자 정의 모델 ID (None이면 DEFAULT 사용)
+        agent_name: 사용자 정의 에이전트 이름 (None이면 DEFAULT 사용)
 
     Returns:
         구성된 Strands Agent 인스턴스
     """
     return Agent(
-        model=model_id or "us.anthropic.claude-sonnet-4-20250514-v1:0",
+        model=model_id or DEFAULT_MODEL_ID,
         system_prompt=system_prompt or DEFAULT_SYSTEM_PROMPT,
-        name=agent_name or "prechat-consultation-agent",
-        tools=[search_customer_references, render_form],
+        name=agent_name or DEFAULT_AGENT_NAME,
+        tools=[retrieve, render_form],
     )
 
 
-# AgentCore Runtime 엔트리포인트
-if __name__ == "__main__":
-    from bedrock_agentcore.runtime import BedrockAgentCoreApp
+@app.entrypoint
+def invoke(payload: dict) -> dict:
+    """AgentCore Runtime 호출 엔트리포인트
 
-    app = BedrockAgentCoreApp()
+    payload 구조:
+      {
+        "prompt": "고객 메시지",
+        "config": {                          # 백엔드 Lambda가 DynamoDB에서 조회하여 주입
+          "system_prompt": "...",
+          "model_id": "...",
+          "agent_name": "..."
+        }
+      }
 
-    # 환경 변수에서 PreChat User 구성 주입
+    config가 없으면 기본값으로 폴백합니다.
+    """
+    prompt = payload.get("prompt", "")
+    if not prompt:
+        return {"error": "No prompt provided"}
+
+    # payload.config에서 동적 구성 추출 (키가 없으면 None → DEFAULT 폴백)
+    config = payload.get("config", {})
     agent = create_consultation_agent(
-        system_prompt=os.environ.get('AGENT_SYSTEM_PROMPT', ''),
-        model_id=os.environ.get('AGENT_MODEL_ID', ''),
-        agent_name=os.environ.get('AGENT_NAME', ''),
+        system_prompt=config.get("system_prompt"),
+        model_id=config.get("model_id"),
+        agent_name=config.get("agent_name"),
     )
 
-    @app.entrypoint
-    def invoke(payload: dict) -> dict:
-        """AgentCore Runtime 호출 엔트리포인트"""
-        prompt = payload.get("prompt", "")
-        if not prompt:
-            return {"error": "No prompt provided"}
-
-        result = agent(prompt)
-        return {"result": result.message}
+    result = agent(prompt)
+    return {"result": result.message}

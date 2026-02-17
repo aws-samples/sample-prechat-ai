@@ -12,7 +12,8 @@ import {
   Alert,
   Select,
   Textarea,
-  Spinner
+  Spinner,
+  Badge
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
 import { BEDROCK_MODELS } from '../../types'
@@ -20,60 +21,64 @@ import { PlaceholderTooltip } from '../../components'
 import defaultPrompt from '../../assets/prechat-agent-prompt.md?raw'
 import { useI18n } from '../../i18n'
 
+const ROLE_LABELS: Record<string, string> = {
+  prechat: 'Consultation Agent',
+  summary: 'Analysis Agent',
+  planning: 'Planning Agent'
+}
+
 export default function EditAgent() {
   const navigate = useNavigate()
   const { t } = useI18n()
-  const { agentId } = useParams<{ agentId: string }>()
+  const { agentId: configId } = useParams<{ agentId: string }>()
   const [loading, setLoading] = useState(false)
-  const [loadingAgent, setLoadingAgent] = useState(true)
+  const [loadingConfig, setLoadingConfig] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [agentRole, setAgentRole] = useState('')
   const [formData, setFormData] = useState({
     agentName: '',
-    foundationModel: '',
-    instruction: '',
-    memoryStorageDays: 30
+    modelId: '',
+    systemPrompt: ''
   })
-  const [agentStatus, setAgentStatus] = useState('')
 
   useEffect(() => {
-    if (agentId) {
-      loadAgent()
+    if (configId) {
+      loadConfig()
     }
-  }, [agentId])
+  }, [configId])
 
-  const loadAgent = async () => {
-    if (!agentId) return
-    
+  const loadConfig = async () => {
+    if (!configId) return
+
     try {
-      setLoadingAgent(true)
-      const agent = await adminApi.getAgent(agentId)
+      setLoadingConfig(true)
+      const config = await adminApi.getAgentConfig(configId)
       setFormData({
-        agentName: agent.agentName,
-        foundationModel: agent.foundationModel,
-        instruction: agent.instruction,
-        memoryStorageDays: agent.memoryStorageDays
+        agentName: config.agentName,
+        modelId: config.modelId,
+        systemPrompt: config.systemPrompt
       })
-      setAgentStatus(agent.agentStatus)
+      setAgentRole(config.agentRole)
     } catch (err) {
       setError(t('admin_failed_load_agent'))
     } finally {
-      setLoadingAgent(false)
+      setLoadingConfig(false)
     }
   }
 
   const handleSubmit = async () => {
-    if (!agentId) return
-    
+    if (!configId) return
+
     setLoading(true)
     setError('')
     setSuccess('')
 
     try {
-      await adminApi.updateAgent(agentId, {
-        foundationModel: formData.foundationModel,
-        instruction: formData.instruction,
-        memoryStorageDays: formData.memoryStorageDays
+      await adminApi.updateAgentConfig(configId, {
+        modelId: formData.modelId,
+        systemPrompt: formData.systemPrompt,
+        agentName: formData.agentName
       })
       setSuccess(t('admin_agent_updated_success', { name: formData.agentName }))
       setTimeout(() => navigate('/admin/agents'), 3000)
@@ -84,7 +89,7 @@ export default function EditAgent() {
     }
   }
 
-  const updateFormData = (field: string, value: string | number) => {
+  const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -93,7 +98,7 @@ export default function EditAgent() {
     value: model.id
   }))
 
-  if (loadingAgent) {
+  if (loadingConfig) {
     return (
       <Container>
         <SpaceBetween size="l">
@@ -123,12 +128,6 @@ export default function EditAgent() {
 
         {error && <Alert type="error">{error}</Alert>}
         {success && <Alert type="success">{success}</Alert>}
-        
-        {agentStatus === 'PREPARED' && (
-          <Alert type="warning">
-            {t('admin_agent_prepared_warning')}
-          </Alert>
-        )}
 
         <Form
           actions={
@@ -140,7 +139,7 @@ export default function EditAgent() {
                 variant="primary"
                 onClick={handleSubmit}
                 loading={loading}
-                disabled={!formData.foundationModel || !formData.instruction}
+                disabled={!formData.modelId || !formData.systemPrompt}
               >
                 {t('admin_update_agent')}
               </Button>
@@ -148,57 +147,51 @@ export default function EditAgent() {
           }
         >
           <SpaceBetween size="l">
-            <FormField 
-              label={t('admin_agent_name')} 
-              description={t('admin_agent_name_readonly')}
+            <FormField
+              label={t('agent_role')}
+              description={t('agent_role_readonly_description')}
+              stretch
+            >
+              <Badge color={
+                agentRole === 'prechat' ? 'blue' :
+                agentRole === 'summary' ? 'green' : 'grey'
+              }>
+                {ROLE_LABELS[agentRole] || agentRole}
+              </Badge>
+            </FormField>
+
+            <FormField
+              label={t('admin_agent_name')}
+              description={t('agents_agent_name_description')}
               stretch
             >
               <Input
                 value={formData.agentName}
                 onChange={({ detail }) => updateFormData('agentName', detail.value)}
                 placeholder={t('enter_agent_name')}
-                disabled={true}
-                readOnly={true}
               />
             </FormField>
 
-            <FormField 
-              label={t('foundation_model')} 
+            <FormField
+              label={t('foundation_model')}
               description={t('admin_select_foundation_model')}
               stretch
             >
               <Select
                 selectedOption={
-                  formData.foundationModel ? 
-                  modelOptions.find(opt => opt.value === formData.foundationModel) || null : null
+                  formData.modelId
+                    ? modelOptions.find(opt => opt.value === formData.modelId) || null
+                    : null
                 }
-                onChange={({ detail }) => 
-                  updateFormData('foundationModel', detail.selectedOption?.value || '')
+                onChange={({ detail }) =>
+                  updateFormData('modelId', detail.selectedOption?.value || '')
                 }
                 options={modelOptions}
                 placeholder={t('select_a_foundation_model')}
               />
             </FormField>
 
-            <FormField 
-              label={t('memory_storage_days')} 
-              description={t('admin_memory_storage_description')}
-              stretch
-            >
-              <Input
-                type="number"
-                value={formData.memoryStorageDays.toString()}
-                onChange={({ detail }) => {
-                  const days = parseInt(detail.value) || 30
-                  if (days >= 1 && days <= 365) {
-                    updateFormData('memoryStorageDays', days)
-                  }
-                }}
-                placeholder="30"
-              />
-            </FormField>
-
-            <FormField 
+            <FormField
               label={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span>{t('agent_instructions')}</span>
@@ -211,15 +204,15 @@ export default function EditAgent() {
                 <Button
                   variant="normal"
                   iconName="refresh"
-                  onClick={() => updateFormData('instruction', defaultPrompt)}
+                  onClick={() => updateFormData('systemPrompt', defaultPrompt)}
                 >
                   {t('admin_default_agent_instructions')}
                 </Button>
               }
             >
               <Textarea
-                value={formData.instruction}
-                onChange={({ detail }) => updateFormData('instruction', detail.value)}
+                value={formData.systemPrompt}
+                onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
                 placeholder={t('enter_agent_instructions')}
                 rows={15}
               />

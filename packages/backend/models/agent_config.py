@@ -34,7 +34,7 @@ class CapabilityType(str, Enum):
 VALID_AGENT_ROLES = {r.value for r in AgentRole}
 
 SUPPORTED_MODELS = {
-    'us.anthropic.claude-sonnet-4-20250514-v1:0',
+    'global.anthropic.claude-sonnet-4-5-20250929-v1:0',
     'anthropic.claude-3-sonnet-20240229-v1:0',
     'anthropic.claude-3-5-sonnet-20241022-v2:0',
     'amazon.nova-pro-v1:0',
@@ -88,7 +88,7 @@ class AgentConfiguration:
     agent_role: str
     campaign_id: str
     agent_runtime_arn: str = ''  # AgentCore Runtime에 배포된 에이전트 ARN
-    model_id: str = 'us.anthropic.claude-sonnet-4-20250514-v1:0'
+    model_id: str = 'global.anthropic.claude-sonnet-4-5-20250929-v1:0'
     system_prompt: str = ''
     agent_name: str = ''  # PreChat User가 정의하는 에이전트 이름
     capabilities: AgentCapabilities = field(default_factory=AgentCapabilities)
@@ -141,7 +141,7 @@ class AgentConfiguration:
             agent_role=item.get('agentRole', ''),
             campaign_id=item.get('campaignId', ''),
             agent_runtime_arn=item.get('agentRuntimeArn', ''),
-            model_id=item.get('modelId', 'us.anthropic.claude-sonnet-4-20250514-v1:0'),
+            model_id=item.get('modelId', 'global.anthropic.claude-sonnet-4-5-20250929-v1:0'),
             system_prompt=item.get('systemPrompt', ''),
             agent_name=item.get('agentName', ''),
             capabilities=AgentCapabilities.from_dict(item.get('capabilities', {})),

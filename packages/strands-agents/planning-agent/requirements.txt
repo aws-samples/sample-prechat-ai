@@ -1,4 +1,5 @@
 strands-agents
+strands-agents-tools
 bedrock-agentcore
 boto3
-aws-opentelemetry-distro>=0.10.1
+aws-opentelemetry-distro>=0.10.0

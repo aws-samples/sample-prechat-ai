@@ -113,6 +113,61 @@ def handle_session_stream(event, context):
     return lambda_response(200, {'message': 'Stream processed successfully'})
 
 
+def handle_campaign_stream(event, context):
+    """Handle DynamoDB Streams events for campaign lifecycle changes and trigger execution.
+
+    CampaignsTable에 StreamSpecification 활성화 후 사용 가능합니다.
+    campaign_handler.py에서 직접 TriggerManager를 호출하는 방식과 병행 가능하며,
+    스트림 기반으로 전환 시 campaign_handler의 트리거 호출을 제거하면 됩니다.
+    """
+
+    for record in event.get('Records', []):
+        event_name = record.get('eventName')
+
+        if event_name == 'INSERT':
+            new_image = record.get('dynamodb', {}).get('NewImage', {})
+            pk = new_image.get('PK', {}).get('S', '')
+
+            if pk.startswith('CAMPAIGN#') and new_image.get('SK', {}).get('S', '') == 'METADATA':
+                campaign_id = new_image.get('campaignId', {}).get('S', '')
+                event_data = {
+                    'event_type': 'CampaignCreated',
+                    'campaign_id': campaign_id,
+                    'campaign_name': new_image.get('campaignName', {}).get('S', ''),
+                    'campaign_code': new_image.get('campaignCode', {}).get('S', ''),
+                    'owner_email': new_image.get('ownerEmail', {}).get('S', ''),
+                    'created_at': new_image.get('createdAt', {}).get('S', ''),
+                    'start_date': new_image.get('startDate', {}).get('S', ''),
+                    'end_date': new_image.get('endDate', {}).get('S', ''),
+                }
+                print(f"Campaign {campaign_id} created - executing triggers")
+                trigger_manager.execute_triggers('CampaignCreated', event_data, campaign_id)
+
+        elif event_name == 'MODIFY':
+            old_image = record.get('dynamodb', {}).get('OldImage', {})
+            new_image = record.get('dynamodb', {}).get('NewImage', {})
+            pk = new_image.get('PK', {}).get('S', '')
+
+            if pk.startswith('CAMPAIGN#') and new_image.get('SK', {}).get('S', '') == 'METADATA':
+                old_status = old_image.get('status', {}).get('S', '')
+                new_status = new_image.get('status', {}).get('S', '')
+
+                # 캠페인 종료 이벤트 (active → inactive)
+                if old_status == 'active' and new_status == 'inactive':
+                    campaign_id = new_image.get('campaignId', {}).get('S', '')
+                    event_data = {
+                        'event_type': 'CampaignClosed',
+                        'campaign_id': campaign_id,
+                        'campaign_name': new_image.get('campaignName', {}).get('S', ''),
+                        'closed_at': get_timestamp(),
+                        'total_sessions': int(new_image.get('sessionCount', {}).get('N', '0')),
+                    }
+                    print(f"Campaign {campaign_id} closed - executing triggers")
+                    trigger_manager.execute_triggers('CampaignClosed', event_data, campaign_id)
+
+    return lambda_response(200, {'message': 'Campaign stream processed successfully'})
+
+
 def _calc_duration_minutes(created_at: str, completed_at: str) -> int:
     """세션 소요 시간을 분 단위로 계산합니다."""
     try:

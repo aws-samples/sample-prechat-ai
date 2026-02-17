@@ -11,10 +11,7 @@
     "test": "yarn workspaces run test",
     "lint": "yarn workspaces run lint",
     "dev": "yarn workspace @mte-prechat/web-app dev",
-    "preview": "yarn workspace @mte-prechat/web-app preview",
-    "sam:build": "sam build --profile terraform",
-    "sam:deploy": "sam deploy --profile terraform",
-    "sam:local": "sam local start-api --profile terraform"
+    "preview": "yarn workspace @mte-prechat/web-app preview"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",

@@ -1,0 +1,62 @@
+default_agent: prechatConsultationAgent
+agents:
+  prechatConsultationAgent:
+    name: prechatConsultationAgent
+    language: python
+    node_version: null
+    entrypoint: /Users/jaebin/AWS/repositories/prechat/packages/strands-agents/consultation-agent/agent.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: none
+    source_path: null
+    aws:
+      execution_role: arn:aws:iam::487498333664:role/AmazonBedrockAgentCoreSDKRuntime-ap-northeast-2-9f0d6c9015
+      execution_role_auto_create: false
+      account: '487498333664'
+      region: ap-northeast-2
+      ecr_repository: 487498333664.dkr.ecr.ap-northeast-2.amazonaws.com/bedrock-agentcore-prechatconsultationagent
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: prechatConsultationAgent-kE0op82EVw
+      agent_arn: arn:aws:bedrock-agentcore:ap-northeast-2:487498333664:runtime/prechatConsultationAgent-kE0op82EVw
+      agent_session_id: null
+    codebuild:
+      project_name: bedrock-agentcore-prechatconsultationagent-builder
+      execution_role: arn:aws:iam::487498333664:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-northeast-2-9f0d6c9015
+      source_bucket: bedrock-agentcore-codebuild-sources-487498333664-ap-northeast-2
+    memory:
+      mode: STM_ONLY
+      memory_id: prechatConsultationAgent_mem-PJOc9h7eGt
+      memory_arn: arn:aws:bedrock-agentcore:ap-northeast-2:487498333664:memory/prechatConsultationAgent_mem-PJOc9h7eGt
+      memory_name: prechatConsultationAgent_mem
+      event_expiry_days: 30
+      first_invoke_memory_check_done: true
+      was_created_by_toolkit: false
+    identity:
+      credential_providers: []
+      workload: null
+    aws_jwt:
+      enabled: false
+      audiences: []
+      signing_algorithm: ES384
+      issuer_url: null
+      duration_seconds: 300
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null
+    api_key_env_var_name: null
+    api_key_credential_provider_name: null
+    is_generated_by_agentcore_create: false

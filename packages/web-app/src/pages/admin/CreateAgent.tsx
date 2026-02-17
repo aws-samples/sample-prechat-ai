@@ -13,11 +13,18 @@ import {
   Select,
   Textarea
 } from '@cloudscape-design/components'
-import { adminApi } from '../../services/api'
+import { adminApi, campaignApi } from '../../services/api'
 import { BEDROCK_MODELS } from '../../types'
+import type { Campaign } from '../../types'
 import { PlaceholderTooltip } from '../../components'
 import defaultPrompt from '../../assets/prechat-agent-prompt.md?raw'
 import { useI18n } from '../../i18n'
+
+const AGENT_ROLES = [
+  { value: 'prechat', label: 'Consultation Agent' },
+  { value: 'summary', label: 'Analysis Agent' },
+  { value: 'planning', label: 'Planning Agent' }
+]
 
 export default function CreateAgent() {
   const navigate = useNavigate()
@@ -25,17 +32,30 @@ export default function CreateAgent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [loadingCampaigns, setLoadingCampaigns] = useState(true)
   const [formData, setFormData] = useState({
     agentName: '',
-    foundationModel: '',
-    instruction: defaultPrompt,
-    memoryStorageDays: 30
+    agentRole: '',
+    campaignId: '',
+    modelId: '',
+    systemPrompt: defaultPrompt
   })
 
   useEffect(() => {
-    // Set default instruction from the imported markdown file
-    setFormData(prev => ({ ...prev, instruction: defaultPrompt }))
+    loadCampaigns()
   }, [])
+
+  const loadCampaigns = async () => {
+    try {
+      const response = await campaignApi.listCampaigns()
+      setCampaigns(response.campaigns || [])
+    } catch (err) {
+      console.error('Failed to load campaigns:', err)
+    } finally {
+      setLoadingCampaigns(false)
+    }
+  }
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -43,7 +63,13 @@ export default function CreateAgent() {
     setSuccess('')
 
     try {
-      await adminApi.createAgent(formData)
+      await adminApi.createAgentConfig({
+        agentRole: formData.agentRole,
+        campaignId: formData.campaignId,
+        modelId: formData.modelId,
+        systemPrompt: formData.systemPrompt,
+        agentName: formData.agentName
+      })
       setSuccess(t('agents_created_success', { name: formData.agentName }))
       setTimeout(() => navigate('/admin/agents'), 3000)
     } catch (err) {
@@ -53,7 +79,7 @@ export default function CreateAgent() {
     }
   }
 
-  const updateFormData = (field: string, value: string | number) => {
+  const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -89,7 +115,7 @@ export default function CreateAgent() {
                 variant="primary"
                 onClick={handleSubmit}
                 loading={loading}
-                disabled={!formData.agentName || !formData.foundationModel || !formData.instruction}
+                disabled={!formData.agentName || !formData.agentRole || !formData.campaignId || !formData.modelId}
               >
                 {t('admin_create_agent')}
               </Button>
@@ -97,8 +123,8 @@ export default function CreateAgent() {
           }
         >
           <SpaceBetween size="l">
-            <FormField 
-              label={t('admin_agent_name')} 
+            <FormField
+              label={t('admin_agent_name')}
               description={t('agents_agent_name_description')}
               stretch
             >
@@ -109,43 +135,68 @@ export default function CreateAgent() {
               />
             </FormField>
 
-            <FormField 
-              label={t('foundation_model')} 
+            <FormField
+              label={t('agent_role')}
+              description={t('agent_role_description')}
+              stretch
+            >
+              <Select
+                selectedOption={
+                  formData.agentRole
+                    ? AGENT_ROLES.find(r => r.value === formData.agentRole) || null
+                    : null
+                }
+                onChange={({ detail }) =>
+                  updateFormData('agentRole', detail.selectedOption?.value || '')
+                }
+                options={AGENT_ROLES}
+                placeholder={t('select_agent_role')}
+              />
+            </FormField>
+
+            <FormField
+              label={t('campaign_association')}
+              description={t('select_campaign')}
+              stretch
+            >
+              <Select
+                selectedOption={
+                  formData.campaignId
+                    ? { label: campaigns.find(c => c.campaignId === formData.campaignId)?.campaignName || '', value: formData.campaignId }
+                    : null
+                }
+                onChange={({ detail }) =>
+                  updateFormData('campaignId', detail.selectedOption?.value || '')
+                }
+                options={campaigns
+                  .filter(c => c.status === 'active')
+                  .map(c => ({ label: c.campaignName, value: c.campaignId }))
+                }
+                placeholder={t('select_campaign')}
+                statusType={loadingCampaigns ? 'loading' : 'finished'}
+              />
+            </FormField>
+
+            <FormField
+              label={t('foundation_model')}
               description={t('agents_foundation_model_description')}
               stretch
             >
               <Select
                 selectedOption={
-                  formData.foundationModel ? 
-                  modelOptions.find(opt => opt.value === formData.foundationModel) || null : null
+                  formData.modelId
+                    ? modelOptions.find(opt => opt.value === formData.modelId) || null
+                    : null
                 }
-                onChange={({ detail }) => 
-                  updateFormData('foundationModel', detail.selectedOption?.value || '')
+                onChange={({ detail }) =>
+                  updateFormData('modelId', detail.selectedOption?.value || '')
                 }
                 options={modelOptions}
                 placeholder={t('select_a_foundation_model')}
               />
             </FormField>
 
-            <FormField 
-              label={t('memory_storage_days')} 
-              description={t('admin_memory_storage_description')}
-              stretch
-            >
-              <Input
-                type="number"
-                value={formData.memoryStorageDays.toString()}
-                onChange={({ detail }) => {
-                  const days = parseInt(detail.value) || 30
-                  if (days >= 1 && days <= 365) {
-                    updateFormData('memoryStorageDays', days)
-                  }
-                }}
-                placeholder="30"
-              />
-            </FormField>
-
-            <FormField 
+            <FormField
               label={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span>{t('agent_instructions')}</span>
@@ -158,15 +209,15 @@ export default function CreateAgent() {
                 <Button
                   variant="normal"
                   iconName="refresh"
-                  onClick={() => updateFormData('instruction', defaultPrompt)}
+                  onClick={() => updateFormData('systemPrompt', defaultPrompt)}
                 >
                   {t('admin_default_agent_instructions')}
                 </Button>
               }
             >
               <Textarea
-                value={formData.instruction}
-                onChange={({ detail }) => updateFormData('instruction', detail.value)}
+                value={formData.systemPrompt}
+                onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
                 placeholder={t('enter_agent_instructions')}
                 rows={15}
               />

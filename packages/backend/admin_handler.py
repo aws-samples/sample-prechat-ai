@@ -1179,4 +1179,188 @@ def get_session_feedback(event, context):
         print(f"Error retrieving feedback for session {session_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to retrieve feedback'})
 
+def patch_session(event, context):
+    """
+    PATCH /api/admin/sessions/{sessionId}
+
+    세션의 부분 업데이트를 수행합니다.
+    지원하는 필드:
+      - status: 'inactive' 로 변경 (기존 inactivate 엔드포인트 통합)
+      - campaignId: 캠페인 연결 (기존 PUT .../campaign 엔드포인트 통합)
+    """
+    try:
+        session_id = event['pathParameters']['sessionId']
+        if not session_id:
+            return lambda_response(400, {'error': 'Session ID is required'})
+    except (KeyError, TypeError):
+        return lambda_response(400, {'error': 'Missing session ID parameter'})
+
+    try:
+        body = parse_body(event)
+        if not body:
+            return lambda_response(400, {'error': 'Request body is required'})
+
+        sessions_table = dynamodb.Table(SESSIONS_TABLE)
+
+        # Verify session exists
+        session_resp = sessions_table.get_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
+        )
+        if 'Item' not in session_resp:
+            return lambda_response(404, {'error': 'Session not found'})
+
+        update_expressions = []
+        expression_names = {}
+        expression_values = {}
+
+        # Handle status change (inactivate)
+        if 'status' in body:
+            new_status = body['status']
+            if new_status not in ('inactive', 'active'):
+                return lambda_response(400, {'error': 'Invalid status. Must be "active" or "inactive"'})
+            update_expressions.append('#status = :status')
+            expression_names['#status'] = 'status'
+            expression_values[':status'] = new_status
+
+        # Handle campaign association
+        if 'campaignId' in body:
+            campaign_id = body['campaignId']
+            if campaign_id:
+                # Validate campaign exists
+                campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
+                campaign_resp = campaigns_table.get_item(
+                    Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
+                )
+                if 'Item' not in campaign_resp:
+                    return lambda_response(404, {'error': 'Campaign not found'})
+
+                campaign = campaign_resp['Item']
+                timestamp = get_timestamp()
+                update_expressions.append('campaignId = :campaign_id')
+                update_expressions.append('GSI2PK = :gsi2pk')
+                update_expressions.append('GSI2SK = :gsi2sk')
+                expression_values[':campaign_id'] = campaign_id
+                expression_values[':gsi2pk'] = f'CAMPAIGN#{campaign_id}'
+                expression_values[':gsi2sk'] = f'SESSION#{timestamp}'
+            else:
+                # Remove campaign association
+                update_expressions.append('campaignId = :empty')
+                update_expressions.append('GSI2PK = :empty')
+                update_expressions.append('GSI2SK = :empty')
+                expression_values[':empty'] = ''
+
+        if not update_expressions:
+            return lambda_response(400, {'error': 'No valid fields to update'})
+
+        update_expr = 'SET ' + ', '.join(update_expressions)
+        update_kwargs = {
+            'Key': {'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            'UpdateExpression': update_expr,
+            'ExpressionAttributeValues': expression_values,
+        }
+        if expression_names:
+            update_kwargs['ExpressionAttributeNames'] = expression_names
+
+        sessions_table.update_item(**update_kwargs)
+
+        return lambda_response(200, {
+            'message': 'Session updated successfully',
+            'sessionId': session_id,
+        })
+
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        logger.error(f"DynamoDB error patching session {session_id}: {error_code} - {str(e)}")
+        return lambda_response(500, {'error': f'Database error: {error_code}'})
+    except Exception as e:
+        logger.error(f"Unexpected error patching session {session_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to update session'})
+
+
+def submit_analysis(event, context):
+    """
+    POST /api/admin/sessions/{sessionId}/analysis
+
+    분석 요청을 통합 처리합니다.
+    기존 analyze + reanalyze 엔드포인트를 통합합니다.
+
+    Request Body:
+      - modelId (str, required): 분석에 사용할 모델 ID
+      - includeMeetingLog (bool, optional): 미팅 로그 포함 여부 (기존 reanalyze)
+    """
+    try:
+        session_id = event['pathParameters']['sessionId']
+        if not session_id:
+            return lambda_response(400, {'error': 'Session ID is required'})
+    except (KeyError, TypeError):
+        return lambda_response(400, {'error': 'Missing session ID parameter'})
+
+    try:
+        body = parse_body(event)
+        model_id = body.get('modelId')
+        include_meeting_log = body.get('includeMeetingLog', False)
+
+        if not model_id:
+            return lambda_response(400, {'error': 'Missing modelId parameter'})
+        if not isinstance(model_id, str) or not model_id.strip():
+            return lambda_response(400, {'error': 'Invalid modelId parameter'})
+
+        sessions_table = dynamodb.Table(SESSIONS_TABLE)
+        session_resp = sessions_table.get_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
+        )
+
+        if 'Item' not in session_resp:
+            return lambda_response(404, {'error': 'Session not found'})
+
+        session = session_resp['Item']
+        timestamp = get_timestamp()
+
+        # Mark analysis as in progress
+        sessions_table.update_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            UpdateExpression='SET analysisStatus = :status, analysisRequestedAt = :timestamp',
+            ExpressionAttributeValues={
+                ':status': 'processing',
+                ':timestamp': timestamp
+            }
+        )
+
+        # Build SQS message
+        message = {
+            'sessionId': session_id,
+            'modelId': model_id,
+            'requestedAt': timestamp,
+        }
+
+        if include_meeting_log:
+            message['includeMeetingLog'] = True
+            message['meetingLog'] = session.get('meetingLog', '')
+
+        if not ANALYSIS_QUEUE_URL:
+            logger.error("ANALYSIS_QUEUE_URL environment variable not configured")
+            return lambda_response(500, {'error': 'Analysis queue not configured'})
+
+        sqs.send_message(
+            QueueUrl=ANALYSIS_QUEUE_URL,
+            MessageBody=json.dumps(message)
+        )
+
+        return lambda_response(202, {
+            'message': 'Analysis request queued successfully',
+            'sessionId': session_id,
+            'status': 'processing',
+            'includeMeetingLog': include_meeting_log,
+        })
+
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        logger.error(f"DynamoDB/SQS error in analysis for session {session_id}: {error_code} - {str(e)}")
+        return lambda_response(500, {'error': f'Service error: {error_code}'})
+    except Exception as e:
+        logger.error(f"Unexpected error submitting analysis for session {session_id}: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to submit analysis request'})
+
+
+
 
