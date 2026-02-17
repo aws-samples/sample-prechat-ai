@@ -33,15 +33,6 @@ class CapabilityType(str, Enum):
 
 VALID_AGENT_ROLES = {r.value for r in AgentRole}
 
-SUPPORTED_MODELS = {
-    'global.anthropic.claude-sonnet-4-5-20250929-v1:0',
-    'anthropic.claude-3-sonnet-20240229-v1:0',
-    'anthropic.claude-3-5-sonnet-20241022-v2:0',
-    'amazon.nova-pro-v1:0',
-    'amazon.nova-lite-v1:0',
-    'amazon.nova-micro-v1:0',
-}
-
 
 @dataclass
 class AgentCapabilities:
@@ -105,16 +96,12 @@ class AgentConfiguration:
             errors.append('config_id is required')
         if self.agent_role not in VALID_AGENT_ROLES:
             errors.append(f'Invalid agent_role: {self.agent_role}. Must be one of {VALID_AGENT_ROLES}')
-        if not self.campaign_id:
-            errors.append('campaign_id is required')
-        if self.model_id and self.model_id not in SUPPORTED_MODELS:
-            errors.append(f'Unsupported model_id: {self.model_id}')
 
         return errors
 
     def to_dynamodb_item(self) -> dict:
         """DynamoDB 아이템으로 변환합니다."""
-        return {
+        item = {
             'PK': f'AGENTCONFIG#{self.config_id}',
             'SK': 'METADATA',
             'configId': self.config_id,
@@ -129,9 +116,15 @@ class AgentConfiguration:
             'createdAt': self.created_at,
             'updatedAt': self.updated_at,
             'createdBy': self.created_by,
-            'GSI1PK': f'CAMPAIGN#{self.campaign_id}',
-            'GSI1SK': f'AGENTCONFIG#{self.agent_role}',
         }
+        # campaign_id가 있는 경우에만 GSI1 설정 (에이전트는 캠페인 없이도 존재 가능)
+        if self.campaign_id:
+            item['GSI1PK'] = f'CAMPAIGN#{self.campaign_id}'
+            item['GSI1SK'] = f'AGENTCONFIG#{self.agent_role}'
+        else:
+            item['GSI1PK'] = f'AGENTCONFIG#GLOBAL'
+            item['GSI1SK'] = f'AGENTCONFIG#{self.agent_role}'
+        return item
 
     @classmethod
     def from_dynamodb_item(cls, item: dict) -> 'AgentConfiguration':
