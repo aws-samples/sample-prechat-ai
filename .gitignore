@@ -49,6 +49,9 @@ venv.bak/
 .aws-sam/
 samconfig.toml
 
+# Bedrock AgentCore
+.bedrock_agentcore.yaml
+
 # IDE
 .vscode/
 .idea/
