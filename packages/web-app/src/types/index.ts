@@ -1,5 +1,8 @@
 export type ConversationStage = 'conversation' | 'completed'
 
+// Div Return Protocol: 메시지 콘텐츠 유형
+export type MessageContentType = 'text' | 'div-return' | 'form-submission';
+
 export interface SalesRepInfo {
   name: string
   email: string
@@ -9,6 +12,7 @@ export interface SalesRepInfo {
 export interface Message {
   id: string;
   content: string;
+  contentType?: MessageContentType;
   sender: 'customer' | 'bot';
   timestamp: string;
   stage: ConversationStage;
@@ -104,10 +108,12 @@ export interface ChatMessageRequest {
   sessionId: string;
   message: string;
   messageId: string;
+  contentType?: MessageContentType;
 }
 
 export interface ChatMessageResponse {
   response: string;
+  contentType?: MessageContentType;
   stage: ConversationStage;
   isComplete: boolean;
   nextQuestions?: string[];
@@ -320,13 +326,9 @@ export interface TriggerTemplatesResponse {
 
 
 export const BEDROCK_MODELS: BedrockModel[] = [
-  { id: 'apac.anthropic.claude-3-haiku-20240307-v1:0', name: 'Claude 3 Haiku', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'apac.anthropic.claude-3-sonnet-20240229-v1:0', name: 'Claude 3 Sonnet', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'apac.anthropic.claude-3-5-sonnet-20240620-v1:0', name: 'Claude 3.5 Sonnet (June)', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'apac.anthropic.claude-3-5-sonnet-20241022-v2:0', name: 'Claude 3.5 Sonnet (Oct)', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'apac.anthropic.claude-3-7-sonnet-20250219-v1:0', name: 'Claude 3.7 Sonnet', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'global.anthropic.claude-sonnet-4-5-20250929-v1:0', name: 'Claude Sonnet 4', provider: 'Anthropic', region: 'ap-northeast-2' },
-  { id: 'apac.amazon.nova-micro-v1:0', name: 'Nova Micro', provider: 'Amazon', region: 'ap-northeast-2' },
-  { id: 'apac.amazon.nova-lite-v1:0', name: 'Nova Lite', provider: 'Amazon', region: 'ap-northeast-2' },
-  { id: 'apac.amazon.nova-pro-v1:0', name: 'Nova Pro', provider: 'Amazon', region: 'ap-northeast-2' }
+  { id: 'global.amazon.nova-2-lite-v1:0', name: 'Nova 2 Lite', provider: 'Amazon', region: 'us-east-1' },
+  { id: 'global.anthropic.claude-haiku-4-5-20251001-v1:0', name: 'Claude Haiku 4.5', provider: 'Anthropic', region: 'us-east-1' },
+  { id: 'global.anthropic.claude-sonnet-4-5-20250929-v1:0', name: 'Claude Sonnet 4.5', provider: 'Anthropic', region: 'us-east-1' },
+  { id: 'global.anthropic.claude-opus-4-5-20251101-v1:0', name: 'Claude Opus 4.5', provider: 'Anthropic', region: 'us-east-1' },
+  { id: 'global.anthropic.claude-opus-4-6-v1', name: 'Claude Opus 4.6', provider: 'Anthropic', region: 'us-east-1' },
 ];

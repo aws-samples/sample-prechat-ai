@@ -9,7 +9,7 @@ ENV UV_SYSTEM_PYTHON=1 \
     DOCKER_CONTAINER=1 \
     AWS_REGION=ap-northeast-2 \
     AWS_DEFAULT_REGION=ap-northeast-2 \
-    BEDROCK_AGENTCORE_MEMORY_ID=prechatConsultationAgent_mem-PJOc9h7eGt \
+    BEDROCK_AGENTCORE_MEMORY_ID=prechatConsultationAgent_mem-Rk4j5aB6Sa \
     BEDROCK_AGENTCORE_MEMORY_NAME=prechatConsultationAgent_mem
 
 
@@ -19,6 +19,9 @@ COPY requirements.txt requirements.txt
 RUN uv pip install -r requirements.txt
 
 
+
+
+RUN uv pip install aws-opentelemetry-distro>=0.10.1
 
 
 # Signal that this is running in Docker for host binding logic

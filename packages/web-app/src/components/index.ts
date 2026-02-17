@@ -22,3 +22,7 @@ export { CampaignCompaniesTable } from './CampaignCompaniesTable'
 export { CampaignCSATTable } from './CampaignCSATTable'
 export { CampaignComparisonTable } from './CampaignComparisonTable'
 export { CampaignReportExport } from './CampaignReportExport'
+
+// Div Return Protocol Components
+export { DivReturnRenderer } from './DivReturnRenderer'
+export { FormSubmissionSummary } from './FormSubmissionSummary'

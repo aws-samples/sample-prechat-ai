@@ -128,3 +128,6 @@ def invoke(payload: dict) -> dict:
     prompt = f"다음 사전 상담 대화 내용을 BANT 프레임워크로 분석해주세요:\n\n{conversation_history}"
     result = agent(prompt)
     return {"result": result.message}
+
+if __name__ == "__main__":
+    app.run()

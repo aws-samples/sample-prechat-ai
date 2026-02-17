@@ -2,8 +2,6 @@ default_agent: prechatPlanningAgent
 agents:
   prechatPlanningAgent:
     name: prechatPlanningAgent
-    language: python
-    node_version: null
     entrypoint: /Users/jaebin/AWS/repositories/prechat/packages/strands-agents/planning-agent/agent.py
     deployment_type: container
     runtime_type: null
@@ -30,8 +28,8 @@ agents:
         idle_runtime_session_timeout: null
         max_lifetime: null
     bedrock_agentcore:
-      agent_id: prechatPlanningAgent-ItALC47r5y
-      agent_arn: arn:aws:bedrock-agentcore:ap-northeast-2:487498333664:runtime/prechatPlanningAgent-ItALC47r5y
+      agent_id: prechatPlanningAgent-fJEjuo6CpO
+      agent_arn: arn:aws:bedrock-agentcore:ap-northeast-2:487498333664:runtime/prechatPlanningAgent-fJEjuo6CpO
       agent_session_id: null
     codebuild:
       project_name: bedrock-agentcore-prechatplanningagent-builder
@@ -45,18 +43,6 @@ agents:
       event_expiry_days: 30
       first_invoke_memory_check_done: false
       was_created_by_toolkit: false
-    identity:
-      credential_providers: []
-      workload: null
-    aws_jwt:
-      enabled: false
-      audiences: []
-      signing_algorithm: ES384
-      issuer_url: null
-      duration_seconds: 300
     authorizer_configuration: null
     request_header_configuration: null
     oauth_configuration: null
-    api_key_env_var_name: null
-    api_key_credential_provider_name: null
-    is_generated_by_agentcore_create: false

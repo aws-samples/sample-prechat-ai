@@ -25,9 +25,14 @@ from strands import Agent
 from strands.tools import tool
 from strands_tools import retrieve
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
+from bedrock_agentcore.memory.integrations.strands.config import AgentCoreMemoryConfig
+from bedrock_agentcore.memory.integrations.strands.session_manager import AgentCoreMemorySessionManager
 
 app = BedrockAgentCoreApp()
 logging.getLogger("strands").setLevel(logging.INFO)
+
+# AgentCore Memory ID: deploy 시 env_vars로 컨테이너에 주입됨
+MEMORY_ID = os.environ.get('BEDROCK_AGENTCORE_MEMORY_ID', '')
 
 # Bedrock KB ID: deploy 시 launch(env_vars=...)로 컨테이너에 주입됨
 _kb_id = os.environ.get('BEDROCK_KB_ID', '')
@@ -90,7 +95,7 @@ def render_form(form_title: str, fields: str) -> str:
 DEFAULT_SYSTEM_PROMPT = """당신은 AWS PreChat 사전 상담 AI 어시스턴트입니다.
 ## 역할
 
-AWS의 MSP 파트너인 NDS 미팅 전 고객정보 수집 대화형 AI
+AWS 미팅 전 고객정보 수집 대화형 AI
 
 ## 금지사항
 
@@ -161,6 +166,7 @@ DEFAULT_AGENT_NAME = "prechatConsultationAgent"
 
 
 def create_consultation_agent(
+    session_id: str,
     system_prompt: str | None = None,
     model_id: str | None = None,
     agent_name: str | None = None,
@@ -168,6 +174,7 @@ def create_consultation_agent(
     """PreChat User의 구성을 주입하여 Consultation Agent를 생성합니다.
 
     Args:
+        session_id: PreChat 세션 ID (STM 메모리 및 actor 식별에 사용)
         system_prompt: 사용자 정의 시스템 프롬프트 (None이면 DEFAULT 사용)
         model_id: 사용자 정의 모델 ID (None이면 DEFAULT 사용)
         agent_name: 사용자 정의 에이전트 이름 (None이면 DEFAULT 사용)
@@ -175,11 +182,24 @@ def create_consultation_agent(
     Returns:
         구성된 Strands Agent 인스턴스
     """
+    # AgentCore Memory STM 설정 (고객은 익명이므로 actor_id = session_id)
+    session_manager = None
+    if MEMORY_ID:
+        memory_config = AgentCoreMemoryConfig(
+            memory_id=MEMORY_ID,
+            session_id=session_id,
+            actor_id=session_id,
+        )
+        session_manager = AgentCoreMemorySessionManager(
+            agentcore_memory_config=memory_config,
+        )
+
     return Agent(
         model=model_id or DEFAULT_MODEL_ID,
         system_prompt=system_prompt or DEFAULT_SYSTEM_PROMPT,
         name=agent_name or DEFAULT_AGENT_NAME,
         tools=[retrieve, render_form],
+        session_manager=session_manager,
     )
 
 
@@ -190,6 +210,7 @@ def invoke(payload: dict) -> dict:
     payload 구조:
       {
         "prompt": "고객 메시지",
+        "session_id": "PreChat 세션 ID (STM 메모리 키 겸 actor ID)",
         "config": {                          # 백엔드 Lambda가 DynamoDB에서 조회하여 주입
           "system_prompt": "...",
           "model_id": "...",
@@ -203,9 +224,12 @@ def invoke(payload: dict) -> dict:
     if not prompt:
         return {"error": "No prompt provided"}
 
+    session_id = payload.get("session_id", "anonymous")
+
     # payload.config에서 동적 구성 추출 (키가 없으면 None → DEFAULT 폴백)
     config = payload.get("config", {})
     agent = create_consultation_agent(
+        session_id=session_id,
         system_prompt=config.get("system_prompt"),
         model_id=config.get("model_id"),
         agent_name=config.get("agent_name"),
@@ -213,3 +237,6 @@ def invoke(payload: dict) -> dict:
 
     result = agent(prompt)
     return {"result": result.message}
+
+if __name__ == "__main__":
+    app.run()

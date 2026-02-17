@@ -5,14 +5,17 @@ import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
 import type { Message, SalesRepInfo } from '../types'
 import { replaceSalesRepPlaceholders } from '../utils/placeholderReplacer'
+import { DivReturnRenderer } from './DivReturnRenderer'
+import { FormSubmissionSummary } from './FormSubmissionSummary'
 
 interface ChatMessageProps {
   message: Message
   isCustomer?: boolean
   salesRepInfo?: SalesRepInfo
+  onFormSubmit?: (formData: Record<string, string>) => void
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = false, salesRepInfo }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = false, salesRepInfo, onFormSubmit }) => {
   const handleActionClick = (actionId: string) => {
     switch (actionId) {
       case 'copy':
@@ -27,6 +30,26 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
         break
     }
   }
+
+  // contentType 기반 렌더링 분기
+  const renderContent = () => {
+    const contentType = message.contentType || 'text';
+    switch (contentType) {
+      case 'div-return':
+        return (
+          <DivReturnRenderer
+            htmlContent={message.content}
+            onFormSubmit={onFormSubmit || (() => {})}
+            disabled={!onFormSubmit}
+          />
+        );
+      case 'form-submission':
+        return <FormSubmissionSummary content={message.content} />;
+      case 'text':
+      default:
+        return <ReactMarkdown>{replaceSalesRepPlaceholders(message.content, salesRepInfo)}</ReactMarkdown>;
+    }
+  };
 
   if (isCustomer) {
     return (
@@ -49,7 +72,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
             borderRadius: '8px',
             wordWrap: 'break-word'
           }}>
-            {message.content}
+            {message.contentType === 'form-submission'
+              ? <FormSubmissionSummary content={message.content} />
+              : message.content}
           </div>
         </ChatBubble>
       </div>
@@ -108,7 +133,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
           />
         }
       >
-        <ReactMarkdown>{replaceSalesRepPlaceholders(message.content, salesRepInfo)}</ReactMarkdown>
+        {renderContent()}
       </ChatBubble>
     </div>
   )

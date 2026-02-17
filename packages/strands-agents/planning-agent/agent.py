@@ -124,3 +124,6 @@ def invoke(payload: dict) -> dict:
     prompt = f"다음 사전 상담 요약을 기반으로 미팅 플랜을 생성해주세요:\n\n{session_summary}"
     result = agent(prompt)
     return {"result": result.message}
+
+if __name__ == "__main__":
+    app.run()

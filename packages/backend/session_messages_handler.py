@@ -21,6 +21,38 @@ MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
 # AgentCore 클라이언트 (Strands Agent 호출용)
 agentcore_client = AgentCoreClient()
 
+# Div Return Protocol: contentType 감지
+DIV_RETURN_MARKER = '<div class="prechat-form" data-form-type="div-return">'
+
+
+def detect_content_type(content: str) -> str:
+    """에이전트 응답에서 contentType을 감지합니다.
+
+    Args:
+        content: 에이전트 응답 문자열
+
+    Returns:
+        'div-return' (마커 포함 시) 또는 'text'
+    """
+    if DIV_RETURN_MARKER in content:
+        return 'div-return'
+    return 'text'
+
+
+def format_form_submission_for_agent(form_data: dict) -> str:
+    """폼 제출 JSON을 에이전트가 이해할 수 있는 텍스트로 변환합니다.
+
+    Args:
+        form_data: 폼 필드 키-값 딕셔너리
+
+    Returns:
+        사람이 읽을 수 있는 텍스트 형식
+    """
+    lines = ["[폼 제출 데이터]"]
+    for key, value in form_data.items():
+        lines.append(f"- {key}: {value}")
+    return "\n".join(lines)
+
 
 def send_message(event, context):
     """
@@ -47,6 +79,7 @@ def send_message(event, context):
     body = parse_body(event)
     message = body.get('message', '')
     message_id = body.get('messageId', generate_id())
+    request_content_type = body.get('contentType', 'text')
 
     if not message:
         return lambda_response(400, {'error': 'Missing message in request body'})
@@ -84,6 +117,7 @@ def send_message(event, context):
         'timestamp': timestamp,
         'sender': 'customer',
         'content': message,
+        'contentType': request_content_type,
         'stage': 'conversation',
         'ttl': ttl_value
     }
@@ -95,6 +129,16 @@ def send_message(event, context):
         print(f"Failed to save customer message {message_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to save customer message'})
 
+    # form-submission인 경우 에이전트에 전달할 메시지를 텍스트로 변환
+    if request_content_type == 'form-submission':
+        try:
+            form_data = json.loads(message)
+            agent_message = format_form_submission_for_agent(form_data)
+        except json.JSONDecodeError:
+            agent_message = message
+    else:
+        agent_message = message
+
     # AgentCore Agent 응답 생성
     # Session ID → Campaign → AgentConfiguration 조회하여 config를 payload에 주입
     campaign_id = session.get('campaignId', '')
@@ -102,16 +146,14 @@ def send_message(event, context):
         config = get_agent_config_for_session(session_id, 'prechat') if campaign_id else \
                  get_agent_config_for_campaign('', 'prechat')
         if config and config.agent_runtime_arn:
-            # Strands Agent (AgentCore Runtime) 호출 - config를 payload에 포함
             ai_response = agentcore_client.invoke_consultation(
                 agent_runtime_arn=config.agent_runtime_arn,
                 session_id=session_id,
-                message=message,
+                message=agent_message,
                 config=config,
             )
         else:
-            # 폴백: 기존 Bedrock Agent 직접 호출 (레거시 호환)
-            ai_response = _generate_agent_response(message, session_id, agent_id)
+            ai_response = _generate_agent_response(agent_message, session_id, agent_id)
     except Exception as e:
         print(f"Failed to generate AI response: {str(e)}")
         return lambda_response(500, {'error': 'Failed to generate AI response'})
@@ -120,6 +162,9 @@ def send_message(event, context):
     is_complete = 'EOF' in ai_response
     if is_complete:
         ai_response = ai_response.replace('EOF', '').strip()
+
+    # AI 응답의 contentType 감지
+    response_content_type = detect_content_type(ai_response)
 
     # AI 응답 저장
     bot_response_id = f"{int(message_id) + 1}" if message_id.isdigit() else generate_id()
@@ -130,6 +175,7 @@ def send_message(event, context):
         'timestamp': timestamp,
         'sender': 'bot',
         'content': ai_response,
+        'contentType': response_content_type,
         'stage': 'conversation',
         'ttl': ttl_value
     }
@@ -159,6 +205,7 @@ def send_message(event, context):
 
     return lambda_response(200, {
         'response': ai_response,
+        'contentType': response_content_type,
         'stage': 'conversation',
         'isComplete': is_complete
     })

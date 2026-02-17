@@ -6,20 +6,24 @@ import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
 import type { Message, SalesRepInfo } from '../types'
 import { replaceSalesRepPlaceholders } from '../utils/placeholderReplacer'
+import { DivReturnRenderer } from './DivReturnRenderer'
 
 interface StreamingChatMessageProps {
   message: Message
   isStreaming?: boolean
   salesRepInfo?: SalesRepInfo
+  onFormSubmit?: (formData: Record<string, string>) => void
 }
 
 export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({ 
   message, 
   isStreaming = false,
-  salesRepInfo
+  salesRepInfo,
+  onFormSubmit
 }) => {
   const [displayedContent, setDisplayedContent] = useState('')
   const [showCursor, setShowCursor] = useState(isStreaming)
+  const [formSubmitted, setFormSubmitted] = useState(false)
 
   useEffect(() => {
     if (isStreaming) {
@@ -111,7 +115,20 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
         }
       >
         <div style={{ position: 'relative' }}>
-          <ReactMarkdown>{replaceSalesRepPlaceholders(displayedContent, salesRepInfo)}</ReactMarkdown>
+          {isStreaming ? (
+            <ReactMarkdown>{replaceSalesRepPlaceholders(displayedContent, salesRepInfo)}</ReactMarkdown>
+          ) : (message.contentType || 'text') === 'div-return' ? (
+            <DivReturnRenderer
+              htmlContent={message.content}
+              onFormSubmit={(formData) => {
+                setFormSubmitted(true)
+                onFormSubmit?.(formData)
+              }}
+              disabled={formSubmitted}
+            />
+          ) : (
+            <ReactMarkdown>{replaceSalesRepPlaceholders(displayedContent, salesRepInfo)}</ReactMarkdown>
+          )}
           {isStreaming && (
             <span 
               style={{ 

@@ -55,6 +55,7 @@ export default function CustomerChat() {
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   const [selectedPurposes, setSelectedPurposes] = useState<ConsultationPurposeEnum[]>([])
   const [showPurposeSelector, setShowPurposeSelector] = useState(false)
+  const [submittedFormIds, setSubmittedFormIds] = useState<Set<string>>(new Set())
 
   const {
     sessionData,
@@ -72,6 +73,7 @@ export default function CustomerChat() {
     setInputValue,
     loading: chatLoading,
     sendMessage,
+    sendFormSubmission,
     clearInput,
     streamingMessage
   } = useChat(sessionId)
@@ -167,6 +169,11 @@ export default function CustomerChat() {
 
   const handleSendMessage = () => {
     sendMessage(addMessage, updateSessionComplete, updateMessage)
+  }
+
+  const handleFormSubmit = (messageId: string) => (formData: Record<string, string>) => {
+    setSubmittedFormIds(prev => new Set(prev).add(messageId))
+    sendFormSubmission(formData, addMessage, updateSessionComplete, updateMessage)
   }
 
   const handleFeedbackSubmit = async (rating: number, feedback: string) => {
@@ -400,6 +407,7 @@ export default function CustomerChat() {
                 {messages.map((message) => {
                   // Check if this message is currently being streamed
                   const isCurrentlyStreaming = Boolean(streamingMessage && streamingMessage.id === message.id)
+                  const isFormSubmitted = submittedFormIds.has(message.id)
 
                   if (message.sender === 'customer') {
                     return (
@@ -417,6 +425,7 @@ export default function CustomerChat() {
                         message={isCurrentlyStreaming && streamingMessage ? streamingMessage : message}
                         isStreaming={isCurrentlyStreaming}
                         salesRepInfo={sessionData?.salesRepInfo}
+                        onFormSubmit={!isFormSubmitted ? handleFormSubmit(message.id) : undefined}
                       />
                     )
                   }

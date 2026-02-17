@@ -2,8 +2,6 @@ default_agent: prechatAnalysisAgent
 agents:
   prechatAnalysisAgent:
     name: prechatAnalysisAgent
-    language: python
-    node_version: null
     entrypoint: /Users/jaebin/AWS/repositories/prechat/packages/strands-agents/analysis-agent/agent.py
     deployment_type: container
     runtime_type: null
@@ -30,13 +28,13 @@ agents:
         idle_runtime_session_timeout: null
         max_lifetime: null
     bedrock_agentcore:
-      agent_id: prechatAnalysisAgent-eKWZaFDty7
-      agent_arn: arn:aws:bedrock-agentcore:ap-northeast-2:487498333664:runtime/prechatAnalysisAgent-eKWZaFDty7
+      agent_id: prechatAnalysisAgent-ln7jbBCJui
+      agent_arn: arn:aws:bedrock-agentcore:ap-northeast-2:487498333664:runtime/prechatAnalysisAgent-ln7jbBCJui
       agent_session_id: null
     codebuild:
-      project_name: null
-      execution_role: null
-      source_bucket: null
+      project_name: bedrock-agentcore-prechatanalysisagent-builder
+      execution_role: arn:aws:iam::487498333664:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-northeast-2-29a32885ca
+      source_bucket: bedrock-agentcore-codebuild-sources-487498333664-ap-northeast-2
     memory:
       mode: NO_MEMORY
       memory_id: null
@@ -45,18 +43,6 @@ agents:
       event_expiry_days: 30
       first_invoke_memory_check_done: false
       was_created_by_toolkit: false
-    identity:
-      credential_providers: []
-      workload: null
-    aws_jwt:
-      enabled: false
-      audiences: []
-      signing_algorithm: ES384
-      issuer_url: null
-      duration_seconds: 300
     authorizer_configuration: null
     request_header_configuration: null
     oauth_configuration: null
-    api_key_env_var_name: null
-    api_key_credential_provider_name: null
-    is_generated_by_agentcore_create: false

@@ -103,7 +103,7 @@ class AgentCoreClient:
     ) -> str:
         """Consultation Agent를 호출하여 응답 텍스트를 반환합니다."""
         try:
-            payload = {"prompt": message}
+            payload = {"prompt": message, "session_id": session_id}
             config_dict = _build_config_payload(config)
             if config_dict:
                 payload["config"] = config_dict

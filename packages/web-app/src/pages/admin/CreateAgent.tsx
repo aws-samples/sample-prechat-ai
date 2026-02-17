@@ -1,5 +1,5 @@
 // nosemgrep
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Container,
@@ -13,11 +13,12 @@ import {
   Select,
   Textarea
 } from '@cloudscape-design/components'
-import { adminApi, campaignApi } from '../../services/api'
+import { adminApi } from '../../services/api'
 import { BEDROCK_MODELS } from '../../types'
-import type { Campaign } from '../../types'
 import { PlaceholderTooltip } from '../../components'
-import defaultPrompt from '../../assets/prechat-agent-prompt.md?raw'
+import consultationPrompt from '../../assets/prechat-agent-prompt.md?raw'
+import analysisPrompt from '../../assets/analysis-agent-prompt.md?raw'
+import planningPrompt from '../../assets/planning-agent-prompt.md?raw'
 import { useI18n } from '../../i18n'
 
 const AGENT_ROLES = [
@@ -26,36 +27,24 @@ const AGENT_ROLES = [
   { value: 'planning', label: 'Planning Agent' }
 ]
 
+const DEFAULT_PROMPTS: Record<string, string> = {
+  prechat: consultationPrompt,
+  summary: analysisPrompt,
+  planning: planningPrompt,
+}
+
 export default function CreateAgent() {
   const navigate = useNavigate()
   const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [campaigns, setCampaigns] = useState<Campaign[]>([])
-  const [loadingCampaigns, setLoadingCampaigns] = useState(true)
   const [formData, setFormData] = useState({
     agentName: '',
     agentRole: '',
-    campaignId: '',
-    modelId: '',
+    modelId: 'global.amazon.nova-2-lite-v1:0',
     systemPrompt: defaultPrompt
   })
-
-  useEffect(() => {
-    loadCampaigns()
-  }, [])
-
-  const loadCampaigns = async () => {
-    try {
-      const response = await campaignApi.listCampaigns()
-      setCampaigns(response.campaigns || [])
-    } catch (err) {
-      console.error('Failed to load campaigns:', err)
-    } finally {
-      setLoadingCampaigns(false)
-    }
-  }
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -65,7 +54,7 @@ export default function CreateAgent() {
     try {
       await adminApi.createAgentConfig({
         agentRole: formData.agentRole,
-        campaignId: formData.campaignId,
+        campaignId: '',
         modelId: formData.modelId,
         systemPrompt: formData.systemPrompt,
         agentName: formData.agentName
@@ -115,7 +104,7 @@ export default function CreateAgent() {
                 variant="primary"
                 onClick={handleSubmit}
                 loading={loading}
-                disabled={!formData.agentName || !formData.agentRole || !formData.campaignId || !formData.modelId}
+                disabled={!formData.agentName || !formData.agentRole || !formData.modelId}
               >
                 {t('admin_create_agent')}
               </Button>
@@ -151,29 +140,6 @@ export default function CreateAgent() {
                 }
                 options={AGENT_ROLES}
                 placeholder={t('select_agent_role')}
-              />
-            </FormField>
-
-            <FormField
-              label={t('campaign_association')}
-              description={t('select_campaign')}
-              stretch
-            >
-              <Select
-                selectedOption={
-                  formData.campaignId
-                    ? { label: campaigns.find(c => c.campaignId === formData.campaignId)?.campaignName || '', value: formData.campaignId }
-                    : null
-                }
-                onChange={({ detail }) =>
-                  updateFormData('campaignId', detail.selectedOption?.value || '')
-                }
-                options={campaigns
-                  .filter(c => c.status === 'active')
-                  .map(c => ({ label: c.campaignName, value: c.campaignId }))
-                }
-                placeholder={t('select_campaign')}
-                statusType={loadingCampaigns ? 'loading' : 'finished'}
               />
             </FormField>
 

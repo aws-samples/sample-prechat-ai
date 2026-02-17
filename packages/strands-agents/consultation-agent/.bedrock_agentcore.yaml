@@ -2,8 +2,6 @@ default_agent: prechatConsultationAgent
 agents:
   prechatConsultationAgent:
     name: prechatConsultationAgent
-    language: python
-    node_version: null
     entrypoint: /Users/jaebin/AWS/repositories/prechat/packages/strands-agents/consultation-agent/agent.py
     deployment_type: container
     runtime_type: null
@@ -30,8 +28,8 @@ agents:
         idle_runtime_session_timeout: null
         max_lifetime: null
     bedrock_agentcore:
-      agent_id: prechatConsultationAgent-kE0op82EVw
-      agent_arn: arn:aws:bedrock-agentcore:ap-northeast-2:487498333664:runtime/prechatConsultationAgent-kE0op82EVw
+      agent_id: prechatConsultationAgent-cTJLzn4rMl
+      agent_arn: arn:aws:bedrock-agentcore:ap-northeast-2:487498333664:runtime/prechatConsultationAgent-cTJLzn4rMl
       agent_session_id: null
     codebuild:
       project_name: bedrock-agentcore-prechatconsultationagent-builder
@@ -39,24 +37,12 @@ agents:
       source_bucket: bedrock-agentcore-codebuild-sources-487498333664-ap-northeast-2
     memory:
       mode: STM_ONLY
-      memory_id: prechatConsultationAgent_mem-PJOc9h7eGt
-      memory_arn: arn:aws:bedrock-agentcore:ap-northeast-2:487498333664:memory/prechatConsultationAgent_mem-PJOc9h7eGt
+      memory_id: prechatConsultationAgent_mem-Rk4j5aB6Sa
+      memory_arn: arn:aws:bedrock-agentcore:ap-northeast-2:487498333664:memory/prechatConsultationAgent_mem-Rk4j5aB6Sa
       memory_name: prechatConsultationAgent_mem
       event_expiry_days: 30
       first_invoke_memory_check_done: true
       was_created_by_toolkit: false
-    identity:
-      credential_providers: []
-      workload: null
-    aws_jwt:
-      enabled: false
-      audiences: []
-      signing_algorithm: ES384
-      issuer_url: null
-      duration_seconds: 300
     authorizer_configuration: null
     request_header_configuration: null
     oauth_configuration: null
-    api_key_env_var_name: null
-    api_key_credential_provider_name: null
-    is_generated_by_agentcore_create: false
