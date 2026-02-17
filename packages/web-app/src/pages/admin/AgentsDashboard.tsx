@@ -128,11 +128,6 @@ export default function AgentsDashboard() {
                 )
               },
               {
-                id: 'campaign',
-                header: t('campaign_association') || 'Campaign',
-                cell: (item) => item.campaignId || '-'
-              },
-              {
                 id: 'actions',
                 header: t('admin_actions'),
                 cell: (item) => (

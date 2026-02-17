@@ -4,7 +4,7 @@ Agent Runtime - AgentCore 호출 클라이언트
 배포된 Strands Agent를 bedrock-agentcore 클라이언트로 호출합니다.
 
 구성 주입 흐름:
-  1. Session ID → Campaign ID → AgentConfiguration 조회 (DynamoDB)
+  1. agentRole 기반으로 AgentConfiguration 조회 (DynamoDB GSI1)
   2. AgentConfiguration의 system_prompt, model_id, agent_name을 payload.config에 포함
   3. AgentCore Runtime의 invoke 엔트리포인트가 config를 읽어 Agent 객체를 동적 초기화
   4. agentRuntimeArn이 없으면 SSM 환경 변수에서 기본 에이전트 ARN 사용
@@ -181,81 +181,61 @@ def get_agent_config_for_session(
     session_id: str,
     agent_role: str,
 ) -> Optional[AgentConfiguration]:
-    """Session ID로부터 연결된 Campaign의 Agent Configuration을 조회합니다.
+    """Session에 연결된 AgentConfiguration을 조회합니다.
 
     조회 흐름:
-      1. Session → campaignId 획득
-      2. Campaign + agentRole → AgentConfiguration 조회
-      3. 없으면 기본 ARN으로 폴백
+      1. 역할(agentRole) 기반으로 AgentConfiguration 조회 (GSI1)
+      2. 없으면 기본 ARN으로 폴백
     """
-    if not SESSIONS_TABLE:
-        return _fallback_config(agent_role, '')
-
-    try:
-        table = dynamodb.Table(SESSIONS_TABLE)
-
-        # 1. Session에서 campaignId 획득
-        session_resp = table.get_item(
-            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
-        )
-        session_item = session_resp.get('Item')
-        if not session_item:
-            print(f"Session {session_id} not found, using default ARN")
-            return _fallback_config(agent_role, '')
-
-        campaign_id = session_item.get('campaignId', '')
-        if not campaign_id:
-            print(f"Session {session_id} has no campaignId, using default ARN")
-            return _fallback_config(agent_role, '')
-
-        # 2. Campaign + agentRole → AgentConfiguration 조회
-        return get_agent_config_for_campaign(campaign_id, agent_role)
-
-    except Exception as e:
-        print(f"Error loading agent config for session {session_id}: {str(e)}")
-        return _fallback_config(agent_role, '')
+    return get_agent_config_by_role(agent_role)
 
 
-def get_agent_config_for_campaign(
-    campaign_id: str,
+def get_agent_config_by_role(
     agent_role: str,
 ) -> Optional[AgentConfiguration]:
-    """Campaign의 Agent Configuration을 조회합니다."""
+    """역할별 AgentConfiguration을 조회합니다."""
     if not SESSIONS_TABLE:
-        return _fallback_config(agent_role, campaign_id)
+        return _fallback_config(agent_role)
 
     try:
         table = dynamodb.Table(SESSIONS_TABLE)
         resp = table.query(
             IndexName='GSI1',
-            KeyConditionExpression='GSI1PK = :pk AND GSI1SK = :sk',
+            KeyConditionExpression='GSI1PK = :pk',
             ExpressionAttributeValues={
-                ':pk': f'CAMPAIGN#{campaign_id}',
-                ':sk': f'AGENTCONFIG#{agent_role}'
-            }
+                ':pk': f'AGENTCONFIG#{agent_role}',
+            },
+            Limit=1
         )
 
         items = resp.get('Items', [])
         if items:
             return AgentConfiguration.from_dynamodb_item(items[0])
 
-        print(f"No agent config in DB for campaign={campaign_id}, role={agent_role}. "
-              f"Using default ARN from SSM.")
-        return _fallback_config(agent_role, campaign_id)
+        print(f"No agent config for role={agent_role}. Using default ARN from SSM.")
+        return _fallback_config(agent_role)
 
     except Exception as e:
-        print(f"Error loading agent config: {str(e)}")
-        return _fallback_config(agent_role, campaign_id)
+        print(f"Error loading agent config for role {agent_role}: {str(e)}")
+        return _fallback_config(agent_role)
 
 
-def _fallback_config(agent_role: str, campaign_id: str) -> Optional[AgentConfiguration]:
+# 하위 호환성을 위한 별칭
+def get_agent_config_for_campaign(
+    campaign_id: str,
+    agent_role: str,
+) -> Optional[AgentConfiguration]:
+    """Deprecated: 역할 기반 조회로 위임합니다."""
+    return get_agent_config_by_role(agent_role)
+
+
+def _fallback_config(agent_role: str) -> Optional[AgentConfiguration]:
     """기본 ARN으로 폴백 AgentConfiguration을 생성합니다."""
     default_arn = DEFAULT_AGENT_ARNS.get(agent_role, '')
     if default_arn:
         return AgentConfiguration(
             config_id='default',
             agent_role=agent_role,
-            campaign_id=campaign_id,
             agent_runtime_arn=default_arn,
         )
     return None

@@ -241,7 +241,6 @@ export const adminApi = {
 
   createAgentConfig: async (data: {
     agentRole: string
-    campaignId: string
     agentRuntimeArn?: string
     modelId: string
     systemPrompt: string
@@ -275,11 +274,10 @@ export const adminApi = {
 
 
 
-  // Unified Analysis API
-  requestAnalysis: async (sessionId: string, modelId: string, includeMeetingLog: boolean = false) => {
+  // Unified Analysis API (AgentCore 기반)
+  requestAnalysis: async (sessionId: string, configId?: string) => {
     const response = await api.post(`/admin/sessions/${sessionId}/analysis`, {
-      modelId,
-      includeMeetingLog
+      configId: configId || ''
     })
     return response.data
   },
@@ -313,10 +311,9 @@ export const adminApi = {
     return response.data
   },
 
-  reanalyzeWithMeetingLog: async (sessionId: string, modelId: string) => {
-    // Uses unified analysis endpoint with includeMeetingLog flag
+  reanalyzeWithMeetingLog: async (sessionId: string, configId?: string) => {
     const response = await api.post(`/admin/sessions/${sessionId}/analysis`, {
-      modelId,
+      configId: configId || '',
       includeMeetingLog: true
     })
     return response.data

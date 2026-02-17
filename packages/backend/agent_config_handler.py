@@ -31,9 +31,8 @@ def create_config(event, context):
     config = AgentConfiguration(
         config_id=generate_id(),
         agent_role=body.get('agentRole', ''),
-        campaign_id=body.get('campaignId', ''),
         agent_runtime_arn=body.get('agentRuntimeArn', ''),
-        model_id=body.get('modelId', 'global.anthropic.claude-sonnet-4-5-20250929-v1:0'),
+        model_id=body.get('modelId', 'global.amazon.nova-2-lite-v1:0'),
         system_prompt=body.get('systemPrompt', ''),
         agent_name=body.get('agentName', ''),
         capabilities=AgentCapabilities.from_dict(body.get('capabilities', {})),
@@ -58,19 +57,21 @@ def create_config(event, context):
 def list_configs(event, context):
     """에이전트 설정 목록을 조회합니다."""
     params = event.get('queryStringParameters') or {}
-    campaign_id = params.get('campaignId')
+    agent_role = params.get('agentRole')
 
     table = dynamodb.Table(SESSIONS_TABLE)
 
     try:
-        if campaign_id:
+        if agent_role:
+            # 역할별 조회 (GSI1)
             resp = table.query(
                 IndexName='GSI1',
                 KeyConditionExpression='GSI1PK = :pk',
-                ExpressionAttributeValues={':pk': f'CAMPAIGN#{campaign_id}'}
+                ExpressionAttributeValues={':pk': f'AGENTCONFIG#{agent_role}'}
             )
-            items = [i for i in resp.get('Items', []) if i.get('PK', '').startswith('AGENTCONFIG#')]
+            items = resp.get('Items', [])
         else:
+            # 전체 조회
             resp = table.scan(
                 FilterExpression='begins_with(PK, :prefix) AND SK = :sk',
                 ExpressionAttributeValues={':prefix': 'AGENTCONFIG#', ':sk': 'METADATA'}

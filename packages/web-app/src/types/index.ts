@@ -159,7 +159,6 @@ export interface AgentCapabilities {
 export interface AgentConfiguration {
   configId: string;
   agentRole: AgentRole;
-  campaignId: string;
   agentRuntimeArn: string;
   modelId: string;
   systemPrompt: string;
@@ -200,11 +199,12 @@ export interface AnalysisResults {
   customerCases: CustomerCase[];
   analyzedAt: string;
   modelUsed: string;
+  agentName?: string;
 }
 
 export interface AnalysisRequest {
   sessionId: string;
-  modelId: string;
+  configId?: string;
 }
 
 // Campaign API Types

@@ -77,9 +77,8 @@ class AgentConfiguration:
     """
     config_id: str
     agent_role: str
-    campaign_id: str
-    agent_runtime_arn: str = ''  # AgentCore Runtime에 배포된 에이전트 ARN
-    model_id: str = 'global.anthropic.claude-sonnet-4-5-20250929-v1:0'
+    agent_runtime_arn: str = ''
+    model_id: str = 'global.amazon.nova-2-lite-v1:0'
     system_prompt: str = ''
     agent_name: str = ''  # PreChat User가 정의하는 에이전트 이름
     capabilities: AgentCapabilities = field(default_factory=AgentCapabilities)
@@ -106,7 +105,6 @@ class AgentConfiguration:
             'SK': 'METADATA',
             'configId': self.config_id,
             'agentRole': self.agent_role,
-            'campaignId': self.campaign_id,
             'agentRuntimeArn': self.agent_runtime_arn,
             'modelId': self.model_id,
             'systemPrompt': self.system_prompt,
@@ -116,14 +114,10 @@ class AgentConfiguration:
             'createdAt': self.created_at,
             'updatedAt': self.updated_at,
             'createdBy': self.created_by,
+            # GSI1: 역할별 조회용
+            'GSI1PK': f'AGENTCONFIG#{self.agent_role}',
+            'GSI1SK': f'AGENTCONFIG#{self.config_id}',
         }
-        # campaign_id가 있는 경우에만 GSI1 설정 (에이전트는 캠페인 없이도 존재 가능)
-        if self.campaign_id:
-            item['GSI1PK'] = f'CAMPAIGN#{self.campaign_id}'
-            item['GSI1SK'] = f'AGENTCONFIG#{self.agent_role}'
-        else:
-            item['GSI1PK'] = f'AGENTCONFIG#GLOBAL'
-            item['GSI1SK'] = f'AGENTCONFIG#{self.agent_role}'
         return item
 
     @classmethod
@@ -132,9 +126,8 @@ class AgentConfiguration:
         return cls(
             config_id=item.get('configId', ''),
             agent_role=item.get('agentRole', ''),
-            campaign_id=item.get('campaignId', ''),
             agent_runtime_arn=item.get('agentRuntimeArn', ''),
-            model_id=item.get('modelId', 'global.anthropic.claude-sonnet-4-5-20250929-v1:0'),
+            model_id=item.get('modelId', 'global.amazon.nova-2-lite-v1:0'),
             system_prompt=item.get('systemPrompt', ''),
             agent_name=item.get('agentName', ''),
             capabilities=AgentCapabilities.from_dict(item.get('capabilities', {})),
@@ -149,7 +142,6 @@ class AgentConfiguration:
         return {
             'configId': self.config_id,
             'agentRole': self.agent_role,
-            'campaignId': self.campaign_id,
             'agentRuntimeArn': self.agent_runtime_arn,
             'modelId': self.model_id,
             'systemPrompt': self.system_prompt,

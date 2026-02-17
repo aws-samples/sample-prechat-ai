@@ -54,7 +54,6 @@ export default function CreateAgent() {
     try {
       await adminApi.createAgentConfig({
         agentRole: formData.agentRole,
-        campaignId: '',
         modelId: formData.modelId,
         systemPrompt: formData.systemPrompt,
         agentName: formData.agentName
