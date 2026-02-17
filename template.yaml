@@ -773,59 +773,6 @@ Resources:
             Path: /api/sessions/{sessionId}/feedback
             Method: post
 
-  # ============================================
-  # Legacy Endpoints (Deprecated - Internal Redirect)
-  # ============================================
-
-  # DEPRECATED: Use SessionMessagesFunction instead
-  ChatFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: legacy_handler.handle_legacy_chat
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref MessagesTable
-        - Statement:
-            Effect: Allow
-            Action:
-              - bedrock:InvokeAgent
-            Resource: '*'
-      Events:
-        PostMessage:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/chat/message
-            Method: post
-
-  ChatStreamFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: chat_stream_handler.handle_stream_message
-      Timeout: 300
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref MessagesTable
-        - Statement:
-            Effect: Allow
-            Action:
-              - bedrock:InvokeAgent
-            Resource: '*'
-      Events:
-        PostStreamMessage:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/chat/stream
-            Method: post
-
-
   CreateSessionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -845,33 +792,6 @@ Resources:
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
-
-
-  # DEPRECATED: Use GetSessionByIdFunction instead
-  GetSessionFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/
-      Handler: legacy_handler.handle_legacy_get_session
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref MessagesTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref CampaignsTable
-        - Statement:
-            Effect: Allow
-            Action:
-              - cognito-idp:ListUsers
-            Resource: !GetAtt AdminUserPool.Arn
-      Events:
-        GetSession:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/chat/session/{sessionId}
-            Method: get
 
 
   VerifySessionPinFunction:
@@ -2342,20 +2262,11 @@ Resources:
             Resource: 
               - !GetAtt WebsiteBucket.Arn
               - !Sub "${WebsiteBucket.Arn}/uploads/*"
-        - Statement:
-            Effect: Allow
-            Action:
-              - sns:Publish
-            Resource: !Ref SlackNotificationTopic
       Environment:
         Variables:
           ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
           WEBSITE_BUCKET: !Ref WebsiteBucket
           CLOUDFRONT_URL: !Sub "https://${CloudFrontDistribution.DomainName}"
-          # SNS Topic ARNs (comma-separated list)
-          SNS_TOPIC_ARNS: !Ref SlackNotificationTopic
-          # Slack Webhook URLs (comma-separated list)
-          SLACK_WEBHOOK_URLS: ""
       Events:
         SessionStream:
           Type: DynamoDB
