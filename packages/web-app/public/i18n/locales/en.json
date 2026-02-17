@@ -697,5 +697,8 @@
   "export_html_report": "Export HTML Report",
   "formatted_html_report": "Formatted HTML report",
   "campaign_report": "Campaign Report",
-  "report_generated_at": "Report generated at"
+  "report_generated_at": "Report generated at",
+  "agent_prompt_override": "Prompt Override",
+  "agent_prompt_override_description": "Enable to customize the agent's system prompt. If disabled, the agent will use its default prompt.",
+  "agent_enable_prompt_override": "Enable custom prompt override"
 }

@@ -323,24 +323,11 @@ Resources:
         - !Ref VPCEndpointSecurityGroup
       PrivateDnsEnabled: true
 
-  BedrockAgentRuntimeVPCEndpoint:
+  BedrockAgentCoreVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       VpcId: !Ref VPC
-      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent-runtime'
-      VpcEndpointType: Interface
-      SubnetIds:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
-      SecurityGroupIds:
-        - !Ref VPCEndpointSecurityGroup
-      PrivateDnsEnabled: true
-
-  BedrockAgentVPCEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      VpcId: !Ref VPC
-      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agent'
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.bedrock-agentcore'
       VpcEndpointType: Interface
       SubnetIds:
         - !Ref PrivateSubnet1
@@ -696,6 +683,31 @@ Resources:
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /api/sessions/{sessionId}/messages
+            Method: post
+
+  # Session Messages Stream - POST /api/sessions/{sessionId}/messages/stream
+  SessionMessagesStreamFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: session_messages_handler.send_message_stream
+      Timeout: 300
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock-agentcore:InvokeAgentRuntime
+            Resource: '*'
+      Events:
+        SendMessageStream:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/sessions/{sessionId}/messages/stream
             Method: post
 
   # Get Session - GET /api/sessions/{sessionId}

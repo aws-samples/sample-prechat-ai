@@ -23,7 +23,7 @@ import json
 import logging
 from strands import Agent
 from strands.tools import tool
-from strands_tools import retrieve
+from strands_tools import retrieve, current_time
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from bedrock_agentcore.memory.integrations.strands.config import AgentCoreMemoryConfig
 from bedrock_agentcore.memory.integrations.strands.session_manager import AgentCoreMemorySessionManager
@@ -35,9 +35,7 @@ logging.getLogger("strands").setLevel(logging.INFO)
 MEMORY_ID = os.environ.get('BEDROCK_AGENTCORE_MEMORY_ID', '')
 
 # Bedrock KB ID: deploy 시 launch(env_vars=...)로 컨테이너에 주입됨
-_kb_id = os.environ.get('BEDROCK_KB_ID', '')
-if _kb_id and _kb_id != 'NONE':
-    os.environ['STRANDS_KNOWLEDGE_BASE_ID'] = _kb_id
+kb_id = os.environ.get('BEDROCK_KB_ID', '')
 
 
 @tool
@@ -92,7 +90,8 @@ def render_form(form_title: str, fields: str) -> str:
 
 
 # 기본 시스템 프롬프트 (PreChat User가 오버라이드 가능)
-DEFAULT_SYSTEM_PROMPT = """당신은 AWS PreChat 사전 상담 AI 어시스턴트입니다.
+def _default_system_prompt() -> str:
+    return f"""당신은 AWS PreChat 사전 상담 AI 어시스턴트입니다.
 ## 역할
 
 AWS 미팅 전 고객정보 수집 대화형 AI
@@ -155,7 +154,7 @@ EOF 토큰 반드시 출력하기
 
 ## 사용 가능한 도구
 
-1. `retrieve`: Bedrock Knowledge Base에서 유사 고객사례를 검색합니다. 고객이 사례를 물으면 `retrieve(text="고객 질문 키워드")` 형태로 호출하세요.
+1. `retrieve`: Bedrock Knowledge Base에서 유사 고객사례를 검색합니다. 고객이 사례를 물으면 `retrieve(text="고객 질문 키워드", knowledgeBaseId="{kb_id}")` 형태로 호출하세요. knowledgeBaseId 파라미터는 반드시 포함해야 합니다.
 2. `render_form`: 고객이 구조화된 정보를 입력해야 할 때 HTML Form을 생성합니다. 참석자 정보, 인프라 현황 등 여러 필드를 한번에 수집할 때 활용하세요.
 
 **핵심: 8회내 필수정보 수집, 단계별 세분화, 정확한 담당자 정보 제공**
@@ -194,11 +193,14 @@ def create_consultation_agent(
             agentcore_memory_config=memory_config,
         )
 
+    # 시스템 프롬프트에 KB ID 주입
+    effective_prompt = system_prompt or _default_system_prompt()
+
     return Agent(
         model=model_id or DEFAULT_MODEL_ID,
-        system_prompt=system_prompt or DEFAULT_SYSTEM_PROMPT,
+        system_prompt=effective_prompt,
         name=agent_name or DEFAULT_AGENT_NAME,
-        tools=[retrieve, render_form],
+        tools=[retrieve, current_time, render_form],
         session_manager=session_manager,
     )
 

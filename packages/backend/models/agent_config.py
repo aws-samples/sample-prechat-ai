@@ -11,7 +11,7 @@ DynamoDB Schema (SessionsTable - Single Table Design):
   GSI1SK: AGENTCONFIG#{agentRole}
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 from enum import Enum
 
@@ -23,49 +23,7 @@ class AgentRole(str, Enum):
     PLANNING = 'planning'
 
 
-class CapabilityType(str, Enum):
-    """에이전트 Capability 유형"""
-    MEMORY = 'memory'
-    TRACING = 'tracing'
-    RAG = 'rag'
-    TOOLS = 'tools'
-
-
 VALID_AGENT_ROLES = {r.value for r in AgentRole}
-
-
-@dataclass
-class AgentCapabilities:
-    """에이전트 Capability 설정"""
-    memory_enabled: bool = False
-    memory_type: str = 'SESSION_SUMMARY'
-    tracing_enabled: bool = True
-    rag_enabled: bool = False
-    rag_knowledge_base_id: str = ''
-    tools_enabled: bool = False
-
-    def to_dict(self) -> dict:
-        return {
-            'memoryEnabled': self.memory_enabled,
-            'memoryType': self.memory_type,
-            'tracingEnabled': self.tracing_enabled,
-            'ragEnabled': self.rag_enabled,
-            'ragKnowledgeBaseId': self.rag_knowledge_base_id,
-            'toolsEnabled': self.tools_enabled,
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict) -> 'AgentCapabilities':
-        if not data:
-            return cls()
-        return cls(
-            memory_enabled=data.get('memoryEnabled', False),
-            memory_type=data.get('memoryType', 'SESSION_SUMMARY'),
-            tracing_enabled=data.get('tracingEnabled', True),
-            rag_enabled=data.get('ragEnabled', False),
-            rag_knowledge_base_id=data.get('ragKnowledgeBaseId', ''),
-            tools_enabled=data.get('toolsEnabled', False),
-        )
 
 
 @dataclass
@@ -81,7 +39,6 @@ class AgentConfiguration:
     model_id: str = 'global.amazon.nova-2-lite-v1:0'
     system_prompt: str = ''
     agent_name: str = ''  # PreChat User가 정의하는 에이전트 이름
-    capabilities: AgentCapabilities = field(default_factory=AgentCapabilities)
     status: str = 'active'
     created_at: str = ''
     updated_at: str = ''
@@ -109,7 +66,6 @@ class AgentConfiguration:
             'modelId': self.model_id,
             'systemPrompt': self.system_prompt,
             'agentName': self.agent_name,
-            'capabilities': self.capabilities.to_dict(),
             'status': self.status,
             'createdAt': self.created_at,
             'updatedAt': self.updated_at,
@@ -130,7 +86,6 @@ class AgentConfiguration:
             model_id=item.get('modelId', 'global.amazon.nova-2-lite-v1:0'),
             system_prompt=item.get('systemPrompt', ''),
             agent_name=item.get('agentName', ''),
-            capabilities=AgentCapabilities.from_dict(item.get('capabilities', {})),
             status=item.get('status', 'active'),
             created_at=item.get('createdAt', ''),
             updated_at=item.get('updatedAt', ''),
@@ -146,7 +101,6 @@ class AgentConfiguration:
             'modelId': self.model_id,
             'systemPrompt': self.system_prompt,
             'agentName': self.agent_name,
-            'capabilities': self.capabilities.to_dict(),
             'status': self.status,
             'createdAt': self.created_at,
             'updatedAt': self.updated_at,

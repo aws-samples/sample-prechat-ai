@@ -7,6 +7,7 @@ dynamodb = boto3.resource('dynamodb')
 cognito = boto3.client('cognito-idp')
 USER_POOL_ID = os.environ.get('USER_POOL_ID')
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
+CAMPAIGNS_TABLE = os.environ.get('CAMPAIGNS_TABLE')
 MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
 
 def create_session(event, context):
@@ -60,16 +61,16 @@ def create_session(event, context):
     # Add campaign association if provided
     if campaign_id:
         try:
-            sessions_table = dynamodb.Table(SESSIONS_TABLE)
+            campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
             # Validate campaign exists
-            campaign_resp = sessions_table.get_item(
+            campaign_resp = campaigns_table.get_item(
                 Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
             )
             
             if 'Item' in campaign_resp:
                 campaign = campaign_resp['Item']
                 session_record['campaignId'] = campaign_id
-                session_record['campaignName'] = campaign['campaignName']
+                session_record['campaignName'] = campaign.get('campaignName', '')
                 session_record['GSI2PK'] = f'CAMPAIGN#{campaign_id}'
                 session_record['GSI2SK'] = f'SESSION#{timestamp}'
             else:

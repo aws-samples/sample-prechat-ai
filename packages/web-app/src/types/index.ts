@@ -147,15 +147,6 @@ export interface AgentCoreAgent {
 
 export type AgentRole = 'prechat' | 'summary' | 'planning';
 
-export interface AgentCapabilities {
-  memoryEnabled: boolean;
-  memoryType: string;
-  tracingEnabled: boolean;
-  ragEnabled: boolean;
-  ragKnowledgeBaseId: string;
-  toolsEnabled: boolean;
-}
-
 export interface AgentConfiguration {
   configId: string;
   agentRole: AgentRole;
@@ -163,7 +154,6 @@ export interface AgentConfiguration {
   modelId: string;
   systemPrompt: string;
   agentName: string;
-  capabilities: AgentCapabilities;
   status: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;

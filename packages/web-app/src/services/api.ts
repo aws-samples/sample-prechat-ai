@@ -245,7 +245,6 @@ export const adminApi = {
     modelId: string
     systemPrompt: string
     agentName: string
-    capabilities?: Record<string, boolean | string>
   }) => {
     const response = await api.post('/admin/agent-configs', data)
     return response.data
@@ -260,7 +259,6 @@ export const adminApi = {
     modelId?: string
     systemPrompt?: string
     agentName?: string
-    capabilities?: Record<string, boolean | string>
     status?: string
   }) => {
     const response = await api.put(`/admin/agent-configs/${configId}`, data)

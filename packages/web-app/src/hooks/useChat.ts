@@ -11,8 +11,7 @@ export const useChat = (sessionId: string | undefined) => {
 
   const sendMessage = async (
     onMessageAdd: (message: Message) => void,
-    onComplete: (complete: boolean) => void,
-    onMessageUpdate?: (messageId: string, message: Message) => void
+    onComplete: (complete: boolean) => void
   ) => {
     if (!inputValue.trim() || loading || !sessionId) return
 
@@ -30,66 +29,25 @@ export const useChat = (sessionId: string | undefined) => {
     setLoading(true)
     setError('')
 
-    // Create initial streaming message
-    const botMessageId = (parseInt(messageId) + 1).toString()
-    const initialBotMessage: Message = {
-      id: botMessageId,
-      content: '',
-      sender: 'bot',
-      timestamp: new Date().toISOString(),
-      stage: 'conversation'
-    }
-    
-    setStreamingMessage(initialBotMessage)
-    onMessageAdd(initialBotMessage)
-
     try {
-      const response = await chatApi.sendStreamMessage({
+      const response = await chatApi.sendMessage({
         sessionId,
         message: inputValue,
         messageId
       })
 
-      // Simulate streaming by displaying chunks progressively
-      if (response.chunks && response.chunks.length > 0) {
-        let accumulatedContent = ''
-        
-        for (let i = 0; i < response.chunks.length; i++) {
-          accumulatedContent += response.chunks[i]
-          
-          const updatedMessage: Message = {
-            ...initialBotMessage,
-            content: accumulatedContent.replace('EOF', '').trim()
-          }
-          
-          setStreamingMessage(updatedMessage)
-          
-          // Update the message in the session if callback is provided
-          if (onMessageUpdate) {
-            onMessageUpdate(botMessageId, updatedMessage)
-          }
-          
-          // Add delay to simulate real-time streaming
-          if (i < response.chunks.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 50))
-          }
-        }
-      }
-
-      // Final message update
-      const finalContent = response.response.replace('EOF', '').trim()
-      const finalBotMessage: Message = {
-        ...initialBotMessage,
-        content: finalContent,
-        contentType: response.contentType || 'text'
+      // Create bot message with the response
+      const botMessageId = (parseInt(messageId) + 1).toString()
+      const botMessage: Message = {
+        id: botMessageId,
+        content: response.response.replace('EOF', '').trim(),
+        contentType: response.contentType || 'text',
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        stage: 'conversation'
       }
       
-      // Update the final message
-      if (onMessageUpdate) {
-        onMessageUpdate(botMessageId, finalBotMessage)
-      }
-      
-      setStreamingMessage(null)
+      onMessageAdd(botMessage)
       onComplete(response.isComplete)
 
       if (response.salesRepInfo) {
@@ -125,8 +83,7 @@ export const useChat = (sessionId: string | undefined) => {
   const sendFormSubmission = async (
     formData: Record<string, string>,
     onMessageAdd: (message: Message) => void,
-    onComplete: (complete: boolean) => void,
-    onMessageUpdate?: (messageId: string, message: Message) => void
+    onComplete: (complete: boolean) => void
   ) => {
     if (loading || !sessionId) return
 
@@ -144,64 +101,26 @@ export const useChat = (sessionId: string | undefined) => {
     setLoading(true)
     setError('')
 
-    // 봇 응답용 초기 메시지 생성
-    const botMessageId = (parseInt(messageId) + 1).toString()
-    const initialBotMessage: Message = {
-      id: botMessageId,
-      content: '',
-      sender: 'bot',
-      timestamp: new Date().toISOString(),
-      stage: 'conversation'
-    }
-
-    setStreamingMessage(initialBotMessage)
-    onMessageAdd(initialBotMessage)
-
     try {
-      const response = await chatApi.sendStreamMessage({
+      const response = await chatApi.sendMessage({
         sessionId,
         message: JSON.stringify(formData),
         messageId,
         contentType: 'form-submission'
       })
 
-      // 스트리밍 청크 처리
-      if (response.chunks && response.chunks.length > 0) {
-        let accumulatedContent = ''
-
-        for (let i = 0; i < response.chunks.length; i++) {
-          accumulatedContent += response.chunks[i]
-
-          const updatedMessage: Message = {
-            ...initialBotMessage,
-            content: accumulatedContent.replace('EOF', '').trim()
-          }
-
-          setStreamingMessage(updatedMessage)
-
-          if (onMessageUpdate) {
-            onMessageUpdate(botMessageId, updatedMessage)
-          }
-
-          if (i < response.chunks.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 50))
-          }
-        }
+      // Create bot message with the response
+      const botMessageId = (parseInt(messageId) + 1).toString()
+      const botMessage: Message = {
+        id: botMessageId,
+        content: response.response.replace('EOF', '').trim(),
+        contentType: response.contentType || 'text',
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        stage: 'conversation'
       }
 
-      // 최종 메시지 업데이트
-      const finalContent = response.response.replace('EOF', '').trim()
-      const finalBotMessage: Message = {
-        ...initialBotMessage,
-        content: finalContent,
-        contentType: response.contentType || 'text'
-      }
-
-      if (onMessageUpdate) {
-        onMessageUpdate(botMessageId, finalBotMessage)
-      }
-
-      setStreamingMessage(null)
+      onMessageAdd(botMessage)
       onComplete(response.isComplete)
 
       if (response.salesRepInfo) {

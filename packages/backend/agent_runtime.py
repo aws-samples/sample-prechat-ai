@@ -67,31 +67,68 @@ class AgentCoreClient:
         session_id: str,
         payload: dict,
     ) -> dict:
-        """AgentCore Runtime에 배포된 에이전트를 호출합니다."""
+        """AgentCore Runtime에 배포된 에이전트를 호출하고 전체 응답을 반환합니다."""
         runtime_session_id = session_id
         if len(runtime_session_id) < 33:
             runtime_session_id = runtime_session_id + '-' + uuid.uuid4().hex[:10]
 
         try:
+            # payload를 JSON 문자열로 변환하여 bytes로 인코딩
+            payload_bytes = json.dumps(payload).encode('utf-8')
+            
+            print(f"[INFO] Invoking AgentCore ARN: {agent_runtime_arn}")
+            print(f"[INFO] Runtime Session ID: {runtime_session_id}")
+            print(f"[INFO] Payload: {json.dumps(payload)}")
+            
             response = self.client.invoke_agent_runtime(
                 agentRuntimeArn=agent_runtime_arn,
                 runtimeSessionId=runtime_session_id,
-                payload=json.dumps(payload).encode(),
+                payload=payload_bytes,
             )
 
-            content = []
-            for chunk in response.get("response", []):
-                content.append(chunk.decode('utf-8'))
+            # contentType에 따라 응답 처리
+            content_type = response.get("contentType", "")
+            print(f"[INFO] Response contentType: {content_type}")
+            
+            if "text/event-stream" in content_type:
+                # 스트리밍 응답 처리
+                content = []
+                for line in response["response"].iter_lines(chunk_size=10):
+                    if line:
+                        line_str = line.decode("utf-8")
+                        if line_str.startswith("data: "):
+                            line_str = line_str[6:]
+                        content.append(line_str)
+                result_text = "\n".join(content)
+                
+            elif content_type == "application/json":
+                # JSON 응답 처리 (기존 방식)
+                content_chunks = []
+                for chunk in response.get("response", []):
+                    content_chunks.append(chunk.decode('utf-8'))
+                result_text = ''.join(content_chunks)
+                
+            else:
+                # 기타 응답 타입
+                print(f"[WARN] Unexpected contentType: {content_type}")
+                content_chunks = []
+                for chunk in response.get("response", []):
+                    content_chunks.append(chunk.decode('utf-8'))
+                result_text = ''.join(content_chunks)
 
-            result_text = ''.join(content)
+            print(f"[INFO] Response length: {len(result_text)} chars")
 
+            # JSON 파싱 시도
             try:
                 return json.loads(result_text)
             except json.JSONDecodeError:
                 return {"result": result_text}
 
         except Exception as e:
-            print(f"AgentCore invoke error: {str(e)}")
+            print(f"[ERROR] AgentCore invoke error: {str(e)}")
+            print(f"[ERROR] Error type: {type(e).__name__}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
             raise
 
     def invoke_consultation(
@@ -101,21 +138,77 @@ class AgentCoreClient:
         message: str,
         config: Optional[AgentConfiguration] = None,
     ) -> str:
-        """Consultation Agent를 호출하여 응답 텍스트를 반환합니다."""
+        """Consultation Agent를 호출하여 전체 응답 텍스트를 한 번에 반환합니다 (뭉태기)."""
+        try:
+            # payload 구조: {"prompt": "메시지", "session_id": "세션ID", "config": {...}}
+            payload = {
+                "prompt": message,
+                "session_id": session_id
+            }
+            
+            config_dict = _build_config_payload(config)
+            if config_dict:
+                payload["config"] = config_dict
+
+            # invoke()가 이미 모든 청크를 모아서 반환함
+            result = self.invoke(
+                agent_runtime_arn=agent_runtime_arn,
+                session_id=session_id,
+                payload=payload,
+            )
+            
+            response_text = result.get("result", "")
+            if not response_text:
+                print(f"Empty result from agent, full response: {result}")
+                return "죄송합니다. 다시 말씀해 주시겠어요?"
+            
+            return response_text
+            
+        except Exception as e:
+            print(f"Consultation agent error: {str(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
+            return self._handle_error(e)
+
+    def invoke_consultation_stream(
+        self,
+        agent_runtime_arn: str,
+        session_id: str,
+        message: str,
+        config: Optional[AgentConfiguration] = None,
+    ):
+        """Consultation Agent를 호출하여 스트리밍 응답을 생성합니다."""
+        runtime_session_id = session_id
+        if len(runtime_session_id) < 33:
+            runtime_session_id = runtime_session_id + '-' + uuid.uuid4().hex[:10]
+
         try:
             payload = {"prompt": message, "session_id": session_id}
             config_dict = _build_config_payload(config)
             if config_dict:
                 payload["config"] = config_dict
 
-            result = self.invoke(
-                agent_runtime_arn=agent_runtime_arn,
-                session_id=session_id,
-                payload=payload,
+            response = self.client.invoke_agent_runtime(
+                agentRuntimeArn=agent_runtime_arn,
+                runtimeSessionId=runtime_session_id,
+                payload=json.dumps(payload).encode(),
             )
-            return result.get("result", "죄송합니다. 다시 말씀해 주시겠어요?")
+
+            for chunk in response.get("response", []):
+                chunk_text = chunk.decode('utf-8')
+                # JSON 응답인 경우 result 필드 추출
+                try:
+                    chunk_data = json.loads(chunk_text)
+                    if 'result' in chunk_data:
+                        yield chunk_data['result']
+                    else:
+                        yield chunk_text
+                except json.JSONDecodeError:
+                    yield chunk_text
+
         except Exception as e:
-            return self._handle_error(e)
+            print(f"AgentCore streaming invoke error: {str(e)}")
+            yield self._handle_error(e)
 
     def invoke_analysis(
         self,

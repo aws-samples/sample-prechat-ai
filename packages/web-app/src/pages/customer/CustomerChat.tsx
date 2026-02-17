@@ -64,7 +64,6 @@ export default function CustomerChat() {
     error: sessionError,
     isComplete,
     addMessage,
-    updateMessage,
     updateSessionComplete,
   } = useSession(sessionId, !showPinModal && !isCheckingStoredPin) // Only load session after PIN verification
 
@@ -168,12 +167,12 @@ export default function CustomerChat() {
   }
 
   const handleSendMessage = () => {
-    sendMessage(addMessage, updateSessionComplete, updateMessage)
+    sendMessage(addMessage, updateSessionComplete)
   }
 
   const handleFormSubmit = (messageId: string) => (formData: Record<string, string>) => {
     setSubmittedFormIds(prev => new Set(prev).add(messageId))
-    sendFormSubmission(formData, addMessage, updateSessionComplete, updateMessage)
+    sendFormSubmission(formData, addMessage, updateSessionComplete)
   }
 
   const handleFeedbackSubmit = async (rating: number, feedback: string) => {

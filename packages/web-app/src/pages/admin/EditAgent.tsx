@@ -13,7 +13,8 @@ import {
   Select,
   Textarea,
   Spinner,
-  Badge
+  Badge,
+  Checkbox
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
 import { BEDROCK_MODELS } from '../../types'
@@ -43,6 +44,7 @@ export default function EditAgent() {
   const [loadingConfig, setLoadingConfig] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [overridePrompt, setOverridePrompt] = useState(false)
   const [agentRole, setAgentRole] = useState('')
   const [formData, setFormData] = useState({
     agentName: '',
@@ -85,7 +87,7 @@ export default function EditAgent() {
     try {
       await adminApi.updateAgentConfig(configId, {
         modelId: formData.modelId,
-        systemPrompt: formData.systemPrompt,
+        systemPrompt: overridePrompt ? formData.systemPrompt : '',
         agentName: formData.agentName
       })
       setSuccess(t('admin_agent_updated_success', { name: formData.agentName }))
@@ -147,7 +149,7 @@ export default function EditAgent() {
                 variant="primary"
                 onClick={handleSubmit}
                 loading={loading}
-                disabled={!formData.modelId || !formData.systemPrompt}
+                disabled={!formData.modelId}
               >
                 {t('admin_update_agent')}
               </Button>
@@ -200,31 +202,46 @@ export default function EditAgent() {
             </FormField>
 
             <FormField
-              label={
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>{t('agent_instructions')}</span>
-                  <PlaceholderTooltip />
-                </div>
-              }
-              description={t('admin_agent_instructions_description')}
+              label={t('agent_prompt_override')}
+              description={t('agent_prompt_override_description')}
               stretch
-              secondaryControl={
-                <Button
-                  variant="normal"
-                  iconName="refresh"
-                  onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[agentRole] || consultationPrompt)}
-                >
-                  {t('admin_default_agent_instructions')}
-                </Button>
-              }
             >
-              <Textarea
-                value={formData.systemPrompt}
-                onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
-                placeholder={t('enter_agent_instructions')}
-                rows={15}
-              />
+              <Checkbox
+                checked={overridePrompt}
+                onChange={({ detail }) => setOverridePrompt(detail.checked)}
+              >
+                {t('agent_enable_prompt_override')}
+              </Checkbox>
             </FormField>
+
+            {overridePrompt && (
+              <FormField
+                label={
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>{t('agent_instructions')}</span>
+                    <PlaceholderTooltip />
+                  </div>
+                }
+                description={t('admin_agent_instructions_description')}
+                stretch
+                secondaryControl={
+                  <Button
+                    variant="normal"
+                    iconName="refresh"
+                    onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[agentRole] || consultationPrompt)}
+                  >
+                    {t('admin_default_agent_instructions')}
+                  </Button>
+                }
+              >
+                <Textarea
+                  value={formData.systemPrompt}
+                  onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
+                  placeholder={t('enter_agent_instructions')}
+                  rows={15}
+                />
+              </FormField>
+            )}
           </SpaceBetween>
         </Form>
       </SpaceBetween>

@@ -15,7 +15,7 @@ import boto3
 import os
 
 from utils import lambda_response, parse_body, get_timestamp, generate_id
-from models.agent_config import AgentConfiguration, AgentCapabilities
+from models.agent_config import AgentConfiguration
 
 dynamodb = boto3.resource('dynamodb')
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
@@ -35,7 +35,6 @@ def create_config(event, context):
         model_id=body.get('modelId', 'global.amazon.nova-2-lite-v1:0'),
         system_prompt=body.get('systemPrompt', ''),
         agent_name=body.get('agentName', ''),
-        capabilities=AgentCapabilities.from_dict(body.get('capabilities', {})),
         created_at=timestamp,
         updated_at=timestamp,
         created_by=created_by,
@@ -127,8 +126,6 @@ def update_config(event, context):
             config.agent_name = body['agentName']
         if 'agentRuntimeArn' in body:
             config.agent_runtime_arn = body['agentRuntimeArn']
-        if 'capabilities' in body:
-            config.capabilities = AgentCapabilities.from_dict(body['capabilities'])
         if 'status' in body:
             config.status = body['status']
 

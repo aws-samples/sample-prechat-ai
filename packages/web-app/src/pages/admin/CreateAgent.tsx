@@ -11,7 +11,8 @@ import {
   SpaceBetween,
   Alert,
   Select,
-  Textarea
+  Textarea,
+  Checkbox
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
 import { BEDROCK_MODELS } from '../../types'
@@ -39,6 +40,7 @@ export default function CreateAgent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [overridePrompt, setOverridePrompt] = useState(false)
   const [formData, setFormData] = useState({
     agentName: '',
     agentRole: '',
@@ -169,31 +171,46 @@ export default function CreateAgent() {
             </FormField>
 
             <FormField
-              label={
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>{t('agent_instructions')}</span>
-                  <PlaceholderTooltip />
-                </div>
-              }
-              description={t('admin_agent_instructions_description')}
+              label={t('agent_prompt_override')}
+              description={t('agent_prompt_override_description')}
               stretch
-              secondaryControl={
-                <Button
-                  variant="normal"
-                  iconName="refresh"
-                  onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[formData.agentRole] || consultationPrompt)}
-                >
-                  {t('admin_default_agent_instructions')}
-                </Button>
-              }
             >
-              <Textarea
-                value={formData.systemPrompt}
-                onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
-                placeholder={t('enter_agent_instructions')}
-                rows={15}
-              />
+              <Checkbox
+                checked={overridePrompt}
+                onChange={({ detail }) => setOverridePrompt(detail.checked)}
+              >
+                {t('agent_enable_prompt_override')}
+              </Checkbox>
             </FormField>
+
+            {overridePrompt && (
+              <FormField
+                label={
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>{t('agent_instructions')}</span>
+                    <PlaceholderTooltip />
+                  </div>
+                }
+                description={t('admin_agent_instructions_description')}
+                stretch
+                secondaryControl={
+                  <Button
+                    variant="normal"
+                    iconName="refresh"
+                    onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[formData.agentRole] || consultationPrompt)}
+                  >
+                    {t('admin_default_agent_instructions')}
+                  </Button>
+                }
+              >
+                <Textarea
+                  value={formData.systemPrompt}
+                  onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
+                  placeholder={t('enter_agent_instructions')}
+                  rows={15}
+                />
+              </FormField>
+            )}
           </SpaceBetween>
         </Form>
       </SpaceBetween>

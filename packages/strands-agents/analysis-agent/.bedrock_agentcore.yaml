@@ -32,9 +32,9 @@ agents:
       agent_arn: arn:aws:bedrock-agentcore:ap-northeast-2:487498333664:runtime/prechatAnalysisAgent-ln7jbBCJui
       agent_session_id: null
     codebuild:
-      project_name: bedrock-agentcore-prechatanalysisagent-builder
-      execution_role: arn:aws:iam::487498333664:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-northeast-2-29a32885ca
-      source_bucket: bedrock-agentcore-codebuild-sources-487498333664-ap-northeast-2
+      project_name: null
+      execution_role: null
+      source_bucket: null
     memory:
       mode: NO_MEMORY
       memory_id: null
