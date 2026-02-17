@@ -15,13 +15,13 @@ import {
   Input
 } from '@cloudscape-design/components'
 import { adminApi } from '../../services/api'
-import type { BedrockAgent } from '../../types'
+import type { AgentCoreAgent } from '../../types'
 import { useI18n } from '../../i18n'
 
 export default function AgentsDashboard() {
   const navigate = useNavigate()
   const { t } = useI18n()
-  const [agents, setAgents] = useState<BedrockAgent[]>([])
+  const [agents, setAgents] = useState<AgentCoreAgent[]>([])
   const [loading, setLoading] = useState(true)
   const [showMemoryModal, setShowMemoryModal] = useState(false)
   const [selectedAgentId, setSelectedAgentId] = useState('')

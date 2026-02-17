@@ -19,7 +19,7 @@ import { authService } from '../../services/auth'
 import { StatusBadge } from '../../components'
 import { extractModelName } from '../../constants'
 import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
-import type { BedrockAgent, Campaign } from '../../types'
+import type { AgentCoreAgent, Campaign } from '../../types'
 import { useI18n } from '../../i18n'
 
 export default function CreateSession() {
@@ -31,7 +31,7 @@ export default function CreateSession() {
   const [loadingCampaigns, setLoadingCampaigns] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [agents, setAgents] = useState<BedrockAgent[]>([])
+  const [agents, setAgents] = useState<AgentCoreAgent[]>([])
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [formData, setFormData] = useState({
     customerName: '',

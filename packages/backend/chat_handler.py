@@ -72,7 +72,7 @@ def handle_message(event, context):
         print(f"Failed to save customer message {message_id}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to save customer message'})
     
-    # Generate AI response using Bedrock Agent
+    # Generate AI response using AgentCore Agent
     if not agent_id:
         print(f"No agent assigned to session {session_id}")
         return lambda_response(400, {'error': 'No agent assigned to this session'})
@@ -137,9 +137,9 @@ def handle_message(event, context):
     })
 
 def generate_agent_response(message, session_id, agent_id):
-    """Generate response using Bedrock Agent with memory support"""
+    """Generate response using AgentCore Agent with memory support"""
     try:
-        print(f"Invoking Bedrock Agent {agent_id} for session {session_id} with memory enabled")
+        print(f"Invoking AgentCore Agent {agent_id} for session {session_id} with memory enabled")
         
         # Use consistent sessionId to maintain conversation context
         response = bedrock_agent.invoke_agent(
@@ -167,7 +167,7 @@ def generate_agent_response(message, session_id, agent_id):
             return "죄송합니다. 다시 말씀해 주시겠어요?"
             
     except Exception as e:
-        print(f"Bedrock Agent error for session {session_id}: {str(e)}")
+        print(f"AgentCore Agent error for session {session_id}: {str(e)}")
         # Return a more specific error message
         if 'ResourceNotFoundException' in str(e):
             return "죄송합니다. 에이전트를 찾을 수 없습니다. 관리자에게 문의해 주세요."

@@ -127,7 +127,7 @@ export interface BedrockModel {
   region: string;
 }
 
-export interface BedrockAgent {
+export interface AgentCoreAgent {
   agentId: string;
   agentName: string;
   agentStatus: 'CREATING' | 'PREPARING' | 'PREPARED' | 'NOT_PREPARED' | 'DELETING' | 'FAILED' | 'VERSIONING' | 'UPDATING';

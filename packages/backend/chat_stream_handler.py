@@ -66,9 +66,9 @@ def handle_stream_message(event, context):
         return lambda_response(500, {'error': 'Failed to generate response'})
 
 def generate_streaming_response(message, session_id, agent_id, message_id, timestamp, ttl_value):
-    """Generate streaming response using Bedrock Agent with streamFinalResponse enabled"""
+    """Generate streaming response using AgentCore Agent with streamFinalResponse enabled"""
     try:
-        # Invoke Bedrock Agent with streaming enabled
+        # Invoke AgentCore Agent with streaming enabled
         response = bedrock_agent.invoke_agent(
             agentId=agent_id,
             agentAliasId=os.environ.get('BEDROCK_AGENT_ALIAS_ID', 'TSTALIASID'),

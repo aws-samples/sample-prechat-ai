@@ -5,7 +5,7 @@ import logging
 import os
 from decimal import Decimal
 from botocore.exceptions import ClientError
-from utils import lambda_response, parse_body, get_timestamp, generate_id
+from utils import lambda_response, parse_body, get_timestamp, generate_id, convert_decimal_to_int, serialize_dynamodb_item, build_update_expression
 
 # Configure logging
 logger = logging.getLogger()
@@ -14,6 +14,7 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource('dynamodb')
 cognito = boto3.client('cognito-idp')
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
+CAMPAIGNS_TABLE = os.environ.get('CAMPAIGNS_TABLE')
 USER_POOL_ID = os.environ.get('USER_POOL_ID')
 
 def create_campaign(event, context):
@@ -65,17 +66,23 @@ def create_campaign(event, context):
             'updatedAt': timestamp,
             'sessionCount': 0,
             'completedSessionCount': 0,
+            # Agent Configuration 연결 (prechat, summary, planning)
+            'agentConfigurations': body.get('agentConfigurations', {
+                'prechat': '',
+                'summary': '',
+                'planning': '',
+            }),
             'GSI1PK': f'OWNER#{owner_id}',
             'GSI1SK': f'CAMPAIGN#{timestamp}'
         }
         
-        sessions_table = dynamodb.Table(SESSIONS_TABLE)
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
         
-        # Check if campaign code already exists
-        existing_campaigns = sessions_table.scan(
-            FilterExpression='SK = :sk AND campaignCode = :code',
+        # Check if campaign code already exists using the CampaignCodeIndex
+        existing_campaigns = campaigns_table.query(
+            IndexName='CampaignCodeIndex',
+            KeyConditionExpression='campaignCode = :code',
             ExpressionAttributeValues={
-                ':sk': 'METADATA',
                 ':code': campaign_code
             }
         )
@@ -84,7 +91,7 @@ def create_campaign(event, context):
             return lambda_response(400, {'error': 'Campaign code already exists'})
         
         # Create campaign
-        sessions_table.put_item(Item=campaign_record)
+        campaigns_table.put_item(Item=campaign_record)
         
         logger.info(f"Created campaign {campaign_id} with code {campaign_code}")
         
@@ -176,8 +183,8 @@ def get_campaign(event, context):
         return lambda_response(400, {'error': 'Missing campaign ID parameter'})
     
     try:
-        sessions_table = dynamodb.Table(SESSIONS_TABLE)
-        campaign_resp = sessions_table.get_item(
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
+        campaign_resp = campaigns_table.get_item(
             Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
         )
         
@@ -186,7 +193,8 @@ def get_campaign(event, context):
         
         campaign = campaign_resp['Item']
         
-        return lambda_response(200, {
+        # Serialize the campaign data to handle Decimal types
+        campaign_data = {
             'campaignId': campaign['campaignId'],
             'campaignName': campaign['campaignName'],
             'campaignCode': campaign['campaignCode'],
@@ -199,9 +207,11 @@ def get_campaign(event, context):
             'status': campaign['status'],
             'createdAt': campaign['createdAt'],
             'updatedAt': campaign.get('updatedAt', campaign['createdAt']),
-            'sessionCount': campaign.get('sessionCount', 0),
-            'completedSessionCount': campaign.get('completedSessionCount', 0)
-        })
+            'sessionCount': convert_decimal_to_int(campaign.get('sessionCount', 0)),
+            'completedSessionCount': convert_decimal_to_int(campaign.get('completedSessionCount', 0))
+        }
+        
+        return lambda_response(200, campaign_data)
         
     except ClientError as e:
         error_code = e.response['Error']['Code']
@@ -230,10 +240,10 @@ def update_campaign(event, context):
         if not update_data:
             return lambda_response(400, {'error': 'No valid fields provided for update'})
         
-        sessions_table = dynamodb.Table(SESSIONS_TABLE)
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
         
         # Check if campaign exists
-        campaign_resp = sessions_table.get_item(
+        campaign_resp = campaigns_table.get_item(
             Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
         )
         
@@ -259,10 +269,11 @@ def update_campaign(event, context):
         
         # Check if campaign code is being changed and if it already exists
         if 'campaignCode' in update_data and update_data['campaignCode'] != current_campaign['campaignCode']:
-            existing_campaigns = sessions_table.scan(
-                FilterExpression='SK = :sk AND campaignCode = :code AND campaignId <> :current_id',
+            existing_campaigns = campaigns_table.query(
+                IndexName='CampaignCodeIndex',
+                KeyConditionExpression='campaignCode = :code',
+                FilterExpression='campaignId <> :current_id',
                 ExpressionAttributeValues={
-                    ':sk': 'METADATA',
                     ':code': update_data['campaignCode'],
                     ':current_id': campaign_id
                 }
@@ -271,23 +282,24 @@ def update_campaign(event, context):
             if existing_campaigns.get('Items'):
                 return lambda_response(400, {'error': 'Campaign code already exists'})
         
-        # Build update expression
-        update_expression = 'SET updatedAt = :timestamp'
-        expression_values = {':timestamp': get_timestamp()}
-        
-        for field, value in update_data.items():
-            update_expression += f', {field} = :{field}'
-            expression_values[f':{field}'] = value
+        # Build update expression with proper handling of reserved keywords
+        update_expression, expression_values, expression_names = build_update_expression(update_data)
         
         # Update campaign
-        sessions_table.update_item(
-            Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'},
-            UpdateExpression=update_expression,
-            ExpressionAttributeValues=expression_values
-        )
+        update_params = {
+            'Key': {'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'},
+            'UpdateExpression': update_expression,
+            'ExpressionAttributeValues': expression_values
+        }
+        
+        # Add ExpressionAttributeNames only if we have reserved keywords
+        if expression_names:
+            update_params['ExpressionAttributeNames'] = expression_names
+        
+        campaigns_table.update_item(**update_params)
         
         # Get updated campaign
-        updated_resp = sessions_table.get_item(
+        updated_resp = campaigns_table.get_item(
             Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
         )
         
@@ -295,7 +307,8 @@ def update_campaign(event, context):
         
         logger.info(f"Updated campaign {campaign_id}")
         
-        return lambda_response(200, {
+        # Serialize the updated campaign data to handle Decimal types
+        campaign_data = {
             'campaignId': updated_campaign['campaignId'],
             'campaignName': updated_campaign['campaignName'],
             'campaignCode': updated_campaign['campaignCode'],
@@ -308,9 +321,11 @@ def update_campaign(event, context):
             'status': updated_campaign['status'],
             'createdAt': updated_campaign['createdAt'],
             'updatedAt': updated_campaign['updatedAt'],
-            'sessionCount': updated_campaign.get('sessionCount', 0),
-            'completedSessionCount': updated_campaign.get('completedSessionCount', 0)
-        })
+            'sessionCount': convert_decimal_to_int(updated_campaign.get('sessionCount', 0)),
+            'completedSessionCount': convert_decimal_to_int(updated_campaign.get('completedSessionCount', 0))
+        }
+        
+        return lambda_response(200, campaign_data)
         
     except ClientError as e:
         error_code = e.response['Error']['Code']
@@ -330,10 +345,11 @@ def delete_campaign(event, context):
         return lambda_response(400, {'error': 'Missing campaign ID parameter'})
     
     try:
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
         
         # Check if campaign exists
-        campaign_resp = sessions_table.get_item(
+        campaign_resp = campaigns_table.get_item(
             Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
         )
         
@@ -356,7 +372,7 @@ def delete_campaign(event, context):
             })
         
         # Delete campaign
-        sessions_table.delete_item(
+        campaigns_table.delete_item(
             Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
         )
         
@@ -382,15 +398,18 @@ def get_campaign_sessions(event, context):
         return lambda_response(400, {'error': 'Missing campaign ID parameter'})
     
     try:
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
         
         # Check if campaign exists
-        campaign_resp = sessions_table.get_item(
+        campaign_resp = campaigns_table.get_item(
             Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
         )
         
         if 'Item' not in campaign_resp:
             return lambda_response(404, {'error': 'Campaign not found'})
+        
+        campaign = campaign_resp['Item']
         
         # Get sessions associated with campaign using GSI2
         sessions_resp = sessions_table.query(
@@ -421,7 +440,7 @@ def get_campaign_sessions(event, context):
                 'salesRepEmail': item.get('salesRepEmail', item.get('salesRepId', '')),
                 'agentId': item.get('agentId', ''),
                 'campaignId': campaign_id,
-                'campaignName': item.get('campaignName', '')
+                'campaignName': campaign['campaignName']  # Use latest campaign name from campaigns table
             })
         
         return lambda_response(200, {
@@ -454,6 +473,7 @@ def associate_session_with_campaign(event, context):
         if not campaign_id:
             return lambda_response(400, {'error': 'Campaign ID is required'})
         
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
         
         # Check if session exists
@@ -465,7 +485,7 @@ def associate_session_with_campaign(event, context):
             return lambda_response(404, {'error': 'Session not found'})
         
         # Check if campaign exists
-        campaign_resp = sessions_table.get_item(
+        campaign_resp = campaigns_table.get_item(
             Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'}
         )
         
@@ -478,10 +498,9 @@ def associate_session_with_campaign(event, context):
         timestamp = get_timestamp()
         sessions_table.update_item(
             Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
-            UpdateExpression='SET campaignId = :campaign_id, campaignName = :campaign_name, GSI2PK = :gsi2pk, GSI2SK = :gsi2sk',
+            UpdateExpression='SET campaignId = :campaign_id, GSI2PK = :gsi2pk, GSI2SK = :gsi2sk',
             ExpressionAttributeValues={
                 ':campaign_id': campaign_id,
-                ':campaign_name': campaign['campaignName'],
                 ':gsi2pk': f'CAMPAIGN#{campaign_id}',
                 ':gsi2sk': f'SESSION#{timestamp}'
             }

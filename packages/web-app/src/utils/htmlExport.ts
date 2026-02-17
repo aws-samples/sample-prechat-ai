@@ -497,7 +497,7 @@ export function generateAnalysisReportHTML(data: ExportData): string {
                 <div class="footer-item">세션 ID: ${data.sessionId}</div>
             </div>
             <div style="margin-top: 15px; font-size: 0.8rem; color: #999;">
-                이 리포트는 MTE Pre-consultation Chatbot에서 자동 생성되었습니다.
+                이 리포트는 PreChat에서 자동 생성되었습니다.
             </div>
         </div>
     </div>
@@ -1067,7 +1067,7 @@ export function generateMeetingLogReportHTML(data: MeetingLogExportData): string
                 <div class="footer-item">세션 ID: ${data.sessionId}</div>
             </div>
             <div style="margin-top: 15px; font-size: 0.8rem; color: #999;">
-                이 리포트는 MTE Pre-consultation Chatbot에서 자동 생성되었습니다.
+                이 리포트는 PreChat에서 자동 생성되었습니다.
             </div>
         </div>
     </div>

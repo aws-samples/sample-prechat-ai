@@ -9,6 +9,7 @@ STAGE=${2:-dev}
 REGION=${3:-ap-northeast-2}
 BEDROCK_REGION=${4:-$REGION}
 STACK_NAME=${5:-mte-prechat}
+BEDROCK_KB_ID=${6:-""}
 
 echo "🚀 Starting full deployment..."
 echo "📋 Configuration:"
@@ -17,17 +18,29 @@ echo "   Stage: $STAGE"
 echo "   Region: $REGION"
 echo "   Bedrock Region: $BEDROCK_REGION"
 echo "   Stack Name: $STACK_NAME"
+echo "   Bedrock KB: ${BEDROCK_KB_ID:-"(없음)"}"
 echo ""
 
-# Step 1: Install dependencies
+# Step 1: Deploy Strands Agents (must run before SAM to register SSM parameters)
+echo "🤖 Deploying Strands Agents to AgentCore..."
+if [ -f "packages/strands-agents/deploy-agents.sh" ]; then
+  ./packages/strands-agents/deploy-agents.sh $PROFILE $STAGE $REGION $BEDROCK_KB_ID
+  echo "✅ Strands Agents deployed and SSM parameters registered"
+else
+  echo "⚠️  deploy-agents.sh not found, skipping agent deployment"
+  echo "   Lambda functions will use legacy Bedrock Agent fallback"
+fi
+echo ""
+
+# Step 2: Install dependencies
 echo "📦 Installing dependencies..."
 yarn install
 
-# Step 2: Build SAM application
+# Step 3: Build SAM application
 echo "🔨 Building SAM application..."
 sam build --profile $PROFILE
 
-# Step 3: Deploy infrastructure
+# Step 4: Deploy infrastructure
 echo "🏗️  Deploying infrastructure..."
 sam deploy \
   --profile $PROFILE \
@@ -37,11 +50,11 @@ sam deploy \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameter-overrides "Stage=\"$STAGE\" BedrockRegion=\"$BEDROCK_REGION\""
 
-# Step 4: Update environment variables
+# Step 5: Update environment variables
 echo "🔧 Updating environment variables..."
 ./update-env-vars.sh $PROFILE $STAGE $REGION $STACK_NAME
 
-# Step 5: Build and deploy website
+# Step 6: Build and deploy website
 echo "🌐 Building and deploying website..."
 ./deploy-website.sh $STAGE $PROFILE $REGION $STACK_NAME
 
@@ -74,5 +87,5 @@ echo "   📋 Stage: $STAGE"
 echo ""
 echo "🎯 Next steps:"
 echo "   1. Access the admin dashboard at: $WEBSITE_URL/admin"
-echo "   2. Create your first Bedrock Agent"
+echo "   2. Configure Agent settings for your campaigns"
 echo "   3. Create customer sessions and start chatting!"

@@ -3,6 +3,7 @@ import boto3
 import os
 import requests
 from utils import lambda_response, get_timestamp
+from trigger_manager import TriggerManager
 
 sqs = boto3.client('sqs')
 ANALYSIS_QUEUE_URL = os.environ.get('ANALYSIS_QUEUE_URL')
@@ -10,7 +11,7 @@ DEFAULT_MODEL_ID = 'apac.anthropic.claude-3-5-sonnet-20241022-v2:0'
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
 MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
 
-# Notification configuration from environment variables
+# Notification configuration from environment variables (legacy)
 SNS_TOPIC_ARNS = os.environ.get('SNS_TOPIC_ARNS', '').split(',') if os.environ.get('SNS_TOPIC_ARNS') else []
 SLACK_WEBHOOK_URLS = os.environ.get('SLACK_WEBHOOK_URLS', '').split(',') if os.environ.get('SLACK_WEBHOOK_URLS') else []
 
@@ -18,8 +19,11 @@ SLACK_WEBHOOK_URLS = os.environ.get('SLACK_WEBHOOK_URLS', '').split(',') if os.e
 SNS_TOPIC_ARNS = [arn.strip() for arn in SNS_TOPIC_ARNS if arn.strip()]
 SLACK_WEBHOOK_URLS = [url.strip() for url in SLACK_WEBHOOK_URLS if url.strip()]
 
+# Initialize TriggerManager for domain event-driven triggers
+trigger_manager = TriggerManager()
+
 def handle_session_stream(event, context):
-    """Handle DynamoDB Streams events for session status changes"""
+    """Handle DynamoDB Streams events for session status changes and trigger execution"""
     
     for record in event.get('Records', []):
         event_name = record.get('eventName')
@@ -33,30 +37,103 @@ def handle_session_stream(event, context):
                 print(f"Session {session_id} expired via TTL - cleaning up S3 files")
                 cleanup_session_files(session_id)
         
+        elif event_name == 'INSERT':
+            new_image = record.get('dynamodb', {}).get('NewImage', {})
+            pk = new_image.get('PK', {}).get('S', '')
+            sk = new_image.get('SK', {}).get('S', '')
+            
+            # 세션 생성 이벤트 감지
+            if pk.startswith('SESSION#') and sk == 'METADATA':
+                session_id = new_image.get('sessionId', {}).get('S', '')
+                campaign_id = new_image.get('campaignId', {}).get('S', '')
+                customer_info = new_image.get('customerInfo', {}).get('M', {})
+                
+                event_data = {
+                    'event_type': 'SessionCreated',
+                    'session_id': session_id,
+                    'campaign_id': campaign_id,
+                    'campaign_name': new_image.get('campaignName', {}).get('S', ''),
+                    'customer_name': customer_info.get('name', {}).get('S', ''),
+                    'customer_email': customer_info.get('email', {}).get('S', ''),
+                    'customer_company': customer_info.get('company', {}).get('S', ''),
+                    'created_at': new_image.get('createdAt', {}).get('S', ''),
+                }
+                
+                print(f"Session {session_id} created - executing triggers")
+                trigger_manager.execute_triggers('SessionCreated', event_data, campaign_id)
+        
         elif event_name == 'MODIFY':
-            # Check if session status changed to completed
             old_image = record.get('dynamodb', {}).get('OldImage', {})
             new_image = record.get('dynamodb', {}).get('NewImage', {})
             
             old_status = old_image.get('status', {}).get('S', '')
             new_status = new_image.get('status', {}).get('S', '')
             
+            # 세션 완료 이벤트
             if old_status != 'completed' and new_status == 'completed':
                 session_id = new_image.get('sessionId', {}).get('S', '')
+                campaign_id = new_image.get('campaignId', {}).get('S', '')
                 customer_info = new_image.get('customerInfo', {}).get('M', {})
                 sales_rep_email = new_image.get('salesRepEmail', {}).get('S', '')
                 
                 print(f"Session {session_id} completed!")
-                print(f"Customer: {customer_info.get('name', {}).get('S', '')}")
-                print(f"Sales Rep: {sales_rep_email}")
                 
-                # Send notifications (both SNS and Slack)
+                # 도메인 이벤트 기반 트리거 실행
+                session_data = get_session_details_for_notification(session_id)
+                cloudfront_url = os.environ.get('CLOUDFRONT_URL', '')
+                event_data = {
+                    'event_type': 'SessionCompleted',
+                    'session_id': session_id,
+                    'campaign_id': campaign_id,
+                    'campaign_name': new_image.get('campaignName', {}).get('S', ''),
+                    'customer_name': customer_info.get('name', {}).get('S', ''),
+                    'customer_email': customer_info.get('email', {}).get('S', ''),
+                    'customer_company': customer_info.get('company', {}).get('S', ''),
+                    'sales_rep_email': sales_rep_email,
+                    'completed_at': new_image.get('completedAt', {}).get('S', ''),
+                    'created_at': new_image.get('createdAt', {}).get('S', ''),
+                    'message_count': session_data.get('message_count', 0),
+                    'duration_minutes': _calc_duration_minutes(
+                        new_image.get('createdAt', {}).get('S', ''),
+                        new_image.get('completedAt', {}).get('S', '')
+                    ),
+                    'admin_url': f"{cloudfront_url}/admin/sessions/{session_id}" if cloudfront_url else '',
+                }
+                trigger_manager.execute_triggers('SessionCompleted', event_data, campaign_id)
+                
+                # 레거시 알림 (환경 변수 기반 - 점진적 제거 예정)
                 send_notifications(session_id, customer_info, old_status, new_status)
                 
-                # Enqueue analysis request
+                # 분석 요청 큐잉
                 enqueue_analysis_request(session_id)
+            
+            # 세션 비활성화 이벤트
+            elif old_status == 'active' and new_status == 'inactive':
+                session_id = new_image.get('sessionId', {}).get('S', '')
+                campaign_id = new_image.get('campaignId', {}).get('S', '')
+                customer_info = new_image.get('customerInfo', {}).get('M', {})
+                
+                event_data = {
+                    'event_type': 'SessionInactivated',
+                    'session_id': session_id,
+                    'campaign_id': campaign_id,
+                    'customer_name': customer_info.get('name', {}).get('S', ''),
+                    'inactivated_at': get_timestamp(),
+                }
+                trigger_manager.execute_triggers('SessionInactivated', event_data, campaign_id)
     
     return lambda_response(200, {'message': 'Stream processed successfully'})
+
+
+def _calc_duration_minutes(created_at: str, completed_at: str) -> int:
+    """세션 소요 시간을 분 단위로 계산합니다."""
+    try:
+        from datetime import datetime
+        created = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+        completed = datetime.fromisoformat(completed_at.replace('Z', '+00:00'))
+        return int((completed - created).total_seconds() / 60)
+    except Exception:
+        return 0
 
 def send_notifications(session_id, customer_info, old_status, new_status):
     """Send notifications via both SNS and Slack webhook methods"""

@@ -9,7 +9,7 @@ bedrock_region = os.environ.get('BEDROCK_REGION', 'ap-northeast-2')
 bedrock_agent = boto3.client('bedrock-agent', region_name=bedrock_region)
 
 def list_agents(event, context):
-    """List all Bedrock agents"""
+    """List all AgentCore agents"""
     try:
         response = bedrock_agent.list_agents()
         
@@ -59,7 +59,7 @@ def list_agents(event, context):
         return lambda_response(500, {'error': 'Failed to list agents'})
 
 def create_agent(event, context):
-    """Create a new Bedrock agent"""
+    """Create a new AgentCore agent"""
     try:
         body = parse_body(event)
         agent_name = body.get('agentName')
@@ -69,10 +69,10 @@ def create_agent(event, context):
         if not all([agent_name, foundation_model, instruction]):
             return lambda_response(400, {'error': 'Missing required fields'})
         
-        # Get Bedrock Agent Role ARN from environment variable
+        # Get AgentCore Agent Role ARN from environment variable
         role_arn = os.environ.get('BEDROCK_AGENT_ROLE_ARN')
         if not role_arn:
-            return lambda_response(500, {'error': 'Bedrock Agent Role ARN not configured'})
+            return lambda_response(500, {'error': 'AgentCore Agent Role ARN not configured'})
         
         # Get memory configuration from request
         memory_storage_days = body.get('memoryStorageDays', 30)  # Default to 30 days
@@ -107,7 +107,7 @@ def create_agent(event, context):
         return lambda_response(500, {'error': f'Failed to create agent: {str(e)}'})
 
 def delete_agent(event, context):
-    """Delete a Bedrock agent"""
+    """Delete an AgentCore agent"""
     try:
         agent_id = event['pathParameters']['agentId']
         
@@ -123,7 +123,7 @@ def delete_agent(event, context):
         return lambda_response(500, {'error': f'Failed to delete agent: {str(e)}'})
 
 def prepare_agent(event, context):
-    """Prepare a Bedrock agent for use"""
+    """Prepare an AgentCore agent for use"""
     try:
         agent_id = event['pathParameters']['agentId']
         
@@ -140,7 +140,7 @@ def prepare_agent(event, context):
         return lambda_response(500, {'error': f'Failed to prepare agent: {str(e)}'})
 
 def get_agent(event, context):
-    """Get a specific Bedrock agent"""
+    """Get a specific AgentCore agent"""
     try:
         agent_id = event['pathParameters']['agentId']
         
@@ -170,7 +170,7 @@ def get_agent(event, context):
         return lambda_response(500, {'error': f'Failed to get agent: {str(e)}'})
 
 def update_agent(event, context):
-    """Update a Bedrock agent or enable memory"""
+    """Update an AgentCore agent or enable memory"""
     try:
         agent_id = event['pathParameters']['agentId']
         http_method = event['httpMethod']
@@ -199,7 +199,7 @@ def update_agent(event, context):
         # Get the agent resource role ARN from environment
         role_arn = os.environ.get('BEDROCK_AGENT_ROLE_ARN')
         if not role_arn:
-            return lambda_response(500, {'error': 'Bedrock Agent Role ARN not configured'})
+            return lambda_response(500, {'error': 'AgentCore Agent Role ARN not configured'})
         
         # Update the agent with memory configuration
         response = bedrock_agent.update_agent(
@@ -231,7 +231,7 @@ def update_agent(event, context):
         return lambda_response(500, {'error': f'Failed to update agent: {str(e)}'})
 
 def enable_agent_memory_only(agent_id: str, event):
-    """Enable memory for an existing Bedrock agent without changing other settings"""
+    """Enable memory for an existing AgentCore agent without changing other settings"""
     try:
         print(f"Starting memory enablement for agent: {agent_id}")
         
@@ -258,7 +258,7 @@ def enable_agent_memory_only(agent_id: str, event):
         role_arn = os.environ.get('BEDROCK_AGENT_ROLE_ARN')
         if not role_arn:
             print("BEDROCK_AGENT_ROLE_ARN environment variable not set")
-            return lambda_response(500, {'error': 'Bedrock Agent Role ARN not configured'})
+            return lambda_response(500, {'error': 'AgentCore Agent Role ARN not configured'})
         
         # Update the agent with memory configuration while keeping existing settings
         print(f"Updating agent with memory configuration...")

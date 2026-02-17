@@ -80,17 +80,19 @@ const handleApiError = (error: unknown, context: string): never => {
 
 export const chatApi = {
   sendMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse> => {
-    const response = await api.post('/chat/message', request)
+    const { sessionId, ...rest } = request as ChatMessageRequest & { sessionId: string }
+    const response = await api.post(`/sessions/${sessionId}/messages`, rest)
     return response.data
   },
 
   sendStreamMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse & { chunks: string[] }> => {
-    const response = await api.post('/chat/stream', request)
+    const { sessionId, ...rest } = request as ChatMessageRequest & { sessionId: string }
+    const response = await api.post(`/sessions/${sessionId}/messages/stream`, rest)
     return response.data
   },
 
   getSession: async (sessionId: string): Promise<Session> => {
-    const response = await api.get(`/chat/session/${sessionId}`)
+    const response = await api.get(`/sessions/${sessionId}`)
     // Store CSRF token if provided
     if (response.data.csrfToken) {
       localStorage.setItem(`csrf_${sessionId}`, response.data.csrfToken)
@@ -99,7 +101,7 @@ export const chatApi = {
   },
 
   verifySessionPin: async (sessionId: string, pinNumber: string, privacyAgreed: boolean = false) => {
-    const response = await api.post(`/chat/session/${sessionId}/verify-pin`, { 
+    const response = await api.post(`/sessions/${sessionId}/verify-pin`, { 
       pinNumber, 
       privacyAgreed 
     })
@@ -132,7 +134,6 @@ export const chatApi = {
 
   deleteSessionFile: async (sessionId: string, fileKey: string) => {
     const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
-    // Encode the fileKey to handle special characters in the path
     const encodedFileKey = encodeURIComponent(fileKey)
     const response = await api.delete(`/chat/session/${sessionId}/files/${encodedFileKey}`, {
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
@@ -142,7 +143,7 @@ export const chatApi = {
 
   submitFeedback: async (sessionId: string, rating: number, feedback: string) => {
     const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
-    const response = await api.post(`/chat/session/${sessionId}/feedback`, {
+    const response = await api.post(`/sessions/${sessionId}/feedback`, {
       rating,
       feedback
     }, {
@@ -153,7 +154,7 @@ export const chatApi = {
 
   updateConsultationPurposes: async (sessionId: string, consultationPurposes: string) => {
     const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
-    const response = await api.put(`/chat/session/${sessionId}/purposes`, {
+    const response = await api.put(`/sessions/${sessionId}/consultation-purposes`, {
       consultationPurposes
     }, {
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
@@ -226,7 +227,7 @@ export const adminApi = {
     return response.data
   },
 
-  // Bedrock Agents API
+  // AgentCore Agents API
   listAgents: async () => {
     const response = await api.get('/admin/agents')
     return response.data

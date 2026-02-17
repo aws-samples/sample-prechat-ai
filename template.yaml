@@ -23,7 +23,7 @@ Parameters:
   BedrockAgentAliasId:
     Type: String
     Default: TSTALIASID
-    Description: Bedrock Agent Alias ID to use for invocations
+    Description: AgentCore Agent Alias ID to use for invocations
   AllowedEmailDomains:
     Type: String
     Default: amazon.com,your-email-domain.com
@@ -60,6 +60,11 @@ Globals:
         ALLOWED_EMAIL_DOMAINS: !Ref AllowedEmailDomains
         BEDROCK_AGENT_ROLE_ARN: !GetAtt BedrockAgentServiceRole.Arn
         BEDROCK_AGENT_ALIAS_ID: !Ref BedrockAgentAliasId
+        BEDROCK_KB_ID: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/bedrock-kb-id:1}}'
+        # Strands Agent Runtime ARNs (SSM Parameter Store에서 resolve)
+        CONSULTATION_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/consultation/runtime-arn:1}}'
+        ANALYSIS_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/analysis/runtime-arn:1}}'
+        PLANNING_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/planning/runtime-arn:1}}'
     KmsKeyArn: !GetAtt DynamoDBKMSKey.Arn
   Api:
     EndpointConfiguration: REGIONAL
@@ -418,7 +423,7 @@ Resources:
         - Key: Name
           Value: !Sub '${AWS::StackName}-vpc-endpoint-sg-${Stage}'
 
-  # Bedrock Agent Service Role
+  # AgentCore Agent Service Role
   BedrockAgentServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -662,11 +667,122 @@ Resources:
         Logging: Enabled
 
   # Lambda Functions
+
+  # ============================================
+  # Domain-Based API Endpoints (New)
+  # ============================================
+
+  # Session Messages - POST /api/sessions/{sessionId}/messages
+  SessionMessagesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: session_messages_handler.send_message
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeAgent
+            Resource: '*'
+      Events:
+        SendMessage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/sessions/{sessionId}/messages
+            Method: post
+
+  # Get Session - GET /api/sessions/{sessionId}
+  GetSessionByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: session_handler.get_session
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:ListUsers
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        GetSessionById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/sessions/{sessionId}
+            Method: get
+
+  # Verify PIN - POST /api/sessions/{sessionId}/verify-pin
+  VerifySessionPinNewFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: session_handler.verify_session_pin
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        VerifyPin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/sessions/{sessionId}/verify-pin
+            Method: post
+
+  # Consultation Purposes - PUT /api/sessions/{sessionId}/consultation-purposes
+  UpdateConsultationPurposesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: chat_handler.update_consultation_purposes
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        UpdatePurposes:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/sessions/{sessionId}/consultation-purposes
+            Method: put
+
+  # Session Feedback - POST /api/sessions/{sessionId}/feedback
+  SessionFeedbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: chat_handler.handle_feedback
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        SessionFeedback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/sessions/{sessionId}/feedback
+            Method: post
+
+  # ============================================
+  # Legacy Endpoints (Deprecated - Internal Redirect)
+  # ============================================
+
+  # DEPRECATED: Use SessionMessagesFunction instead
   ChatFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/
-      Handler: chat_handler.handle_message
+      Handler: legacy_handler.handle_legacy_chat
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
@@ -731,11 +847,12 @@ Resources:
               Authorizer: CognitoAuthorizer
 
 
+  # DEPRECATED: Use GetSessionByIdFunction instead
   GetSessionFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/
-      Handler: session_handler.get_session
+      Handler: legacy_handler.handle_legacy_get_session
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
@@ -1038,7 +1155,7 @@ Resources:
             Path: /api/auth/confirm-phone
             Method: post
 
-  # Bedrock Agent Functions
+  # AgentCore Agent Functions
   ListAgentsFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -1188,6 +1305,297 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  # ============================================
+  # Trigger Management API (New)
+  # ============================================
+
+  CreateTriggerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: trigger_api_handler.create_trigger
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        CreateTrigger:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/triggers
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  ListTriggersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: trigger_api_handler.list_triggers
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        ListTriggers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/triggers
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetTriggerTemplatesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: trigger_api_handler.get_default_templates
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetTriggerTemplates:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/triggers/templates
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetTriggerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: trigger_api_handler.get_trigger
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetTrigger:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/triggers/{triggerId}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  UpdateTriggerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: trigger_api_handler.update_trigger
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        UpdateTrigger:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/triggers/{triggerId}
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  DeleteTriggerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: trigger_api_handler.delete_trigger
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        DeleteTrigger:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/triggers/{triggerId}
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  # ============================================
+  # Meeting Plan API (New)
+  # ============================================
+
+  # ============================================
+  # Agent Configuration API (New)
+  # ============================================
+
+  CreateAgentConfigFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_config_handler.create_config
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        CreateAgentConfig:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agent-configs
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  ListAgentConfigsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_config_handler.list_configs
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        ListAgentConfigs:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agent-configs
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetAgentConfigFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_config_handler.get_config
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetAgentConfig:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agent-configs/{configId}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  UpdateAgentConfigFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_config_handler.update_config
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        UpdateAgentConfig:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agent-configs/{configId}
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  DeleteAgentConfigFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: agent_config_handler.delete_config
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        DeleteAgentConfig:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/agent-configs/{configId}
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GenerateMeetingPlanFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: meeting_plan_handler.generate_meeting_plan
+      Timeout: 120
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:Retrieve
+              - bedrock:InvokeModel
+            Resource: '*'
+      Events:
+        GenerateMeetingPlan:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/meeting-plan
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetMeetingPlanFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: meeting_plan_handler.get_meeting_plan
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        GetMeetingPlan:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/meeting-plan
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  UpdateMeetingPlanFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: meeting_plan_handler.update_meeting_plan
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        UpdateMeetingPlan:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/meeting-plan
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  AddMeetingPlanCommentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/
+      Handler: meeting_plan_handler.add_comment
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        AddMeetingPlanComment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/sessions/{sessionId}/meeting-plan/comments
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   # SQS Queue for Analysis Jobs
   AnalysisQueue:
     Type: AWS::SQS::Queue
@@ -1202,7 +1610,7 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: !Sub '${AWS::StackName}-slack-notification'
-      DisplayName: 'MTE PreChat Session Notifications'
+      DisplayName: 'PreChat Session Notifications'
       KmsMasterKeyId: !Ref DynamoDBKMSKey
 
 
@@ -2299,7 +2707,7 @@ Resources:
             ResponseCode: 200
             ResponsePagePath: /index.html
         PriceClass: PriceClass_100
-        Comment: !Sub "MTE PreChat Website - ${Stage}"
+        Comment: !Sub "PreChat Website - ${Stage}"
         ViewerCertificate:
           CloudFrontDefaultCertificate: true
           MinimumProtocolVersion: TLSv1.2_2021
@@ -2320,7 +2728,7 @@ Outputs:
     Description: API Gateway CloudWatch Log Group
     Value: !Ref ApiGatewayLogGroup
   BedrockActionEndpoint:
-    Description: Bedrock Agent Action Group endpoint URL
+    Description: AgentCore Agent Action Group endpoint URL
     Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/bedrock/aws-docs-action"
   UserPoolId:
     Description: Cognito User Pool ID
