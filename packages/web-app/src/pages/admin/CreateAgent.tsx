@@ -43,7 +43,7 @@ export default function CreateAgent() {
     agentName: '',
     agentRole: '',
     modelId: 'global.amazon.nova-2-lite-v1:0',
-    systemPrompt: defaultPrompt
+    systemPrompt: consultationPrompt
   })
 
   const handleSubmit = async () => {
@@ -69,7 +69,14 @@ export default function CreateAgent() {
   }
 
   const updateFormData = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value }
+      // 역할 변경 시 해당 역할의 기본 프롬프트로 자동 전환
+      if (field === 'agentRole' && DEFAULT_PROMPTS[value]) {
+        updated.systemPrompt = DEFAULT_PROMPTS[value]
+      }
+      return updated
+    })
   }
 
   const modelOptions = BEDROCK_MODELS.map(model => ({
@@ -175,7 +182,7 @@ export default function CreateAgent() {
                 <Button
                   variant="normal"
                   iconName="refresh"
-                  onClick={() => updateFormData('systemPrompt', defaultPrompt)}
+                  onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[formData.agentRole] || consultationPrompt)}
                 >
                   {t('admin_default_agent_instructions')}
                 </Button>
