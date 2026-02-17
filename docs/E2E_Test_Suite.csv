@@ -1,0 +1,35 @@
+﻿Test Suite ID,Domain,Test Scenario,Test Case ID,Test Case Title,Priority,Preconditions,Test Steps,Expected Result,API Endpoint / UI Path,Spec Reference
+TS-AUTH,Authentication,관리자 인증,TC-AUTH-001,Cognito 로그인 성공,Critical,유효한 Cognito 계정 존재,"1. 로그인 페이지 접속
+2. 이메일/비밀번호 입력
+3. 로그인 버튼 클릭",JWT 토큰 발급 및 Admin Dashboard 리다이렉트,/auth/login,Domain-Alignment Req 1
+TS-AUTH,Authentication,관리자 인증,TC-AUTH-002,잘못된 자격증명 로그인 실패,High,N/A,"1. 로그인 페이지 접속
+2. 잘못된 이메일/비밀번호 입력
+3. 로그인 버튼 클릭",에러 메시지 표시 및 로그인 차단,/auth/login,Domain-Alignment Req 1
+TS-AUTH,Authentication,관리자 인증,TC-AUTH-003,인증 토큰 만료 시 재인증,High,로그인 상태에서 토큰 만료,"1. Admin Dashboard 접속
+2. 토큰 만료 대기
+3. API 호출 시도",로그인 페이지로 리다이렉트,/admin/*,Domain-Alignment Req 1
+TS-AUTH,Authentication,관리자 인증,TC-AUTH-004,미인증 상태에서 Admin API 접근 차단,Critical,로그아웃 상태,"1. 브라우저에서 직접 /admin/sessions 접근",로그인 페이지로 리다이렉트 (401),/admin/*,Domain-Alignment Req 1
+TS-CAMP,Campaign Management,캠페인 생성,TC-CAMP-001,캠페인 정상 생성,Critical,"Admin 로그인 완료, Cognito 사용자 존재","1. Campaigns 메뉴 클릭
+2. Create Campaign 버튼 클릭
+3. campaignName/campaignCode/startDate/endDate/ownerId 입력
+4. Submit",201 응답 및 캠페인 목록에 신규 캠페인 표시,POST /api/admin/campaigns,Campaign-Mgmt Req 1 AC 3
+TS-CAMP,Campaign Management,캠페인 생성,TC-CAMP-002,필수 필드 누락 시 생성 실패,High,Admin 로그인 완료,"1. Create Campaign 폼에서 campaignName 비워둠
+2. Submit",400 에러 및 validation 에러 메시지 표시,POST /api/admin/campaigns,Campaign-Mgmt Req 1 AC 4
+TS-CAMP,Campaign Management,캠페인 생성,TC-CAMP-003,종료일이 시작일 이전인 경우 생성 실패,High,Admin 로그인 완료,"1. startDate: 2026-03-01 / endDate: 2026-02-01 입력
+2. Submit",400 에러 'End date must be after start date',POST /api/admin/campaigns,Campaign-Mgmt Req 1 AC 5
+TS-CAMP,Campaign Management,캠페인 생성,TC-CAMP-004,중복 캠페인 코드 생성 실패,High,"Admin 로그인 완료, 기존 캠페인 코드 TECH2024 존재","1. campaignCode: TECH2024 입력
+2. Submit",400 에러 'Campaign code already exists',POST /api/admin/campaigns,Campaign-Mgmt Req 1 AC 3
+TS-CAMP,Campaign Management,캠페인 목록 조회,TC-CAMP-005,전체 캠페인 목록 조회,Critical,캠페인 2개 이상 존재,"1. Campaigns 메뉴 클릭",캠페인 목록 표시 (이름/코드/상태/세션수),GET /api/admin/campaigns,Campaign-Mgmt Req 2 AC 1
+TS-CAMP,Campaign Management,캠페인 목록 조회,TC-CAMP-006,소유자별 캠페인 필터링,Medium,여러 소유자의 캠페인 존재,"1. ownerId 쿼리 파라미터로 필터링",해당 소유자의 캠페인만 반환,GET /api/admin/campaigns?ownerId=xxx,Campaign-Mgmt Req 2 AC 1
+TS-CAMP,Campaign Management,캠페인 상세 조회,TC-CAMP-007,캠페인 상세 정보 조회,Critical,캠페인 존재,"1. 캠페인 목록에서 특정 캠페인 클릭",캠페인 메타데이터 및 세션 수 표시,GET /api/admin/campaigns/{campaignId},Campaign-Mgmt Req 2 AC 3
+TS-CAMP,Campaign Management,캠페인 수정,TC-CAMP-008,캠페인 정보 수정,High,캠페인 존재,"1. 캠페인 상세에서 Edit 클릭
+2. campaignName 변경
+3. Save",200 응답 및 변경된 이름 반영,PUT /api/admin/campaigns/{campaignId},Campaign-Mgmt Req 2 AC 5
+TS-CAMP,Campaign Management,캠페인 수정,TC-CAMP-009,존재하지 않는 캠페인 수정 시도,Medium,N/A,"1. 잘못된 campaignId로 PUT 요청",404 에러 'Campaign not found',PUT /api/admin/campaigns/{campaignId},Campaign-Mgmt Req 2 AC 4
+TS-CAMP,Campaign Management,캠페인 삭제,TC-CAMP-010,세션 없는 캠페인 삭제,High,세션이 연결되지 않은 캠페인 존재,"1. 캠페인 상세에서 Delete 클릭
+2. 확인",200 응답 및 캠페인 목록에서 제거,DELETE /api/admin/campaigns/{campaignId},Campaign-Mgmt Req 2 AC 5
+TS-CAMP,Campaign Management,캠페인 삭제,TC-CAMP-011,세션이 있는 캠페인 삭제 차단,High,세션이 연결된 캠페인 존재,"1. 캠페인 상세에서 Delete 클릭",400 에러 'Cannot delete campaign with associated sessions',DELETE /api/admin/campaigns/{campaignId},Campaign-Mgmt Req 2 AC 5
+TS-CAMP,Campaign Management,캠페인 코드 조회,TC-CAMP-012,공개 캠페인 코드로 캠페인 조회,Critical,활성 캠페인 존재,"1. 고객 Welcome 화면에서 캠페인 코드 입력",캠페인 정보 반환 및 세션 생성 화면 이동,GET /api/campaigns/code/{campaignCode},Domain-Alignment Req 1 AC 4
+TS-CAMP,Campaign Management,캠페인 분석,TC-CAMP-013,캠페인 분석 데이터 조회,High,세션이 있는 캠페인 존재,"1. 캠페인 상세에서 Analytics 탭 클릭",totalSessions/activeSessions/completionRate/topPurposes 표시,GET /api/admin/campaigns/{campaignId}/analytics,Campaign-Mgmt Req 5 AC 1
+TS-CAMP,Campaign Management,캠페인 비교,TC-CAMP-014,다중 캠페인 비교 분석,Medium,캠페인 2개 이상 존재,"1. 캠페인 비교 화면에서 2개 캠페인 선택
+2. Compare 클릭",비교 테이블에 양 캠페인 지표 표시,POST /api/admin/campaigns/analytics/comparison,Campaign-Mgmt Req 5 AC 4
