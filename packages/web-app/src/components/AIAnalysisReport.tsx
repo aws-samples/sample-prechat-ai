@@ -14,7 +14,7 @@ import {
 import LoadingBar from '@cloudscape-design/chat-components/loading-bar'
 import ReactMarkdown from 'react-markdown'
 import { adminApi } from '../services/api'
-import { BEDROCK_MODELS, AnalysisResults, BedrockModel, Session } from '../types'
+import { AnalysisResults, AgentConfiguration, Session } from '../types'
 import { generateAnalysisReportHTML, downloadHTMLFile } from '../utils/htmlExport'
 import { useI18n } from '../i18n'
 
@@ -25,7 +25,8 @@ interface AIAnalysisReportProps {
 
 export default function AIAnalysisReport({ sessionId, session }: AIAnalysisReportProps) {
   const { t } = useI18n()
-  const [selectedModel, setSelectedModel] = useState<BedrockModel>(BEDROCK_MODELS[0])
+  const [agentConfigs, setAgentConfigs] = useState<AgentConfiguration[]>([])
+  const [selectedConfig, setSelectedConfig] = useState<AgentConfiguration | null>(null)
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -34,7 +35,24 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
 
   useEffect(() => {
     loadExistingAnalysis()
+    loadAgentConfigs()
   }, [sessionId])
+
+  const loadAgentConfigs = async () => {
+    try {
+      const campaignId = (session as any)?.campaignId || ''
+      const response = await adminApi.listAgentConfigs(campaignId || undefined)
+      const summaryConfigs = (response.configs || []).filter(
+        (c: AgentConfiguration) => c.agentRole === 'summary' && c.status === 'active'
+      )
+      setAgentConfigs(summaryConfigs)
+      if (summaryConfigs.length > 0 && !selectedConfig) {
+        setSelectedConfig(summaryConfigs[0])
+      }
+    } catch (err) {
+      console.error('Failed to load agent configs:', err)
+    }
+  }
 
   const loadExistingAnalysis = async () => {
     setIsLoading(true)
@@ -65,10 +83,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
     setTimeoutProgress(0)
 
     try {
-      // Start analysis (Producer)
-      await adminApi.requestAnalysis(sessionId, selectedModel.id)
-      
-      // Start polling for status
+      await adminApi.requestAnalysis(sessionId, selectedConfig?.configId)
       pollAnalysisStatus()
     } catch (err: any) {
       console.error('Failed to start analysis:', err)
@@ -156,19 +171,21 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
               {t('analysis_7d2725cb')}
             </Box>
             <Select
-              selectedOption={{
-                label: `${selectedModel.name} (${selectedModel.provider})`,
-                value: selectedModel.id
-              }}
+              selectedOption={selectedConfig ? {
+                label: `${selectedConfig.agentName || selectedConfig.configId} (${selectedConfig.modelId.split('.').pop()})`,
+                value: selectedConfig.configId
+              } : null}
               onChange={({ detail }) => {
-                const model = BEDROCK_MODELS.find(m => m.id === detail.selectedOption.value)
-                if (model) setSelectedModel(model)
+                const config = agentConfigs.find(c => c.configId === detail.selectedOption.value)
+                if (config) setSelectedConfig(config)
               }}
-              options={BEDROCK_MODELS.map(model => ({
-                label: `${model.name} (${model.provider})`,
-                value: model.id
+              options={agentConfigs.map(config => ({
+                label: `${config.agentName || config.configId} (${config.modelId.split('.').pop()})`,
+                value: config.configId
               }))}
-              disabled={isAnalyzing}
+              placeholder="요약 에이전트를 선택하세요"
+              disabled={isAnalyzing || agentConfigs.length === 0}
+              empty="캠페인에 연결된 요약 에이전트가 없습니다"
             />
           </Box>
 
@@ -230,7 +247,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
             <SpaceBetween size="s">
               <LoadingBar variant="gen-ai" />
               <Box>
-                {t('analysis_23df3b00', { model: selectedModel.name })}
+                {t('analysis_23df3b00', { model: selectedConfig?.agentName || '분석 에이전트' })}
                 <br />
                 <Box fontSize="body-s" color="text-status-inactive">
                   {t('korean_5b25d067')}{Math.round(timeoutProgress)}{t('korean_22dd3ccb')}
@@ -279,7 +296,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
         
         <Container>
           <Box fontSize="body-s" color="text-status-inactive" textAlign="center">
-            {t('analysis_fe53b01e')} {new Date(analysisResults.analyzedAt).toLocaleString()} {t('korean_9a9f5cbe')} {BEDROCK_MODELS.find(m => m.id === analysisResults.modelUsed)?.name || analysisResults.modelUsed}
+            {t('analysis_fe53b01e')} {new Date(analysisResults.analyzedAt).toLocaleString()} {t('korean_9a9f5cbe')} {analysisResults.agentName || analysisResults.modelUsed}
           </Box>
         </Container>
       </SpaceBetween>

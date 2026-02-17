@@ -16,7 +16,7 @@ import {
 import LoadingBar from '@cloudscape-design/chat-components/loading-bar'
 import ReactMarkdown from 'react-markdown'
 import { adminApi } from '../services/api'
-import { BEDROCK_MODELS, AnalysisResults, BedrockModel, Session } from '../types'
+import { AnalysisResults, AgentConfiguration, Session } from '../types'
 import { generateMeetingLogReportHTML, downloadHTMLFile } from '../utils/htmlExport'
 
 interface MeetingLogViewProps {
@@ -25,7 +25,8 @@ interface MeetingLogViewProps {
 }
 
 export default function MeetingLogView({ sessionId, session }: MeetingLogViewProps) {
-  const [selectedModel, setSelectedModel] = useState<BedrockModel>(BEDROCK_MODELS[0])
+  const [agentConfigs, setAgentConfigs] = useState<AgentConfiguration[]>([])
+  const [selectedConfig, setSelectedConfig] = useState<AgentConfiguration | null>(null)
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null)
   const [meetingLog, setMeetingLog] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -38,6 +39,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
 
   useEffect(() => {
     loadExistingData()
+    loadAgentConfigs()
   }, [sessionId])
 
   const loadExistingData = async () => {
@@ -68,6 +70,22 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
       }
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const loadAgentConfigs = async () => {
+    try {
+      const campaignId = (session as any)?.campaignId || ''
+      const response = await adminApi.listAgentConfigs(campaignId || undefined)
+      const summaryConfigs = (response.configs || []).filter(
+        (c: AgentConfiguration) => c.agentRole === 'summary' && c.status === 'active'
+      )
+      setAgentConfigs(summaryConfigs)
+      if (summaryConfigs.length > 0 && !selectedConfig) {
+        setSelectedConfig(summaryConfigs[0])
+      }
+    } catch (err) {
+      console.error('Failed to load agent configs:', err)
     }
   }
 
@@ -105,10 +123,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
     setTimeoutProgress(0)
 
     try {
-      // Start re-analysis with meeting log
-      await adminApi.reanalyzeWithMeetingLog(sessionId, selectedModel.id)
-      
-      // Start polling for status
+      await adminApi.reanalyzeWithMeetingLog(sessionId, selectedConfig?.configId)
       pollAnalysisStatus()
     } catch (err: any) {
       console.error('Failed to start re-analysis:', err)
@@ -200,22 +215,24 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
               <ColumnLayout columns={2}>
                 <Box>
                   <Box variant="awsui-key-label" margin={{ bottom: 's' }}>
-                    분석 모델 선택
+                    분석 에이전트 선택
                   </Box>
                   <Select
-                    selectedOption={{
-                      label: `${selectedModel.name} (${selectedModel.provider})`,
-                      value: selectedModel.id
-                    }}
+                    selectedOption={selectedConfig ? {
+                      label: `${selectedConfig.agentName || selectedConfig.configId} (${selectedConfig.modelId.split('.').pop()})`,
+                      value: selectedConfig.configId
+                    } : null}
                     onChange={({ detail }) => {
-                      const model = BEDROCK_MODELS.find(m => m.id === detail.selectedOption.value)
-                      if (model) setSelectedModel(model)
+                      const config = agentConfigs.find(c => c.configId === detail.selectedOption.value)
+                      if (config) setSelectedConfig(config)
                     }}
-                    options={BEDROCK_MODELS.map(model => ({
-                      label: `${model.name} (${model.provider})`,
-                      value: model.id
+                    options={agentConfigs.map(config => ({
+                      label: `${config.agentName || config.configId} (${config.modelId.split('.').pop()})`,
+                      value: config.configId
                     }))}
-                    disabled={isAnalyzing}
+                    placeholder="요약 에이전트를 선택하세요"
+                    disabled={isAnalyzing || agentConfigs.length === 0}
+                    empty="캠페인에 연결된 요약 에이전트가 없습니다"
                   />
                 </Box>
 
@@ -266,7 +283,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
                   <SpaceBetween size="s">
                     <LoadingBar variant="gen-ai" />
                     <Box>
-                      선택된 모델({selectedModel.name})이 대화 내용과 미팅 로그를 함께 분석하고 있습니다...
+                      {selectedConfig?.agentName || '분석 에이전트'}가 대화 내용과 미팅 로그를 함께 분석하고 있습니다...
                       <br />
                       <Box fontSize="body-s" color="text-status-inactive">
                         최대 5분까지 소요될 수 있습니다. ({Math.round(timeoutProgress)}% 완료)
@@ -289,7 +306,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
               <Container>
                 <Box fontSize="body-s" color="text-status-inactive" textAlign="center">
                   분석 완료: {new Date(analysisResults.analyzedAt).toLocaleString('ko-KR')} | 
-                  사용 모델: {BEDROCK_MODELS.find(m => m.id === analysisResults.modelUsed)?.name || analysisResults.modelUsed}
+                  에이전트: {analysisResults.agentName || analysisResults.modelUsed}
                 </Box>
               </Container>
             </SpaceBetween>

@@ -1388,12 +1388,13 @@ Resources:
       CodeUri: packages/backend/
       Handler: admin_handler.submit_analysis
       Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
         - Statement:
             Effect: Allow
             Action:
-              - dynamodb:GetItem
-              - dynamodb:UpdateItem
-            Resource: !GetAtt SessionsTable.Arn
+              - dynamodb:Query
+            Resource: !Sub "${SessionsTable.Arn}/index/GSI1"
         - Statement:
             Effect: Allow
             Action:
@@ -1412,7 +1413,7 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  # Consumer Function - Processes analysis from SQS
+  # Consumer Function - Processes analysis from SQS via AgentCore
   ProcessAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -1428,7 +1429,13 @@ Resources:
         - Statement:
             Effect: Allow
             Action:
+              - dynamodb:Query
+            Resource: !Sub "${SessionsTable.Arn}/index/GSI1"
+        - Statement:
+            Effect: Allow
+            Action:
               - bedrock:InvokeModel
+              - bedrock-agentcore:InvokeAgentRuntime
             Resource: '*'
       Events:
         ProcessAnalysis:

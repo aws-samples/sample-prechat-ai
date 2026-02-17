@@ -21,6 +21,12 @@ SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
 MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
 CAMPAIGNS_TABLE = os.environ.get('CAMPAIGNS_TABLE')
 
+from agent_runtime import AgentCoreClient, get_agent_config_for_session
+from models.agent_config import AgentConfiguration
+
+# AgentCore 클라이언트 (Analysis Agent 호출용)
+agentcore_client = AgentCoreClient()
+
 def clean_llm_response(content):
     """Clean up LLM response by removing code block markers and trimming"""
     content = content.strip()
@@ -477,38 +483,46 @@ def save_meeting_log(event, context):
         return lambda_response(500, {'error': 'Failed to save meeting log'})
 
 def reanalyze_with_meeting_log(event, context):
-    """Request re-analysis including meeting log context"""
+    """Request re-analysis including meeting log context via AgentCore
+
+    Request Body:
+        configId (str): 사용할 AgentConfiguration ID (summary 역할, 선택)
+    """
     try:
         session_id = event['pathParameters']['sessionId']
         if not session_id:
             return lambda_response(400, {'error': 'Session ID is required'})
     except (KeyError, TypeError):
         return lambda_response(400, {'error': 'Missing session ID parameter'})
-    
+
     try:
         body = parse_body(event)
-        model_id = body.get('modelId')
-        
-        if not model_id:
-            return lambda_response(400, {'error': 'Missing modelId parameter'})
-        if not isinstance(model_id, str) or not model_id.strip():
-            return lambda_response(400, {'error': 'Invalid modelId parameter'})
+        config_id = body.get('configId', '')
     except (ValueError, TypeError) as e:
         logger.error(f"Invalid request body for re-analysis request: {str(e)}")
         return lambda_response(400, {'error': 'Invalid request body'})
-    
+
     try:
-        # Check if session exists and has meeting log
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
-        
+
         if 'Item' not in session_resp:
             return lambda_response(404, {'error': 'Session not found'})
-        
+
         session = session_resp['Item']
         meeting_log = session.get('meetingLog', '')
-        
-        # Mark analysis as in progress
+
+        # configId 결정
+        if config_id:
+            config_resp = sessions_table.get_item(Key={'PK': f'AGENTCONFIG#{config_id}', 'SK': 'METADATA'})
+            if 'Item' not in config_resp:
+                return lambda_response(404, {'error': 'Agent configuration not found'})
+        else:
+            config = get_agent_config_for_session(session_id, 'summary')
+            if not config or not config.agent_runtime_arn:
+                return lambda_response(400, {'error': 'No summary agent configured for this session'})
+            config_id = config.config_id
+
         timestamp = get_timestamp()
         sessions_table.update_item(
             Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
@@ -518,20 +532,19 @@ def reanalyze_with_meeting_log(event, context):
                 ':timestamp': timestamp
             }
         )
-        
-        # Send message to SQS with meeting log flag
+
         message = {
             'sessionId': session_id,
-            'modelId': model_id,
+            'configId': config_id,
             'requestedAt': timestamp,
             'includeMeetingLog': True,
             'meetingLog': meeting_log
         }
-        
+
         if not ANALYSIS_QUEUE_URL:
             logger.error("ANALYSIS_QUEUE_URL environment variable not configured")
             return lambda_response(500, {'error': 'Analysis queue not configured'})
-        
+
         try:
             sqs.send_message(
                 QueueUrl=ANALYSIS_QUEUE_URL,
@@ -541,13 +554,14 @@ def reanalyze_with_meeting_log(event, context):
             error_code = sqs_error.response['Error']['Code']
             logger.error(f"SQS error sending re-analysis request for session {session_id}: {error_code} - {str(sqs_error)}")
             return lambda_response(500, {'error': f'Failed to queue re-analysis request: {error_code}'})
-        
+
         return lambda_response(202, {
             'message': 'Re-analysis with meeting log queued successfully',
             'sessionId': session_id,
+            'configId': config_id,
             'status': 'processing'
         })
-        
+
     except ClientError as e:
         error_code = e.response['Error']['Code']
         logger.error(f"DynamoDB error in re-analysis for session {session_id}: {error_code} - {str(e)}")
@@ -559,35 +573,43 @@ def reanalyze_with_meeting_log(event, context):
 
 
 def request_analysis(event, context):
-    """Producer function - Enqueue analysis request to SQS"""
+    """Producer function - Enqueue AgentCore-based analysis request to SQS
+
+    Request Body:
+        configId (str): 사용할 AgentConfiguration ID (summary 역할)
+    """
     try:
         session_id = event['pathParameters']['sessionId']
         if not session_id:
             return lambda_response(400, {'error': 'Session ID is required'})
     except (KeyError, TypeError):
         return lambda_response(400, {'error': 'Missing session ID parameter'})
-    
+
     try:
         body = parse_body(event)
-        model_id = body.get('modelId')
-        
-        if not model_id:
-            return lambda_response(400, {'error': 'Missing modelId parameter'})
-        if not isinstance(model_id, str) or not model_id.strip():
-            return lambda_response(400, {'error': 'Invalid modelId parameter'})
+        config_id = body.get('configId', '')
     except (ValueError, TypeError) as e:
         logger.error(f"Invalid request body for analysis request: {str(e)}")
         return lambda_response(400, {'error': 'Invalid request body'})
-    
+
     try:
-        # Check if session exists
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
-        
+
         if 'Item' not in session_resp:
             return lambda_response(404, {'error': 'Session not found'})
-        
-        # Mark analysis as in progress
+
+        # configId가 명시되면 해당 설정 사용, 아니면 세션 캠페인의 summary 설정 자동 조회
+        if config_id:
+            config_resp = sessions_table.get_item(Key={'PK': f'AGENTCONFIG#{config_id}', 'SK': 'METADATA'})
+            if 'Item' not in config_resp:
+                return lambda_response(404, {'error': 'Agent configuration not found'})
+        else:
+            config = get_agent_config_for_session(session_id, 'summary')
+            if not config or not config.agent_runtime_arn:
+                return lambda_response(400, {'error': 'No summary agent configured for this session'})
+            config_id = config.config_id
+
         timestamp = get_timestamp()
         sessions_table.update_item(
             Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
@@ -597,18 +619,17 @@ def request_analysis(event, context):
                 ':timestamp': timestamp
             }
         )
-        
-        # Send message to SQS
+
         message = {
             'sessionId': session_id,
-            'modelId': model_id,
+            'configId': config_id,
             'requestedAt': timestamp
         }
-        
+
         if not ANALYSIS_QUEUE_URL:
             logger.error("ANALYSIS_QUEUE_URL environment variable not configured")
             return lambda_response(500, {'error': 'Analysis queue not configured'})
-        
+
         try:
             sqs.send_message(
                 QueueUrl=ANALYSIS_QUEUE_URL,
@@ -618,13 +639,14 @@ def request_analysis(event, context):
             error_code = sqs_error.response['Error']['Code']
             logger.error(f"SQS error sending analysis request for session {session_id}: {error_code} - {str(sqs_error)}")
             return lambda_response(500, {'error': f'Failed to queue analysis request: {error_code}'})
-        
+
         return lambda_response(202, {
             'message': 'Analysis request queued successfully',
             'sessionId': session_id,
+            'configId': config_id,
             'status': 'processing'
         })
-        
+
     except ClientError as e:
         error_code = e.response['Error']['Code']
         logger.error(f"DynamoDB error in analysis request for session {session_id}: {error_code} - {str(e)}")
@@ -634,31 +656,215 @@ def request_analysis(event, context):
         return lambda_response(500, {'error': 'Failed to queue analysis request'})
 
 def process_analysis(event, context):
-    """Consumer function - Process analysis from SQS queue"""
+    """Consumer function - Process analysis from SQS queue via AgentCore
+
+    SQS 메시지 구조:
+        sessionId (str): 세션 ID
+        configId (str): AgentConfiguration ID
+        includeMeetingLog (bool): 미팅 로그 포함 여부
+        meetingLog (str): 미팅 로그 텍스트
+    """
     try:
-        # Process each SQS record
         for record in event['Records']:
             message_body = json.loads(record['body'])
             session_id = message_body['sessionId']
-            model_id = message_body['modelId']
+            config_id = message_body.get('configId', '')
             include_meeting_log = message_body.get('includeMeetingLog', False)
             meeting_log = message_body.get('meetingLog', '')
-            
-            logger.info(f"Processing analysis for session {session_id} with model {model_id}, includeMeetingLog: {include_meeting_log}")
-            
-            # Perform the actual analysis
-            result = _perform_conversation_analysis(session_id, model_id, include_meeting_log, meeting_log)
-            
+
+            logger.info(f"Processing AgentCore analysis for session {session_id}, configId={config_id}, includeMeetingLog={include_meeting_log}")
+
+            result = _perform_agentcore_analysis(session_id, config_id, include_meeting_log, meeting_log)
+
             if result['success']:
-                logger.info(f"Analysis completed successfully for session {session_id}")
+                logger.info(f"AgentCore analysis completed successfully for session {session_id}")
             else:
-                logger.error(f"Analysis failed for session {session_id}: {result.get('error')}")
-        
+                logger.error(f"AgentCore analysis failed for session {session_id}: {result.get('error')}")
+
         return {'statusCode': 200}
-        
+
     except Exception as e:
         logger.warning(f"Error processing analysis from SQS: {str(e)}")
         raise e
+
+def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False, meeting_log=''):
+    """AgentCore Analysis Agent를 호출하여 대화 분석을 수행합니다."""
+    logger.info(f"Starting AgentCore analysis for session {session_id}, configId={config_id}")
+
+    sessions_table = dynamodb.Table(SESSIONS_TABLE)
+    try:
+        sessions_table.update_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            UpdateExpression='SET analysisStatus = :status',
+            ExpressionAttributeValues={':status': 'processing'}
+        )
+
+        # 세션 및 메시지 조회
+        session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
+        if 'Item' not in session_resp:
+            return {'success': False, 'error': 'Session not found'}
+
+        session = session_resp['Item']
+
+        messages_table = dynamodb.Table(MESSAGES_TABLE)
+        messages_resp = messages_table.query(
+            KeyConditionExpression='PK = :pk',
+            ExpressionAttributeValues={':pk': f'SESSION#{session_id}'},
+            ScanIndexForward=True
+        )
+        messages = messages_resp.get('Items', [])
+        if not messages:
+            return {'success': False, 'error': 'No conversation messages found'}
+
+        # 대화 이력 텍스트 구성
+        conversation_text = '\n'.join([f"{msg['sender']}: {msg['content']}" for msg in messages])
+        if len(conversation_text) > 50000:
+            conversation_text = conversation_text[:50000] + "\n[대화 내용이 길어 일부 생략됨]"
+
+        if include_meeting_log and meeting_log:
+            conversation_text += f"\n\n미팅 로그 (Sales Rep이 작성한 초도미팅록):\n{meeting_log}\n\n위의 미팅 로그와 사전상담 대화 내용을 모두 고려하여 분석해주세요."
+
+        # AgentConfiguration 조회
+        config = None
+        if config_id and config_id != 'default':
+            config_resp = sessions_table.get_item(Key={'PK': f'AGENTCONFIG#{config_id}', 'SK': 'METADATA'})
+            if 'Item' in config_resp:
+                config = AgentConfiguration.from_dynamodb_item(config_resp['Item'])
+
+        if not config:
+            config = get_agent_config_for_session(session_id, 'summary')
+
+        if not config or not config.agent_runtime_arn:
+            logger.error(f"No analysis agent ARN available for session {session_id}")
+            # 폴백: 기존 직접 LLM 호출
+            logger.info("Falling back to direct LLM analysis")
+            return _perform_conversation_analysis(session_id, 'global.anthropic.claude-sonnet-4-5-20250929-v1:0', include_meeting_log, meeting_log)
+
+        # AgentCore Analysis Agent 호출
+        logger.info(f"Invoking AgentCore Analysis Agent: {config.agent_runtime_arn}")
+        result = agentcore_client.invoke_analysis(
+            agent_runtime_arn=config.agent_runtime_arn,
+            session_id=session_id,
+            conversation_history=conversation_text,
+            config=config,
+        )
+
+        if 'error' in result and not result.get('result'):
+            logger.error(f"AgentCore analysis returned error: {result['error']}")
+            sessions_table.update_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+                UpdateExpression='SET analysisStatus = :status',
+                ExpressionAttributeValues={':status': 'failed'}
+            )
+            return {'success': False, 'error': result['error']}
+
+        # 결과 파싱 - AgentCore 응답에서 분석 데이터 추출
+        analysis_data = _parse_agentcore_analysis_result(result, config)
+
+        if not _store_analysis_results(session_id, analysis_data):
+            sessions_table.update_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+                UpdateExpression='SET analysisStatus = :status',
+                ExpressionAttributeValues={':status': 'failed'}
+            )
+            return {'success': False, 'error': 'Failed to store analysis results'}
+
+        sessions_table.update_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            UpdateExpression='SET analysisStatus = :status',
+            ExpressionAttributeValues={':status': 'completed'}
+        )
+
+        logger.info(f"AgentCore analysis completed for session {session_id}")
+        return {'success': True, 'analysis': analysis_data}
+
+    except Exception as e:
+        logger.error(f"AgentCore analysis error for session {session_id}: {str(e)}")
+        try:
+            sessions_table.update_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+                UpdateExpression='SET analysisStatus = :status',
+                ExpressionAttributeValues={':status': 'failed'}
+            )
+        except Exception:
+            pass
+        return {'success': False, 'error': str(e)}
+
+
+def _parse_agentcore_analysis_result(result: dict, config: AgentConfiguration) -> dict:
+    """AgentCore Analysis Agent 응답을 분석 결과 형식으로 파싱합니다."""
+    timestamp = get_timestamp()
+    model_used = config.model_id if config else 'unknown'
+    agent_name = config.agent_name if config else 'unknown'
+
+    # result가 이미 구조화된 JSON이면 그대로 사용
+    raw = result.get('result', result)
+
+    # 문자열이면 JSON 파싱 시도
+    if isinstance(raw, str):
+        # JSON 코드 블록 제거
+        cleaned = raw.strip()
+        if cleaned.startswith('```'):
+            cleaned = cleaned.split('\n', 1)[-1]
+            if cleaned.endswith('```'):
+                cleaned = cleaned[:-3]
+            cleaned = cleaned.strip()
+        try:
+            raw = json.loads(cleaned)
+        except json.JSONDecodeError:
+            # 파싱 실패 시 텍스트를 markdownSummary로 사용
+            return {
+                'markdownSummary': raw,
+                'bantAnalysis': {'budget': '정보 없음', 'authority': '정보 없음', 'need': '정보 없음', 'timeline': '정보 없음'},
+                'awsServices': [],
+                'customerCases': [],
+                'analyzedAt': timestamp,
+                'modelUsed': model_used,
+                'agentName': agent_name,
+            }
+
+    # BANT 형식 (Analysis Agent 기본 출력)을 프론트엔드 형식으로 변환
+    if isinstance(raw, dict):
+        bant = raw.get('bantAnalysis', {})
+        # Analysis Agent가 BANT 최상위 키로 반환하는 경우
+        if not bant and 'budget' in raw:
+            bant = {
+                'budget': _extract_bant_field(raw.get('budget', {})),
+                'authority': _extract_bant_field(raw.get('authority', {})),
+                'need': _extract_bant_field(raw.get('need', {})),
+                'timeline': _extract_bant_field(raw.get('timeline', {})),
+            }
+
+        return {
+            'markdownSummary': raw.get('markdownSummary', raw.get('executive_summary', '')),
+            'bantAnalysis': bant or {'budget': '정보 없음', 'authority': '정보 없음', 'need': '정보 없음', 'timeline': '정보 없음'},
+            'awsServices': raw.get('awsServices', raw.get('additional_insights', {}).get('recommended_aws_services', [])),
+            'customerCases': raw.get('customerCases', []),
+            'analyzedAt': timestamp,
+            'modelUsed': model_used,
+            'agentName': agent_name,
+        }
+
+    return {
+        'markdownSummary': str(raw),
+        'bantAnalysis': {'budget': '정보 없음', 'authority': '정보 없음', 'need': '정보 없음', 'timeline': '정보 없음'},
+        'awsServices': [],
+        'customerCases': [],
+        'analyzedAt': timestamp,
+        'modelUsed': model_used,
+        'agentName': agent_name,
+    }
+
+
+def _extract_bant_field(field_data) -> str:
+    """BANT 필드 데이터를 문자열로 추출합니다."""
+    if isinstance(field_data, str):
+        return field_data
+    if isinstance(field_data, dict):
+        parts = [f"{k}: {v}" for k, v in field_data.items() if v and v != '정보 없음']
+        return '; '.join(parts) if parts else '정보 없음'
+    return '정보 없음'
+
 
 def _perform_conversation_analysis(session_id, model_id, include_meeting_log=False, meeting_log=''):
     """Perform the actual conversation analysis"""

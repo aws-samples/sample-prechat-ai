@@ -236,7 +236,7 @@ def get_session_details_for_notification(session_id):
 
 
 def enqueue_analysis_request(session_id):
-    """Enqueue analysis request to SQS"""
+    """Enqueue AgentCore-based analysis request to SQS"""
     try:
         if not ANALYSIS_QUEUE_URL:
             print(f"No analysis queue URL configured, skipping analysis for session {session_id}")
@@ -244,7 +244,7 @@ def enqueue_analysis_request(session_id):
         
         message = {
             'sessionId': session_id,
-            'modelId': DEFAULT_MODEL_ID,
+            'configId': '',  # 빈 값이면 process_analysis에서 세션 캠페인의 summary 설정 자동 조회
             'requestedAt': get_timestamp(),
             'triggeredBy': 'session_completion'
         }
@@ -254,7 +254,7 @@ def enqueue_analysis_request(session_id):
             MessageBody=json.dumps(message)
         )
         
-        print(f"Analysis request enqueued for session {session_id}")
+        print(f"AgentCore analysis request enqueued for session {session_id}")
         
     except Exception as e:
         print(f"Error enqueuing analysis request for session {session_id}: {str(e)}")
