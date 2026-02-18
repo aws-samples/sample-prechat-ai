@@ -1,3 +1,5 @@
+boto3>=1.42.0
+botocore>=1.42.0
 requests==2.31.0
 beautifulsoup4==4.12.2
 markdownify==0.11.6

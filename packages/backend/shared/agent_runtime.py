@@ -19,9 +19,14 @@ from typing import Optional
 from models.agent_config import AgentConfiguration
 
 # SSM에서 resolve된 기본 에이전트 ARN (deploy-agents.sh로 등록)
+# 모듈 로드 시점에 환경 변수 읽기
 DEFAULT_CONSULTATION_AGENT_ARN = os.environ.get('CONSULTATION_AGENT_ARN', '')
 DEFAULT_ANALYSIS_AGENT_ARN = os.environ.get('ANALYSIS_AGENT_ARN', '')
 DEFAULT_PLANNING_AGENT_ARN = os.environ.get('PLANNING_AGENT_ARN', '')
+
+print(f"[INIT] Module loaded - DEFAULT_CONSULTATION_AGENT_ARN: '{DEFAULT_CONSULTATION_AGENT_ARN}'")
+print(f"[INIT] Module loaded - DEFAULT_ANALYSIS_AGENT_ARN: '{DEFAULT_ANALYSIS_AGENT_ARN}'")
+print(f"[INIT] Module loaded - DEFAULT_PLANNING_AGENT_ARN: '{DEFAULT_PLANNING_AGENT_ARN}'")
 
 # 역할별 기본 ARN 매핑
 DEFAULT_AGENT_ARNS = {
@@ -91,7 +96,7 @@ class AgentCoreClient:
             print(f"[INFO] Response contentType: {content_type}")
             
             if "text/event-stream" in content_type:
-                # 스트리밍 응답 처리
+                # 스트리밍 응답 처리: data: 접두사를 제거하고 전체를 합침
                 content = []
                 for line in response["response"].iter_lines(chunk_size=10):
                     if line:
@@ -99,7 +104,8 @@ class AgentCoreClient:
                         if line_str.startswith("data: "):
                             line_str = line_str[6:]
                         content.append(line_str)
-                result_text = "\n".join(content)
+                # 모든 data 라인을 합쳐서 하나의 JSON으로 파싱 시도
+                result_text = ''.join(content)
                 
             elif content_type == "application/json":
                 # JSON 응답 처리 (기존 방식)
@@ -118,7 +124,7 @@ class AgentCoreClient:
 
             print(f"[INFO] Response length: {len(result_text)} chars")
 
-            # JSON 파싱 시도
+            # JSON 파싱 시도, 실패하면 텍스트로 반환
             try:
                 return json.loads(result_text)
             except json.JSONDecodeError:
@@ -137,10 +143,9 @@ class AgentCoreClient:
         session_id: str,
         message: str,
         config: Optional[AgentConfiguration] = None,
-    ) -> str:
-        """Consultation Agent를 호출하여 전체 응답 텍스트를 한 번에 반환합니다 (뭉태기)."""
+    ) -> dict:
+        """Consultation Agent를 호출하여 raw 응답을 그대로 반환합니다."""
         try:
-            # payload 구조: {"prompt": "메시지", "session_id": "세션ID", "config": {...}}
             payload = {
                 "prompt": message,
                 "session_id": session_id
@@ -150,25 +155,17 @@ class AgentCoreClient:
             if config_dict:
                 payload["config"] = config_dict
 
-            # invoke()가 이미 모든 청크를 모아서 반환함
-            result = self.invoke(
+            return self.invoke(
                 agent_runtime_arn=agent_runtime_arn,
                 session_id=session_id,
                 payload=payload,
             )
             
-            response_text = result.get("result", "")
-            if not response_text:
-                print(f"Empty result from agent, full response: {result}")
-                return "죄송합니다. 다시 말씀해 주시겠어요?"
-            
-            return response_text
-            
         except Exception as e:
-            print(f"Consultation agent error: {str(e)}")
+            print(f"[ERROR] Consultation agent error: {str(e)}")
             import traceback
-            print(f"Traceback: {traceback.format_exc()}")
-            return self._handle_error(e)
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            return {"error": self._handle_error(e)}
 
     def invoke_consultation_stream(
         self,
@@ -209,6 +206,106 @@ class AgentCoreClient:
         except Exception as e:
             print(f"AgentCore streaming invoke error: {str(e)}")
             yield self._handle_error(e)
+
+    def invoke_consultation_stream_chunks(
+        self,
+        agent_runtime_arn: str,
+        session_id: str,
+        message: str,
+        config: Optional[AgentConfiguration] = None,
+    ):
+        """AgentCore 스트리밍 응답을 이벤트 단위로 yield합니다.
+
+        에이전트의 'stream' 엔트리포인트를 호출하고,
+        text/event-stream 응답의 각 SSE data 라인을 파싱하여
+        텍스트 청크 또는 tool_use 이벤트로 반환합니다.
+
+        payload에 entrypoint: "stream"을 포함하여 스트리밍 엔트리포인트를 지정합니다.
+
+        Yields:
+            dict: 파싱된 이벤트 딕셔너리. type 필드로 분류:
+                - {"type": "chunk", "content": "텍스트 조각"}
+                - {"type": "tool", "toolName": "...", "toolUseId": "...", "status": "running|complete", ...}
+                - {"type": "result", "message": "전체 응답 텍스트"}
+                - {"type": "error", "message": "에러 메시지"}
+        """
+        # runtimeSessionId는 최소 33자 이상이어야 함
+        runtime_session_id = session_id
+        if len(runtime_session_id) < 33:
+            runtime_session_id = runtime_session_id + '-' + uuid.uuid4().hex[:10]
+
+        try:
+            # stream 엔트리포인트를 호출하도록 payload 구성
+            payload = {
+                "prompt": message,
+                "session_id": session_id,
+                "entrypoint": "stream",
+            }
+            config_dict = _build_config_payload(config)
+            if config_dict:
+                payload["config"] = config_dict
+
+            print(f"[INFO] Invoking AgentCore stream - ARN: {agent_runtime_arn}")
+            print(f"[INFO] Runtime Session ID: {runtime_session_id}")
+
+            response = self.client.invoke_agent_runtime(
+                agentRuntimeArn=agent_runtime_arn,
+                runtimeSessionId=runtime_session_id,
+                payload=json.dumps(payload).encode('utf-8'),
+            )
+
+            content_type = response.get("contentType", "")
+            print(f"[INFO] Stream response contentType: {content_type}")
+
+            # text/event-stream 응답의 SSE data: 라인을 파싱
+            # 각 라인을 순회하며 "data: " 접두사가 있는 라인에서 JSON 이벤트를 추출
+            for line in response["response"].iter_lines(chunk_size=10):
+                if not line:
+                    # 빈 라인은 SSE 이벤트 구분자이므로 건너뜀
+                    continue
+
+                line_str = line.decode("utf-8")
+
+                # SSE data: 접두사 제거
+                if line_str.startswith("data: "):
+                    line_str = line_str[6:]
+                elif line_str.startswith("data:"):
+                    line_str = line_str[5:]
+                else:
+                    # data: 접두사가 없는 라인 (comment, event, id 등)은 건너뜀
+                    continue
+
+                # 빈 데이터 라인 건너뜀
+                stripped = line_str.strip()
+                if not stripped:
+                    continue
+
+                # AgentCore SSE 응답은 JSON이 이중 따옴표로 감싸질 수 있음
+                # 예: data: "{"type": "chunk", "content": "Hello"}"
+                # 바깥 따옴표를 제거하여 내부 JSON을 추출
+                if stripped.startswith('"') and stripped.endswith('"'):
+                    # 이중 따옴표 감싸기 제거 후 이스케이프된 따옴표 복원
+                    inner = stripped[1:-1].replace('\\"', '"')
+                    stripped = inner
+
+                # JSON 파싱하여 이벤트 타입별로 yield
+                try:
+                    event = json.loads(stripped)
+                    if isinstance(event, dict) and "type" in event:
+                        yield event
+                    else:
+                        # type 필드가 없는 JSON은 chunk로 래핑
+                        yield {"type": "chunk", "content": json.dumps(event) if isinstance(event, dict) else stripped}
+                except json.JSONDecodeError:
+                    # JSON이 아닌 텍스트 데이터는 chunk로 래핑
+                    yield {"type": "chunk", "content": stripped}
+
+        except Exception as e:
+            print(f"[ERROR] AgentCore stream chunks error: {str(e)}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            yield {"type": "error", "message": self._handle_error(e)}
+
 
     def invoke_analysis(
         self,
@@ -270,28 +367,55 @@ class AgentCoreClient:
             return "죄송합니다. 시스템에 일시적인 문제가 있습니다. 잠시 후 다시 시도해 주세요."
 
 
+def get_agent_runtime_arn(agent_role: str) -> str:
+    """역할에 맞는 AgentCore Runtime ARN을 환경 변수에서 가져옵니다."""
+    base_arn = DEFAULT_AGENT_ARNS.get(agent_role, '')
+    
+    if not base_arn:
+        print(f"[ERROR] No ARN found in env vars for role: {agent_role}")
+        return ''
+    
+    print(f"[DEBUG] Final ARN for role '{agent_role}': '{base_arn}'")
+    return base_arn
+
+
 def get_agent_config_for_session(
     session_id: str,
     agent_role: str,
-) -> Optional[AgentConfiguration]:
-    """Session에 연결된 AgentConfiguration을 조회합니다.
+) -> tuple[str, Optional[AgentConfiguration]]:
+    """Session에 연결된 ARN과 사용자 정의 config를 반환합니다.
 
-    조회 흐름:
-      1. 역할(agentRole) 기반으로 AgentConfiguration 조회 (GSI1)
-      2. 없으면 기본 ARN으로 폴백
+    Returns:
+        (agent_runtime_arn, config): ARN은 환경 변수에서, config는 DynamoDB에서 조회
     """
-    return get_agent_config_by_role(agent_role)
+    print(f"[DEBUG] get_agent_config_for_session: session={session_id}, role={agent_role}")
+    
+    # 1. ARN은 환경 변수에서 가져오기 (고정)
+    arn = get_agent_runtime_arn(agent_role)
+    
+    # 2. 사용자 정의 config는 DynamoDB에서 조회 (선택적)
+    config = get_agent_config_by_role(agent_role)
+    
+    return (arn, config)
 
 
 def get_agent_config_by_role(
     agent_role: str,
 ) -> Optional[AgentConfiguration]:
-    """역할별 AgentConfiguration을 조회합니다."""
+    """역할별 사용자 정의 AgentConfiguration을 DynamoDB에서 조회합니다.
+    
+    ARN은 포함하지 않고, system_prompt, model_id, agent_name만 조회합니다.
+    """
+    print(f"[DEBUG] get_agent_config_by_role: role={agent_role}")
+    
     if not SESSIONS_TABLE:
-        return _fallback_config(agent_role)
+        print(f"[WARN] SESSIONS_TABLE not set")
+        return None
 
     try:
         table = dynamodb.Table(SESSIONS_TABLE)
+        print(f"[DEBUG] Querying GSI1 with PK: AGENTCONFIG#{agent_role}")
+        
         resp = table.query(
             IndexName='GSI1',
             KeyConditionExpression='GSI1PK = :pk',
@@ -302,15 +426,20 @@ def get_agent_config_by_role(
         )
 
         items = resp.get('Items', [])
+        print(f"[DEBUG] Query returned {len(items)} items")
+        
         if items:
+            print(f"[INFO] Found custom config in DynamoDB")
             return AgentConfiguration.from_dynamodb_item(items[0])
 
-        print(f"No agent config for role={agent_role}. Using default ARN from SSM.")
-        return _fallback_config(agent_role)
+        print(f"[INFO] No custom config for role={agent_role} in DynamoDB")
+        return None
 
     except Exception as e:
-        print(f"Error loading agent config for role {agent_role}: {str(e)}")
-        return _fallback_config(agent_role)
+        print(f"[ERROR] Error querying agent config for role {agent_role}: {str(e)}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        return None
 
 
 # 하위 호환성을 위한 별칭
@@ -323,12 +452,6 @@ def get_agent_config_for_campaign(
 
 
 def _fallback_config(agent_role: str) -> Optional[AgentConfiguration]:
-    """기본 ARN으로 폴백 AgentConfiguration을 생성합니다."""
-    default_arn = DEFAULT_AGENT_ARNS.get(agent_role, '')
-    if default_arn:
-        return AgentConfiguration(
-            config_id='default',
-            agent_role=agent_role,
-            agent_runtime_arn=default_arn,
-        )
+    """Deprecated: get_agent_config_for_session()이 직접 처리합니다."""
+    print(f"[WARN] _fallback_config is deprecated and should not be called")
     return None

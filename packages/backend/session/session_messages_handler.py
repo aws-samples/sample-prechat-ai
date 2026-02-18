@@ -51,6 +51,30 @@ def format_form_submission_for_agent(form_data: dict) -> str:
     return "\n".join(lines)
 
 
+def _extract_text_from_agent_response(agent_result: dict) -> str:
+    """에이전트 raw 응답에서 전체 텍스트를 추출합니다 (EOF 감지 및 contentType 판별용).
+
+    Args:
+        agent_result: {"role": "assistant", "content": [{"text": "..."}, ...]}
+
+    Returns:
+        content 배열의 모든 text를 합친 문자열
+    """
+    if not isinstance(agent_result, dict):
+        return str(agent_result)
+    
+    content_list = agent_result.get("content", [])
+    if not isinstance(content_list, list):
+        return str(agent_result)
+    
+    text_parts = []
+    for item in content_list:
+        if isinstance(item, dict) and "text" in item:
+            text_parts.append(item["text"])
+    
+    return "\n".join(text_parts)
+
+
 def send_message(event, context):
     """
     세션에 메시지를 전송하고 AgentCore Agent 응답을 받습니다.
@@ -135,15 +159,26 @@ def send_message(event, context):
 
     # AgentCore Agent 응답 생성
     try:
-        config = get_agent_config_for_session(session_id, 'prechat')
-        print(f"[INFO] Calling AgentCore ARN: {config.agent_runtime_arn}")
-        ai_response = agentcore_client.invoke_consultation(
-            agent_runtime_arn=config.agent_runtime_arn,
+        arn, config = get_agent_config_for_session(session_id, 'prechat')
+        
+        if not arn:
+            print(f"[ERROR] No ARN found for role: prechat")
+            return lambda_response(500, {'error': 'Agent runtime ARN not configured'})
+        
+        print(f"[INFO] Calling AgentCore ARN: {arn}")
+        agent_result = agentcore_client.invoke_consultation(
+            agent_runtime_arn=arn,
             session_id=session_id,
             message=agent_message,
-            config=config,  # config 내부 필드는 None이어도 OK
+            config=config,
         )
-        print(f"[INFO] Response received: {len(ai_response)} chars")
+        
+        # 에러 체크
+        if "error" in agent_result:
+            return lambda_response(500, {'error': agent_result["error"]})
+        
+        # "result" 키로 감싸져 있으면 벗기기
+        agent_response = agent_result.get("result", agent_result)
         
     except Exception as e:
         print(f"[ERROR] Failed to generate AI response: {str(e)}")
@@ -151,15 +186,18 @@ def send_message(event, context):
         print(f"[ERROR] Traceback: {traceback.format_exc()}")
         return lambda_response(500, {'error': f'Failed to generate AI response: {str(e)}'})
 
+    # content 배열에서 전체 텍스트 추출
+    full_text = _extract_text_from_agent_response(agent_response)
+    
     # EOF 토큰으로 세션 완료 감지
-    is_complete = 'EOF' in ai_response
+    is_complete = 'EOF' in full_text
     if is_complete:
-        ai_response = ai_response.replace('EOF', '').strip()
+        full_text = full_text.replace('EOF', '').strip()
 
     # AI 응답의 contentType 감지
-    response_content_type = detect_content_type(ai_response)
+    response_content_type = detect_content_type(full_text)
 
-    # AI 응답 저장
+    # AI 응답 저장 (텍스트만 저장)
     bot_response_id = f"{int(message_id) + 1}" if message_id.isdigit() else generate_id()
     bot_msg = {
         'PK': f'SESSION#{session_id}',
@@ -167,7 +205,7 @@ def send_message(event, context):
         'sessionId': session_id,
         'timestamp': timestamp,
         'sender': 'bot',
-        'content': ai_response,
+        'content': full_text,
         'contentType': response_content_type,
         'stage': 'conversation',
         'ttl': ttl_value
@@ -196,8 +234,9 @@ def send_message(event, context):
         except Exception as e:
             print(f"[WARN] Failed to update session status for {session_id}: {str(e)}")
 
+    # 프론트엔드에 텍스트 응답 전달
     return lambda_response(200, {
-        'response': ai_response,
+        'response': full_text,
         'contentType': response_content_type,
         'stage': 'conversation',
         'isComplete': is_complete
@@ -354,3 +393,4 @@ def send_message_stream(event, context):
         'contentType': response_content_type,
         'isComplete': is_complete
     }) + '\n'
+

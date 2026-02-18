@@ -40,6 +40,8 @@ Globals:
     Runtime: python3.13
     Timeout: 30
     ReservedConcurrentExecutions: !Ref LambdaConcurrencyLimit
+    Layers:
+      - !Ref SharedLayer
     DeadLetterQueue:
       Type: SQS
       TargetArn: !GetAtt LambdaDeadLetterQueue.Arn
@@ -60,11 +62,11 @@ Globals:
         ALLOWED_EMAIL_DOMAINS: !Ref AllowedEmailDomains
         BEDROCK_AGENT_ROLE_ARN: !GetAtt BedrockAgentServiceRole.Arn
         BEDROCK_AGENT_ALIAS_ID: !Ref BedrockAgentAliasId
-        BEDROCK_KB_ID: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/bedrock-kb-id:1}}'
+        BEDROCK_KB_ID: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/bedrock-kb-id}}'
         # Strands Agent Runtime ARNs (SSM Parameter Store에서 resolve)
-        CONSULTATION_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/consultation/runtime-arn:1}}'
-        ANALYSIS_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/analysis/runtime-arn:1}}'
-        PLANNING_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/planning/runtime-arn:1}}'
+        CONSULTATION_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/consultation/runtime-arn}}'
+        ANALYSIS_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/analysis/runtime-arn}}'
+        PLANNING_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/planning/runtime-arn}}'
     KmsKeyArn: !GetAtt DynamoDBKMSKey.Arn
   Api:
     EndpointConfiguration: REGIONAL
@@ -388,6 +390,21 @@ Resources:
         - !Ref VPCEndpointSecurityGroup
       PrivateDnsEnabled: true
 
+  # API Gateway Management API용 VPC Endpoint
+  # WebSocket Lambda가 VPC 내에서 post_to_connection 호출 시 필요
+  ExecuteApiVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.execute-api'
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: true
+
   # Security Group for VPC Endpoints
   VPCEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -655,17 +672,30 @@ Resources:
         Tracing: Enabled
         Logging: Enabled
 
-  # Lambda Functions
+  # ============================================
+  # Shared Lambda Layer (공통 코드: utils, models, agent_runtime, trigger_manager)
+  # ============================================
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub '${AWS::StackName}-shared-layer-${Stage}'
+      Description: Shared utilities, models, agent_runtime, trigger_manager
+      ContentUri: packages/backend/shared/
+      CompatibleRuntimes:
+        - python3.13
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: python3.13
 
   # ============================================
-  # Domain-Based API Endpoints (New)
+  # Domain-Based Lambda Functions
   # ============================================
 
   # Session Messages - POST /api/sessions/{sessionId}/messages
   SessionMessagesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/session/
       Handler: session_messages_handler.send_message
       Policies:
         - DynamoDBCrudPolicy:
@@ -689,7 +719,7 @@ Resources:
   SessionMessagesStreamFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/session/
       Handler: session_messages_handler.send_message_stream
       Timeout: 300
       Policies:
@@ -714,7 +744,7 @@ Resources:
   GetSessionByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/session/
       Handler: session_handler.get_session
       Policies:
         - DynamoDBCrudPolicy:
@@ -740,7 +770,7 @@ Resources:
   VerifySessionPinNewFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/session/
       Handler: session_handler.verify_session_pin
       Policies:
         - DynamoDBCrudPolicy:
@@ -757,7 +787,7 @@ Resources:
   UpdateConsultationPurposesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/session/
       Handler: chat_handler.update_consultation_purposes
       Policies:
         - DynamoDBCrudPolicy:
@@ -774,7 +804,7 @@ Resources:
   SessionFeedbackFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/session/
       Handler: chat_handler.handle_feedback
       Policies:
         - DynamoDBCrudPolicy:
@@ -790,7 +820,7 @@ Resources:
   CreateSessionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/session/
       Handler: session_handler.create_session
       Policies:
         - DynamoDBCrudPolicy:
@@ -814,7 +844,7 @@ Resources:
   GetCampaignByCodeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/session/
       Handler: session_handler.get_campaign_by_code
       Policies:
         - DynamoDBReadPolicy:
@@ -833,7 +863,7 @@ Resources:
   ListCognitoUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/auth/
       Handler: cognito_handler.list_cognito_users
       Policies:
         - Statement:
@@ -854,7 +884,7 @@ Resources:
   GetCognitoUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/auth/
       Handler: cognito_handler.get_cognito_user
       Policies:
         - Statement:
@@ -876,7 +906,7 @@ Resources:
   ListSessionsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_handler.list_sessions
       Policies:
         - DynamoDBCrudPolicy:
@@ -896,7 +926,7 @@ Resources:
   GetSessionDetailsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_handler.get_session_details
       Policies:
         - DynamoDBCrudPolicy:
@@ -916,7 +946,7 @@ Resources:
   GetReportFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_handler.get_session_report
       Timeout: 300
       MemorySize: 1024
@@ -945,7 +975,7 @@ Resources:
   InactivateSessionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_handler.patch_session
       Policies:
         - DynamoDBCrudPolicy:
@@ -965,7 +995,7 @@ Resources:
   DeleteSessionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_handler.delete_session
       Policies:
         - DynamoDBCrudPolicy:
@@ -985,7 +1015,7 @@ Resources:
   SignupFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/auth/
       Handler: auth_handler.signup
       Policies:
         - Statement:
@@ -1004,7 +1034,7 @@ Resources:
   SigninFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/auth/
       Handler: auth_handler.signin
       Policies:
         - Statement:
@@ -1024,7 +1054,7 @@ Resources:
   ConfirmSignupFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/auth/
       Handler: auth_handler.confirm_signup
       Policies:
         - Statement:
@@ -1043,7 +1073,7 @@ Resources:
   VerifyTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/auth/
       Handler: auth_handler.verify_token
       Policies:
         - Statement:
@@ -1062,7 +1092,7 @@ Resources:
   ConfirmPhoneFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/auth/
       Handler: auth_handler.confirm_phone
       Policies:
         - Statement:
@@ -1089,7 +1119,7 @@ Resources:
   CreateTriggerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/trigger/
       Handler: trigger_api_handler.create_trigger
       Policies:
         - DynamoDBCrudPolicy:
@@ -1107,7 +1137,7 @@ Resources:
   ListTriggersFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/trigger/
       Handler: trigger_api_handler.list_triggers
       Policies:
         - DynamoDBCrudPolicy:
@@ -1125,7 +1155,7 @@ Resources:
   GetTriggerTemplatesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/trigger/
       Handler: trigger_api_handler.get_default_templates
       Policies:
         - DynamoDBReadPolicy:
@@ -1143,7 +1173,7 @@ Resources:
   GetTriggerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/trigger/
       Handler: trigger_api_handler.get_trigger
       Policies:
         - DynamoDBCrudPolicy:
@@ -1161,7 +1191,7 @@ Resources:
   UpdateTriggerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/trigger/
       Handler: trigger_api_handler.update_trigger
       Policies:
         - DynamoDBCrudPolicy:
@@ -1179,7 +1209,7 @@ Resources:
   DeleteTriggerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/trigger/
       Handler: trigger_api_handler.delete_trigger
       Policies:
         - DynamoDBCrudPolicy:
@@ -1205,7 +1235,7 @@ Resources:
   CreateAgentConfigFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/agent/
       Handler: agent_config_handler.create_config
       Policies:
         - DynamoDBCrudPolicy:
@@ -1223,7 +1253,7 @@ Resources:
   ListAgentConfigsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/agent/
       Handler: agent_config_handler.list_configs
       Policies:
         - DynamoDBCrudPolicy:
@@ -1241,7 +1271,7 @@ Resources:
   GetAgentConfigFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/agent/
       Handler: agent_config_handler.get_config
       Policies:
         - DynamoDBReadPolicy:
@@ -1259,7 +1289,7 @@ Resources:
   UpdateAgentConfigFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/agent/
       Handler: agent_config_handler.update_config
       Policies:
         - DynamoDBCrudPolicy:
@@ -1277,7 +1307,7 @@ Resources:
   DeleteAgentConfigFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/agent/
       Handler: agent_config_handler.delete_config
       Policies:
         - DynamoDBCrudPolicy:
@@ -1295,7 +1325,7 @@ Resources:
   GenerateMeetingPlanFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/meeting/
       Handler: meeting_plan_handler.generate_meeting_plan
       Timeout: 120
       Policies:
@@ -1323,7 +1353,7 @@ Resources:
   GetMeetingPlanFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/meeting/
       Handler: meeting_plan_handler.get_meeting_plan
       Policies:
         - DynamoDBReadPolicy:
@@ -1341,7 +1371,7 @@ Resources:
   UpdateMeetingPlanFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/meeting/
       Handler: meeting_plan_handler.update_meeting_plan
       Policies:
         - DynamoDBCrudPolicy:
@@ -1359,7 +1389,7 @@ Resources:
   AddMeetingPlanCommentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/meeting/
       Handler: meeting_plan_handler.add_comment
       Policies:
         - DynamoDBCrudPolicy:
@@ -1397,7 +1427,7 @@ Resources:
   RequestAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_handler.submit_analysis
       Policies:
         - DynamoDBCrudPolicy:
@@ -1429,7 +1459,7 @@ Resources:
   ProcessAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_handler.process_analysis
       Timeout: 900
       MemorySize: 1024
@@ -1460,7 +1490,7 @@ Resources:
   GetAnalysisStatusFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_handler.get_analysis_status
       Policies:
         - DynamoDBCrudPolicy:
@@ -1479,7 +1509,7 @@ Resources:
   SaveMeetingLogFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_handler.save_meeting_log
       Policies:
         - DynamoDBCrudPolicy:
@@ -1501,7 +1531,7 @@ Resources:
   GetSessionFeedbackFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_handler.get_session_feedback
       Policies:
         - DynamoDBCrudPolicy:
@@ -1520,7 +1550,7 @@ Resources:
   ListDiscussionsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: discussion_handler.list_discussions
       Policies:
         - DynamoDBCrudPolicy:
@@ -1538,7 +1568,7 @@ Resources:
   CreateDiscussionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: discussion_handler.create_discussion
       Policies:
         - DynamoDBCrudPolicy:
@@ -1556,7 +1586,7 @@ Resources:
   UpdateDiscussionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: discussion_handler.update_discussion
       Policies:
         - DynamoDBCrudPolicy:
@@ -1574,7 +1604,7 @@ Resources:
   DeleteDiscussionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: discussion_handler.delete_discussion
       Policies:
         - DynamoDBCrudPolicy:
@@ -1593,7 +1623,7 @@ Resources:
   AWSDocsActionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/agent/
       Handler: aws_docs_handler.aws_docs_action_handler
       MemorySize: 512
       Timeout: 30
@@ -1618,7 +1648,7 @@ Resources:
   GenerateUploadUrlFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/file/
       Handler: file_upload_handler.generate_presigned_url
       Environment:
         Variables:
@@ -1648,7 +1678,7 @@ Resources:
   ListSessionFilesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/file/
       Handler: file_upload_handler.list_session_files
       Environment:
         Variables:
@@ -1681,7 +1711,7 @@ Resources:
   DeleteSessionFileFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/file/
       Handler: file_upload_handler.delete_session_file
       Environment:
         Variables:
@@ -1709,7 +1739,7 @@ Resources:
   CreateCampaignFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/campaign/
       Handler: campaign_handler.create_campaign
       Policies:
         - DynamoDBCrudPolicy:
@@ -1734,7 +1764,7 @@ Resources:
   ListCampaignsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/campaign/
       Handler: campaign_handler.list_campaigns
       Policies:
         - DynamoDBCrudPolicy:
@@ -1754,7 +1784,7 @@ Resources:
   GetCampaignFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/campaign/
       Handler: campaign_handler.get_campaign
       Policies:
         - DynamoDBCrudPolicy:
@@ -1774,7 +1804,7 @@ Resources:
   UpdateCampaignFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/campaign/
       Handler: campaign_handler.update_campaign
       Policies:
         - DynamoDBCrudPolicy:
@@ -1799,7 +1829,7 @@ Resources:
   DeleteCampaignFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/campaign/
       Handler: campaign_handler.delete_campaign
       Policies:
         - DynamoDBCrudPolicy:
@@ -1819,7 +1849,7 @@ Resources:
   GetCampaignSessionsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/campaign/
       Handler: campaign_handler.get_campaign_sessions
       Policies:
         - DynamoDBCrudPolicy:
@@ -1843,7 +1873,7 @@ Resources:
   GetCampaignAnalyticsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/campaign/
       Handler: campaign_analytics.get_campaign_analytics
       Policies:
         - DynamoDBCrudPolicy:
@@ -1865,7 +1895,7 @@ Resources:
   GetCampaignsSummaryAnalyticsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/campaign/
       Handler: campaign_analytics.get_campaigns_summary_analytics
       Policies:
         - DynamoDBCrudPolicy:
@@ -1885,7 +1915,7 @@ Resources:
   GetCampaignComparisonAnalyticsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/campaign/
       Handler: campaign_analytics.get_campaign_comparison_analytics
       Policies:
         - DynamoDBCrudPolicy:
@@ -1909,7 +1939,7 @@ Resources:
   MigrateCampaignsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/migration/
       Handler: migration_handler.migrate_campaigns_handler
       Timeout: 900
       MemorySize: 512
@@ -1931,7 +1961,7 @@ Resources:
   FixCampaignSessionCountsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/migration/
       Handler: fix_campaign_session_counts.fix_campaign_session_counts
       Timeout: 900
       MemorySize: 512
@@ -1944,7 +1974,7 @@ Resources:
   VerifyMigrationFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/migration/
       Handler: migration_handler.verify_migration_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -1965,7 +1995,7 @@ Resources:
   ListSessionFilesAdminFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_file_handler.list_session_files_admin
       Environment:
         Variables:
@@ -1998,7 +2028,7 @@ Resources:
   DeleteSessionFileAdminFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_file_handler.delete_session_file_admin
       Environment:
         Variables:
@@ -2022,7 +2052,7 @@ Resources:
   GenerateFilePresignedUrlFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/admin/
       Handler: admin_file_handler.generate_file_presigned_url
       Environment:
         Variables:
@@ -2048,7 +2078,7 @@ Resources:
   SessionStreamHandler:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/stream/
       Handler: stream_handler.handle_session_stream
       Policies:
         - DynamoDBCrudPolicy:
@@ -2086,7 +2116,7 @@ Resources:
   CampaignStreamHandler:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: packages/backend/
+      CodeUri: packages/backend/stream/
       Handler: stream_handler.handle_campaign_stream
       Policies:
         - DynamoDBReadPolicy:
@@ -2457,6 +2487,189 @@ Resources:
           - CLOUDFRONT_MINIMUM_PROTOCOL_VERSION_RULE
           - CLOUDFRONT_SNI_ENABLED
 
+  # ============================================
+  # WebSocket Lambda 함수
+  # ============================================
+
+  # WebSocket $connect 핸들러 - 세션 검증 및 연결 수립
+  WebSocketConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/websocket/
+      Handler: websocket_handler.handle_connect
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+
+  # WebSocket $disconnect 핸들러 - 연결 정리
+  WebSocketDisconnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/websocket/
+      Handler: websocket_handler.handle_disconnect
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+
+  # WebSocket sendMessage 핸들러 - 메시지 처리 및 AgentCore 스트리밍
+  WebSocketSendMessageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/websocket/
+      Handler: websocket_handler.handle_send_message
+      Timeout: 300
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock-agentcore:InvokeAgentRuntime
+            Resource: '*'
+        - Statement:
+            Effect: Allow
+            Action:
+              - execute-api:ManageConnections
+            Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Stage}/POST/@connections/*'
+
+  # WebSocket $default 핸들러 - 알 수 없는 액션 처리
+  WebSocketDefaultFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/websocket/
+      Handler: websocket_handler.handle_default
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - execute-api:ManageConnections
+            Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Stage}/POST/@connections/*'
+
+  # WebSocket Lambda Permission - API Gateway가 각 함수를 호출할 수 있도록 허용
+  WebSocketConnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketConnectFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/$connect'
+
+  WebSocketDisconnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketDisconnectFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/$disconnect'
+
+  WebSocketSendMessagePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketSendMessageFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/sendMessage'
+
+  WebSocketDefaultPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketDefaultFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/$default'
+
+  # ============================================
+  # WebSocket API Gateway (실시간 스트리밍)
+  # ============================================
+
+  # WebSocket API 정의
+  WebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${AWS::StackName}-websocket-${Stage}'
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+      Tags:
+        Name: !Sub '${AWS::StackName}-websocket-api'
+        Environment: !Ref Stage
+
+  # WebSocket 스테이지 (자동 배포)
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebSocketApi
+      StageName: !Ref Stage
+      AutoDeploy: true
+      Tags:
+        Name: !Sub '${AWS::StackName}-websocket-stage-${Stage}'
+        Environment: !Ref Stage
+
+  # ---- $connect 라우트 ----
+  WebSocketConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketConnectFunction.Arn}/invocations'
+
+  WebSocketConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $connect
+      AuthorizationType: NONE
+      Target: !Sub 'integrations/${WebSocketConnectIntegration}'
+
+  # ---- $disconnect 라우트 ----
+  WebSocketDisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketDisconnectFunction.Arn}/invocations'
+
+  WebSocketDisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      Target: !Sub 'integrations/${WebSocketDisconnectIntegration}'
+
+  # ---- sendMessage 라우트 ----
+  WebSocketSendMessageIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketSendMessageFunction.Arn}/invocations'
+
+  WebSocketSendMessageRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: sendMessage
+      AuthorizationType: NONE
+      Target: !Sub 'integrations/${WebSocketSendMessageIntegration}'
+
+  # ---- $default 라우트 ----
+  WebSocketDefaultIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketDefaultFunction.Arn}/invocations'
+
+  WebSocketDefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $default
+      AuthorizationType: NONE
+      Target: !Sub 'integrations/${WebSocketDefaultIntegration}'
+
 Outputs:
   ApiUrl:
     Description: API Gateway URL
@@ -2515,3 +2728,9 @@ Outputs:
   CampaignsTable:
     Description: DynamoDB table for campaigns
     Value: !Ref CampaignsTable
+  WebSocketUrl:
+    Description: WebSocket API Gateway URL
+    Value: !Sub "wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  WebSocketApiId:
+    Description: WebSocket API Gateway ID
+    Value: !Ref WebSocketApi
