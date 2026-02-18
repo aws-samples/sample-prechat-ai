@@ -315,6 +315,24 @@ export interface TriggerTemplatesResponse {
 
 
 
+// WebSocket 메시지 타입 정의
+
+// 서버 → 클라이언트 메시지 유니온 타입
+export type WebSocketServerMessage =
+  | { type: 'chunk'; content: string }
+  | { type: 'tool'; toolName: string; toolUseId: string; status: 'running' | 'complete'; input?: Record<string, unknown>; output?: string }
+  | { type: 'done'; contentType: MessageContentType; isComplete: boolean; messageId: string }
+  | { type: 'error'; message: string };
+
+// 클라이언트 → 서버 메시지
+export interface WebSocketClientMessage {
+  action: 'sendMessage';
+  sessionId: string;
+  message: string;
+  messageId: string;
+  contentType?: MessageContentType;
+}
+
 export const BEDROCK_MODELS: BedrockModel[] = [
   { id: 'global.amazon.nova-2-lite-v1:0', name: 'Nova 2 Lite', provider: 'Amazon', region: 'us-east-1' },
   { id: 'global.anthropic.claude-haiku-4-5-20251001-v1:0', name: 'Claude Haiku 4.5', provider: 'Anthropic', region: 'us-east-1' },

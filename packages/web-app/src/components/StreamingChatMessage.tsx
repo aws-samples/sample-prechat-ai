@@ -13,13 +13,18 @@ interface StreamingChatMessageProps {
   isStreaming?: boolean
   salesRepInfo?: SalesRepInfo
   onFormSubmit?: (formData: Record<string, string>) => void
+  toolStatus?: {
+    toolName: string
+    status: 'running' | 'complete'
+  } | null
 }
 
 export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({ 
   message, 
   isStreaming = false,
   salesRepInfo,
-  onFormSubmit
+  onFormSubmit,
+  toolStatus,
 }) => {
   const [displayedContent, setDisplayedContent] = useState('')
   const [showCursor, setShowCursor] = useState(isStreaming)
@@ -115,6 +120,16 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
         }
       >
         <div style={{ position: 'relative' }}>
+          {/* 도구 사용 상태 표시 */}
+          {isStreaming && toolStatus && (
+            <div style={{ marginBottom: '8px' }}>
+              <StatusIndicator type={toolStatus.status === 'running' ? 'in-progress' : 'success'}>
+                {toolStatus.status === 'running'
+                  ? `🔧 ${toolStatus.toolName} 실행 중...`
+                  : `✅ ${toolStatus.toolName} 완료`}
+              </StatusIndicator>
+            </div>
+          )}
           {isStreaming ? (
             <ReactMarkdown>{replaceSalesRepPlaceholders(displayedContent, salesRepInfo)}</ReactMarkdown>
           ) : (message.contentType || 'text') === 'div-return' ? (

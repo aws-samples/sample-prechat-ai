@@ -334,13 +334,13 @@ def send_message_stream(event, context):
             config=config,  # config 내부 필드는 None이어도 OK
         ):
             full_response += chunk
-            yield json.dumps({'chunk': chunk}) + '\n'
+            yield json.dumps({'chunk': chunk}, ensure_ascii=False) + '\n'
         
         ai_response = full_response
                 
     except Exception as e:
         print(f"[ERROR] Failed to generate AI response: {str(e)}")
-        yield json.dumps({'error': 'Failed to generate AI response'}) + '\n'
+        yield json.dumps({'error': 'Failed to generate AI response'}, ensure_ascii=False) + '\n'
         return
 
     # EOF 토큰으로 세션 완료 감지
@@ -392,5 +392,5 @@ def send_message_stream(event, context):
         'done': True,
         'contentType': response_content_type,
         'isComplete': is_complete
-    }) + '\n'
+    }, ensure_ascii=False) + '\n'
 

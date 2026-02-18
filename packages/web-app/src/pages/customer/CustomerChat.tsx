@@ -13,7 +13,8 @@ import {
   Button,
   FormField,
   Checkbox,
-  Link
+  Link,
+  StatusIndicator,
 } from '@cloudscape-design/components'
 import Avatar from '@cloudscape-design/chat-components/avatar'
 import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
@@ -67,6 +68,9 @@ export default function CustomerChat() {
     updateSessionComplete,
   } = useSession(sessionId, !showPinModal && !isCheckingStoredPin) // Only load session after PIN verification
 
+  // PIN 검증 후 저장된 PIN을 useChat에 전달
+  const verifiedPin = sessionId ? getStoredPinForSession(sessionId) : undefined
+
   const {
     inputValue,
     setInputValue,
@@ -74,8 +78,10 @@ export default function CustomerChat() {
     sendMessage,
     sendFormSubmission,
     clearInput,
-    streamingMessage
-  } = useChat(sessionId)
+    streamingMessage,
+    connectionState,
+    toolStatus,
+  } = useChat(sessionId, verifiedPin || undefined)
 
   // 컴포넌트 로드 시 저장된 PIN 확인
   useEffect(() => {
@@ -349,7 +355,29 @@ export default function CustomerChat() {
           <div className="fade-in-up">
             <Header
               variant="h1"
-              description={selectedPurposes.length > 0 ? `${t('chat_purpose')}: ${formatPurposesForDisplay(formatPurposesForStorage(selectedPurposes))}` : t('consultation_5e21ae53')}
+              description={
+                <SpaceBetween direction="horizontal" size="xs" alignItems="center">
+                  {selectedPurposes.length > 0 && (
+                    <span>{`${t('chat_purpose')}: ${formatPurposesForDisplay(formatPurposesForStorage(selectedPurposes))}`}</span>
+                  )}
+                  {!selectedPurposes.length && (
+                    <span>{t('consultation_5e21ae53')}</span>
+                  )}
+                  {/* WebSocket 연결 상태 인디케이터 */}
+                  {connectionState === 'connected' && (
+                    <StatusIndicator type="success">{t('ws_connected') || 'Connected'}</StatusIndicator>
+                  )}
+                  {connectionState === 'connecting' && (
+                    <StatusIndicator type="in-progress">{t('ws_connecting') || 'Connecting...'}</StatusIndicator>
+                  )}
+                  {connectionState === 'disconnected' && (
+                    <StatusIndicator type="warning">{t('ws_reconnecting') || 'Reconnecting...'}</StatusIndicator>
+                  )}
+                  {connectionState === 'error' && (
+                    <StatusIndicator type="error">{t('ws_error') || 'Connection error'}</StatusIndicator>
+                  )}
+                </SpaceBetween>
+              }
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
                   <Button
@@ -425,6 +453,7 @@ export default function CustomerChat() {
                         isStreaming={isCurrentlyStreaming}
                         salesRepInfo={sessionData?.salesRepInfo}
                         onFormSubmit={!isFormSubmitted ? handleFormSubmit(message.id) : undefined}
+                        toolStatus={isCurrentlyStreaming ? toolStatus : null}
                       />
                     )
                   }
@@ -444,14 +473,25 @@ export default function CustomerChat() {
                       }
                     >
                       <Box>
-                        <div className="loading-dots">
-                          <span></span>
-                          <span></span>
-                          <span></span>
-                        </div>
-                        <Box margin={{ left: 's' }} display="inline-block">
-                          {t(MESSAGES.AI_THINKING)}
-                        </Box>
+                        {/* 도구 사용 중이면 도구 상태 표시, 아니면 로딩 dots */}
+                        {toolStatus ? (
+                          <StatusIndicator type={toolStatus.status === 'running' ? 'in-progress' : 'success'}>
+                            {toolStatus.status === 'running'
+                              ? `🔧 ${toolStatus.toolName} 실행 중...`
+                              : `✅ ${toolStatus.toolName} 완료`}
+                          </StatusIndicator>
+                        ) : (
+                          <>
+                            <div className="loading-dots">
+                              <span></span>
+                              <span></span>
+                              <span></span>
+                            </div>
+                            <Box margin={{ left: 's' }} display="inline-block">
+                              {t(MESSAGES.AI_THINKING)}
+                            </Box>
+                          </>
+                        )}
                       </Box>
                     </ChatBubble>
                   </div>

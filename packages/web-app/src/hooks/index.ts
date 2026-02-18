@@ -1,3 +1,5 @@
 export { useSession } from './useSession'
 export { useChat } from './useChat'
 export { useFormSubmission } from './useFormSubmission'
+export { useWebSocket } from './useWebSocket'
+export type { UseWebSocketOptions, UseWebSocketReturn, ConnectionState } from './useWebSocket'

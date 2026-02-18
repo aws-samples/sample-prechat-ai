@@ -285,17 +285,33 @@ class AgentCoreClient:
                 # 바깥 따옴표를 제거하여 내부 JSON을 추출
                 if stripped.startswith('"') and stripped.endswith('"'):
                     # 이중 따옴표 감싸기 제거 후 이스케이프된 따옴표 복원
-                    inner = stripped[1:-1].replace('\\"', '"')
+                    inner = stripped[1:-1].replace('\\"', '"').replace('\\\\', '\\')
                     stripped = inner
 
                 # JSON 파싱하여 이벤트 타입별로 yield
                 try:
                     event = json.loads(stripped)
                     if isinstance(event, dict) and "type" in event:
+                        # content가 JSON 문자열로 이중 직렬화된 경우 내부 파싱
+                        if event.get("type") == "chunk" and isinstance(event.get("content"), str):
+                            try:
+                                inner = json.loads(event["content"])
+                                if isinstance(inner, dict) and "type" in inner:
+                                    yield inner
+                                    continue
+                            except (json.JSONDecodeError, TypeError):
+                                pass
+                        # result의 message가 문자열인 경우 파싱
+                        if event.get("type") == "result" and isinstance(event.get("message"), str):
+                            try:
+                                inner_msg = json.loads(event["message"])
+                                event["message"] = inner_msg
+                            except (json.JSONDecodeError, TypeError):
+                                pass
                         yield event
                     else:
                         # type 필드가 없는 JSON은 chunk로 래핑
-                        yield {"type": "chunk", "content": json.dumps(event) if isinstance(event, dict) else stripped}
+                        yield {"type": "chunk", "content": json.dumps(event, ensure_ascii=False) if isinstance(event, dict) else stripped}
                 except json.JSONDecodeError:
                     # JSON이 아닌 텍스트 데이터는 chunk로 래핑
                     yield {"type": "chunk", "content": stripped}

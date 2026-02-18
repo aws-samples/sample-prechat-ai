@@ -2491,12 +2491,21 @@ Resources:
   # WebSocket Lambda 함수
   # ============================================
 
+  # ============================================
+  # WebSocket Lambda 함수
+  # VPC 밖에서 실행: execute-api VPC Endpoint(PrivateDnsEnabled=true)가
+  # public WebSocket API의 @connections Management API 호출을 403으로 차단하므로
+  # WebSocket 함수들은 VPC 밖에서 퍼블릭 엔드포인트로 통신해야 합니다.
+  # ref: https://repost.aws/knowledge-center/api-gateway-vpc-connections
+  # ============================================
+
   # WebSocket $connect 핸들러 - 세션 검증 및 연결 수립
   WebSocketConnectFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/websocket/
       Handler: websocket_handler.handle_connect
+      VpcConfig: !Ref AWS::NoValue
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
@@ -2507,6 +2516,7 @@ Resources:
     Properties:
       CodeUri: packages/backend/websocket/
       Handler: websocket_handler.handle_disconnect
+      VpcConfig: !Ref AWS::NoValue
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
@@ -2518,6 +2528,7 @@ Resources:
       CodeUri: packages/backend/websocket/
       Handler: websocket_handler.handle_send_message
       Timeout: 300
+      VpcConfig: !Ref AWS::NoValue
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
@@ -2540,6 +2551,7 @@ Resources:
     Properties:
       CodeUri: packages/backend/websocket/
       Handler: websocket_handler.handle_default
+      VpcConfig: !Ref AWS::NoValue
       Policies:
         - Statement:
             Effect: Allow

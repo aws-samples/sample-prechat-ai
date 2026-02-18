@@ -134,11 +134,13 @@ AWS 미팅 전 고객정보 수집 대화형 AI
 
 **일정변경 요청:** "담당자에게 우선 전달하여 빠른 연락받도록 하겠습니다"
 
+**form 렌더링시:** **중요: render_form 도구를 호출한 후, 도구가 반환한 HTML을 반드시 섀도잉하여 상대방에게 그대로 전달해주세요. 예: "아래 폼에 정보를 입력해주세요!\n\n<div class=..."**
+
 **대화 8회 초과, 담당자 정보 요청시:**
 "담당자 정보:
-- {{sales_rep.name}}
-- {{sales_rep.phone}}
-- {{sales_rep.email}}
+- {{{{sales_rep.name}}}}
+- {{{{sales_rep.phone}}}}
+- {{{{sales_rep.email}}}}
 
 1-2일내 미팅 확정메일 발송예정입니다."
 
@@ -204,32 +206,35 @@ def create_consultation_agent(
         session_manager=session_manager,
     )
 
-
 @app.entrypoint
-def invoke(payload: dict) -> dict:
-    """AgentCore Runtime 호출 엔트리포인트
+async def stream(payload: dict):
+    """스트리밍 엔트리포인트 - AgentCore Runtime이 SSE text/event-stream으로 변환합니다.
+
+    Strands Agent의 stream_async()를 활용하여 이벤트를 비동기 제너레이터로 yield합니다.
+    각 yield는 AgentCore Runtime에 의해 SSE data: 라인으로 변환됩니다.
+
+    이벤트 유형:
+      - chunk: {"type": "chunk", "content": "텍스트 조각"} - 모델의 텍스트 출력
+      - tool:  {"type": "tool", "toolName": "...", "toolUseId": "...", "status": "running", "input": {...}}
+               {"type": "tool", "toolName": "...", "toolUseId": "...", "status": "complete"}
+      - result: {"type": "result", "message": "전체 응답 텍스트"} - 최종 결과
+      - error: {"type": "error", "message": "에러 메시지"} - 에러 발생 시
 
     payload 구조:
       {
         "prompt": "고객 메시지",
-        "session_id": "PreChat 세션 ID (STM 메모리 키 겸 actor ID)",
-        "config": {                          # 백엔드 Lambda가 DynamoDB에서 조회하여 주입
-          "system_prompt": "...",
-          "model_id": "...",
-          "agent_name": "..."
-        }
+        "session_id": "PreChat 세션 ID",
+        "config": { "system_prompt": "...", "model_id": "...", "agent_name": "..." }
       }
-
-    config가 없으면 기본값으로 폴백합니다.
     """
     prompt = payload.get("prompt", "")
     if not prompt:
-        return {"error": "No prompt provided"}
+        yield json.dumps({"type": "error", "message": "No prompt provided"}, ensure_ascii=False)
+        return
 
     session_id = payload.get("session_id", "anonymous")
-
-    # payload.config에서 동적 구성 추출 (키가 없으면 None → DEFAULT 폴백)
     config = payload.get("config", {})
+
     agent = create_consultation_agent(
         session_id=session_id,
         system_prompt=config.get("system_prompt"),
@@ -237,8 +242,55 @@ def invoke(payload: dict) -> dict:
         agent_name=config.get("agent_name"),
     )
 
-    result = agent(prompt)
-    return {"result": result.message}
+    # 현재 진행 중인 도구 사용을 추적 (중복 이벤트 방지)
+    active_tool_use_id = None
+
+    try:
+        async for event in agent.stream_async(prompt):
+            # 텍스트 청크 이벤트: 모델이 생성하는 텍스트 조각
+            if "data" in event:
+                yield json.dumps({"type": "chunk", "content": event["data"]}, ensure_ascii=False)
+
+            # 도구 사용 이벤트: 에이전트가 도구를 호출할 때
+            if "current_tool_use" in event:
+                tool_use = event["current_tool_use"]
+                tool_name = tool_use.get("name")
+                tool_use_id = tool_use.get("toolUseId")
+
+                # 새로운 도구 사용이 시작된 경우에만 이벤트 발행 (중복 방지)
+                if tool_name and tool_use_id and tool_use_id != active_tool_use_id:
+                    active_tool_use_id = tool_use_id
+                    yield json.dumps({
+                        "type": "tool",
+                        "toolName": tool_name,
+                        "toolUseId": tool_use_id,
+                        "status": "running",
+                        "input": tool_use.get("input", {}),
+                    }, ensure_ascii=False)
+
+            # 최종 결과 이벤트: 에이전트 실행 완료
+            if "result" in event:
+                result = event["result"]
+                # 이전 도구 사용이 있었다면 완료 이벤트 발행
+                if active_tool_use_id:
+                    yield json.dumps({
+                        "type": "tool",
+                        "toolName": "",
+                        "toolUseId": active_tool_use_id,
+                        "status": "complete",
+                    }, ensure_ascii=False)
+                    active_tool_use_id = None
+
+                yield json.dumps({
+                    "type": "result",
+                    "message": result.message if hasattr(result, "message") else str(result),
+                }, ensure_ascii=False)
+
+    except Exception as e:
+        logging.error(f"스트리밍 중 에러 발생: {e}")
+        yield json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
+
+
 
 if __name__ == "__main__":
     app.run()

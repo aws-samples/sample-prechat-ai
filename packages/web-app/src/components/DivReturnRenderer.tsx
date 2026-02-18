@@ -116,9 +116,25 @@ export const DivReturnRenderer: React.FC<DivReturnRendererProps> = ({
 
       for (let i = 0; i < elements.length; i++) {
         const el = elements[i] as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-        if (el.name) {
-          formData[el.name] = el.value;
+        if (el.tagName === 'BUTTON') continue;
+
+        // name 속성 우선, 없으면 id, 없으면 연결된 label의 for 속성에서 추출
+        const fieldName = el.name || el.id || '';
+        if (!fieldName) {
+          // label 요소에서 필드명 추출 시도
+          const label = el.closest('.form-field')?.querySelector('label');
+          if (label) {
+            const labelFor = label.getAttribute('for') || '';
+            const labelText = label.textContent?.trim() || '';
+            const key = labelFor || labelText;
+            if (key && el.value) {
+              formData[key] = el.value;
+            }
+          }
+          continue;
         }
+
+        formData[fieldName] = el.value;
       }
 
       onFormSubmit(formData);

@@ -168,7 +168,7 @@ def handle_default(event, context):
             error_message = json.dumps({
                 'type': 'error',
                 'message': f'알 수 없는 액션입니다: {action}',
-            })
+            }, ensure_ascii=False)
 
             apigw_management.post_to_connection(
                 ConnectionId=connection_id,
@@ -231,7 +231,7 @@ def _post_to_connection(apigw_management, connection_id: str, data: dict) -> boo
     try:
         apigw_management.post_to_connection(
             ConnectionId=connection_id,
-            Data=json.dumps(data).encode('utf-8'),
+            Data=json.dumps(data, ensure_ascii=False).encode('utf-8'),
         )
         return True
     except apigw_management.exceptions.GoneException:
@@ -272,6 +272,7 @@ def handle_send_message(event, context):
 
     # Management API 클라이언트 초기화
     endpoint_url = f'https://{domain_name}/{stage}'
+    print(f"[DEBUG] WebSocket Management API endpoint: {endpoint_url}, connectionId: {connection_id}")
     apigw_management = boto3.client(
         'apigatewaymanagementapi',
         endpoint_url=endpoint_url,
@@ -411,10 +412,19 @@ def handle_send_message(event, context):
                     )
 
             elif event_type == 'result':
-                # 최종 결과 이벤트 - result의 message로 전체 텍스트 대체
+                # 최종 결과 이벤트 - result의 message에서 텍스트 추출
                 result_message = stream_event.get('message', '')
                 if result_message:
-                    full_text = result_message
+                    # message가 dict인 경우 (Bedrock 응답 구조) 텍스트 추출
+                    if isinstance(result_message, dict):
+                        content_blocks = result_message.get('content', [])
+                        if isinstance(content_blocks, list):
+                            texts = [b.get('text', '') for b in content_blocks if isinstance(b, dict) and 'text' in b]
+                            full_text = ''.join(texts)
+                        else:
+                            full_text = str(content_blocks)
+                    else:
+                        full_text = str(result_message)
 
             elif event_type == 'error':
                 # 에이전트 에러 이벤트

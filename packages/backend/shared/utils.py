@@ -9,7 +9,7 @@ def lambda_response(status_code, body):
             'Access-Control-Allow-Origin': '*',
             'Content-Type': 'application/json'
         },
-        'body': json.dumps(body)
+        'body': json.dumps(body, ensure_ascii=False)
     }
 
 def generate_id():
