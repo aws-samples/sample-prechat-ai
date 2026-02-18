@@ -465,7 +465,7 @@ def handle_send_message(event, context):
     response_content_type = _detect_content_type(full_text)
 
     # 6. 봇 메시지 DynamoDB 저장 (Requirement 2.3)
-    bot_message_id = generate_id()
+    bot_message_id = str(int(message_id) + 1) if message_id.isdigit() else generate_id()
     bot_msg = {
         'PK': f'SESSION#{session_id}',
         'SK': f'MESSAGE#{bot_message_id}',

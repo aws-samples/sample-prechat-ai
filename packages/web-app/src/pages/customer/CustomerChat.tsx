@@ -80,7 +80,6 @@ export default function CustomerChat() {
     clearInput,
     streamingMessage,
     connectionState,
-    toolStatus,
   } = useChat(sessionId, verifiedPin || undefined)
 
   // 컴포넌트 로드 시 저장된 PIN 확인
@@ -453,12 +452,48 @@ export default function CustomerChat() {
                         isStreaming={isCurrentlyStreaming}
                         salesRepInfo={sessionData?.salesRepInfo}
                         onFormSubmit={!isFormSubmitted ? handleFormSubmit(message.id) : undefined}
-                        toolStatus={isCurrentlyStreaming ? toolStatus : null}
                       />
                     )
                   }
                 })}
-                {chatLoading && (
+                {/* 고객 타이핑 인디케이터 — 입력 중이고 봇 응답 대기 아닐 때 */}
+                {inputValue.trim() && !streamingMessage && (
+                  <div className="slide-in-right" style={{ maxWidth: '70vw', marginLeft: 'auto' }}>
+                    <ChatBubble
+                      type="outgoing"
+                      ariaLabel="You are typing"
+                      avatar={
+                        <Avatar
+                          initials="U"
+                          ariaLabel="You"
+                          tooltipText="You"
+                        />
+                      }
+                    >
+                      <div style={{
+                        padding: '8px 12px',
+                        backgroundColor: '#0073bb',
+                        borderRadius: '8px',
+                      }}>
+                        <div className="loading-dots">
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </div>
+                      </div>
+                    </ChatBubble>
+                  </div>
+                )}
+                {/* 스트리밍 중인 봇 메시지 — status가 single source of truth */}
+                {streamingMessage && streamingMessage.status === 'streaming' && (
+                  <StreamingChatMessage
+                    key={`streaming-${streamingMessage.id}`}
+                    message={streamingMessage}
+                    isStreaming={true}
+                    salesRepInfo={sessionData?.salesRepInfo}
+                  />
+                )}
+                {streamingMessage && (streamingMessage.status === 'thinking' || streamingMessage.status === 'tool-use') && (
                   <div className="slide-in-left" style={{ maxWidth: '70vw' }}>
                     <ChatBubble
                       type="incoming"
@@ -473,12 +508,11 @@ export default function CustomerChat() {
                       }
                     >
                       <Box>
-                        {/* 도구 사용 중이면 도구 상태 표시, 아니면 로딩 dots */}
-                        {toolStatus ? (
-                          <StatusIndicator type={toolStatus.status === 'running' ? 'in-progress' : 'success'}>
-                            {toolStatus.status === 'running'
-                              ? `🔧 ${toolStatus.toolName} 실행 중...`
-                              : `✅ ${toolStatus.toolName} 완료`}
+                        {streamingMessage.status === 'tool-use' && streamingMessage.toolInfo ? (
+                          <StatusIndicator type={streamingMessage.toolInfo.status === 'running' ? 'in-progress' : 'success'}>
+                            {streamingMessage.toolInfo.status === 'running'
+                              ? `🔧 ${streamingMessage.toolInfo.toolName} 실행 중...`
+                              : `✅ ${streamingMessage.toolInfo.toolName} 완료`}
                           </StatusIndicator>
                         ) : (
                           <>

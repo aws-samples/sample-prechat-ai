@@ -9,6 +9,9 @@ export interface SalesRepInfo {
   phone: string
 }
 
+// 봇 메시지의 생성 상태
+export type BotMessageStatus = 'thinking' | 'tool-use' | 'streaming' | 'complete' | 'error';
+
 export interface Message {
   id: string;
   content: string;
@@ -16,6 +19,13 @@ export interface Message {
   sender: 'customer' | 'bot';
   timestamp: string;
   stage: ConversationStage;
+  // 봇 메시지 상태 (sender === 'bot' 일 때만 유효)
+  status?: BotMessageStatus;
+  // 도구 사용 정보 (status === 'tool-use' 일 때)
+  toolInfo?: {
+    toolName: string;
+    status: 'running' | 'complete';
+  };
 }
 
 export interface CustomerFeedback {

@@ -7,22 +7,18 @@ import { MESSAGES } from '../constants'
 /**
  * WebSocket 기반 채팅 훅
  *
- * REST API 호출을 완전히 제거하고 WebSocket only로 메시지를 전송합니다.
- * - 스트리밍 청크 → streamingMessage 상태 업데이트
- * - tool 이벤트 → toolStatus 상태로 도구 사용 표시
- * - 완료 시 최종 메시지 확정 및 streamingMessage 초기화
- * - Div Return contentType 처리 유지
- * - form-submission 메시지 WebSocket 전송 지원
+ * streamingMessage가 봇 응답 상태의 single source of truth입니다.
+ * - streamingMessage === null → 대기 상태
+ * - streamingMessage.status === 'thinking' → AI 응답 대기 중
+ * - streamingMessage.status === 'tool-use' → 도구 실행 중
+ * - streamingMessage.status === 'streaming' → 텍스트 스트리밍 중
+ * - streamingMessage.status === 'complete' → 응답 완료 (messages로 이동)
+ * - streamingMessage.status === 'error' → 에러 발생
  */
 export const useChat = (sessionId: string | undefined, pin?: string) => {
   const [inputValue, setInputValue] = useState('')
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [streamingMessage, setStreamingMessage] = useState<Message | null>(null)
-  const [toolStatus, setToolStatus] = useState<{
-    toolName: string
-    status: 'running' | 'complete'
-  } | null>(null)
 
   // 콜백에서 최신 상태를 참조하기 위한 ref
   const streamingContentRef = useRef('')
@@ -30,6 +26,7 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
   const onMessageAddRef = useRef<((message: Message) => void) | null>(null)
   const onCompleteRef = useRef<((complete: boolean) => void) | null>(null)
   const streamingContentTypeRef = useRef<MessageContentType>('text')
+  const lastToolNameRef = useRef<string>('')
 
   // 스트리밍 청크 수신 콜백
   const handleChunk = useCallback((chunk: string) => {
@@ -47,12 +44,13 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
         ...prev,
         content: streamingContentRef.current,
         contentType: streamingContentTypeRef.current,
+        status: 'streaming',
+        toolInfo: undefined,
       }
     })
   }, [])
 
   // tool 이벤트 수신 콜백
-  const lastToolNameRef = useRef<string>('')
   const handleTool = useCallback((tool: {
     toolName: string
     toolUseId: string
@@ -60,22 +58,28 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
     input?: Record<string, unknown>
     output?: string
   }) => {
-    // running 이벤트에서 toolName을 기억 (complete 이벤트에서 빈 문자열이 올 수 있음)
     const displayName = tool.toolName || lastToolNameRef.current || 'tool'
     if (tool.toolName) {
       lastToolNameRef.current = tool.toolName
     }
 
-    setToolStatus({
-      toolName: displayName,
-      status: tool.status,
+    setStreamingMessage((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        status: 'tool-use',
+        toolInfo: { toolName: displayName, status: tool.status },
+      }
     })
 
-    // 도구 실행 완료 시 상태 초기화
+    // 도구 실행 완료 시 thinking으로 복귀
     if (tool.status === 'complete') {
       setTimeout(() => {
-        setToolStatus(null)
         lastToolNameRef.current = ''
+        setStreamingMessage((prev) => {
+          if (!prev || prev.status === 'streaming' || prev.status === 'complete') return prev
+          return { ...prev, status: 'thinking', toolInfo: undefined }
+        })
       }, 1000)
     }
   }, [])
@@ -89,7 +93,6 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
     const finalContent = streamingContentRef.current.replace('EOF', '').trim()
     const finalContentType = metadata.contentType || streamingContentTypeRef.current
 
-    // 최종 메시지 확정
     const botMessage: Message = {
       id: metadata.messageId || (currentMessageIdRef.current
         ? (parseInt(currentMessageIdRef.current) + 1).toString()
@@ -99,16 +102,14 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
       sender: 'bot',
       timestamp: new Date().toISOString(),
       stage: 'conversation',
+      status: 'complete',
     }
 
-    // 스트리밍 메시지를 최종 메시지로 교체
     setStreamingMessage(null)
     onMessageAddRef.current?.(botMessage)
     onCompleteRef.current?.(metadata.isComplete)
 
-    // 상태 초기화
-    setLoading(false)
-    setToolStatus(null)
+    // ref 초기화
     streamingContentRef.current = ''
     currentMessageIdRef.current = null
     streamingContentTypeRef.current = 'text'
@@ -119,18 +120,17 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
     console.error('[useChat] WebSocket 에러:', errorMsg)
     setError(errorMsg)
 
-    // 에러 메시지를 채팅에 표시
     const errorMessage: Message = {
       id: Date.now().toString(),
       content: MESSAGES.FAILED_TO_SEND,
       sender: 'bot',
       timestamp: new Date().toISOString(),
       stage: 'conversation',
+      status: 'error',
     }
 
     setStreamingMessage(null)
     onMessageAddRef.current?.(errorMessage)
-    setLoading(false)
     streamingContentRef.current = ''
     currentMessageIdRef.current = null
     streamingContentTypeRef.current = 'text'
@@ -147,13 +147,29 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
     onError: handleError,
   })
 
+  // 봇 메시지 플레이스홀더 생성 (thinking 상태)
+  const createBotPlaceholder = useCallback((messageId: string): Message => {
+    const botMessageId = (parseInt(messageId) + 1).toString()
+    streamingContentRef.current = ''
+    streamingContentTypeRef.current = 'text'
+    return {
+      id: botMessageId,
+      content: '',
+      contentType: 'text',
+      sender: 'bot',
+      timestamp: new Date().toISOString(),
+      stage: 'conversation',
+      status: 'thinking',
+    }
+  }, [])
+
   // 텍스트 메시지 전송
   const sendMessage = useCallback(
     (
       onMessageAdd: (message: Message) => void,
       onComplete: (complete: boolean) => void
     ) => {
-      if (!inputValue.trim() || loading || !sessionId) return
+      if (!inputValue.trim() || streamingMessage || !sessionId) return
 
       const messageId = Date.now().toString()
       const userMessage: Message = {
@@ -164,33 +180,18 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
         stage: 'conversation',
       }
 
-      // 콜백 ref 저장
       onMessageAddRef.current = onMessageAdd
       onCompleteRef.current = onComplete
       currentMessageIdRef.current = messageId
 
       onMessageAdd(userMessage)
       setInputValue('')
-      setLoading(true)
       setError('')
+      setStreamingMessage(createBotPlaceholder(messageId))
 
-      // 스트리밍 메시지 플레이스홀더 생성
-      const botMessageId = (parseInt(messageId) + 1).toString()
-      streamingContentRef.current = ''
-      streamingContentTypeRef.current = 'text'
-      setStreamingMessage({
-        id: botMessageId,
-        content: '',
-        contentType: 'text',
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        stage: 'conversation',
-      })
-
-      // WebSocket으로 메시지 전송
       wsSendMessage(inputValue, messageId)
     },
-    [inputValue, loading, sessionId, wsSendMessage]
+    [inputValue, streamingMessage, sessionId, wsSendMessage, createBotPlaceholder]
   )
 
   // 폼 제출 메시지 전송
@@ -200,7 +201,7 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
       onMessageAdd: (message: Message) => void,
       onComplete: (complete: boolean) => void
     ) => {
-      if (loading || !sessionId) return
+      if (streamingMessage || !sessionId) return
 
       const messageId = Date.now().toString()
       const userMessage: Message = {
@@ -212,37 +213,25 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
         stage: 'conversation',
       }
 
-      // 콜백 ref 저장
       onMessageAddRef.current = onMessageAdd
       onCompleteRef.current = onComplete
       currentMessageIdRef.current = messageId
 
       onMessageAdd(userMessage)
-      setLoading(true)
       setError('')
+      setStreamingMessage(createBotPlaceholder(messageId))
 
-      // 스트리밍 메시지 플레이스홀더 생성
-      const botMessageId = (parseInt(messageId) + 1).toString()
-      streamingContentRef.current = ''
-      streamingContentTypeRef.current = 'text'
-      setStreamingMessage({
-        id: botMessageId,
-        content: '',
-        contentType: 'text',
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        stage: 'conversation',
-      })
-
-      // WebSocket으로 form-submission 메시지 전송
       wsSendMessage(JSON.stringify(formData), messageId, 'form-submission')
     },
-    [loading, sessionId, wsSendMessage]
+    [streamingMessage, sessionId, wsSendMessage, createBotPlaceholder]
   )
 
   const clearInput = useCallback(() => {
     setInputValue('')
   }, [])
+
+  // loading은 streamingMessage에서 파생
+  const loading = streamingMessage !== null
 
   return {
     inputValue,
@@ -253,9 +242,7 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
     sendFormSubmission,
     clearInput,
     streamingMessage,
-    // WebSocket 관련 상태 추가 노출
     connectionState,
     isConnected,
-    toolStatus,
   }
 }

@@ -1,5 +1,5 @@
 // nosemgrep
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { ButtonGroup, StatusIndicator } from '@cloudscape-design/components'
 import Avatar from '@cloudscape-design/chat-components/avatar'
 import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
@@ -13,10 +13,6 @@ interface StreamingChatMessageProps {
   isStreaming?: boolean
   salesRepInfo?: SalesRepInfo
   onFormSubmit?: (formData: Record<string, string>) => void
-  toolStatus?: {
-    toolName: string
-    status: 'running' | 'complete'
-  } | null
 }
 
 export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({ 
@@ -24,21 +20,31 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
   isStreaming = false,
   salesRepInfo,
   onFormSubmit,
-  toolStatus,
 }) => {
-  const [displayedContent, setDisplayedContent] = useState('')
   const [showCursor, setShowCursor] = useState(isStreaming)
   const [formSubmitted, setFormSubmitted] = useState(false)
 
-  useEffect(() => {
-    if (isStreaming) {
-      setDisplayedContent(message.content)
-      setShowCursor(true)
-    } else {
-      setDisplayedContent(message.content)
-      setShowCursor(false)
+  // 스트리밍 중: 완성된 줄은 마크다운, 진행 중인 줄은 plain text
+  const { completedLines, currentLine } = useMemo(() => {
+    if (!isStreaming) return { completedLines: '', currentLine: '' }
+    const content = message.content
+    const lastNewline = content.lastIndexOf('\n')
+    if (lastNewline === -1) {
+      return { completedLines: '', currentLine: content }
+    }
+    return {
+      completedLines: content.substring(0, lastNewline + 1),
+      currentLine: content.substring(lastNewline + 1),
     }
   }, [message.content, isStreaming])
+
+  useEffect(() => {
+    if (isStreaming) {
+      setShowCursor(true)
+    } else {
+      setShowCursor(false)
+    }
+  }, [isStreaming])
 
   // Cursor blinking effect
   useEffect(() => {
@@ -120,18 +126,13 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
         }
       >
         <div style={{ position: 'relative' }}>
-          {/* 도구 사용 상태 표시 */}
-          {isStreaming && toolStatus && (
-            <div style={{ marginBottom: '8px' }}>
-              <StatusIndicator type={toolStatus.status === 'running' ? 'in-progress' : 'success'}>
-                {toolStatus.status === 'running'
-                  ? `🔧 ${toolStatus.toolName} 실행 중...`
-                  : `✅ ${toolStatus.toolName} 완료`}
-              </StatusIndicator>
-            </div>
-          )}
           {isStreaming ? (
-            <ReactMarkdown>{replaceSalesRepPlaceholders(displayedContent, salesRepInfo)}</ReactMarkdown>
+            <>
+              {completedLines && (
+                <ReactMarkdown>{replaceSalesRepPlaceholders(completedLines, salesRepInfo)}</ReactMarkdown>
+              )}
+              {currentLine && <span>{currentLine}</span>}
+            </>
           ) : (message.contentType || 'text') === 'div-return' ? (
             <DivReturnRenderer
               htmlContent={message.content}
@@ -142,7 +143,7 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
               disabled={formSubmitted}
             />
           ) : (
-            <ReactMarkdown>{replaceSalesRepPlaceholders(displayedContent, salesRepInfo)}</ReactMarkdown>
+            <ReactMarkdown>{replaceSalesRepPlaceholders(message.content, salesRepInfo)}</ReactMarkdown>
           )}
           {isStreaming && (
             <span 
