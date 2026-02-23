@@ -71,7 +71,7 @@ export default function EditAgent() {
       })
       setAgentRole(config.agentRole)
     } catch (err) {
-      setError(t('admin_failed_load_agent'))
+      setError(t('adminAgentEdit.alert.failedLoadAgent'))
     } finally {
       setLoadingConfig(false)
     }
@@ -90,10 +90,10 @@ export default function EditAgent() {
         systemPrompt: overridePrompt ? formData.systemPrompt : '',
         agentName: formData.agentName
       })
-      setSuccess(t('admin_agent_updated_success', { name: formData.agentName }))
+      setSuccess(t('adminAgentEdit.alert.updatedSuccess', { name: formData.agentName }))
       setTimeout(() => navigate('/admin/agents'), 3000)
     } catch (err) {
-      setError(t('admin_failed_update_agent'))
+      setError(t('adminAgentEdit.alert.failedUpdateAgent'))
     } finally {
       setLoading(false)
     }
@@ -112,10 +112,10 @@ export default function EditAgent() {
     return (
       <Container>
         <SpaceBetween size="l">
-          <Header variant="h1">{t('admin_edit_prechat_agent')}</Header>
+          <Header variant="h1">{t('adminAgentEdit.loading.pageTitle')}</Header>
           <div style={{ textAlign: 'center', padding: '2rem' }}>
             <Spinner size="large" />
-            <div style={{ marginTop: '1rem' }}>{t('loading_agent_details')}</div>
+            <div style={{ marginTop: '1rem' }}>{t('adminAgentEdit.loading.agentDetails')}</div>
           </div>
         </SpaceBetween>
       </Container>
@@ -129,11 +129,11 @@ export default function EditAgent() {
           variant="h1"
           actions={
             <Button variant="normal" onClick={() => navigate('/admin/agents')}>
-              {t('admin_to_dashboard')}
+              {t('adminAgentEdit.header.toDashboardButton')}
             </Button>
           }
         >
-          {t('admin_edit_prechat_agent')}
+          {t('adminAgentEdit.header.title')}
         </Header>
 
         {error && <Alert type="error">{error}</Alert>}
@@ -143,7 +143,7 @@ export default function EditAgent() {
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="link" onClick={() => navigate('/admin/agents')}>
-                {t('cancel')}
+                {t('adminAgentEdit.form.cancelButton')}
               </Button>
               <Button
                 variant="primary"
@@ -151,15 +151,15 @@ export default function EditAgent() {
                 loading={loading}
                 disabled={!formData.modelId}
               >
-                {t('admin_update_agent')}
+                {t('adminAgentEdit.form.updateAgentButton')}
               </Button>
             </SpaceBetween>
           }
         >
           <SpaceBetween size="l">
             <FormField
-              label={t('agent_role')}
-              description={t('agent_role_readonly_description')}
+              label={t('adminAgentEdit.form.agentRoleLabel')}
+              description={t('adminAgentEdit.form.agentRoleReadonlyDescription')}
               stretch
             >
               <Badge color={
@@ -171,20 +171,20 @@ export default function EditAgent() {
             </FormField>
 
             <FormField
-              label={t('admin_agent_name')}
-              description={t('agents_agent_name_description')}
+              label={t('adminAgentEdit.form.agentNameLabel')}
+              description={t('adminAgentEdit.form.agentNameDescription')}
               stretch
             >
               <Input
                 value={formData.agentName}
                 onChange={({ detail }) => updateFormData('agentName', detail.value)}
-                placeholder={t('enter_agent_name')}
+                placeholder={t('adminAgentEdit.form.agentNamePlaceholder')}
               />
             </FormField>
 
             <FormField
-              label={t('foundation_model')}
-              description={t('admin_select_foundation_model')}
+              label={t('adminAgentEdit.form.foundationModelLabel')}
+              description={t('adminAgentEdit.form.foundationModelDescription')}
               stretch
             >
               <Select
@@ -197,20 +197,20 @@ export default function EditAgent() {
                   updateFormData('modelId', detail.selectedOption?.value || '')
                 }
                 options={modelOptions}
-                placeholder={t('select_a_foundation_model')}
+                placeholder={t('adminAgentEdit.form.foundationModelPlaceholder')}
               />
             </FormField>
 
             <FormField
-              label={t('agent_prompt_override')}
-              description={t('agent_prompt_override_description')}
+              label={t('adminAgentEdit.form.promptOverrideLabel')}
+              description={t('adminAgentEdit.form.promptOverrideDescription')}
               stretch
             >
               <Checkbox
                 checked={overridePrompt}
                 onChange={({ detail }) => setOverridePrompt(detail.checked)}
               >
-                {t('agent_enable_prompt_override')}
+                {t('adminAgentEdit.form.promptOverrideCheckbox')}
               </Checkbox>
             </FormField>
 
@@ -218,11 +218,11 @@ export default function EditAgent() {
               <FormField
                 label={
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>{t('agent_instructions')}</span>
+                    <span>{t('adminAgentEdit.form.agentInstructionsLabel')}</span>
                     <PlaceholderTooltip />
                   </div>
                 }
-                description={t('admin_agent_instructions_description')}
+                description={t('adminAgentEdit.form.agentInstructionsDescription')}
                 stretch
                 secondaryControl={
                   <Button
@@ -230,14 +230,14 @@ export default function EditAgent() {
                     iconName="refresh"
                     onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[agentRole] || consultationPrompt)}
                   >
-                    {t('admin_default_agent_instructions')}
+                    {t('adminAgentEdit.form.defaultInstructionsButton')}
                   </Button>
                 }
               >
                 <Textarea
                   value={formData.systemPrompt}
                   onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
-                  placeholder={t('enter_agent_instructions')}
+                  placeholder={t('adminAgentEdit.form.agentInstructionsPlaceholder')}
                   rows={15}
                 />
               </FormField>

@@ -51,7 +51,7 @@ export default function CreateCampaign() {
       setCurrentUserEmail(user.email)
     } catch (err) {
       console.error('Failed to load current user:', err)
-      setError('Failed to load current user. Please login again.')
+      setError(t('adminCampaignCreate.alert.failedLoadUser'))
     } finally {
       setLoadingUser(false)
     }
@@ -77,7 +77,7 @@ export default function CreateCampaign() {
       }
     } catch (err) {
       console.error('Failed to load Cognito users:', err)
-      setError('Failed to load users. Some features may not work properly.')
+      setError(t('adminCampaignCreate.alert.failedLoadUsers'))
     } finally {
       setLoadingUsers(false)
     }
@@ -102,27 +102,27 @@ export default function CreateCampaign() {
     const errors: Record<string, string> = {}
 
     if (!formData.campaignName.trim()) {
-      errors.campaignName = t('campaign_name_required')
+      errors.campaignName = t('adminCampaignCreate.validation.campaignNameRequired')
     }
 
     if (!formData.campaignCode.trim()) {
-      errors.campaignCode = t('campaign_code_required')
+      errors.campaignCode = t('adminCampaignCreate.validation.campaignCodeRequired')
     }
 
     if (!formData.description.trim()) {
-      errors.description = t('campaign_description_required')
+      errors.description = t('adminCampaignCreate.validation.descriptionRequired')
     }
 
     if (!formData.startDate) {
-      errors.startDate = t('start_date_required')
+      errors.startDate = t('adminCampaignCreate.validation.startDateRequired')
     }
 
     if (!formData.endDate) {
-      errors.endDate = t('end_date_required')
+      errors.endDate = t('adminCampaignCreate.validation.endDateRequired')
     }
 
     if (!formData.ownerId) {
-      errors.owner = t('owner_required')
+      errors.owner = t('adminCampaignCreate.validation.ownerRequired')
     }
 
     // Validate date range
@@ -130,7 +130,7 @@ export default function CreateCampaign() {
       const startDate = new Date(formData.startDate)
       const endDate = new Date(formData.endDate)
       if (endDate <= startDate) {
-        errors.endDate = t('invalid_date_range')
+        errors.endDate = t('adminCampaignCreate.validation.invalidDateRange')
       }
     }
 
@@ -158,7 +158,7 @@ export default function CreateCampaign() {
       }
 
       const result = await campaignApi.createCampaign(campaignData)
-      setSuccess(t('campaign_created_successfully'))
+      setSuccess(t('adminCampaignCreate.alert.createdSuccess'))
       
       // Navigate to campaign details or campaigns list after a short delay
       setTimeout(() => {
@@ -173,13 +173,13 @@ export default function CreateCampaign() {
       
       // Handle specific error messages
       if (err.message?.includes('Campaign code already exists')) {
-        setValidationErrors(prev => ({ ...prev, campaignCode: 'Campaign code already exists' }))
-        setError('Campaign code already exists. Please choose a different code.')
+        setValidationErrors(prev => ({ ...prev, campaignCode: t('adminCampaignCreate.form.campaignCodeExistsError') }))
+        setError(t('adminCampaignCreate.alert.campaignCodeExists'))
       } else if (err.message?.includes('Invalid owner ID')) {
-        setValidationErrors(prev => ({ ...prev, owner: 'Invalid owner selected' }))
-        setError('Invalid owner selected. Please choose a valid user.')
+        setValidationErrors(prev => ({ ...prev, owner: t('adminCampaignCreate.form.ownerInvalidError') }))
+        setError(t('adminCampaignCreate.alert.invalidOwner'))
       } else {
-        setError(err.message || 'Failed to create campaign. Please try again.')
+        setError(err.message || t('adminCampaignCreate.alert.failedCreate'))
       }
     } finally {
       setLoading(false)
@@ -224,11 +224,11 @@ export default function CreateCampaign() {
           variant="h1"
           actions={
             <Button variant="normal" onClick={() => navigate('/admin/campaigns')}>
-              {t('cancel')}
+              {t('adminCampaignCreate.header.cancelButton')}
             </Button>
           }
         >
-          {t('campaign_form_title')}
+          {t('adminCampaignCreate.header.title')}
         </Header>
 
         {error && <Alert type="error">{error}</Alert>}
@@ -238,7 +238,7 @@ export default function CreateCampaign() {
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="link" onClick={() => navigate('/admin/campaigns')}>
-                {t('cancel')}
+                {t('adminCampaignCreate.form.cancelButton')}
               </Button>
               <Button
                 variant="primary"
@@ -246,50 +246,50 @@ export default function CreateCampaign() {
                 loading={loading}
                 disabled={loadingUser || loadingUsers}
               >
-                {t('save_campaign')}
+                {t('adminCampaignCreate.form.saveButton')}
               </Button>
             </SpaceBetween>
           }
         >
           <SpaceBetween size="l">
             <FormField
-              label={t('campaign_name_label')}
-              description="Enter a descriptive name for the campaign"
+              label={t('adminCampaignCreate.form.campaignNameLabel')}
+              description={t('adminCampaignCreate.form.campaignNameDescription')}
               errorText={validationErrors.campaignName}
               stretch
             >
               <Input
                 value={formData.campaignName}
                 onChange={({ detail }) => updateFormData('campaignName', detail.value)}
-                placeholder="e.g., Q1 2025 Enterprise Migration"
+                placeholder={t('adminCampaignCreate.form.campaignNamePlaceholder')}
                 invalid={!!validationErrors.campaignName}
               />
             </FormField>
 
             <FormField
-              label={t('campaign_code_label')}
-              description="Enter a unique code for the campaign"
+              label={t('adminCampaignCreate.form.campaignCodeLabel')}
+              description={t('adminCampaignCreate.form.campaignCodeDescription')}
               errorText={validationErrors.campaignCode}
               stretch
             >
               <Input
                 value={formData.campaignCode}
                 onChange={({ detail }) => updateFormData('campaignCode', detail.value)}
-                placeholder="e.g., Q1-ENT-MIG"
+                placeholder={t('adminCampaignCreate.form.campaignCodePlaceholder')}
                 invalid={!!validationErrors.campaignCode}
               />
             </FormField>
 
             <FormField
-              label={t('campaign_description_label')}
-              description="Provide a detailed description of the campaign"
+              label={t('adminCampaignCreate.form.descriptionLabel')}
+              description={t('adminCampaignCreate.form.descriptionDescription')}
               errorText={validationErrors.description}
               stretch
             >
               <Textarea
                 value={formData.description}
                 onChange={({ detail }) => updateFormData('description', detail.value)}
-                placeholder="Describe the campaign objectives, target audience, and key goals..."
+                placeholder={t('adminCampaignCreate.form.descriptionPlaceholder')}
                 rows={4}
                 invalid={!!validationErrors.description}
               />
@@ -297,37 +297,37 @@ export default function CreateCampaign() {
 
             <SpaceBetween direction="horizontal" size="s">
               <FormField
-                label={t('start_date_label')}
-                description="Campaign start date"
+                label={t('adminCampaignCreate.form.startDateLabel')}
+                description={t('adminCampaignCreate.form.startDateDescription')}
                 errorText={validationErrors.startDate}
                 stretch
               >
                 <DatePicker
                   value={formData.startDate}
                   onChange={({ detail }) => updateFormData('startDate', detail.value)}
-                  placeholder="YYYY-MM-DD"
+                  placeholder={t('adminCampaignCreate.form.datePlaceholder')}
                   invalid={!!validationErrors.startDate}
                 />
               </FormField>
 
               <FormField
-                label={t('end_date_label')}
-                description="Campaign end date"
+                label={t('adminCampaignCreate.form.endDateLabel')}
+                description={t('adminCampaignCreate.form.endDateDescription')}
                 errorText={validationErrors.endDate}
                 stretch
               >
                 <DatePicker
                   value={formData.endDate}
                   onChange={({ detail }) => updateFormData('endDate', detail.value)}
-                  placeholder="YYYY-MM-DD"
+                  placeholder={t('adminCampaignCreate.form.datePlaceholder')}
                   invalid={!!validationErrors.endDate}
                 />
               </FormField>
             </SpaceBetween>
 
             <FormField
-              label={t('campaign_owner_label')}
-              description="Select the campaign owner from Cognito users"
+              label={t('adminCampaignCreate.form.ownerLabel')}
+              description={t('adminCampaignCreate.form.ownerDescription')}
               errorText={validationErrors.owner}
               stretch
             >
@@ -348,11 +348,11 @@ export default function CreateCampaign() {
                     value: user.userId,
                     description: `Status: ${user.status}`
                   }))}
-                placeholder="Select campaign owner..."
+                placeholder={t('adminCampaignCreate.form.ownerPlaceholder')}
                 invalid={!!validationErrors.owner}
-                loadingText={loadingUsers ? "Loading users..." : undefined}
+                loadingText={loadingUsers ? t('adminCampaignCreate.form.ownerLoadingText') : undefined}
                 disabled={loadingUsers}
-                empty={cognitoUsers.length === 0 ? "No users available" : undefined}
+                empty={cognitoUsers.length === 0 ? t('adminCampaignCreate.form.ownerEmpty') : undefined}
               />
             </FormField>
           </SpaceBetween>

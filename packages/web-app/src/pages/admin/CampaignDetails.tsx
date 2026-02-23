@@ -62,7 +62,7 @@ export default function CampaignDetails() {
       setSessions(sessionsData.sessions || [])
     } catch (err) {
       console.error('Failed to load campaign data:', err)
-      setError('Failed to load campaign details. Please try again.')
+      setError(t('adminCampaignDetail.overview.failedLoad'))
     } finally {
       setLoading(false)
     }
@@ -77,7 +77,7 @@ export default function CampaignDetails() {
       navigate('/admin/campaigns')
     } catch (err) {
       console.error('Failed to delete campaign:', err)
-      setError('Failed to delete campaign. Please try again.')
+      setError(t('adminCampaignDetail.deleteModal.failedDelete'))
     } finally {
       setDeleting(false)
       setShowDeleteModal(false)
@@ -86,10 +86,10 @@ export default function CampaignDetails() {
 
   const getStatusBadge = (status: Campaign['status']) => {
     const statusConfig = {
-      active: { type: 'green' as const, text: t('campaign_status_active') },
-      completed: { type: 'blue' as const, text: t('campaign_status_completed') },
-      paused: { type: 'grey' as const, text: t('campaign_status_paused') },
-      cancelled: { type: 'red' as const, text: t('campaign_status_cancelled') }
+      active: { type: 'green' as const, text: t('adminCampaignDetail.status.active') },
+      completed: { type: 'blue' as const, text: t('adminCampaignDetail.status.completed') },
+      paused: { type: 'grey' as const, text: t('adminCampaignDetail.status.paused') },
+      cancelled: { type: 'red' as const, text: t('adminCampaignDetail.status.cancelled') }
     }
     
     const config = statusConfig[status]
@@ -111,8 +111,8 @@ export default function CampaignDetails() {
   if (error || !campaign) {
     return (
       <Container>
-        <Alert type="error" header="Error occurred">
-          {error || 'Campaign not found'}
+        <Alert type="error" header={t('adminCampaignDetail.overview.errorHeader')}>
+          {error || t('adminCampaignDetail.overview.notFound')}
         </Alert>
       </Container>
     )
@@ -133,22 +133,22 @@ export default function CampaignDetails() {
                 />
               )}
               <Button variant="normal" onClick={() => navigate('/admin/campaigns')}>
-                Back to Campaigns
+                {t('adminCampaignDetail.header.backButton')}
               </Button>
               <ButtonDropdown
                 items={[
                   {
-                    text: t('edit_campaign'),
+                    text: t('adminCampaignDetail.header.editAction'),
                     id: 'edit',
                     iconName: 'edit'
                   },
                   {
-                    text: t('view_sessions'),
+                    text: t('adminCampaignDetail.header.viewSessionsAction'),
                     id: 'sessions',
                     iconName: 'view-horizontal'
                   },
                   {
-                    text: t('delete_campaign'),
+                    text: t('adminCampaignDetail.header.deleteAction'),
                     id: 'delete',
                     iconName: 'remove'
                   }
@@ -167,42 +167,42 @@ export default function CampaignDetails() {
                   }
                 }}
               >
-                Actions
+                {t('adminCampaignDetail.header.actionsLabel')}
               </ButtonDropdown>
             </SpaceBetween>
           }
         >
-          {t('campaign_details_title')}
+          {t('adminCampaignDetail.header.title')}
         </Header>
 
         {/* Campaign Overview */}
         <ColumnLayout columns={3}>
           <Box>
-            <Box variant="awsui-key-label">{t('campaign_name')}</Box>
+            <Box variant="awsui-key-label">{t('adminCampaignDetail.overview.campaignNameLabel')}</Box>
             <Box fontWeight="bold">{campaign.campaignName}</Box>
             <Box fontSize="body-s" color="text-status-inactive">{campaign.campaignCode}</Box>
           </Box>
           <Box>
-            <Box variant="awsui-key-label">{t('campaign_owner')}</Box>
+            <Box variant="awsui-key-label">{t('adminCampaignDetail.overview.ownerLabel')}</Box>
             <Box>{campaign.ownerName}</Box>
             <Box fontSize="body-s" color="text-status-inactive">{campaign.ownerEmail}</Box>
           </Box>
           <Box>
-            <Box variant="awsui-key-label">{t('campaign_status')}</Box>
+            <Box variant="awsui-key-label">{t('adminCampaignDetail.overview.statusLabel')}</Box>
             {getStatusBadge(campaign.status)}
           </Box>
         </ColumnLayout>
 
         <ColumnLayout columns={1}>
           <Box>
-            <Box variant="awsui-key-label">Description</Box>
+            <Box variant="awsui-key-label">{t('adminCampaignDetail.overview.descriptionLabel')}</Box>
             <Box>{campaign.description}</Box>
           </Box>
         </ColumnLayout>
 
         <ColumnLayout columns={1}>
           <Box>
-            <Box variant="awsui-key-label">Campaign Period</Box>
+            <Box variant="awsui-key-label">{t('adminCampaignDetail.overview.periodLabel')}</Box>
             <Box>{new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}</Box>
           </Box>
         </ColumnLayout>
@@ -210,7 +210,7 @@ export default function CampaignDetails() {
         <Tabs
           tabs={[
             {
-              label: t('campaign_analytics'),
+              label: t('adminCampaignDetail.tabs.analyticsLabel'),
               id: 'analytics',
               content: analytics ? (
                 <SpaceBetween size="l">
@@ -232,7 +232,7 @@ export default function CampaignDetails() {
               )
             },
             {
-              label: t('associated_sessions'),
+              label: t('adminCampaignDetail.tabs.sessionsLabel'),
               id: 'sessions',
               content: (
                 <Box textAlign="center" padding="l">
@@ -241,7 +241,7 @@ export default function CampaignDetails() {
                       onClick={() => navigate(`/admin?mySession=n&campaignCode=${campaign.campaignCode}`)}
                       iconName="external"
                     >
-                      {t('view_all_sessions_for_campaign')}
+                      {t('adminCampaignDetail.tabs.viewAllSessionsButton')}
                     </Button>
                 </Box>
               )
@@ -253,24 +253,24 @@ export default function CampaignDetails() {
         <Modal
           onDismiss={() => setShowDeleteModal(false)}
           visible={showDeleteModal}
-          closeAriaLabel="Close modal"
+          closeAriaLabel={t('adminCampaignDetail.deleteModal.closeAriaLabel')}
           footer={
             <Box float="right">
               <SpaceBetween direction="horizontal" size="xs">
                 <Button variant="link" onClick={() => setShowDeleteModal(false)}>
-                  {t('cancel')}
+                  {t('adminCampaignDetail.deleteModal.cancelButton')}
                 </Button>
                 <Button variant="primary" onClick={handleDeleteCampaign} loading={deleting}>
-                  {t('delete_campaign')}
+                  {t('adminCampaignDetail.deleteModal.confirmButton')}
                 </Button>
               </SpaceBetween>
             </Box>
           }
-          header={t('confirm_delete_campaign')}
+          header={t('adminCampaignDetail.deleteModal.header')}
         >
           <SpaceBetween size="m">
             <Box variant="span">
-              {t('delete_campaign_warning')}
+              {t('adminCampaignDetail.deleteModal.warningMessage')}
             </Box>
             <Alert type="warning">
               Campaign: <strong>{campaign.campaignName}</strong> ({campaign.campaignCode})

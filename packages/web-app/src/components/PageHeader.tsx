@@ -15,11 +15,11 @@ export default function PageHeader() {
       }}
     >
       <Header variant="h1" className="typewriter fade-in-up">
-        <span style={{ color: 'white' }}>{t('aws_prechat')}</span>
+        <span style={{ color: 'white' }}>{t('welcome.pageHeader.title')}</span>
       </Header>
       <Box fontSize="body-m" padding={{ top: 's' }} textAlign="left">
         <span style={{ color: 'white' }}>
-          {t('aws_prechat_is_a_conversational_ai_web_s')}
+          {t('welcome.pageHeader.description')}
         </span>
       </Box>
     </div>

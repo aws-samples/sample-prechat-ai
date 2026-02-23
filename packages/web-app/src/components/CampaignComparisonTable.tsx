@@ -64,13 +64,13 @@ export function CampaignComparisonTable({ campaigns, loading = false }: Campaign
   const getStatusIndicator = (status: string) => {
     switch (status) {
       case 'active':
-        return <StatusIndicator type="success">{t('active')}</StatusIndicator>
+        return <StatusIndicator type="success">{t('adminCampaignDetail.comparisonTable.statusActive')}</StatusIndicator>
       case 'completed':
-        return <StatusIndicator type="info">{t('completed')}</StatusIndicator>
+        return <StatusIndicator type="info">{t('adminCampaignDetail.comparisonTable.statusCompleted')}</StatusIndicator>
       case 'paused':
-        return <StatusIndicator type="warning">{t('paused')}</StatusIndicator>
+        return <StatusIndicator type="warning">{t('adminCampaignDetail.comparisonTable.statusPaused')}</StatusIndicator>
       case 'cancelled':
-        return <StatusIndicator type="error">{t('cancelled')}</StatusIndicator>
+        return <StatusIndicator type="error">{t('adminCampaignDetail.comparisonTable.statusCancelled')}</StatusIndicator>
       default:
         return <StatusIndicator type="pending">{status}</StatusIndicator>
     }
@@ -88,7 +88,7 @@ export function CampaignComparisonTable({ campaigns, loading = false }: Campaign
       <SpaceBetween size="l">
         <Header 
           variant="h2"
-          description={t('compare_campaign_performance')}
+          description={t('adminCampaignDetail.comparisonTable.description')}
           actions={
             <Button
               variant="primary"
@@ -96,16 +96,16 @@ export function CampaignComparisonTable({ campaigns, loading = false }: Campaign
               disabled={selectedCampaigns.length < 2 || comparisonLoading}
               loading={comparisonLoading}
             >
-              {t('compare_campaigns')}
+              {t('adminCampaignDetail.comparisonTable.compareButton')}
             </Button>
           }
         >
-          {t('campaign_comparison')}
+          {t('adminCampaignDetail.comparisonTable.title')}
         </Header>
 
         <FormField
-          label={t('select_campaigns_to_compare')}
-          description={t('select_at_least_two_campaigns')}
+          label={t('adminCampaignDetail.comparisonTable.selectLabel')}
+          description={t('adminCampaignDetail.comparisonTable.selectDescription')}
         >
           <Multiselect
             selectedOptions={selectedCampaigns.map(id => 
@@ -115,17 +115,17 @@ export function CampaignComparisonTable({ campaigns, loading = false }: Campaign
               setSelectedCampaigns(detail.selectedOptions.map(opt => opt.value!))
             }
             options={campaignOptions}
-            placeholder={t('choose_campaigns')}
-            selectedAriaLabel={t('selected_campaigns')}
-            deselectAriaLabel={(option) => `${t('remove')} ${option.label}`}
+            placeholder={t('adminCampaignDetail.comparisonTable.choosePlaceholder')}
+            selectedAriaLabel={t('adminCampaignDetail.comparisonTable.selectedAriaLabel')}
+            deselectAriaLabel={(option) => `${t('adminCampaignDetail.comparisonTable.removeAriaLabel')} ${option.label}`}
             filteringType="auto"
-            filteringPlaceholder={t('search_campaigns')}
-            filteringAriaLabel={t('search_campaigns')}
+            filteringPlaceholder={t('adminCampaignDetail.comparisonTable.filterPlaceholder')}
+            filteringAriaLabel={t('adminCampaignDetail.comparisonTable.filterAriaLabel')}
             statusType={loading ? 'loading' : 'finished'}
-            loadingText={t('loading_campaigns')}
-            errorText={t('error_loading_campaigns')}
-            recoveryText={t('retry')}
-            empty={t('no_campaigns_available')}
+            loadingText={t('adminCampaignDetail.comparisonTable.loadingText')}
+            errorText={t('adminCampaignDetail.comparisonTable.errorText')}
+            recoveryText={t('adminCampaignDetail.comparisonTable.retryText')}
+            empty={t('adminCampaignDetail.comparisonTable.emptyText')}
           />
         </FormField>
         
@@ -134,13 +134,13 @@ export function CampaignComparisonTable({ campaigns, loading = false }: Campaign
             columnDefinitions={[
               {
                 id: 'rank',
-                header: t('rank'),
+                header: t('adminCampaignDetail.comparisonTable.rankHeader'),
                 cell: (item: CampaignComparisonData) => (comparisonData.indexOf(item) + 1),
                 width: 60
               },
               {
                 id: 'campaignName',
-                header: t('campaign_name'),
+                header: t('adminCampaignDetail.comparisonTable.campaignNameHeader'),
                 cell: (item) => (
                   <SpaceBetween size="xs" direction="vertical">
                     <Box variant="strong">{item.campaignName}</Box>
@@ -154,52 +154,52 @@ export function CampaignComparisonTable({ campaigns, loading = false }: Campaign
               },
               {
                 id: 'status',
-                header: t('status'),
+                header: t('adminCampaignDetail.comparisonTable.statusHeader'),
                 cell: (item) => getStatusIndicator(item.status),
                 sortingField: 'status'
               },
               {
                 id: 'totalSessions',
-                header: t('total_sessions'),
+                header: t('adminCampaignDetail.comparisonTable.totalSessionsHeader'),
                 cell: (item) => item.totalSessions,
                 sortingField: 'totalSessions'
               },
               {
                 id: 'completedSessions',
-                header: t('completed_sessions'),
+                header: t('adminCampaignDetail.comparisonTable.completedSessionsHeader'),
                 cell: (item) => item.completedSessions,
                 sortingField: 'completedSessions'
               },
               {
                 id: 'completionRate',
-                header: t('completion_rate'),
+                header: t('adminCampaignDetail.comparisonTable.completionRateHeader'),
                 cell: (item) => getCompletionRateBadge(item.completionRate),
                 sortingField: 'completionRate'
               },
               {
                 id: 'dateRange',
-                header: t('date_range'),
+                header: t('adminCampaignDetail.comparisonTable.dateRangeHeader'),
                 cell: (item) => (
                   <SpaceBetween size="xs" direction="vertical">
                     <Box variant="small">
-                      {t('start')}: {new Date(item.startDate).toLocaleDateString()}
+                      {t('adminCampaignDetail.comparisonTable.startLabel')}: {new Date(item.startDate).toLocaleDateString()}
                     </Box>
                     <Box variant="small">
-                      {t('end')}: {new Date(item.endDate).toLocaleDateString()}
+                      {t('adminCampaignDetail.comparisonTable.endLabel')}: {new Date(item.endDate).toLocaleDateString()}
                     </Box>
                   </SpaceBetween>
                 )
               },
               {
                 id: 'owner',
-                header: t('owner'),
+                header: t('adminCampaignDetail.comparisonTable.ownerHeader'),
                 cell: (item) => item.ownerName,
                 sortingField: 'ownerName'
               }
             ]}
             items={comparisonData}
             loading={comparisonLoading}
-            loadingText={t('loading_comparison')}
+            loadingText={t('adminCampaignDetail.comparisonTable.loadingComparison')}
             sortingDisabled={comparisonLoading}
             sortingColumn={{ sortingField: 'completionRate' }}
             sortingDescending={true}
@@ -207,10 +207,10 @@ export function CampaignComparisonTable({ campaigns, loading = false }: Campaign
               <Box margin={{ vertical: 'xs' }} textAlign="center" color="inherit">
                 <SpaceBetween size="m">
                   <Box variant="strong" color="inherit">
-                    {t('no_comparison_data')}
+                    {t('adminCampaignDetail.comparisonTable.noDataTitle')}
                   </Box>
                   <Box variant="p" color="inherit">
-                    {t('select_campaigns_and_click_compare')}
+                    {t('adminCampaignDetail.comparisonTable.noDataDescription')}
                   </Box>
                 </SpaceBetween>
               </Box>
@@ -218,9 +218,9 @@ export function CampaignComparisonTable({ campaigns, loading = false }: Campaign
             header={
               <Header
                 counter={`(${comparisonData.length})`}
-                description={t('campaigns_ranked_by_completion_rate')}
+                description={t('adminCampaignDetail.comparisonTable.resultsDescription')}
               >
-                {t('comparison_results')}
+                {t('adminCampaignDetail.comparisonTable.resultsTitle')}
               </Header>
             }
           />

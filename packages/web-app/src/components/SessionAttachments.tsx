@@ -38,14 +38,14 @@ export default function SessionAttachments({ sessionId }: SessionAttachmentsProp
       setFiles(response.files || [])
     } catch (err) {
       console.error('SessionAttachments - Error loading files:', err)
-      setError('파일 목록을 불러오는데 실패했습니다.')
+      setError(t('adminSessionDetail.attachments.failedLoad'))
     } finally {
       setLoading(false)
     }
   }
 
   const handleDeleteFile = async (fileKey: string) => {
-    if (!confirm('정말로 이 파일을 삭제하시겠습니까?')) {
+    if (!confirm(t('adminSessionDetail.attachments.deleteConfirm'))) {
       return
     }
 
@@ -55,7 +55,7 @@ export default function SessionAttachments({ sessionId }: SessionAttachmentsProp
       setFiles(prev => prev.filter(file => file.fileKey !== fileKey))
     } catch (err) {
       console.error('Error deleting file:', err)
-      setError('파일 삭제에 실패했습니다.')
+      setError(t('adminSessionDetail.attachments.failedDelete'))
     } finally {
       setDeleting(null)
     }
@@ -71,7 +71,7 @@ export default function SessionAttachments({ sessionId }: SessionAttachmentsProp
 
   if (error) {
     return (
-      <Alert type="error" header="오류">
+      <Alert type="error" header={t('adminSessionDetail.alert.errorOccurred')}>
         {error}
       </Alert>
     )
@@ -81,7 +81,7 @@ export default function SessionAttachments({ sessionId }: SessionAttachmentsProp
     <SpaceBetween size="l">
       {/* File List Table */}
       <Container>
-        <Header variant="h3">{t('loading_5d37a8ec')}</Header>
+        <Header variant="h3">{t('adminSessionDetail.attachments.uploadedFilesTitle')}</Header>
         <FileList 
           files={files} 
           loading={loading || deleting !== null}

@@ -19,33 +19,33 @@ export function CampaignReportExport({ campaign, analytics, sessions = [] }: Cam
 
   const generateCSVReport = () => {
     const headers = [
-      t('metric'),
-      t('value'),
-      t('description')
+      t('adminCampaignDetail.reportExport.metricHeader'),
+      t('adminCampaignDetail.reportExport.valueHeader'),
+      t('adminCampaignDetail.reportExport.descriptionHeader')
     ]
 
     const rows = [
-      [t('campaign_name'), campaign.campaignName, ''],
-      [t('campaign_code'), campaign.campaignCode, ''],
-      [t('campaign_status'), campaign.status, ''],
-      [t('start_date'), new Date(campaign.startDate).toLocaleDateString(), ''],
-      [t('end_date'), new Date(campaign.endDate).toLocaleDateString(), ''],
-      [t('campaign_owner'), campaign.ownerName, campaign.ownerEmail],
-      ['', '', ''], // Empty row for separation
-      [t('total_sessions'), analytics.totalSessions.toString(), ''],
-      [t('active_sessions'), analytics.activeSessions.toString(), ''],
-      [t('completed_sessions'), analytics.completedSessions.toString(), ''],
-      [t('completion_rate'), `${analytics.completionRate}%`, ''],
-      [t('average_duration'), formatDuration(analytics.averageSessionDuration), t('completed_sessions_only')],
-      ['', '', ''], // Empty row for separation
-      [t('top_consultation_purposes'), '', ''],
+      [t('adminCampaignDetail.reportExport.campaignNameRow'), campaign.campaignName, ''],
+      [t('adminCampaignDetail.reportExport.campaignCodeRow'), campaign.campaignCode, ''],
+      [t('adminCampaignDetail.reportExport.campaignStatusRow'), campaign.status, ''],
+      [t('adminCampaignDetail.reportExport.startDateRow'), new Date(campaign.startDate).toLocaleDateString(), ''],
+      [t('adminCampaignDetail.reportExport.endDateRow'), new Date(campaign.endDate).toLocaleDateString(), ''],
+      [t('adminCampaignDetail.reportExport.campaignOwnerRow'), campaign.ownerName, campaign.ownerEmail],
+      ['', '', ''],
+      [t('adminCampaignDetail.reportExport.totalSessionsRow'), analytics.totalSessions.toString(), ''],
+      [t('adminCampaignDetail.reportExport.activeSessionsRow'), analytics.activeSessions.toString(), ''],
+      [t('adminCampaignDetail.reportExport.completedSessionsRow'), analytics.completedSessions.toString(), ''],
+      [t('adminCampaignDetail.reportExport.completionRateRow'), `${analytics.completionRate}%`, ''],
+      [t('adminCampaignDetail.reportExport.averageDurationRow'), formatDuration(analytics.averageSessionDuration), t('adminCampaignDetail.reportExport.completedSessionsOnlyNote')],
+      ['', '', ''],
+      [t('adminCampaignDetail.reportExport.topPurposesRow'), '', ''],
       ...analytics.topConsultationPurposes.map(purpose => [
         purpose.purpose,
         purpose.count.toString(),
         `${((purpose.count / analytics.totalSessions) * 100).toFixed(1)}%`
       ]),
-      ['', '', ''], // Empty row for separation
-      [t('customer_companies'), '', ''],
+      ['', '', ''],
+      [t('adminCampaignDetail.reportExport.customerCompaniesRow'), '', ''],
       ...analytics.customerCompanies.map(company => [
         company.company,
         company.sessionCount.toString(),
@@ -64,17 +64,17 @@ export function CampaignReportExport({ campaign, analytics, sessions = [] }: Cam
     if (!sessions.length) return ''
 
     const headers = [
-      t('session_id'),
-      t('status'),
-      t('customer_name'),
-      t('customer_email'),
-      t('customer_company'),
-      t('customer_title'),
-      t('consultation_purposes'),
-      t('sales_rep_email'),
-      t('created_at'),
-      t('completed_at'),
-      t('duration_minutes')
+      t('adminCampaignDetail.reportExport.sessionIdHeader'),
+      t('adminCampaignDetail.reportExport.statusHeader'),
+      t('adminCampaignDetail.reportExport.customerNameHeader'),
+      t('adminCampaignDetail.reportExport.customerEmailHeader'),
+      t('adminCampaignDetail.reportExport.customerCompanyHeader'),
+      t('adminCampaignDetail.reportExport.customerTitleHeader'),
+      t('adminCampaignDetail.reportExport.consultationPurposesHeader'),
+      t('adminCampaignDetail.reportExport.salesRepEmailHeader'),
+      t('adminCampaignDetail.reportExport.createdAtHeader'),
+      t('adminCampaignDetail.reportExport.completedAtHeader'),
+      t('adminCampaignDetail.reportExport.durationMinutesHeader')
     ]
 
     const rows = sessions.map(session => {
@@ -114,7 +114,7 @@ export function CampaignReportExport({ campaign, analytics, sessions = [] }: Cam
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${t('campaign_report')}: ${campaign.campaignName}</title>
+    <title>${t('adminCampaignDetail.reportExport.reportTitle')}: ${campaign.campaignName}</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
         .header { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
@@ -132,39 +132,39 @@ export function CampaignReportExport({ campaign, analytics, sessions = [] }: Cam
 </head>
 <body>
     <div class="header">
-        <h1>${t('campaign_report')}: ${campaign.campaignName}</h1>
-        <p><strong>${t('campaign_code')}:</strong> ${campaign.campaignCode}</p>
-        <p><strong>${t('date_range')}:</strong> ${new Date(campaign.startDate).toLocaleDateString()} - ${new Date(campaign.endDate).toLocaleDateString()}</p>
-        <p><strong>${t('owner')}:</strong> ${campaign.ownerName} (${campaign.ownerEmail})</p>
+        <h1>${t('adminCampaignDetail.reportExport.reportTitle')}: ${campaign.campaignName}</h1>
+        <p><strong>${t('adminCampaignDetail.reportExport.codeLabel')}:</strong> ${campaign.campaignCode}</p>
+        <p><strong>${t('adminCampaignDetail.reportExport.dateRangeLabel')}:</strong> ${new Date(campaign.startDate).toLocaleDateString()} - ${new Date(campaign.endDate).toLocaleDateString()}</p>
+        <p><strong>${t('adminCampaignDetail.reportExport.ownerHeader')}:</strong> ${campaign.ownerName} (${campaign.ownerEmail})</p>
     </div>
 
     <div class="metric-grid">
         <div class="metric-card">
-            <div class="metric-label">${t('total_sessions')}</div>
+            <div class="metric-label">${t('adminCampaignDetail.reportExport.totalSessionsRow')}</div>
             <div class="metric-value">${analytics.totalSessions}</div>
         </div>
         <div class="metric-card">
-            <div class="metric-label">${t('completion_rate')}</div>
+            <div class="metric-label">${t('adminCampaignDetail.reportExport.completionRateRow')}</div>
             <div class="metric-value">${analytics.completionRate}%</div>
         </div>
         <div class="metric-card">
-            <div class="metric-label">${t('average_duration')}</div>
+            <div class="metric-label">${t('adminCampaignDetail.reportExport.averageDurationRow')}</div>
             <div class="metric-value">${formatDuration(analytics.averageSessionDuration)}</div>
         </div>
         <div class="metric-card">
-            <div class="metric-label">${t('customer_companies')}</div>
+            <div class="metric-label">${t('adminCampaignDetail.reportExport.customerCompaniesRow')}</div>
             <div class="metric-value">${analytics.customerCompanies.length}</div>
         </div>
     </div>
 
     <div class="section">
-        <h2>${t('top_consultation_purposes')}</h2>
+        <h2>${t('adminCampaignDetail.reportExport.topPurposesRow')}</h2>
         <table>
             <thead>
                 <tr>
-                    <th>${t('purpose')}</th>
-                    <th>${t('sessions')}</th>
-                    <th>${t('percentage')}</th>
+                    <th>${t('adminCampaignDetail.reportExport.purposeHeader')}</th>
+                    <th>${t('adminCampaignDetail.reportExport.sessionsHeader')}</th>
+                    <th>${t('adminCampaignDetail.reportExport.percentageHeader')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -180,13 +180,13 @@ export function CampaignReportExport({ campaign, analytics, sessions = [] }: Cam
     </div>
 
     <div class="section">
-        <h2>${t('customer_companies')}</h2>
+        <h2>${t('adminCampaignDetail.reportExport.customerCompaniesRow')}</h2>
         <table>
             <thead>
                 <tr>
-                    <th>${t('company')}</th>
-                    <th>${t('sessions')}</th>
-                    <th>${t('percentage')}</th>
+                    <th>${t('adminCampaignDetail.reportExport.companyHeader')}</th>
+                    <th>${t('adminCampaignDetail.reportExport.sessionsHeader')}</th>
+                    <th>${t('adminCampaignDetail.reportExport.percentageHeader')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -202,7 +202,7 @@ export function CampaignReportExport({ campaign, analytics, sessions = [] }: Cam
     </div>
 
     <div class="generated-at">
-        ${t('report_generated_at')}: ${new Date().toLocaleString()}
+        ${t('adminCampaignDetail.reportExport.reportGeneratedAt')}: ${new Date().toLocaleString()}
     </div>
 </body>
 </html>`
@@ -256,26 +256,26 @@ export function CampaignReportExport({ campaign, analytics, sessions = [] }: Cam
         items={[
           {
             id: 'csv-summary',
-            text: t('export_summary_csv'),
-            description: t('campaign_metrics_and_analytics')
+            text: t('adminCampaignDetail.reportExport.summaryCsvOption'),
+            description: t('adminCampaignDetail.reportExport.summaryCsvDescription')
           },
           {
             id: 'csv-sessions',
-            text: t('export_sessions_csv'),
-            description: t('detailed_session_data'),
+            text: t('adminCampaignDetail.reportExport.sessionsCsvOption'),
+            description: t('adminCampaignDetail.reportExport.sessionsCsvDescription'),
             disabled: sessions.length === 0
           },
           {
             id: 'html',
-            text: t('export_html_report'),
-            description: t('formatted_html_report')
+            text: t('adminCampaignDetail.reportExport.htmlOption'),
+            description: t('adminCampaignDetail.reportExport.htmlDescription')
           }
         ]}
         onItemClick={({ detail }) => handleExport(detail.id)}
         loading={exporting}
         disabled={exporting}
       >
-        {t('export_report')}
+        {t('adminCampaignDetail.reportExport.exportButton')}
       </ButtonDropdown>
     </SpaceBetween>
   )

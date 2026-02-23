@@ -1,5 +1,9 @@
 {
   "welcome": {
+    "pageHeader": {
+      "title": "AWS PreChat",
+      "description": "AWS PreChat는 AWS 영업팀과 고객 간의 미팅 전 준비 과정을 간소화하기 위해 설계된 대화형 AI 웹 시스템입니다. 이 시스템은 기존의 엑셀 기반 양식을 직관적인 챗봇 인터페이스로 대체하여, 고객이 비즈니스 요구사항, 기술적 제약 조건 및 프로젝트 일정을 수집하는 구조화된 대화를 안내합니다. 수집된 정보는 AWS 영업 담당자와 엔지니어에게 체계적이고 실행 가능한 형식으로 제공됩니다."
+    },
     "header": {
       "title": "✨ PreChat에 오신 것을 환영합니다!",
       "subtitle": "AWS 만남전에 AI 에이전트와 대화하여 논의 주제와 기대사항을 공유해 주세요.",
@@ -451,6 +455,84 @@
     "sideNav": {
       "sectionTitle": "트리거",
       "manageTriggers": "트리거 관리"
+    },
+    "header": {
+      "title": "트리거 관리",
+      "description": "도메인 이벤트에 반응하여 Slack, SNS 등으로 알림을 전송하는 트리거를 관리합니다.",
+      "createButton": "트리거 생성"
+    },
+    "table": {
+      "eventHeader": "이벤트",
+      "typeHeader": "유형",
+      "scopeHeader": "범위",
+      "endpointHeader": "엔드포인트",
+      "statusHeader": "상태",
+      "actionsHeader": "작업",
+      "editButton": "수정",
+      "deleteButton": "삭제",
+      "activeStatus": "활성",
+      "inactiveStatus": "비활성",
+      "globalBadge": "전역",
+      "loadingText": "트리거 로딩 중...",
+      "searchPlaceholder": "트리거 검색...",
+      "emptyTitle": "등록된 트리거가 없습니다",
+      "emptyDescription": "트리거를 생성하여 도메인 이벤트 알림을 설정하세요.",
+      "emptyCreateButton": "트리거 생성"
+    },
+    "modal": {
+      "createTitle": "트리거 생성",
+      "editTitle": "트리거 수정",
+      "deleteTitle": "트리거 삭제",
+      "cancelButton": "취소",
+      "saveButton": "저장",
+      "createButton": "트리거 생성",
+      "deleteButton": "삭제",
+      "triggerTypeLabel": "트리거 유형",
+      "eventTypeLabel": "이벤트 유형",
+      "endpointLabel": "전달 엔드포인트",
+      "endpointSlackDescription": "Slack Workflow Webhook URL을 입력하세요. Workflow의 웹훅 데이터 변수는 SessionCompleted 스키마(모든 필드 포함)에 맞춰 설정하면 모든 이벤트에 호환됩니다.",
+      "endpointSnsDescription": "이벤트를 발행할 SNS Topic을 선택하세요.",
+      "snsPlaceholder": "SNS Topic 선택...",
+      "snsLoadingText": "SNS Topic 로딩 중...",
+      "snsEmptyText": "사용 가능한 SNS Topic이 없습니다.",
+      "scopeLabel": "범위",
+      "globalToggle": "전역 트리거 (모든 캠페인에 적용)",
+      "campaignLabel": "캠페인",
+      "campaignPlaceholder": "캠페인 선택...",
+      "statusLabel": "상태",
+      "activeStatus": "활성",
+      "inactiveStatus": "비활성",
+      "webhookSchemaHeader": "Webhook 데이터 스키마",
+      "schemaEmptyFieldsNote": "값이 없는 필드는 빈 문자열로 전송됩니다.",
+      "deleteConfirm": "이 트리거를 삭제하시겠습니까?",
+      "deleteEventLabel": "이벤트",
+      "deleteTypeLabel": "유형",
+      "deleteEndpointLabel": "엔드포인트"
+    },
+    "eventDescription": {
+      "sessionCompleted": "세션이 완료되었을 때 전송됩니다.",
+      "sessionCreated": "새 세션이 생성되었을 때 전송됩니다.",
+      "sessionInactivated": "세션이 비활성화되었을 때 전송됩니다.",
+      "campaignCreated": "새 캠페인이 생성되었을 때 전송됩니다.",
+      "campaignCompleted": "캠페인이 완료되었을 때 전송됩니다."
+    },
+    "fieldLabels": {
+      "sessionId": "세션 ID",
+      "campaignId": "캠페인 ID",
+      "campaignName": "캠페인명",
+      "customerName": "고객명",
+      "customerCompany": "고객 회사명",
+      "customerEmail": "고객 이메일",
+      "salesRepEmail": "담당 영업 이메일",
+      "ownerEmail": "소유자 이메일",
+      "messageCount": "메시지 수",
+      "totalSessions": "총 세션 수",
+      "durationMinutes": "소요 시간 (분)",
+      "adminUrl": "관리자 대시보드 URL",
+      "eventTimeCreated": "생성 시각",
+      "eventTimeCompleted": "완료 시각",
+      "eventTimeInactivated": "비활성화 시각",
+      "eventTimeClosed": "종료 시각"
     }
   },
   "login": {
@@ -496,6 +578,432 @@
       "enterConfirmationCode": "인증 코드를 입력해 주세요",
       "confirmationFailed": "인증에 실패했습니다",
       "signupFailed": "회원가입에 실패했습니다"
+    }
+  },
+  "adminCampaigns": {
+    "header": {
+      "title": "캠페인",
+      "description": "모든 캠페인",
+      "createButton": "캠페인 생성"
+    },
+    "table": {
+      "campaignNameHeader": "캠페인명",
+      "ownerHeader": "캠페인 담당자",
+      "statusHeader": "상태",
+      "periodHeader": "기간",
+      "actionsHeader": "작업",
+      "startDateLabel": "시작일",
+      "endDateLabel": "종료일",
+      "loadingText": "캠페인 로딩 중",
+      "searchPlaceholder": "캠페인 검색...",
+      "noItemsTitle": "캠페인을 찾을 수 없습니다",
+      "noItemsDescription": "캠페인을 찾을 수 없습니다"
+    },
+    "status": {
+      "active": "활성",
+      "completed": "완료",
+      "paused": "일시정지",
+      "cancelled": "취소"
+    },
+    "actions": {
+      "label": "작업",
+      "viewDetails": "캠페인 상세 정보",
+      "edit": "캠페인 수정",
+      "viewSessions": "세션 보기",
+      "delete": "캠페인 삭제"
+    },
+    "preferences": {
+      "title": "환경설정",
+      "confirmLabel": "확인",
+      "cancelLabel": "취소",
+      "pageSizeTitle": "페이지 크기",
+      "pageSize10": "캠페인 10개",
+      "pageSize20": "캠페인 20개",
+      "pageSize50": "캠페인 50개"
+    }
+  },
+  "adminCampaignCreate": {
+    "header": {
+      "title": "새 캠페인 생성",
+      "cancelButton": "취소"
+    },
+    "alert": {
+      "failedLoadUser": "현재 사용자를 불러오지 못했습니다. 다시 로그인해 주세요.",
+      "failedLoadUsers": "사용자를 불러오지 못했습니다. 일부 기능이 작동하지 않을 수 있습니다.",
+      "campaignCodeExists": "캠페인 코드가 이미 존재합니다. 다른 코드를 선택해 주세요.",
+      "invalidOwner": "유효하지 않은 담당자입니다. 올바른 사용자를 선택해 주세요.",
+      "failedCreate": "캠페인 생성에 실패했습니다. 다시 시도해 주세요.",
+      "createdSuccess": "캠페인이 성공적으로 생성되었습니다"
+    },
+    "form": {
+      "cancelButton": "취소",
+      "saveButton": "캠페인 저장",
+      "campaignNameLabel": "캠페인명",
+      "campaignNameDescription": "캠페인에 대한 설명적인 이름을 입력하세요",
+      "campaignNamePlaceholder": "예: 2025년 1분기 엔터프라이즈 마이그레이션",
+      "campaignCodeLabel": "캠페인 코드",
+      "campaignCodeDescription": "캠페인의 고유 코드를 입력하세요",
+      "campaignCodePlaceholder": "예: Q1-ENT-MIG",
+      "campaignCodeExistsError": "캠페인 코드가 이미 존재합니다",
+      "descriptionLabel": "설명",
+      "descriptionDescription": "캠페인에 대한 상세 설명을 입력하세요",
+      "descriptionPlaceholder": "캠페인 목표, 대상 고객, 주요 목표를 설명해 주세요...",
+      "startDateLabel": "시작일",
+      "startDateDescription": "캠페인 시작일",
+      "endDateLabel": "종료일",
+      "endDateDescription": "캠페인 종료일",
+      "datePlaceholder": "YYYY-MM-DD",
+      "ownerLabel": "캠페인 담당자",
+      "ownerDescription": "Cognito 사용자 중 캠페인 담당자를 선택하세요",
+      "ownerPlaceholder": "캠페인 담당자 선택...",
+      "ownerLoadingText": "사용자 로딩 중...",
+      "ownerEmpty": "사용 가능한 사용자 없음",
+      "ownerInvalidError": "유효하지 않은 담당자입니다"
+    },
+    "validation": {
+      "campaignNameRequired": "캠페인명은 필수입니다",
+      "campaignCodeRequired": "캠페인 코드는 필수입니다",
+      "descriptionRequired": "캠페인 설명은 필수입니다",
+      "startDateRequired": "시작일은 필수입니다",
+      "endDateRequired": "종료일은 필수입니다",
+      "ownerRequired": "캠페인 담당자는 필수입니다",
+      "invalidDateRange": "종료일은 시작일보다 늦어야 합니다"
+    }
+  },
+  "adminCampaignDetail": {
+    "header": {
+      "title": "캠페인 상세",
+      "backButton": "캠페인 목록으로",
+      "actionsLabel": "작업",
+      "editAction": "캠페인 수정",
+      "viewSessionsAction": "세션 보기",
+      "deleteAction": "캠페인 삭제"
+    },
+    "overview": {
+      "campaignNameLabel": "캠페인명",
+      "ownerLabel": "캠페인 담당자",
+      "statusLabel": "상태",
+      "descriptionLabel": "설명",
+      "periodLabel": "캠페인 기간",
+      "errorHeader": "오류 발생",
+      "notFound": "캠페인을 찾을 수 없습니다",
+      "failedLoad": "캠페인 상세 정보를 불러오지 못했습니다. 다시 시도해 주세요."
+    },
+    "status": {
+      "active": "활성",
+      "completed": "완료",
+      "paused": "일시정지",
+      "cancelled": "취소"
+    },
+    "tabs": {
+      "analyticsLabel": "캠페인 분석",
+      "sessionsLabel": "연결된 세션",
+      "viewAllSessionsButton": "이 캠페인의 모든 세션 보기"
+    },
+    "deleteModal": {
+      "header": "캠페인 삭제",
+      "closeAriaLabel": "모달 닫기",
+      "cancelButton": "취소",
+      "confirmButton": "캠페인 삭제",
+      "warningMessage": "이 캠페인을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+      "failedDelete": "캠페인 삭제에 실패했습니다. 다시 시도해 주세요."
+    },
+    "metrics": {
+      "totalSessions": "총 세션",
+      "completionRate": "완료율",
+      "averageDuration": "평균 소요시간",
+      "completedSessionsOnly": "완료된 세션만",
+      "customerCompanies": "고객 회사",
+      "topCompany": "최상위 회사",
+      "noData": "데이터 없음",
+      "activeSessions": "활성 세션",
+      "completedSessions": "완료된 세션"
+    },
+    "sessionsChart": {
+      "title": "완료된 세션 시간별 추이",
+      "seriesTitle": "일별 완료된 세션",
+      "legendAriaLabel": "차트 범례",
+      "chartAriaLabel": "세션 타임라인 차트",
+      "noDataTitle": "세션 데이터 없음",
+      "noDataDescription": "이 기간에 대한 세션 데이터가 없습니다",
+      "loading": "로딩 중"
+    },
+    "purposesChart": {
+      "title": "주요 상담 목적",
+      "description": "이 캠페인에서 가장 일반적인 상담 목적",
+      "purposeKey": "목적",
+      "sessionsKey": "세션",
+      "percentageKey": "비율",
+      "filterLabel": "필터",
+      "filterPlaceholder": "목적 필터",
+      "filterSelectedAriaLabel": "목적 선택됨",
+      "dismissAriaLabel": "닫기",
+      "legendAriaLabel": "차트 범례",
+      "chartAriaLabel": "상담 목적 차트",
+      "chartError": "차트 오류",
+      "loadingText": "차트 로딩 중",
+      "retryText": "다시 시도",
+      "noDataTitle": "목적 데이터 없음",
+      "noDataDescription": "상담 목적 데이터가 없습니다",
+      "loading": "로딩 중"
+    },
+    "companiesTable": {
+      "title": "고객 회사",
+      "description": "이 캠페인에 참여하는 회사",
+      "companyNameHeader": "회사명",
+      "sessionCountHeader": "세션 수",
+      "percentageHeader": "전체 대비 비율",
+      "relativeVolumeHeader": "상대적 볼륨",
+      "sessionsLabel": "세션",
+      "ofTotalLabel": "전체 중",
+      "loadingText": "회사 로딩 중",
+      "unknownCompany": "알 수 없는 회사",
+      "noDataTitle": "회사 데이터 없음",
+      "noDataDescription": "고객 회사 데이터가 없습니다"
+    },
+    "csatTable": {
+      "title": "고객 만족도 피드백",
+      "description": "완료된 세션의 고객 만족도 평점 및 피드백",
+      "averageRatingLabel": "평균 CSAT 평점",
+      "totalResponsesLabel": "{{count}}개 응답",
+      "noRatings": "평점 없음",
+      "customerHeader": "고객",
+      "ratingHeader": "평점",
+      "feedbackHeader": "피드백",
+      "completionDateHeader": "완료 날짜",
+      "noNarrativeProvided": "피드백 없음",
+      "noDataTitle": "CSAT 피드백 없음",
+      "noDataDescription": "이 캠페인에 대한 고객 만족도 피드백이 아직 수집되지 않았습니다.",
+      "loading": "로딩 중"
+    },
+    "comparisonTable": {
+      "title": "캠페인 비교",
+      "description": "여러 캠페인의 성과 지표 비교",
+      "compareButton": "캠페인 비교",
+      "selectLabel": "비교할 캠페인 선택",
+      "selectDescription": "비교를 활성화하려면 최소 두 개의 캠페인을 선택하세요",
+      "choosePlaceholder": "캠페인 선택",
+      "selectedAriaLabel": "선택된 캠페인",
+      "removeAriaLabel": "제거",
+      "filterPlaceholder": "캠페인 검색",
+      "filterAriaLabel": "캠페인 검색",
+      "loadingText": "캠페인 로딩 중",
+      "errorText": "캠페인 로딩 오류",
+      "retryText": "다시 시도",
+      "emptyText": "사용 가능한 캠페인 없음",
+      "rankHeader": "순위",
+      "campaignNameHeader": "캠페인명",
+      "statusHeader": "상태",
+      "totalSessionsHeader": "총 세션",
+      "completedSessionsHeader": "완료된 세션",
+      "completionRateHeader": "완료율",
+      "dateRangeHeader": "날짜 범위",
+      "ownerHeader": "담당자",
+      "startLabel": "시작",
+      "endLabel": "종료",
+      "statusActive": "활성",
+      "statusCompleted": "완료",
+      "statusPaused": "일시정지",
+      "statusCancelled": "취소",
+      "loadingComparison": "비교 로딩 중",
+      "noDataTitle": "비교 데이터 없음",
+      "noDataDescription": "캠페인을 선택하고 비교를 클릭하여 결과를 확인하세요",
+      "resultsTitle": "비교 결과",
+      "resultsDescription": "완료율 기준 캠페인 순위"
+    },
+    "reportExport": {
+      "exportButton": "보고서 내보내기",
+      "summaryCsvOption": "요약 내보내기 (CSV)",
+      "summaryCsvDescription": "캠페인 지표 및 분석",
+      "sessionsCsvOption": "세션 내보내기 (CSV)",
+      "sessionsCsvDescription": "세션 상세 데이터",
+      "htmlOption": "HTML 보고서 내보내기",
+      "htmlDescription": "형식화된 HTML 보고서",
+      "metricHeader": "지표",
+      "valueHeader": "값",
+      "descriptionHeader": "설명",
+      "reportTitle": "캠페인 보고서",
+      "reportGeneratedAt": "보고서 생성 시간",
+      "campaignNameRow": "캠페인명",
+      "campaignCodeRow": "캠페인 코드",
+      "campaignStatusRow": "캠페인 상태",
+      "startDateRow": "시작일",
+      "endDateRow": "종료일",
+      "campaignOwnerRow": "캠페인 담당자",
+      "totalSessionsRow": "총 세션",
+      "activeSessionsRow": "활성 세션",
+      "completedSessionsRow": "완료된 세션",
+      "completionRateRow": "완료율",
+      "averageDurationRow": "평균 소요시간",
+      "completedSessionsOnlyNote": "완료된 세션만",
+      "topPurposesRow": "주요 상담 목적",
+      "customerCompaniesRow": "고객 회사",
+      "sessionIdHeader": "세션 ID",
+      "statusHeader": "상태",
+      "customerNameHeader": "고객명",
+      "customerEmailHeader": "고객 이메일",
+      "customerCompanyHeader": "고객 회사",
+      "customerTitleHeader": "고객 직함",
+      "consultationPurposesHeader": "상담 목적",
+      "salesRepEmailHeader": "영업 담당자 이메일",
+      "createdAtHeader": "생성일",
+      "completedAtHeader": "완료일",
+      "durationMinutesHeader": "소요시간 (분)",
+      "purposeHeader": "목적",
+      "sessionsHeader": "세션",
+      "percentageHeader": "비율",
+      "companyHeader": "회사",
+      "ownerHeader": "담당자",
+      "dateRangeLabel": "날짜 범위",
+      "codeLabel": "캠페인 코드"
+    }
+  },
+  "adminAgents": {
+    "header": {
+      "title": "PreChat 에이전트",
+      "description": "고객과 상담을 담당하는 AI 에이전트(AgentCore Agents)를 관리합니다. 구성한 에이전트는 준비(Prepared)되어야 합니다.",
+      "allSessionsButton": "모든 세션 💬",
+      "refreshButton": "새로고침",
+      "createAgentButton": "에이전트 생성"
+    },
+    "table": {
+      "agentNameHeader": "에이전트 이름",
+      "agentRoleHeader": "에이전트 역할",
+      "foundationModelHeader": "Foundation Model",
+      "statusHeader": "Status",
+      "actionsHeader": "작업",
+      "editAgentItem": "에이전트 편집",
+      "removeAgentItem": "에이전트 제거",
+      "actionsButton": "작업"
+    },
+    "empty": {
+      "noAgentsTitle": "No agents",
+      "noAgentsDescription": "No AgentCore agents found.",
+      "createAgentButton": "에이전트 생성"
+    }
+  },
+  "adminAgentCreate": {
+    "header": {
+      "title": "새로운 PreChat Agent 를 등록합니다 🤖",
+      "toDashboardButton": "대시보드로"
+    },
+    "alert": {
+      "createdSuccess": "Agent \"{{name}}\" created successfully!",
+      "failedCreate": "Failed to create agent"
+    },
+    "form": {
+      "cancelButton": "취소",
+      "createAgentButton": "에이전트 생성",
+      "agentNameLabel": "에이전트 이름",
+      "agentNameDescription": "에이전트 이름",
+      "agentNamePlaceholder": "Enter 에이전트 이름",
+      "agentRoleLabel": "에이전트 역할",
+      "agentRoleDescription": "이 설정이 적용될 시스템 에이전트를 선택하세요",
+      "agentRolePlaceholder": "에이전트 역할 선택",
+      "foundationModelLabel": "Foundation Model",
+      "foundationModelDescription": "에이전트의 기반 Foundation Model",
+      "foundationModelPlaceholder": "Select a foundation model",
+      "promptOverrideLabel": "프롬프트 오버라이드",
+      "promptOverrideDescription": "에이전트의 시스템 프롬프트를 커스터마이징하려면 활성화하세요. 비활성화 시 에이전트의 기본 프롬프트가 사용됩니다.",
+      "promptOverrideCheckbox": "커스텀 프롬프트 오버라이드 활성화",
+      "agentInstructionsLabel": "Agent Instructions",
+      "agentInstructionsDescription": "에이전트 행동에 대한 지침을 상세하게 작성합니다. 플레이스홀더를 사용하여 동적 정보를 포함할 수 있습니다.",
+      "agentInstructionsPlaceholder": "Enter agent instructions...",
+      "defaultInstructionsButton": "기본 에이전트 지침"
+    }
+  },
+  "adminAgentEdit": {
+    "header": {
+      "title": "PreChat 에이전트를 수정합니다 🤖",
+      "toDashboardButton": "대시보드로"
+    },
+    "loading": {
+      "pageTitle": "PreChat 에이전트를 수정합니다 🤖",
+      "agentDetails": "Loading agent details..."
+    },
+    "alert": {
+      "failedLoadAgent": "Failed to load agent details",
+      "updatedSuccess": "Agent \"{{name}}\" updated successfully!",
+      "failedUpdateAgent": "Failed to update agent"
+    },
+    "form": {
+      "cancelButton": "취소",
+      "updateAgentButton": "에이전트 수정",
+      "agentRoleLabel": "에이전트 역할",
+      "agentRoleReadonlyDescription": "이 필드는 읽기 전용입니다. 역할은 생성 시 설정됩니다.",
+      "agentNameLabel": "에이전트 이름",
+      "agentNameDescription": "에이전트 이름",
+      "agentNamePlaceholder": "Enter agent name",
+      "foundationModelLabel": "Foundation Model",
+      "foundationModelDescription": "Foundation model 을 선택합니다",
+      "foundationModelPlaceholder": "Select a foundation model",
+      "promptOverrideLabel": "프롬프트 오버라이드",
+      "promptOverrideDescription": "에이전트의 시스템 프롬프트를 커스터마이징하려면 활성화하세요. 비활성화 시 에이전트의 기본 프롬프트가 사용됩니다.",
+      "promptOverrideCheckbox": "커스텀 프롬프트 오버라이드 활성화",
+      "agentInstructionsLabel": "Agent Instructions",
+      "agentInstructionsDescription": "에이전트 행동에 대한 지침을 상세하게 작성합니다. 플레이스홀더를 사용하여 동적 정보를 포함할 수 있습니다.",
+      "agentInstructionsPlaceholder": "Enter agent instructions...",
+      "defaultInstructionsButton": "기본 에이전트 지침"
+    }
+  },
+  "adminCampaignEdit": {
+    "header": {
+      "title": "캠페인 수정",
+      "cancelButton": "취소"
+    },
+    "alert": {
+      "notFound": "캠페인을 찾을 수 없습니다.",
+      "notFoundRedirect": "캠페인을 찾을 수 없습니다.",
+      "failedLoadCampaign": "캠페인 상세 정보를 불러오지 못했습니다. 다시 시도해 주세요.",
+      "failedLoadUsers": "사용자를 불러오지 못했습니다. 일부 기능이 작동하지 않을 수 있습니다.",
+      "campaignCodeExists": "캠페인 코드가 이미 존재합니다. 다른 코드를 선택해 주세요.",
+      "invalidOwner": "유효하지 않은 담당자입니다. 올바른 사용자를 선택해 주세요.",
+      "failedUpdate": "캠페인 업데이트에 실패했습니다. 다시 시도해 주세요.",
+      "updatedSuccess": "캠페인이 성공적으로 업데이트되었습니다"
+    },
+    "loading": {
+      "campaignDetails": "캠페인 상세 정보 로딩 중..."
+    },
+    "form": {
+      "cancelButton": "취소",
+      "saveButton": "캠페인 저장",
+      "campaignNameLabel": "캠페인명",
+      "campaignNameDescription": "캠페인에 대한 설명적인 이름을 입력하세요",
+      "campaignNamePlaceholder": "예: 2025년 1분기 엔터프라이즈 마이그레이션",
+      "campaignCodeLabel": "캠페인 코드",
+      "campaignCodeDescription": "캠페인의 고유 코드를 입력하세요",
+      "campaignCodePlaceholder": "예: Q1-ENT-MIG",
+      "campaignCodeExistsError": "캠페인 코드가 이미 존재합니다",
+      "descriptionLabel": "설명",
+      "descriptionDescription": "캠페인에 대한 상세 설명을 입력하세요",
+      "descriptionPlaceholder": "캠페인 목표, 대상 고객, 주요 목표를 설명해 주세요...",
+      "startDateLabel": "시작일",
+      "startDateDescription": "캠페인 시작일",
+      "endDateLabel": "종료일",
+      "endDateDescription": "캠페인 종료일",
+      "datePlaceholder": "YYYY-MM-DD",
+      "ownerLabel": "캠페인 담당자",
+      "ownerDescription": "Cognito 사용자 중 캠페인 담당자를 선택하세요",
+      "ownerPlaceholder": "캠페인 담당자 선택...",
+      "ownerLoadingText": "사용자 로딩 중...",
+      "ownerEmpty": "사용 가능한 사용자 없음",
+      "ownerInvalidError": "유효하지 않은 담당자입니다",
+      "statusLabel": "상태",
+      "statusDescription": "캠페인의 현재 상태를 선택하세요",
+      "statusPlaceholder": "상태 선택...",
+      "statusActive": "활성",
+      "statusCompleted": "완료",
+      "statusPaused": "일시정지",
+      "statusCancelled": "취소"
+    },
+    "validation": {
+      "campaignNameRequired": "캠페인명은 필수입니다",
+      "campaignCodeRequired": "캠페인 코드는 필수입니다",
+      "descriptionRequired": "캠페인 설명은 필수입니다",
+      "startDateRequired": "시작일은 필수입니다",
+      "endDateRequired": "종료일은 필수입니다",
+      "ownerRequired": "캠페인 담당자는 필수입니다",
+      "invalidDateRange": "종료일은 시작일보다 늦어야 합니다"
     }
   }
 }

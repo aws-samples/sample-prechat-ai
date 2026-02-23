@@ -23,20 +23,20 @@ export function CampaignCompaniesTable({ analytics, loading = false }: CampaignC
       columnDefinitions={[
         {
           id: 'company',
-          header: t('company_name'),
-          cell: (item) => item.company || t('unknown_company'),
+          header: t('adminCampaignDetail.companiesTable.companyNameHeader'),
+          cell: (item) => item.company || t('adminCampaignDetail.companiesTable.unknownCompany'),
           sortingField: 'company',
           isRowHeader: true
         },
         {
           id: 'sessionCount',
-          header: t('session_count'),
+          header: t('adminCampaignDetail.companiesTable.sessionCountHeader'),
           cell: (item) => item.sessionCount,
           sortingField: 'sessionCount'
         },
         {
           id: 'percentage',
-          header: t('percentage_of_total'),
+          header: t('adminCampaignDetail.companiesTable.percentageHeader'),
           cell: (item) => {
             const percentage = ((item.sessionCount / analytics.totalSessions) * 100).toFixed(1)
             return `${percentage}%`
@@ -44,28 +44,28 @@ export function CampaignCompaniesTable({ analytics, loading = false }: CampaignC
         },
         {
           id: 'progress',
-          header: t('relative_volume'),
+          header: t('adminCampaignDetail.companiesTable.relativeVolumeHeader'),
           cell: (item) => (
             <ProgressBar
               value={(item.sessionCount / maxSessions) * 100}
-              additionalInfo={`${item.sessionCount} ${t('sessions')}`}
-              description={`${((item.sessionCount / analytics.totalSessions) * 100).toFixed(1)}% ${t('of_total')}`}
+              additionalInfo={`${item.sessionCount} ${t('adminCampaignDetail.companiesTable.sessionsLabel')}`}
+              description={`${((item.sessionCount / analytics.totalSessions) * 100).toFixed(1)}% ${t('adminCampaignDetail.companiesTable.ofTotalLabel')}`}
             />
           )
         }
       ]}
       items={analytics.customerCompanies}
       loading={loading}
-      loadingText={t('loading_companies')}
+      loadingText={t('adminCampaignDetail.companiesTable.loadingText')}
       sortingDisabled={loading}
       empty={
         <Box margin={{ vertical: 'xs' }} textAlign="center" color="inherit">
           <SpaceBetween size="m">
             <Box variant="strong" color="inherit">
-              {t('no_companies_data')}
+              {t('adminCampaignDetail.companiesTable.noDataTitle')}
             </Box>
             <Box variant="p" color="inherit">
-              {t('no_companies_data_description')}
+              {t('adminCampaignDetail.companiesTable.noDataDescription')}
             </Box>
           </SpaceBetween>
         </Box>
@@ -73,9 +73,9 @@ export function CampaignCompaniesTable({ analytics, loading = false }: CampaignC
       header={
         <Header
           counter={`(${analytics.customerCompanies.length})`}
-          description={t('companies_participating_in_campaign')}
+          description={t('adminCampaignDetail.companiesTable.description')}
         >
-          {t('customer_companies')}
+          {t('adminCampaignDetail.companiesTable.title')}
         </Header>
       }
     />

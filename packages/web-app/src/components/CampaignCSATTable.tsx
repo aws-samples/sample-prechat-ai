@@ -45,32 +45,32 @@ export function CampaignCSATTable({ analytics, loading = false }: CampaignCSATTa
       <SpaceBetween size="l">
         <Header 
           variant="h2"
-          description={t('csat_feedback_description')}
+          description={t('adminCampaignDetail.csatTable.description')}
           info={
             <Box>
-              <Box variant="awsui-key-label">{t('average_csat_rating')}</Box>
+              <Box variant="awsui-key-label">{t('adminCampaignDetail.csatTable.averageRatingLabel')}</Box>
               <Box fontWeight="bold" fontSize="heading-m">
-                {averageCSAT > 0 ? `${averageCSAT}/5` : t('no_ratings')}
+                {averageCSAT > 0 ? `${averageCSAT}/5` : t('adminCampaignDetail.csatTable.noRatings')}
               </Box>
               <Box fontSize="body-s" color="text-status-inactive">
-                {t('total_responses', { count: totalResponses })}
+                {t('adminCampaignDetail.csatTable.totalResponsesLabel', { count: totalResponses })}
               </Box>
             </Box>
           }
         >
-          {t('customer_satisfaction_feedback')}
+          {t('adminCampaignDetail.csatTable.title')}
         </Header>
         
         {loading ? (
           <Box textAlign="center" padding="l">
-            <Box variant="p">{t('loading')}...</Box>
+            <Box variant="p">{t('adminCampaignDetail.csatTable.loading')}...</Box>
           </Box>
         ) : csatData.length > 0 ? (
           <Table
             columnDefinitions={[
               {
                 id: 'customer',
-                header: t('customer'),
+                header: t('adminCampaignDetail.csatTable.customerHeader'),
                 cell: (item: CSATFeedback) => (
                   <Box>
                     <Box fontWeight="bold">{item.customerName}</Box>
@@ -82,23 +82,23 @@ export function CampaignCSATTable({ analytics, loading = false }: CampaignCSATTa
               },
               {
                 id: 'rating',
-                header: t('csat_rating'),
+                header: t('adminCampaignDetail.csatTable.ratingHeader'),
                 cell: (item: CSATFeedback) => getRatingBadge(item.rating)
               },
               {
                 id: 'narrative',
-                header: t('feedback_narrative'),
+                header: t('adminCampaignDetail.csatTable.feedbackHeader'),
                 cell: (item: CSATFeedback) => (
                   <Box>
                     {item.narrative || (
-                      <Box color="text-status-inactive">{t('no_narrative_provided')}</Box>
+                      <Box color="text-status-inactive">{t('adminCampaignDetail.csatTable.noNarrativeProvided')}</Box>
                     )}
                   </Box>
                 )
               },
               {
                 id: 'completedAt',
-                header: t('completion_date'),
+                header: t('adminCampaignDetail.csatTable.completionDateHeader'),
                 cell: (item: CSATFeedback) => 
                   item.completedAt ? new Date(item.completedAt).toLocaleDateString() : '-'
               }
@@ -109,10 +109,10 @@ export function CampaignCSATTable({ analytics, loading = false }: CampaignCSATTa
             empty={
               <Box textAlign="center" color="inherit">
                 <Box variant="strong" textAlign="center" color="inherit">
-                  {t('no_csat_feedback')}
+                  {t('adminCampaignDetail.csatTable.noDataTitle')}
                 </Box>
                 <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                  {t('no_csat_feedback_description')}
+                  {t('adminCampaignDetail.csatTable.noDataDescription')}
                 </Box>
               </Box>
             }
@@ -120,10 +120,10 @@ export function CampaignCSATTable({ analytics, loading = false }: CampaignCSATTa
         ) : (
           <Box textAlign="center" padding="l">
             <Box variant="h3" color="text-status-inactive">
-              {t('no_csat_feedback')}
+              {t('adminCampaignDetail.csatTable.noDataTitle')}
             </Box>
             <Box variant="p" color="text-status-inactive">
-              {t('no_csat_feedback_description')}
+              {t('adminCampaignDetail.csatTable.noDataDescription')}
             </Box>
           </Box>
         )}

@@ -129,7 +129,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
       pollAnalysisStatus()
     } catch (err: any) {
       console.error('Failed to start re-analysis:', err)
-      setError(err.response?.data?.error || '재분석 요청에 실패했습니다. 다시 시도해주세요.')
+      setError(err.response?.data?.error || t('adminSessionDetail.meetingLog.failedReanalyze'))
       setIsAnalyzing(false)
     }
   }
@@ -149,7 +149,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
           setTimeoutProgress(100)
         } else if (statusResponse.status === 'failed') {
           clearInterval(pollInterval)
-          setError('AI 분석에 실패했습니다. 다시 시도해주세요.')
+          setError(t('adminSessionDetail.meetingLog.failedAnalysis'))
           setIsAnalyzing(false)
           setTimeoutProgress(0)
         } else if (statusResponse.status === 'processing') {
@@ -159,7 +159,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
       } catch (err: any) {
         console.error('Failed to check analysis status:', err)
         clearInterval(pollInterval)
-        setError('분석 상태 확인에 실패했습니다.')
+        setError(t('adminSessionDetail.meetingLog.failedStatusCheck'))
         setIsAnalyzing(false)
       }
     }, 15000)
@@ -167,7 +167,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
     setTimeout(() => {
       clearInterval(pollInterval)
       if (isAnalyzing) {
-        setError('분석 시간이 초과되었습니다. 다시 시도해주세요.')
+        setError(t('adminSessionDetail.meetingLog.timeout'))
         setIsAnalyzing(false)
         setTimeoutProgress(0)
       }
@@ -213,12 +213,12 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
           {/* Analysis Interface */}
           <Container>
             <SpaceBetween size="l">
-              <Header variant="h3">AI 분석</Header>
+              <Header variant="h3">{t('adminSessionDetail.aiAnalysis.sectionTitle')}</Header>
 
               <ColumnLayout columns={2}>
                 <Box>
                   <Box variant="awsui-key-label" margin={{ bottom: 's' }}>
-                    분석 에이전트 선택
+                    {t('adminSessionDetail.meetingLog.agentSelectLabel')}
                   </Box>
                   <Select
                     selectedOption={selectedConfig ? {
@@ -233,9 +233,9 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
                       label: `${config.agentName || config.configId} (${config.modelId.split('.').pop()})`,
                       value: config.configId
                     }))}
-                    placeholder="요약 에이전트를 선택하세요"
+                    placeholder={t('adminSessionDetail.meetingLog.agentSelectPlaceholder')}
                     disabled={isAnalyzing || agentConfigs.length === 0}
-                    empty="캠페인에 연결된 요약 에이전트가 없습니다"
+                    empty={t('adminSessionDetail.meetingLog.agentSelectEmpty')}
                   />
                 </Box>
 
@@ -247,7 +247,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
                       loading={isAnalyzing}
                       disabled={isAnalyzing}
                     >
-                      {isAnalyzing ? '재분석 중...' : '재분석'}
+                      {isAnalyzing ? t('adminSessionDetail.meetingLog.reanalyzingButton') : t('adminSessionDetail.meetingLog.reanalyzeButton')}
                     </Button>
                     
                     {analysisResults && (
@@ -257,7 +257,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
                         onClick={exportToHTML}
                         disabled={isAnalyzing || isLoading || !session}
                       >
-                        HTML 저장
+                        {t('adminSessionDetail.meetingLog.exportHtmlButton')}
                       </Button>
                     )}
                   </SpaceBetween>
@@ -273,7 +273,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
                       onClick={startReanalysis}
                       disabled={isAnalyzing}
                     >
-                      다시 시도
+                      {t('adminSessionDetail.meetingLog.retryButton')}
                     </Button>
                   }
                 >
@@ -286,10 +286,10 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
                   <SpaceBetween size="s">
                     <LoadingBar variant="gen-ai" />
                     <Box>
-                      {selectedConfig?.agentName || '분석 에이전트'}가 대화 내용과 미팅 로그를 함께 분석하고 있습니다...
+                      {selectedConfig?.agentName || t('adminSessionDetail.aiAnalysis.sectionTitle')}{t('adminSessionDetail.meetingLog.analyzingMessage')}
                       <br />
                       <Box fontSize="body-s" color="text-status-inactive">
-                        최대 5분까지 소요될 수 있습니다. ({Math.round(timeoutProgress)}% 완료)
+                        {t('adminSessionDetail.meetingLog.analyzingProgress')}{Math.round(timeoutProgress)}{t('adminSessionDetail.meetingLog.analyzingProgressSuffix')}
                       </Box>
                     </Box>
                   </SpaceBetween>
@@ -308,8 +308,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
               
               <Container>
                 <Box fontSize="body-s" color="text-status-inactive" textAlign="center">
-                  분석 완료: {new Date(analysisResults.analyzedAt).toLocaleString('ko-KR')} | 
-                  에이전트: {analysisResults.agentName || analysisResults.modelUsed}
+                  {t('adminSessionDetail.meetingLog.analysisComplete')} {new Date(analysisResults.analyzedAt).toLocaleString('ko-KR')} {t('adminSessionDetail.meetingLog.modelUsed')} {analysisResults.agentName || analysisResults.modelUsed}
                 </Box>
               </Container>
             </SpaceBetween>
@@ -317,10 +316,10 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
             <Container>
               <Box textAlign="center" padding="xl">
                 <Box variant="h3" margin={{ bottom: 's' }}>
-                  분석 결과가 없습니다
+                  {t('adminSessionDetail.meetingLog.noAnalysisResults')}
                 </Box>
                 <Box color="text-status-inactive" margin={{ bottom: 'l' }}>
-                  "재분석" 버튼을 클릭하여 대화 내용과 미팅 로그를 함께 분석해보세요.
+                  {t('adminSessionDetail.meetingLog.noAnalysisResultsDescription')}
                 </Box>
               </Box>
             </Container>
@@ -343,7 +342,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
                         onClick={cancelEditing}
                         disabled={isSaving}
                       >
-                        취소
+                        {t('adminSessionDetail.meetingLog.cancelButton')}
                       </Button>
                       <Button
                         variant="primary"
@@ -351,7 +350,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
                         loading={isSaving}
                         disabled={isSaving}
                       >
-                        저장
+                        {t('adminSessionDetail.meetingLog.saveButton')}
                       </Button>
                     </>
                   ) : (
@@ -360,44 +359,30 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
                       onClick={startEditing}
                       iconName="edit"
                     >
-                      수정
+                      {t('adminSessionDetail.meetingLog.editButton')}
                     </Button>
                   )}
                 </SpaceBetween>
               }
             >
-              미팅 로그
+              {t('adminSessionDetail.meetingLog.sectionTitle')}
             </Header>
 
             {saveSuccess && (
               <Alert type="success" dismissible onDismiss={() => setSaveSuccess(false)}>
-                미팅 로그가 성공적으로 저장되었습니다.
+                {t('adminSessionDetail.meetingLog.saveSuccess')}
               </Alert>
             )}
 
             {isEditing ? (
               <Box>
                 <Box variant="awsui-key-label" margin={{ bottom: 's' }}>
-                  초도미팅록 작성 (마크다운 형식 지원)
+                  {t('adminSessionDetail.meetingLog.writeLabel')}
                 </Box>
                 <Textarea
                   value={meetingLog}
                   onChange={({ detail }) => setMeetingLog(detail.value)}
-                  placeholder="미팅 내용을 자유롭게 작성해주세요. 마크다운 형식을 사용할 수 있습니다.
-
-예시:
-## 미팅 개요
-- 일시: 2024-01-15 14:00
-- 참석자: 홍길동 (고객), 김영희 (AWS)
-
-## 주요 논의사항
-1. 클라우드 마이그레이션 계획
-2. 예상 비용 및 일정
-3. 기술적 요구사항
-
-## 액션 아이템
-- [ ] POC 제안서 작성
-- [ ] 기술 검토 미팅 일정 조율"
+                  placeholder={t('adminSessionDetail.meetingLog.writePlaceholder')}
                   rows={20}
                   disabled={isSaving}
                 />
@@ -437,10 +422,10 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
                 ) : (
                   <Box textAlign="center" padding="xl" color="text-status-inactive">
                     <Box variant="h4" margin={{ bottom: 's' }}>
-                      미팅 로그가 없습니다
+                      {t('adminSessionDetail.meetingLog.noMeetingLog')}
                     </Box>
                     <Box margin={{ bottom: 'l' }}>
-                      "수정" 버튼을 클릭하여 초도미팅록을 작성해보세요.
+                      {t('adminSessionDetail.meetingLog.noMeetingLogDescription')}
                     </Box>
                   </Box>
                 )}
@@ -448,7 +433,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
             )}
 
             <Box fontSize="body-s" color="text-status-inactive">
-              미팅 로그를 저장한 후 "재분석" 버튼을 클릭하면, 사전상담 대화 내용과 미팅 로그를 모두 고려하여 AI가 좌측의 분석 결과를 업데이트합니다.
+              {t('adminSessionDetail.meetingLog.reanalyzeHint')}
             </Box>
           </SpaceBetween>
         </Container>
@@ -463,12 +448,14 @@ interface MarkdownSummaryContainerProps {
 }
 
 function MarkdownSummaryContainer({ summary }: MarkdownSummaryContainerProps) {
+  const { t } = useI18n()
+
   if (!summary) {
     return (
       <Container>
-        <Header variant="h3">요약 보고서</Header>
+        <Header variant="h3">{t('adminSessionDetail.summary.sectionTitle')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          요약 보고서가 생성되지 않았습니다.
+          {t('adminSessionDetail.summary.noSummary')}
         </Box>
       </Container>
     )
@@ -476,7 +463,7 @@ function MarkdownSummaryContainer({ summary }: MarkdownSummaryContainerProps) {
 
   return (
     <Container>
-      <Header variant="h3">요약 보고서</Header>
+      <Header variant="h3">{t('adminSessionDetail.summary.sectionTitle')}</Header>
       <Box padding="l">
         <div 
           style={{ 
@@ -523,14 +510,15 @@ interface BANTAnalysisContainerProps {
 }
 
 function BANTAnalysisContainer({ bantAnalysis }: BANTAnalysisContainerProps) {
+  const { t } = useI18n()
   const isEmpty = !bantAnalysis || (!bantAnalysis.budget && !bantAnalysis.authority && !bantAnalysis.need && !bantAnalysis.timeline)
 
   if (isEmpty) {
     return (
       <Container>
-        <Header variant="h3">BANT 분석</Header>
+        <Header variant="h3">{t('adminSessionDetail.bant.sectionTitle')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          BANT 분석 결과가 생성되지 않았습니다.
+          {t('adminSessionDetail.bant.noResults')}
         </Box>
       </Container>
     )
@@ -538,30 +526,30 @@ function BANTAnalysisContainer({ bantAnalysis }: BANTAnalysisContainerProps) {
 
   return (
     <Container>
-      <Header variant="h3">BANT 분석</Header>
+      <Header variant="h3">{t('adminSessionDetail.bant.sectionTitle')}</Header>
       <ColumnLayout columns={2}>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>Budget (예산)</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('adminSessionDetail.bant.budgetLabel')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.budget || '정보 없음'}
+            {bantAnalysis.budget || t('adminSessionDetail.aiAnalysis.noInfo')}
           </div>
         </Box>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>Authority (권한)</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('adminSessionDetail.bant.authorityLabel')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.authority || '정보 없음'}
+            {bantAnalysis.authority || t('adminSessionDetail.aiAnalysis.noInfo')}
           </div>
         </Box>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>Need (필요성)</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('adminSessionDetail.bant.needLabel')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.need || '정보 없음'}
+            {bantAnalysis.need || t('adminSessionDetail.aiAnalysis.noInfo')}
           </div>
         </Box>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>Timeline (일정)</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('adminSessionDetail.bant.timelineLabel')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.timeline || '정보 없음'}
+            {bantAnalysis.timeline || t('adminSessionDetail.aiAnalysis.noInfo')}
           </div>
         </Box>
       </ColumnLayout>
@@ -578,12 +566,14 @@ interface AWSServicesContainerProps {
 }
 
 function AWSServicesContainer({ awsServices }: AWSServicesContainerProps) {
+  const { t } = useI18n()
+
   if (!awsServices || awsServices.length === 0) {
     return (
       <Container>
-        <Header variant="h3">추천 AWS 서비스</Header>
+        <Header variant="h3">{t('adminSessionDetail.awsServices.sectionTitle')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          추천 AWS 서비스가 생성되지 않았습니다.
+          {t('adminSessionDetail.awsServices.noResults')}
         </Box>
       </Container>
     )
@@ -591,18 +581,18 @@ function AWSServicesContainer({ awsServices }: AWSServicesContainerProps) {
 
   return (
     <Container>
-      <Header variant="h3">추천 AWS 서비스</Header>
+      <Header variant="h3">{t('adminSessionDetail.awsServices.sectionTitle')}</Header>
       <ColumnLayout columns={awsServices.length > 2 ? 2 : 1}>
         {awsServices.map((service, index) => (
           <div key={index} style={{ border: '1px solid #e1e4e8', borderRadius: '8px', padding: '12px' }}>
             <SpaceBetween size="s">
               <Box variant="h4">{service.service}</Box>
               <Box>
-                <Box variant="awsui-key-label">추천 이유</Box>
+                <Box variant="awsui-key-label">{t('adminSessionDetail.awsServices.reasonLabel')}</Box>
                 <Box fontSize="body-s">{service.reason}</Box>
               </Box>
               <Box>
-                <Box variant="awsui-key-label">구현 방안</Box>
+                <Box variant="awsui-key-label">{t('adminSessionDetail.awsServices.implementationLabel')}</Box>
                 <Box fontSize="body-s">{service.implementation}</Box>
               </Box>
             </SpaceBetween>
@@ -622,12 +612,14 @@ interface CustomerCasesContainerProps {
 }
 
 function CustomerCasesContainer({ customerCases }: CustomerCasesContainerProps) {
+  const { t } = useI18n()
+
   if (!customerCases || customerCases.length === 0) {
     return (
       <Container>
-        <Header variant="h3">관련 고객 사례</Header>
+        <Header variant="h3">{t('adminSessionDetail.customerCases.sectionTitle')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          관련 고객 사례가 생성되지 않았습니다.
+          {t('adminSessionDetail.customerCases.noResults')}
         </Box>
       </Container>
     )
@@ -635,18 +627,18 @@ function CustomerCasesContainer({ customerCases }: CustomerCasesContainerProps) 
 
   return (
     <Container>
-      <Header variant="h3">관련 고객 사례</Header>
+      <Header variant="h3">{t('adminSessionDetail.customerCases.sectionTitle')}</Header>
       <SpaceBetween size="m">
         {customerCases.map((customerCase, index) => (
           <div key={index} style={{ border: '1px solid #e1e4e8', borderRadius: '8px', backgroundColor: '#fafbfc', padding: '24px' }}>
             <SpaceBetween size="s">
               <Box variant="h4">{customerCase.title}</Box>
               <Box>
-                <Box variant="awsui-key-label">사례 설명</Box>
+                <Box variant="awsui-key-label">{t('adminSessionDetail.customerCases.descriptionLabel')}</Box>
                 <Box>{customerCase.description}</Box>
               </Box>
               <Box>
-                <Box variant="awsui-key-label">관련성</Box>
+                <Box variant="awsui-key-label">{t('adminSessionDetail.customerCases.relevanceLabel')}</Box>
                 <Box fontSize="body-s" color="text-status-info">{customerCase.relevance}</Box>
               </Box>
             </SpaceBetween>

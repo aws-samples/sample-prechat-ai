@@ -43,51 +43,51 @@ export function CampaignPurposesChart({ analytics, loading = false }: CampaignPu
       <SpaceBetween size="l">
         <Header 
           variant="h2"
-          description={t('top_consultation_purposes_description')}
+          description={t('adminCampaignDetail.purposesChart.description')}
         >
-          {t('top_consultation_purposes')}
+          {t('adminCampaignDetail.purposesChart.title')}
         </Header>
         
         {loading ? (
           <Box textAlign="center" padding="l">
-            <Box variant="p">{t('loading')}...</Box>
+            <Box variant="p">{t('adminCampaignDetail.purposesChart.loading')}...</Box>
           </Box>
         ) : chartData.length > 0 ? (
           <PieChart
             data={chartData}
             detailPopoverContent={(datum) => [
-              { key: t('purpose'), value: datum.title },
-              { key: t('sessions'), value: datum.value },
+              { key: t('adminCampaignDetail.purposesChart.purposeKey'), value: datum.title },
+              { key: t('adminCampaignDetail.purposesChart.sessionsKey'), value: datum.value },
               { 
-                key: t('percentage'), 
+                key: t('adminCampaignDetail.purposesChart.percentageKey'), 
                 value: `${((datum.value / analytics.totalSessions) * 100).toFixed(1)}%` 
               }
             ]}
             segmentDescription={(datum, sum) => 
-              `${datum.value} ${t('sessions')} (${((datum.value / sum) * 100).toFixed(1)}%)`
+              `${datum.value} ${t('adminCampaignDetail.purposesChart.sessionsKey')} (${((datum.value / sum) * 100).toFixed(1)}%)`
             }
             i18nStrings={{
-              detailsValue: t('sessions'),
-              detailsPercentage: t('percentage'),
-              filterLabel: t('filter'),
-              filterPlaceholder: t('filter_purposes'),
-              filterSelectedAriaLabel: `${t('purposes_selected')}`,
-              detailPopoverDismissAriaLabel: t('dismiss'),
-              legendAriaLabel: t('chart_legend'),
-              chartAriaRoleDescription: t('consultation_purposes_chart'),
-              segmentAriaRoleDescription: t('consultation_purposes_chart')
+              detailsValue: t('adminCampaignDetail.purposesChart.sessionsKey'),
+              detailsPercentage: t('adminCampaignDetail.purposesChart.percentageKey'),
+              filterLabel: t('adminCampaignDetail.purposesChart.filterLabel'),
+              filterPlaceholder: t('adminCampaignDetail.purposesChart.filterPlaceholder'),
+              filterSelectedAriaLabel: `${t('adminCampaignDetail.purposesChart.filterSelectedAriaLabel')}`,
+              detailPopoverDismissAriaLabel: t('adminCampaignDetail.purposesChart.dismissAriaLabel'),
+              legendAriaLabel: t('adminCampaignDetail.purposesChart.legendAriaLabel'),
+              chartAriaRoleDescription: t('adminCampaignDetail.purposesChart.chartAriaLabel'),
+              segmentAriaRoleDescription: t('adminCampaignDetail.purposesChart.chartAriaLabel')
             }}
-            ariaLabel={t('consultation_purposes_chart')}
-            errorText={t('chart_error')}
-            loadingText={t('loading_chart')}
-            recoveryText={t('retry')}
+            ariaLabel={t('adminCampaignDetail.purposesChart.chartAriaLabel')}
+            errorText={t('adminCampaignDetail.purposesChart.chartError')}
+            loadingText={t('adminCampaignDetail.purposesChart.loadingText')}
+            recoveryText={t('adminCampaignDetail.purposesChart.retryText')}
             empty={
               <Box textAlign="center" color="inherit">
                 <Box variant="strong" color="inherit">
-                  {t('no_purposes_data')}
+                  {t('adminCampaignDetail.purposesChart.noDataTitle')}
                 </Box>
                 <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                  {t('no_purposes_data_description')}
+                  {t('adminCampaignDetail.purposesChart.noDataDescription')}
                 </Box>
               </Box>
             }
@@ -95,10 +95,10 @@ export function CampaignPurposesChart({ analytics, loading = false }: CampaignPu
         ) : (
           <Box textAlign="center" padding="l">
             <Box variant="h3" color="text-status-inactive">
-              {t('no_purposes_data')}
+              {t('adminCampaignDetail.purposesChart.noDataTitle')}
             </Box>
             <Box variant="p" color="text-status-inactive">
-              {t('no_purposes_data_description')}
+              {t('adminCampaignDetail.purposesChart.noDataDescription')}
             </Box>
           </Box>
         )}

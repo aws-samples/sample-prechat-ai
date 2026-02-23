@@ -67,10 +67,10 @@ export default function CampaignDashboard() {
 
   const getStatusBadge = (status: Campaign['status']) => {
     const statusConfig = {
-      active: { type: 'green' as const, text: t('campaign_status_active') },
-      completed: { type: 'blue' as const, text: t('campaign_status_completed') },
-      paused: { type: 'grey' as const, text: t('campaign_status_paused') },
-      cancelled: { type: 'red' as const, text: t('campaign_status_cancelled') }
+      active: { type: 'green' as const, text: t('adminCampaigns.status.active') },
+      completed: { type: 'blue' as const, text: t('adminCampaigns.status.completed') },
+      paused: { type: 'grey' as const, text: t('adminCampaigns.status.paused') },
+      cancelled: { type: 'red' as const, text: t('adminCampaigns.status.cancelled') }
     }
     
     const config = statusConfig[status]
@@ -128,19 +128,19 @@ export default function CampaignDashboard() {
       <SpaceBetween size="l">
         <Header
           variant="h1"
-          description={t('campaign_list_title')}
+          description={t('adminCampaigns.header.description')}
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button
                 variant="primary"
                 onClick={() => navigate('/admin/campaigns/create')}
               >
-                {t('create_campaign')}
+                {t('adminCampaigns.header.createButton')}
               </Button>
             </SpaceBetween>
           }
         >
-          {t('campaigns')}
+          {t('adminCampaigns.header.title')}
         </Header>
 
         {error && <Alert type="error" dismissible onDismiss={() => setError('')}>{error}</Alert>}
@@ -149,7 +149,7 @@ export default function CampaignDashboard() {
           columnDefinitions={[
             {
               id: 'campaignName',
-              header: t('campaign_name'),
+              header: t('adminCampaigns.table.campaignNameHeader'),
               sortingField: 'campaignName',
               cell: (item) => (
                 <Box>
@@ -165,7 +165,7 @@ export default function CampaignDashboard() {
             },
             {
               id: 'owner',
-              header: t('campaign_owner'),
+              header: t('adminCampaigns.table.ownerHeader'),
               cell: (item) => (
                 <Box>
                   <Box fontWeight="bold">{item.ownerName}</Box>
@@ -177,20 +177,20 @@ export default function CampaignDashboard() {
             },
             {
               id: 'status',
-              header: t('campaign_status'),
+              header: t('adminCampaigns.table.statusHeader'),
               sortingField: 'status',
               cell: (item) => getStatusBadge(item.status)
             },
             {
               id: 'dates',
-              header: 'Period',
+              header: t('adminCampaigns.table.periodHeader'),
               cell: (item) => (
                 <Box>
                   <Box fontSize="body-s">
-                    {t('start_date_label')}: {new Date(item.startDate).toLocaleDateString()}
+                    {t('adminCampaigns.table.startDateLabel')}: {new Date(item.startDate).toLocaleDateString()}
                   </Box>
                   <Box fontSize="body-s">
-                    {t('end_date_label')}: {new Date(item.endDate).toLocaleDateString()}
+                    {t('adminCampaigns.table.endDateLabel')}: {new Date(item.endDate).toLocaleDateString()}
                   </Box>
                 </Box>
               )
@@ -198,28 +198,28 @@ export default function CampaignDashboard() {
 
             {
               id: 'actions',
-              header: t('admin_actions'),
+              header: t('adminCampaigns.table.actionsHeader'),
               cell: (item) => (
                 <ButtonDropdown
                   expandToViewport
                   items={[
                     {
-                      text: t('campaign_details'),
+                      text: t('adminCampaigns.actions.viewDetails'),
                       id: 'view',
                       iconName: 'external'
                     },
                     {
-                      text: t('edit_campaign'),
+                      text: t('adminCampaigns.actions.edit'),
                       id: 'edit',
                       iconName: 'edit'
                     },
                     {
-                      text: t('view_sessions'),
+                      text: t('adminCampaigns.actions.viewSessions'),
                       id: 'sessions',
                       iconName: 'view-horizontal'
                     },
                     {
-                      text: t('delete_campaign'),
+                      text: t('adminCampaigns.actions.delete'),
                       id: 'delete',
                       iconName: 'remove'
                     }
@@ -241,14 +241,14 @@ export default function CampaignDashboard() {
                     }
                   }}
                 >
-                  {t('admin_actions')}
+                  {t('adminCampaigns.actions.label')}
                 </ButtonDropdown>
               )
             }
           ]}
           items={paginatedCampaigns}
           loading={loading}
-          loadingText={t('loading_campaigns')}
+          loadingText={t('adminCampaigns.table.loadingText')}
           selectedItems={selectedItems}
           onSelectionChange={({ detail }) => setSelectedItems(detail.selectedItems)}
           sortingColumn={sortingColumn}
@@ -261,7 +261,7 @@ export default function CampaignDashboard() {
             <TextFilter
               filteringText={filteringText}
               onChange={({ detail }) => setFilteringText(detail.filteringText)}
-              filteringPlaceholder="Search campaigns..."
+              filteringPlaceholder={t('adminCampaigns.table.searchPlaceholder')}
             />
           }
           pagination={
@@ -273,15 +273,15 @@ export default function CampaignDashboard() {
           }
           preferences={
             <CollectionPreferences
-              title="Preferences"
-              confirmLabel="Confirm"
-              cancelLabel="Cancel"
+              title={t('adminCampaigns.preferences.title')}
+              confirmLabel={t('adminCampaigns.preferences.confirmLabel')}
+              cancelLabel={t('adminCampaigns.preferences.cancelLabel')}
               pageSizePreference={{
-                title: "Page size",
+                title: t('adminCampaigns.preferences.pageSizeTitle'),
                 options: [
-                  { value: 10, label: "10 campaigns" },
-                  { value: 20, label: "20 campaigns" },
-                  { value: 50, label: "50 campaigns" }
+                  { value: 10, label: t('adminCampaigns.preferences.pageSize10') },
+                  { value: 20, label: t('adminCampaigns.preferences.pageSize20') },
+                  { value: 50, label: t('adminCampaigns.preferences.pageSize50') }
                 ]
               }}
               onConfirm={({ detail }) => {
@@ -292,13 +292,13 @@ export default function CampaignDashboard() {
           empty={
             <Box textAlign="center" color="inherit">
               <Box variant="strong" textAlign="center" color="inherit">
-                {t('no_campaigns_found')}
+                {t('adminCampaigns.table.noItemsTitle')}
               </Box>
               <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                {t('no_campaigns_found')}
+                {t('adminCampaigns.table.noItemsDescription')}
               </Box>
               <Button onClick={() => navigate('/admin/campaigns/create')}>
-                {t('create_campaign')}
+                {t('adminCampaigns.header.createButton')}
               </Button>
             </Box>
           }

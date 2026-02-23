@@ -60,10 +60,10 @@ export default function CreateAgent() {
         systemPrompt: formData.systemPrompt,
         agentName: formData.agentName
       })
-      setSuccess(t('agents_created_success', { name: formData.agentName }))
+      setSuccess(t('adminAgentCreate.alert.createdSuccess', { name: formData.agentName }))
       setTimeout(() => navigate('/admin/agents'), 3000)
     } catch (err) {
-      setError(t('agents_failed_create'))
+      setError(t('adminAgentCreate.alert.failedCreate'))
     } finally {
       setLoading(false)
     }
@@ -92,11 +92,11 @@ export default function CreateAgent() {
           variant="h1"
           actions={
             <Button variant="normal" onClick={() => navigate('/admin/agents')}>
-              {t('admin_to_dashboard')}
+              {t('adminAgentCreate.header.toDashboardButton')}
             </Button>
           }
         >
-          {t('agents_create_new_agent')}
+          {t('adminAgentCreate.header.title')}
         </Header>
 
         {error && <Alert type="error">{error}</Alert>}
@@ -106,7 +106,7 @@ export default function CreateAgent() {
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="link" onClick={() => navigate('/admin/agents')}>
-                {t('cancel')}
+                {t('adminAgentCreate.form.cancelButton')}
               </Button>
               <Button
                 variant="primary"
@@ -114,27 +114,27 @@ export default function CreateAgent() {
                 loading={loading}
                 disabled={!formData.agentName || !formData.agentRole || !formData.modelId}
               >
-                {t('admin_create_agent')}
+                {t('adminAgentCreate.form.createAgentButton')}
               </Button>
             </SpaceBetween>
           }
         >
           <SpaceBetween size="l">
             <FormField
-              label={t('admin_agent_name')}
-              description={t('agents_agent_name_description')}
+              label={t('adminAgentCreate.form.agentNameLabel')}
+              description={t('adminAgentCreate.form.agentNameDescription')}
               stretch
             >
               <Input
                 value={formData.agentName}
                 onChange={({ detail }) => updateFormData('agentName', detail.value)}
-                placeholder={t('agents_enter_agent_name')}
+                placeholder={t('adminAgentCreate.form.agentNamePlaceholder')}
               />
             </FormField>
 
             <FormField
-              label={t('agent_role')}
-              description={t('agent_role_description')}
+              label={t('adminAgentCreate.form.agentRoleLabel')}
+              description={t('adminAgentCreate.form.agentRoleDescription')}
               stretch
             >
               <Select
@@ -147,13 +147,13 @@ export default function CreateAgent() {
                   updateFormData('agentRole', detail.selectedOption?.value || '')
                 }
                 options={AGENT_ROLES}
-                placeholder={t('select_agent_role')}
+                placeholder={t('adminAgentCreate.form.agentRolePlaceholder')}
               />
             </FormField>
 
             <FormField
-              label={t('foundation_model')}
-              description={t('agents_foundation_model_description')}
+              label={t('adminAgentCreate.form.foundationModelLabel')}
+              description={t('adminAgentCreate.form.foundationModelDescription')}
               stretch
             >
               <Select
@@ -166,20 +166,20 @@ export default function CreateAgent() {
                   updateFormData('modelId', detail.selectedOption?.value || '')
                 }
                 options={modelOptions}
-                placeholder={t('select_a_foundation_model')}
+                placeholder={t('adminAgentCreate.form.foundationModelPlaceholder')}
               />
             </FormField>
 
             <FormField
-              label={t('agent_prompt_override')}
-              description={t('agent_prompt_override_description')}
+              label={t('adminAgentCreate.form.promptOverrideLabel')}
+              description={t('adminAgentCreate.form.promptOverrideDescription')}
               stretch
             >
               <Checkbox
                 checked={overridePrompt}
                 onChange={({ detail }) => setOverridePrompt(detail.checked)}
               >
-                {t('agent_enable_prompt_override')}
+                {t('adminAgentCreate.form.promptOverrideCheckbox')}
               </Checkbox>
             </FormField>
 
@@ -187,11 +187,11 @@ export default function CreateAgent() {
               <FormField
                 label={
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>{t('agent_instructions')}</span>
+                    <span>{t('adminAgentCreate.form.agentInstructionsLabel')}</span>
                     <PlaceholderTooltip />
                   </div>
                 }
-                description={t('admin_agent_instructions_description')}
+                description={t('adminAgentCreate.form.agentInstructionsDescription')}
                 stretch
                 secondaryControl={
                   <Button
@@ -199,14 +199,14 @@ export default function CreateAgent() {
                     iconName="refresh"
                     onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[formData.agentRole] || consultationPrompt)}
                   >
-                    {t('admin_default_agent_instructions')}
+                    {t('adminAgentCreate.form.defaultInstructionsButton')}
                   </Button>
                 }
               >
                 <Textarea
                   value={formData.systemPrompt}
                   onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
-                  placeholder={t('enter_agent_instructions')}
+                  placeholder={t('adminAgentCreate.form.agentInstructionsPlaceholder')}
                   rows={15}
                 />
               </FormField>

@@ -44,56 +44,56 @@ const TRIGGER_TYPE_OPTIONS = [
 const EVENT_ACTIVE_FIELD_KEYS: Record<string, Record<string, string>> = {
   SessionCreated: {
     event_type: 'SessionCreated',
-    session_id: 'trigger_field_session_id',
-    campaign_id: 'trigger_field_campaign_id',
-    campaign_name: 'trigger_field_campaign_name',
-    customer_name: 'trigger_field_customer_name',
-    customer_company: 'trigger_field_customer_company',
-    customer_email: 'trigger_field_customer_email',
-    sales_rep_email: 'trigger_field_sales_rep_email',
-    admin_url: 'trigger_field_admin_url',
-    event_time: 'trigger_field_event_time_created',
+    session_id: 'adminTriggers.fieldLabels.sessionId',
+    campaign_id: 'adminTriggers.fieldLabels.campaignId',
+    campaign_name: 'adminTriggers.fieldLabels.campaignName',
+    customer_name: 'adminTriggers.fieldLabels.customerName',
+    customer_company: 'adminTriggers.fieldLabels.customerCompany',
+    customer_email: 'adminTriggers.fieldLabels.customerEmail',
+    sales_rep_email: 'adminTriggers.fieldLabels.salesRepEmail',
+    admin_url: 'adminTriggers.fieldLabels.adminUrl',
+    event_time: 'adminTriggers.fieldLabels.eventTimeCreated',
   },
   SessionCompleted: {
     event_type: 'SessionCompleted',
-    session_id: 'trigger_field_session_id',
-    campaign_id: 'trigger_field_campaign_id',
-    campaign_name: 'trigger_field_campaign_name',
-    customer_name: 'trigger_field_customer_name',
-    customer_company: 'trigger_field_customer_company',
-    customer_email: 'trigger_field_customer_email',
-    sales_rep_email: 'trigger_field_sales_rep_email',
-    message_count: 'trigger_field_message_count',
-    duration_minutes: 'trigger_field_duration_minutes',
-    admin_url: 'trigger_field_admin_url',
-    event_time: 'trigger_field_event_time_completed',
+    session_id: 'adminTriggers.fieldLabels.sessionId',
+    campaign_id: 'adminTriggers.fieldLabels.campaignId',
+    campaign_name: 'adminTriggers.fieldLabels.campaignName',
+    customer_name: 'adminTriggers.fieldLabels.customerName',
+    customer_company: 'adminTriggers.fieldLabels.customerCompany',
+    customer_email: 'adminTriggers.fieldLabels.customerEmail',
+    sales_rep_email: 'adminTriggers.fieldLabels.salesRepEmail',
+    message_count: 'adminTriggers.fieldLabels.messageCount',
+    duration_minutes: 'adminTriggers.fieldLabels.durationMinutes',
+    admin_url: 'adminTriggers.fieldLabels.adminUrl',
+    event_time: 'adminTriggers.fieldLabels.eventTimeCompleted',
   },
   SessionInactivated: {
     event_type: 'SessionInactivated',
-    session_id: 'trigger_field_session_id',
-    campaign_id: 'trigger_field_campaign_id',
-    campaign_name: 'trigger_field_campaign_name',
-    customer_name: 'trigger_field_customer_name',
-    customer_company: 'trigger_field_customer_company',
-    customer_email: 'trigger_field_customer_email',
-    admin_url: 'trigger_field_admin_url',
-    event_time: 'trigger_field_event_time_inactivated',
+    session_id: 'adminTriggers.fieldLabels.sessionId',
+    campaign_id: 'adminTriggers.fieldLabels.campaignId',
+    campaign_name: 'adminTriggers.fieldLabels.campaignName',
+    customer_name: 'adminTriggers.fieldLabels.customerName',
+    customer_company: 'adminTriggers.fieldLabels.customerCompany',
+    customer_email: 'adminTriggers.fieldLabels.customerEmail',
+    admin_url: 'adminTriggers.fieldLabels.adminUrl',
+    event_time: 'adminTriggers.fieldLabels.eventTimeInactivated',
   },
   CampaignCreated: {
     event_type: 'CampaignCreated',
-    campaign_id: 'trigger_field_campaign_id',
-    campaign_name: 'trigger_field_campaign_name',
-    sales_rep_email: 'trigger_field_owner_email',
-    admin_url: 'trigger_field_admin_url',
-    event_time: 'trigger_field_event_time_created',
+    campaign_id: 'adminTriggers.fieldLabels.campaignId',
+    campaign_name: 'adminTriggers.fieldLabels.campaignName',
+    sales_rep_email: 'adminTriggers.fieldLabels.ownerEmail',
+    admin_url: 'adminTriggers.fieldLabels.adminUrl',
+    event_time: 'adminTriggers.fieldLabels.eventTimeCreated',
   },
   CampaignCompleted: {
     event_type: 'CampaignCompleted',
-    campaign_id: 'trigger_field_campaign_id',
-    campaign_name: 'trigger_field_campaign_name',
-    message_count: 'trigger_field_total_sessions',
-    admin_url: 'trigger_field_admin_url',
-    event_time: 'trigger_field_event_time_completed',
+    campaign_id: 'adminTriggers.fieldLabels.campaignId',
+    campaign_name: 'adminTriggers.fieldLabels.campaignName',
+    message_count: 'adminTriggers.fieldLabels.totalSessions',
+    admin_url: 'adminTriggers.fieldLabels.adminUrl',
+    event_time: 'adminTriggers.fieldLabels.eventTimeCompleted',
   },
 }
 
@@ -280,26 +280,26 @@ export default function TriggerDashboard() {
       <SpaceBetween size="l">
         <Header
           variant="h1"
-          description={t('trigger_management_description')}
-          actions={<Button variant="primary" onClick={openCreateModal}>{t('trigger_create')}</Button>}
+          description={t('adminTriggers.header.description')}
+          actions={<Button variant="primary" onClick={openCreateModal}>{t('adminTriggers.header.createButton')}</Button>}
         >
-          {t('trigger_management')}
+          {t('adminTriggers.header.title')}
         </Header>
 
         {error && <Alert type="error" dismissible onDismiss={() => setError('')}>{error}</Alert>}
 
         <Table
           columnDefinitions={[
-            { id: 'eventType', header: t('trigger_event'), cell: item => getEventBadge(item.eventType), width: 180 },
-            { id: 'triggerType', header: t('trigger_type'), cell: item => getTypeBadge(item.triggerType), width: 100 },
+            { id: 'eventType', header: t('adminTriggers.table.eventHeader'), cell: item => getEventBadge(item.eventType), width: 180 },
+            { id: 'triggerType', header: t('adminTriggers.table.typeHeader'), cell: item => getTypeBadge(item.triggerType), width: 100 },
             {
-              id: 'scope', header: t('trigger_scope'), width: 160,
+              id: 'scope', header: t('adminTriggers.table.scopeHeader'), width: 160,
               cell: item => item.isGlobal
-                ? <Badge color="blue">{t('trigger_global')}</Badge>
+                ? <Badge color="blue">{t('adminTriggers.table.globalBadge')}</Badge>
                 : <Box fontSize="body-s">{campaigns.find(c => c.campaignId === item.campaignId)?.campaignName || item.campaignId}</Box>,
             },
             {
-              id: 'endpoint', header: t('trigger_endpoint'),
+              id: 'endpoint', header: t('adminTriggers.table.endpointHeader'),
               cell: item => (
                 <Box fontSize="body-s" variant="code">
                   {item.deliveryEndpoint.length > 50 ? item.deliveryEndpoint.substring(0, 50) + '...' : item.deliveryEndpoint}
@@ -307,31 +307,31 @@ export default function TriggerDashboard() {
               ),
             },
             {
-              id: 'status', header: t('trigger_status'), width: 130,
+              id: 'status', header: t('adminTriggers.table.statusHeader'), width: 130,
               cell: item => (
                 <Toggle checked={item.status === 'active'} onChange={() => handleToggleStatus(item)}>
-                  {item.status === 'active' ? t('trigger_active') : t('trigger_inactive')}
+                  {item.status === 'active' ? t('adminTriggers.table.activeStatus') : t('adminTriggers.table.inactiveStatus')}
                 </Toggle>
               ),
             },
             {
-              id: 'actions', header: t('trigger_actions'), width: 140,
+              id: 'actions', header: t('adminTriggers.table.actionsHeader'), width: 140,
               cell: item => (
                 <SpaceBetween direction="horizontal" size="xs">
-                  <Button variant="link" onClick={() => openEditModal(item)}>{t('trigger_edit_btn')}</Button>
-                  <Button variant="link" onClick={() => setDeleteTarget(item)}>{t('trigger_delete_btn')}</Button>
+                  <Button variant="link" onClick={() => openEditModal(item)}>{t('adminTriggers.table.editButton')}</Button>
+                  <Button variant="link" onClick={() => setDeleteTarget(item)}>{t('adminTriggers.table.deleteButton')}</Button>
                 </SpaceBetween>
               ),
             },
           ]}
           items={paginatedTriggers}
           loading={loading}
-          loadingText={t('trigger_loading')}
+          loadingText={t('adminTriggers.table.loadingText')}
           filter={
             <TextFilter
               filteringText={filteringText}
               onChange={({ detail }) => setFilteringText(detail.filteringText)}
-              filteringPlaceholder={t('trigger_search_placeholder')}
+              filteringPlaceholder={t('adminTriggers.table.searchPlaceholder')}
             />
           }
           pagination={
@@ -343,9 +343,9 @@ export default function TriggerDashboard() {
           }
           empty={
             <Box textAlign="center" color="inherit">
-              <Box variant="strong">{t('trigger_empty_title')}</Box>
-              <Box variant="p" padding={{ bottom: 's' }}>{t('trigger_empty_description')}</Box>
-              <Button onClick={openCreateModal}>{t('trigger_create')}</Button>
+              <Box variant="strong">{t('adminTriggers.table.emptyTitle')}</Box>
+              <Box variant="p" padding={{ bottom: 's' }}>{t('adminTriggers.table.emptyDescription')}</Box>
+              <Button onClick={openCreateModal}>{t('adminTriggers.table.emptyCreateButton')}</Button>
             </Box>
           }
         />
@@ -355,14 +355,14 @@ export default function TriggerDashboard() {
       <Modal
         visible={modalVisible}
         onDismiss={() => setModalVisible(false)}
-        header={editingTrigger ? t('trigger_edit') : t('trigger_create')}
+        header={editingTrigger ? t('adminTriggers.modal.editTitle') : t('adminTriggers.modal.createTitle')}
         size="large"
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setModalVisible(false)}>{t('trigger_cancel')}</Button>
+              <Button variant="link" onClick={() => setModalVisible(false)}>{t('adminTriggers.modal.cancelButton')}</Button>
               <Button variant="primary" loading={saving} onClick={handleSave}>
-                {editingTrigger ? t('trigger_save') : t('trigger_create')}
+                {editingTrigger ? t('adminTriggers.modal.saveButton') : t('adminTriggers.modal.createButton')}
               </Button>
             </SpaceBetween>
           </Box>
@@ -372,7 +372,7 @@ export default function TriggerDashboard() {
           {modalError && <Alert type="error">{modalError}</Alert>}
 
           <ColumnLayout columns={2}>
-            <FormField label={t('trigger_type_label')}>
+            <FormField label={t('adminTriggers.modal.triggerTypeLabel')}>
               <Select
                 selectedOption={TRIGGER_TYPE_OPTIONS.find(o => o.value === form.triggerType) || null}
                 onChange={({ detail }) => {
@@ -384,7 +384,7 @@ export default function TriggerDashboard() {
                 disabled={!!editingTrigger}
               />
             </FormField>
-            <FormField label={t('trigger_event_type_label')}>
+            <FormField label={t('adminTriggers.modal.eventTypeLabel')}>
               <Select
                 selectedOption={EVENT_TYPE_OPTIONS.find(o => o.value === form.eventType) || null}
                 onChange={({ detail }) => setForm(prev => ({ ...prev, eventType: detail.selectedOption.value as TriggerEventType }))}
@@ -394,8 +394,8 @@ export default function TriggerDashboard() {
           </ColumnLayout>
 
           <FormField
-            label={t('trigger_endpoint_label')}
-            description={form.triggerType === 'slack' ? t('trigger_endpoint_slack_description') : t('trigger_endpoint_sns_description')}
+            label={t('adminTriggers.modal.endpointLabel')}
+            description={form.triggerType === 'slack' ? t('adminTriggers.modal.endpointSlackDescription') : t('adminTriggers.modal.endpointSnsDescription')}
           >
             {form.triggerType === 'sns' ? (
               <Select
@@ -406,11 +406,11 @@ export default function TriggerDashboard() {
                 }
                 onChange={({ detail }) => setForm(prev => ({ ...prev, deliveryEndpoint: detail.selectedOption.value || '' }))}
                 options={snsTopics.map(tp => ({ label: tp.topicName, value: tp.topicArn, description: tp.topicArn }))}
-                placeholder={t('trigger_sns_placeholder')}
+                placeholder={t('adminTriggers.modal.snsPlaceholder')}
                 filteringType="auto"
                 statusType={snsTopicsLoading ? 'loading' : 'finished'}
-                loadingText={t('trigger_sns_loading')}
-                empty={t('trigger_sns_empty')}
+                loadingText={t('adminTriggers.modal.snsLoadingText')}
+                empty={t('adminTriggers.modal.snsEmptyText')}
               />
             ) : (
               <Input
@@ -421,17 +421,17 @@ export default function TriggerDashboard() {
             )}
           </FormField>
 
-          <FormField label={t('trigger_scope_label')}>
+          <FormField label={t('adminTriggers.modal.scopeLabel')}>
             <Toggle
               checked={form.isGlobal}
               onChange={({ detail }) => setForm(prev => ({ ...prev, isGlobal: detail.checked }))}
             >
-              {t('trigger_global_toggle')}
+              {t('adminTriggers.modal.globalToggle')}
             </Toggle>
           </FormField>
 
           {!form.isGlobal && (
-            <FormField label={t('trigger_campaign_label')}>
+            <FormField label={t('adminTriggers.modal.campaignLabel')}>
               <Select
                 selectedOption={
                   campaigns.find(c => c.campaignId === form.campaignId)
@@ -440,32 +440,38 @@ export default function TriggerDashboard() {
                 }
                 onChange={({ detail }) => setForm(prev => ({ ...prev, campaignId: detail.selectedOption.value || '' }))}
                 options={campaigns.map(c => ({ label: c.campaignName, value: c.campaignId }))}
-                placeholder={t('trigger_campaign_placeholder')}
+                placeholder={t('adminTriggers.modal.campaignPlaceholder')}
                 filteringType="auto"
               />
             </FormField>
           )}
 
           {editingTrigger && (
-            <FormField label={t('trigger_status_label')}>
+            <FormField label={t('adminTriggers.modal.statusLabel')}>
               <Toggle
                 checked={form.status === 'active'}
                 onChange={({ detail }) => setForm(prev => ({ ...prev, status: detail.checked ? 'active' : 'inactive' }))}
               >
-                {form.status === 'active' ? t('trigger_active') : t('trigger_inactive')}
+                {form.status === 'active' ? t('adminTriggers.modal.activeStatus') : t('adminTriggers.modal.inactiveStatus')}
               </Toggle>
             </FormField>
           )}
 
           {EVENT_ACTIVE_FIELD_KEYS[form.eventType] && (
             <ExpandableSection
-              headerText={`${t('trigger_webhook_schema_header')} (${form.eventType})`}
+              headerText={`${t('adminTriggers.modal.webhookSchemaHeader')} (${form.eventType})`}
               defaultExpanded={!editingTrigger}
             >
               <SpaceBetween size="xs">
                 <Box fontSize="body-s" color="text-status-inactive">
-                  {t(`trigger_event_desc_${form.eventType}`)}
-                  {' '}{t('trigger_schema_empty_fields_note')}
+                  {t(`adminTriggers.eventDescription.${
+                    form.eventType === 'SessionCompleted' ? 'sessionCompleted' :
+                    form.eventType === 'SessionCreated' ? 'sessionCreated' :
+                    form.eventType === 'SessionInactivated' ? 'sessionInactivated' :
+                    form.eventType === 'CampaignCreated' ? 'campaignCreated' :
+                    'campaignCompleted'
+                  }`)}
+                  {' '}{t('adminTriggers.modal.schemaEmptyFieldsNote')}
                 </Box>
                 <Box variant="code">
                   <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontSize: '13px' }}>
@@ -482,23 +488,23 @@ export default function TriggerDashboard() {
       <Modal
         visible={!!deleteTarget}
         onDismiss={() => setDeleteTarget(null)}
-        header={t('trigger_delete')}
+        header={t('adminTriggers.modal.deleteTitle')}
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setDeleteTarget(null)}>{t('trigger_cancel')}</Button>
-              <Button variant="primary" onClick={handleDelete}>{t('trigger_delete_btn')}</Button>
+              <Button variant="link" onClick={() => setDeleteTarget(null)}>{t('adminTriggers.modal.cancelButton')}</Button>
+              <Button variant="primary" onClick={handleDelete}>{t('adminTriggers.modal.deleteButton')}</Button>
             </SpaceBetween>
           </Box>
         }
       >
         <Box>
-          {t('trigger_delete_confirm')}
+          {t('adminTriggers.modal.deleteConfirm')}
           {deleteTarget && (
             <Box margin={{ top: 's' }}>
-              <Box fontSize="body-s">{t('trigger_delete_event')}: {deleteTarget.eventType}</Box>
-              <Box fontSize="body-s">{t('trigger_delete_type')}: {deleteTarget.triggerType}</Box>
-              <Box fontSize="body-s">{t('trigger_delete_endpoint')}: {deleteTarget.deliveryEndpoint}</Box>
+              <Box fontSize="body-s">{t('adminTriggers.modal.deleteEventLabel')}: {deleteTarget.eventType}</Box>
+              <Box fontSize="body-s">{t('adminTriggers.modal.deleteTypeLabel')}: {deleteTarget.triggerType}</Box>
+              <Box fontSize="body-s">{t('adminTriggers.modal.deleteEndpointLabel')}: {deleteTarget.deliveryEndpoint}</Box>
             </Box>
           )}
         </Box>

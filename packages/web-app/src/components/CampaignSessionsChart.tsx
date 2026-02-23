@@ -40,18 +40,18 @@ export function CampaignSessionsChart({ analytics, loading = false }: CampaignSe
     <Container>
       <SpaceBetween size="l">
         <Header variant="h2">
-          {t('completed_sessions_over_time')}
+          {t('adminCampaignDetail.sessionsChart.title')}
         </Header>
         
         {loading ? (
           <Box textAlign="center" padding="l">
-            <Box variant="p">{t('loading')}...</Box>
+            <Box variant="p">{t('adminCampaignDetail.sessionsChart.loading')}...</Box>
           </Box>
         ) : chartData.length > 0 && analytics.sessionsByDate.length > 0 ? (
           <BarChart
             series={[
               {
-                title: t('completed_sessions_per_day'),
+                title: t('adminCampaignDetail.sessionsChart.seriesTitle'),
                 type: 'bar',
                 data: chartData
               }
@@ -61,8 +61,8 @@ export function CampaignSessionsChart({ analytics, loading = false }: CampaignSe
             yScaleType="linear"
             emphasizeBaselineAxis={true}
             i18nStrings={{
-              legendAriaLabel: t('chart_legend'),
-              chartAriaRoleDescription: t('sessions_timeline_chart'),
+              legendAriaLabel: t('adminCampaignDetail.sessionsChart.legendAriaLabel'),
+              chartAriaRoleDescription: t('adminCampaignDetail.sessionsChart.chartAriaLabel'),
               xTickFormatter: (value) => {
                 // Format date string for display
                 try {
@@ -81,7 +81,7 @@ export function CampaignSessionsChart({ analytics, loading = false }: CampaignSe
                 return ''
               }
             }}
-            ariaLabel={t('sessions_timeline_chart')}
+            ariaLabel={t('adminCampaignDetail.sessionsChart.chartAriaLabel')}
             height={300}
             hideFilter
             hideLegend={false}
@@ -90,10 +90,10 @@ export function CampaignSessionsChart({ analytics, loading = false }: CampaignSe
         ) : (
           <Box textAlign="center" padding="l">
             <Box variant="h3" color="text-status-inactive">
-              {t('no_session_data')}
+              {t('adminCampaignDetail.sessionsChart.noDataTitle')}
             </Box>
             <Box variant="p" color="text-status-inactive">
-              {t('no_session_data_description')}
+              {t('adminCampaignDetail.sessionsChart.noDataDescription')}
             </Box>
           </Box>
         )}

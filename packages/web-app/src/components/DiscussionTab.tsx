@@ -49,7 +49,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
       const response = await adminApi.listDiscussions(sessionId)
       setDiscussions(response.discussions || [])
     } catch (err) {
-      setError(t('discussion_failed_load'))
+      setError(t('adminSessionDetail.discussion.failedLoad'))
       console.error('Error loading discussions:', err)
     } finally {
       setLoading(false)
@@ -66,7 +66,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
       setNewComment('')
       await loadDiscussions()
     } catch (err) {
-      setError(t('discussion_failed_create'))
+      setError(t('adminSessionDetail.discussion.failedCreate'))
       console.error('Error creating discussion:', err)
     } finally {
       setSubmitting(false)
@@ -93,7 +93,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
       setEditContent('')
       await loadDiscussions()
     } catch (err) {
-      setError(t('discussion_failed_update'))
+      setError(t('adminSessionDetail.discussion.failedUpdate'))
       console.error('Error updating discussion:', err)
     }
   }
@@ -113,7 +113,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
       setDeleteTargetId(null)
       await loadDiscussions()
     } catch (err) {
-      setError(t('discussion_failed_delete'))
+      setError(t('adminSessionDetail.discussion.failedDelete'))
       console.error('Error deleting discussion:', err)
     }
   }
@@ -143,8 +143,8 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
   return (
     <Container>
       <SpaceBetween size="l">
-        <Header variant="h3" description={t('discussion_description')}>
-          {t('discussion')}
+        <Header variant="h3" description={t('adminSessionDetail.discussion.sectionDescription')}>
+          {t('adminSessionDetail.discussion.sectionTitle')}
         </Header>
 
         {error && (
@@ -156,11 +156,11 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
         {/* New Comment Form */}
         <Container>
           <SpaceBetween size="m">
-            <FormField label={t('discussion_new_comment')}>
+            <FormField label={t('adminSessionDetail.discussion.newCommentLabel')}>
               <Textarea
                 value={newComment}
                 onChange={({ detail }) => setNewComment(detail.value)}
-                placeholder={t('discussion_comment_placeholder')}
+                placeholder={t('adminSessionDetail.discussion.commentPlaceholder')}
                 rows={3}
                 disabled={submitting}
               />
@@ -172,7 +172,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
                 disabled={!newComment.trim() || submitting}
                 loading={submitting}
               >
-                {t('discussion_submit_comment')}
+                {t('adminSessionDetail.discussion.submitButton')}
               </Button>
             </Box>
           </SpaceBetween>
@@ -181,7 +181,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
         {/* Discussion List */}
         {discussions.length === 0 ? (
           <Box textAlign="center" color="text-status-inactive" padding="xxl">
-            {t('discussion_no_comments')}
+            {t('adminSessionDetail.discussion.noComments')}
           </Box>
         ) : (
           <SpaceBetween size="m">
@@ -193,7 +193,7 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
                     <Box fontWeight="bold">{item.authorName}</Box>
                     <Badge color="grey">{item.authorEmail}</Badge>
                     {item.updatedAt && (
-                      <Badge color="blue">{t('discussion_edited')}</Badge>
+                      <Badge color="blue">{t('adminSessionDetail.discussion.editedBadge')}</Badge>
                     )}
                   </SpaceBetween>
 
@@ -211,12 +211,12 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
                           onClick={() => handleSaveEdit(item.id)}
                           disabled={!editContent.trim()}
                         >
-                          {t('save')}
+                          {t('adminSessionDetail.discussion.saveButton')}
                         </Button>
                         <Button
                           onClick={handleCancelEdit}
                         >
-                          {t('cancel')}
+                          {t('adminSessionDetail.discussion.cancelButton')}
                         </Button>
                       </SpaceBetween>
                     </SpaceBetween>
@@ -236,13 +236,13 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
                               variant="icon"
                               iconName="edit"
                               onClick={() => handleStartEdit(item)}
-                              ariaLabel={t('discussion_edit_comment')}
+                              ariaLabel={t('adminSessionDetail.discussion.editCommentAriaLabel')}
                             />
                             <Button
                               variant="icon"
                               iconName="remove"
                               onClick={() => handleDeleteClick(item.id)}
-                              ariaLabel={t('discussion_delete_comment')}
+                              ariaLabel={t('adminSessionDetail.discussion.deleteCommentAriaLabel')}
                             />
                           </SpaceBetween>
                         )}
@@ -259,22 +259,22 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
         <Modal
           visible={deleteModalVisible}
           onDismiss={() => setDeleteModalVisible(false)}
-          header={t('discussion_delete_comment')}
+          header={t('adminSessionDetail.discussion.deleteModalTitle')}
           footer={
             <Box float="right">
               <SpaceBetween direction="horizontal" size="xs">
                 <Button onClick={() => setDeleteModalVisible(false)}>
-                  {t('cancel')}
+                  {t('adminSessionDetail.discussion.cancelButton')}
                 </Button>
                 <Button variant="primary" onClick={handleConfirmDelete}>
-                  {t('delete')}
+                  {t('adminSessionDetail.discussion.deleteButton')}
                 </Button>
               </SpaceBetween>
             </Box>
           }
         >
           <Box>
-            {t('discussion_delete_confirmation')}
+            {t('adminSessionDetail.discussion.deleteConfirmation')}
           </Box>
         </Modal>
       </SpaceBetween>

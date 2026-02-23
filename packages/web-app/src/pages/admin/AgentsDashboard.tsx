@@ -57,14 +57,14 @@ export default function AgentsDashboard() {
       <SpaceBetween size="l">
         <Header
           variant="h1"
-          description={t('agents_dashboard_description')}
+          description={t('adminAgents.header.description')}
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button
                 variant="normal"
                 onClick={() => navigate('/admin')}
               >
-                {t('admin_prechat_sessions')}
+                {t('adminAgents.header.allSessionsButton')}
               </Button>
               <Button
                 variant="normal"
@@ -72,18 +72,18 @@ export default function AgentsDashboard() {
                 onClick={loadConfigs}
                 loading={loading}
               >
-                {t('agents_refresh')}
+                {t('adminAgents.header.refreshButton')}
               </Button>
               <Button
                 variant="primary"
                 onClick={() => navigate('/admin/agents/create')}
               >
-                {t('admin_create_agent')}
+                {t('adminAgents.header.createAgentButton')}
               </Button>
             </SpaceBetween>
           }
         >
-          {t('admin_prechat_agents')}
+          {t('adminAgents.header.title')}
         </Header>
 
         <div style={{ minHeight: '50vh' }}>
@@ -91,7 +91,7 @@ export default function AgentsDashboard() {
             columnDefinitions={[
               {
                 id: 'name',
-                header: t('admin_agent_name'),
+                header: t('adminAgents.table.agentNameHeader'),
                 cell: (item) => (
                   <Box>
                     <Box fontWeight="bold">{item.agentName || `${ROLE_LABELS[item.agentRole] || item.agentRole} Agent`}</Box>
@@ -103,7 +103,7 @@ export default function AgentsDashboard() {
               },
               {
                 id: 'role',
-                header: t('agent_role'),
+                header: t('adminAgents.table.agentRoleHeader'),
                 cell: (item) => (
                   <Badge color={
                     item.agentRole === 'prechat' ? 'blue' :
@@ -115,12 +115,12 @@ export default function AgentsDashboard() {
               },
               {
                 id: 'model',
-                header: t('foundation_model'),
+                header: t('adminAgents.table.foundationModelHeader'),
                 cell: (item) => extractModelName(item.modelId)
               },
               {
                 id: 'status',
-                header: t('status'),
+                header: t('adminAgents.table.statusHeader'),
                 cell: (item) => (
                   <Badge color={item.status === 'active' ? 'green' : 'grey'}>
                     {item.status}
@@ -129,18 +129,18 @@ export default function AgentsDashboard() {
               },
               {
                 id: 'actions',
-                header: t('admin_actions'),
+                header: t('adminAgents.table.actionsHeader'),
                 cell: (item) => (
                   <ButtonDropdown
                     expandToViewport
                     items={[
                       {
-                        text: t('agents_edit_agent'),
+                        text: t('adminAgents.table.editAgentItem'),
                         id: 'edit',
                         iconName: 'edit' as const
                       },
                       {
-                        text: t('agents_remove_agent'),
+                        text: t('adminAgents.table.removeAgentItem'),
                         id: 'delete',
                         iconName: 'remove' as const
                       }
@@ -156,7 +156,7 @@ export default function AgentsDashboard() {
                       }
                     }}
                   >
-                    {t('admin_actions')}
+                    {t('adminAgents.table.actionsButton')}
                   </ButtonDropdown>
                 )
               }
@@ -166,13 +166,13 @@ export default function AgentsDashboard() {
             empty={
               <Box textAlign="center" color="inherit">
                 <Box variant="strong" textAlign="center" color="inherit">
-                  {t('no_agents')}
+                  {t('adminAgents.empty.noAgentsTitle')}
                 </Box>
                 <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                  {t('no_bedrock_agents_found')}
+                  {t('adminAgents.empty.noAgentsDescription')}
                 </Box>
                 <Button onClick={() => navigate('/admin/agents/create')}>
-                  {t('admin_create_agent')}
+                  {t('adminAgents.empty.createAgentButton')}
                 </Button>
               </Box>
             }

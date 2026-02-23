@@ -58,30 +58,30 @@ export function CampaignMetricsCards({ analytics, loading = false }: CampaignMet
   return (
     <ColumnLayout columns={4} variant="text-grid">
       <MetricCard
-        title={t('total_sessions')}
+        title={t('adminCampaignDetail.metrics.totalSessions')}
         value={analytics.totalSessions}
-        subtitle={`${analytics.activeSessions} ${t('active').toLowerCase()}, ${analytics.completedSessions} ${t('completed').toLowerCase()}`}
+        subtitle={`${analytics.activeSessions} ${t('adminCampaignDetail.metrics.activeSessions').toLowerCase()}, ${analytics.completedSessions} ${t('adminCampaignDetail.metrics.completedSessions').toLowerCase()}`}
       />
       
       <MetricCard
-        title={t('completion_rate')}
+        title={t('adminCampaignDetail.metrics.completionRate')}
         value={`${analytics.completionRate}%`}
         variant={completionRateVariant}
         subtitle={`${analytics.completedSessions} of ${analytics.totalSessions} sessions`}
       />
       
       <MetricCard
-        title={t('average_duration')}
+        title={t('adminCampaignDetail.metrics.averageDuration')}
         value={formatDuration(analytics.averageSessionDuration)}
-        subtitle={t('completed_sessions_only')}
+        subtitle={t('adminCampaignDetail.metrics.completedSessionsOnly')}
       />
       
       <MetricCard
-        title={t('customer_companies')}
+        title={t('adminCampaignDetail.metrics.customerCompanies')}
         value={analytics.customerCompanies.length}
         subtitle={analytics.customerCompanies.length > 0 
-          ? `${t('top_company')}: ${analytics.customerCompanies[0]?.company}` 
-          : t('no_data')
+          ? `${t('adminCampaignDetail.metrics.topCompany')}: ${analytics.customerCompanies[0]?.company}` 
+          : t('adminCampaignDetail.metrics.noData')
         }
       />
     </ColumnLayout>

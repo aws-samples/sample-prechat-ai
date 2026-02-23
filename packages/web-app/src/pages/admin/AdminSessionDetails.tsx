@@ -188,22 +188,22 @@ export default function AdminSessionDetails() {
         <Tabs
           tabs={[
             {
-              label: t('session_meeting_log'),
+              label: t('adminSessionDetail.tabs.meetingLog'),
               id: 'meeting-log',
               content: sessionId ? <MeetingLogView sessionId={sessionId} session={session} /> : null
             },
             {
-              label: t('discussion'),
+              label: t('adminSessionDetail.tabs.discussion'),
               id: 'discussion',
               content: sessionId ? <DiscussionTab sessionId={sessionId} /> : null
             },
             {
-              label: t('session_attachments'),
+              label: t('adminSessionDetail.tabs.attachments'),
               id: 'attachments',
               content: sessionId ? <SessionAttachments sessionId={sessionId} /> : null
             },
             {
-              label: t('conversation'),
+              label: t('adminSessionDetail.tabs.conversation'),
               id: 'conversation',
               content: (
                 <SpaceBetween size="l">
@@ -211,15 +211,15 @@ export default function AdminSessionDetails() {
                   {session.customerFeedback ? (
                     <Container>
                       <Header variant="h3">
-                        {t('session_customer_feedback')}{' '}
+                        {t('adminSessionDetail.feedback.sectionTitle')}{' '}
                         <Badge color="green">
-                          {t('session_feedback_available')}
+                          {t('adminSessionDetail.feedback.available')}
                         </Badge>
                       </Header>
                       <SpaceBetween size="m">
                         <ColumnLayout columns={2}>
                           <Box>
-                            <Box variant="awsui-key-label">{t('session_satisfaction_score')}</Box>
+                            <Box variant="awsui-key-label">{t('adminSessionDetail.feedback.satisfactionScoreLabel')}</Box>
                             <Box>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <div style={{ display: 'flex', gap: '0.1rem' }}>
@@ -257,7 +257,7 @@ export default function AdminSessionDetails() {
                             </Box>
                           </Box>
                           <Box>
-                            <Box variant="awsui-key-label">{t('session_feedback_time')}</Box>
+                            <Box variant="awsui-key-label">{t('adminSessionDetail.feedback.feedbackTimeLabel')}</Box>
                             <Box>
                               {new Date(session.customerFeedback.timestamp).toLocaleString('ko-KR')}
                             </Box>
@@ -266,7 +266,7 @@ export default function AdminSessionDetails() {
 
                         {session.customerFeedback.feedback && (
                           <Box>
-                            <Box variant="awsui-key-label">{t('session_customer_opinion')}</Box>
+                            <Box variant="awsui-key-label">{t('adminSessionDetail.feedback.customerOpinionLabel')}</Box>
                             <Box padding="s" variant="awsui-value-large">
                               {session.customerFeedback.feedback}
                             </Box>
@@ -277,15 +277,15 @@ export default function AdminSessionDetails() {
                   ) : (
                     <Container>
                       <Header variant="h3">
-                        {t('session_customer_feedback')}{' '}
+                        {t('adminSessionDetail.feedback.sectionTitle')}{' '}
                         <Badge color="grey">
-                          {t('session_no_feedback')}
+                          {t('adminSessionDetail.feedback.noFeedback')}
                         </Badge>
                       </Header>
                       <Box color="text-status-inactive" textAlign="center" padding="l">
                         {session.status === 'completed' 
-                          ? t('session_no_feedback_submitted')
-                          : t('session_feedback_after_completion')
+                          ? t('adminSessionDetail.feedback.noFeedbackSubmitted')
+                          : t('adminSessionDetail.feedback.feedbackAfterCompletion')
                         }
                       </Box>
                     </Container>
@@ -293,7 +293,7 @@ export default function AdminSessionDetails() {
 
                   {/* Conversation History */}
                   <Container>
-                    <Header variant="h3">{t('session_conversation_history')}</Header>
+                    <Header variant="h3">{t('adminSessionDetail.conversation.sectionTitle')}</Header>
                     <SpaceBetween size="m">
                       {session.conversationHistory.map((message) => (
                         <Box
@@ -302,9 +302,9 @@ export default function AdminSessionDetails() {
                         >
                           <SpaceBetween size="xs">
                             <Box fontSize="body-s" color="text-status-inactive">
-                              {message.sender === 'customer' ? t('customer') : t('assistant')} •
+                              {message.sender === 'customer' ? t('adminSessionDetail.conversation.customerSender') : t('adminSessionDetail.conversation.assistantSender')} •
                               {new Date(message.timestamp).toLocaleString()} •
-                              {t('session_stage')}: {message.stage?.replace('_', ' ').toUpperCase() || t('unknown')}
+                              {t('adminSessionDetail.conversation.stageLabel')}: {message.stage?.replace('_', ' ').toUpperCase() || t('adminSessionDetail.conversation.unknownStage')}
                             </Box>
                             <Box>{message.content}</Box>
                           </SpaceBetween>
@@ -312,7 +312,7 @@ export default function AdminSessionDetails() {
                       ))}
                       {session.conversationHistory.length === 0 && (
                         <Box textAlign="center" color="text-status-inactive">
-                          {t('no_messages_yet')}
+                          {t('adminSessionDetail.conversation.noMessages')}
                         </Box>
                       )}
                     </SpaceBetween>

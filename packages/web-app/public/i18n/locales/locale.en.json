@@ -1,5 +1,9 @@
 {
   "welcome": {
+    "pageHeader": {
+      "title": "AWS PreChat",
+      "description": "AWS PreChat is a conversational AI web system designed to streamline the pre-meeting preparation process between AWS sales teams and customers. The system replaces traditional Excel-based forms with an intuitive chatbot interface that guides customers through a structured conversation to collect business requirements, technical constraints, and project timelines. The collected information is then processed and presented to AWS sales representatives and engineers in an organized, actionable format."
+    },
     "header": {
       "title": "✨ Welcome to PreChat!",
       "subtitle": "Share your discussion topics and expectations with our AI agent before your AWS meeting.",
@@ -451,6 +455,84 @@
     "sideNav": {
       "sectionTitle": "Triggers",
       "manageTriggers": "Manage Triggers"
+    },
+    "header": {
+      "title": "Trigger Management",
+      "description": "Manage triggers that send notifications to Slack, SNS, etc. in response to domain events.",
+      "createButton": "Create Trigger"
+    },
+    "table": {
+      "eventHeader": "Event",
+      "typeHeader": "Type",
+      "scopeHeader": "Scope",
+      "endpointHeader": "Endpoint",
+      "statusHeader": "Status",
+      "actionsHeader": "Actions",
+      "editButton": "Edit",
+      "deleteButton": "Delete",
+      "activeStatus": "Active",
+      "inactiveStatus": "Inactive",
+      "globalBadge": "Global",
+      "loadingText": "Loading triggers...",
+      "searchPlaceholder": "Search triggers...",
+      "emptyTitle": "No triggers registered",
+      "emptyDescription": "Create a trigger to set up domain event notifications.",
+      "emptyCreateButton": "Create Trigger"
+    },
+    "modal": {
+      "createTitle": "Create Trigger",
+      "editTitle": "Edit Trigger",
+      "deleteTitle": "Delete Trigger",
+      "cancelButton": "Cancel",
+      "saveButton": "Save",
+      "createButton": "Create Trigger",
+      "deleteButton": "Delete",
+      "triggerTypeLabel": "Trigger Type",
+      "eventTypeLabel": "Event Type",
+      "endpointLabel": "Delivery Endpoint",
+      "endpointSlackDescription": "Enter a Slack Workflow Webhook URL. Set the webhook data variables to match the SessionCompleted schema (all fields included) for compatibility with all events.",
+      "endpointSnsDescription": "Select an SNS Topic to publish events to.",
+      "snsPlaceholder": "Select SNS Topic...",
+      "snsLoadingText": "Loading SNS Topics...",
+      "snsEmptyText": "No SNS Topics available.",
+      "scopeLabel": "Scope",
+      "globalToggle": "Global trigger (applies to all campaigns)",
+      "campaignLabel": "Campaign",
+      "campaignPlaceholder": "Select campaign...",
+      "statusLabel": "Status",
+      "activeStatus": "Active",
+      "inactiveStatus": "Inactive",
+      "webhookSchemaHeader": "Webhook Data Schema",
+      "schemaEmptyFieldsNote": "Fields without values are sent as empty strings.",
+      "deleteConfirm": "Are you sure you want to delete this trigger?",
+      "deleteEventLabel": "Event",
+      "deleteTypeLabel": "Type",
+      "deleteEndpointLabel": "Endpoint"
+    },
+    "eventDescription": {
+      "sessionCompleted": "Sent when a session is completed.",
+      "sessionCreated": "Sent when a new session is created.",
+      "sessionInactivated": "Sent when a session is inactivated.",
+      "campaignCreated": "Sent when a new campaign is created.",
+      "campaignCompleted": "Sent when a campaign is completed."
+    },
+    "fieldLabels": {
+      "sessionId": "Session ID",
+      "campaignId": "Campaign ID",
+      "campaignName": "Campaign Name",
+      "customerName": "Customer Name",
+      "customerCompany": "Customer Company",
+      "customerEmail": "Customer Email",
+      "salesRepEmail": "Sales Rep Email",
+      "ownerEmail": "Owner Email",
+      "messageCount": "Message Count",
+      "totalSessions": "Total Sessions",
+      "durationMinutes": "Duration (minutes)",
+      "adminUrl": "Admin Dashboard URL",
+      "eventTimeCreated": "Created At",
+      "eventTimeCompleted": "Completed At",
+      "eventTimeInactivated": "Inactivated At",
+      "eventTimeClosed": "Closed At"
     }
   },
   "login": {
@@ -496,6 +578,432 @@
       "enterConfirmationCode": "Please enter confirmation code",
       "confirmationFailed": "Confirmation failed",
       "signupFailed": "Signup failed"
+    }
+  },
+  "adminCampaigns": {
+    "header": {
+      "title": "Campaigns",
+      "description": "All Campaigns",
+      "createButton": "Create Campaign"
+    },
+    "table": {
+      "campaignNameHeader": "Campaign Name",
+      "ownerHeader": "Campaign Owner",
+      "statusHeader": "Status",
+      "periodHeader": "Period",
+      "actionsHeader": "Actions",
+      "startDateLabel": "Start Date",
+      "endDateLabel": "End Date",
+      "loadingText": "Loading campaigns",
+      "searchPlaceholder": "Search campaigns...",
+      "noItemsTitle": "No campaigns found",
+      "noItemsDescription": "No campaigns found"
+    },
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "paused": "Paused",
+      "cancelled": "Cancelled"
+    },
+    "actions": {
+      "label": "Actions",
+      "viewDetails": "Campaign Details",
+      "edit": "Edit Campaign",
+      "viewSessions": "View Sessions",
+      "delete": "Delete Campaign"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "confirmLabel": "Confirm",
+      "cancelLabel": "Cancel",
+      "pageSizeTitle": "Page size",
+      "pageSize10": "10 campaigns",
+      "pageSize20": "20 campaigns",
+      "pageSize50": "50 campaigns"
+    }
+  },
+  "adminCampaignCreate": {
+    "header": {
+      "title": "Create New Campaign",
+      "cancelButton": "Cancel"
+    },
+    "alert": {
+      "failedLoadUser": "Failed to load current user. Please login again.",
+      "failedLoadUsers": "Failed to load users. Some features may not work properly.",
+      "campaignCodeExists": "Campaign code already exists. Please choose a different code.",
+      "invalidOwner": "Invalid owner selected. Please choose a valid user.",
+      "failedCreate": "Failed to create campaign. Please try again.",
+      "createdSuccess": "Campaign created successfully"
+    },
+    "form": {
+      "cancelButton": "Cancel",
+      "saveButton": "Save Campaign",
+      "campaignNameLabel": "Campaign Name",
+      "campaignNameDescription": "Enter a descriptive name for the campaign",
+      "campaignNamePlaceholder": "e.g., Q1 2025 Enterprise Migration",
+      "campaignCodeLabel": "Campaign Code",
+      "campaignCodeDescription": "Enter a unique code for the campaign",
+      "campaignCodePlaceholder": "e.g., Q1-ENT-MIG",
+      "campaignCodeExistsError": "Campaign code already exists",
+      "descriptionLabel": "Description",
+      "descriptionDescription": "Provide a detailed description of the campaign",
+      "descriptionPlaceholder": "Describe the campaign objectives, target audience, and key goals...",
+      "startDateLabel": "Start Date",
+      "startDateDescription": "Campaign start date",
+      "endDateLabel": "End Date",
+      "endDateDescription": "Campaign end date",
+      "datePlaceholder": "YYYY-MM-DD",
+      "ownerLabel": "Campaign Owner",
+      "ownerDescription": "Select the campaign owner from Cognito users",
+      "ownerPlaceholder": "Select campaign owner...",
+      "ownerLoadingText": "Loading users...",
+      "ownerEmpty": "No users available",
+      "ownerInvalidError": "Invalid owner selected"
+    },
+    "validation": {
+      "campaignNameRequired": "Campaign name is required",
+      "campaignCodeRequired": "Campaign code is required",
+      "descriptionRequired": "Campaign description is required",
+      "startDateRequired": "Start date is required",
+      "endDateRequired": "End date is required",
+      "ownerRequired": "Campaign owner is required",
+      "invalidDateRange": "End date must be after start date"
+    }
+  },
+  "adminCampaignDetail": {
+    "header": {
+      "title": "Campaign Details",
+      "backButton": "Back to Campaigns",
+      "actionsLabel": "Actions",
+      "editAction": "Edit Campaign",
+      "viewSessionsAction": "View Sessions",
+      "deleteAction": "Delete Campaign"
+    },
+    "overview": {
+      "campaignNameLabel": "Campaign Name",
+      "ownerLabel": "Campaign Owner",
+      "statusLabel": "Status",
+      "descriptionLabel": "Description",
+      "periodLabel": "Campaign Period",
+      "errorHeader": "Error occurred",
+      "notFound": "Campaign not found",
+      "failedLoad": "Failed to load campaign details. Please try again."
+    },
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "paused": "Paused",
+      "cancelled": "Cancelled"
+    },
+    "tabs": {
+      "analyticsLabel": "Campaign Analytics",
+      "sessionsLabel": "Associated Sessions",
+      "viewAllSessionsButton": "View All Sessions for This Campaign"
+    },
+    "deleteModal": {
+      "header": "Delete Campaign",
+      "closeAriaLabel": "Close modal",
+      "cancelButton": "Cancel",
+      "confirmButton": "Delete Campaign",
+      "warningMessage": "Are you sure you want to delete this campaign? This action cannot be undone.",
+      "failedDelete": "Failed to delete campaign. Please try again."
+    },
+    "metrics": {
+      "totalSessions": "Total Sessions",
+      "completionRate": "Completion Rate",
+      "averageDuration": "Average Duration",
+      "completedSessionsOnly": "Completed sessions only",
+      "customerCompanies": "Customer Companies",
+      "topCompany": "Top company",
+      "noData": "No data",
+      "activeSessions": "Active Sessions",
+      "completedSessions": "Completed Sessions"
+    },
+    "sessionsChart": {
+      "title": "Completed Sessions Over Time",
+      "seriesTitle": "Completed Sessions per Day",
+      "legendAriaLabel": "Chart legend",
+      "chartAriaLabel": "Sessions timeline chart",
+      "noDataTitle": "No Session Data",
+      "noDataDescription": "No session data available for this time period",
+      "loading": "Loading"
+    },
+    "purposesChart": {
+      "title": "Top Consultation Purposes",
+      "description": "Most common consultation purposes in this campaign",
+      "purposeKey": "Purpose",
+      "sessionsKey": "Sessions",
+      "percentageKey": "Percentage",
+      "filterLabel": "Filter",
+      "filterPlaceholder": "Filter purposes",
+      "filterSelectedAriaLabel": "purposes selected",
+      "dismissAriaLabel": "Dismiss",
+      "legendAriaLabel": "Chart legend",
+      "chartAriaLabel": "Consultation purposes chart",
+      "chartError": "Chart error",
+      "loadingText": "Loading chart",
+      "retryText": "Retry",
+      "noDataTitle": "No Purposes Data",
+      "noDataDescription": "No consultation purposes data available",
+      "loading": "Loading"
+    },
+    "companiesTable": {
+      "title": "Customer Companies",
+      "description": "Companies participating in this campaign",
+      "companyNameHeader": "Company Name",
+      "sessionCountHeader": "Session Count",
+      "percentageHeader": "Percentage of Total",
+      "relativeVolumeHeader": "Relative Volume",
+      "sessionsLabel": "sessions",
+      "ofTotalLabel": "of total",
+      "loadingText": "Loading companies",
+      "unknownCompany": "Unknown Company",
+      "noDataTitle": "No Companies Data",
+      "noDataDescription": "No customer company data available"
+    },
+    "csatTable": {
+      "title": "Customer Satisfaction Feedback",
+      "description": "Customer satisfaction ratings and feedback from completed sessions",
+      "averageRatingLabel": "Average CSAT Rating",
+      "totalResponsesLabel": "{{count}} responses",
+      "noRatings": "No ratings yet",
+      "customerHeader": "Customer",
+      "ratingHeader": "Rating",
+      "feedbackHeader": "Feedback",
+      "completionDateHeader": "Completion Date",
+      "noNarrativeProvided": "No feedback provided",
+      "noDataTitle": "No CSAT Feedback",
+      "noDataDescription": "No customer satisfaction feedback has been collected for this campaign yet.",
+      "loading": "Loading"
+    },
+    "comparisonTable": {
+      "title": "Campaign Comparison",
+      "description": "Compare performance metrics across multiple campaigns",
+      "compareButton": "Compare Campaigns",
+      "selectLabel": "Select campaigns to compare",
+      "selectDescription": "Select at least two campaigns to enable comparison",
+      "choosePlaceholder": "Choose campaigns",
+      "selectedAriaLabel": "Selected campaigns",
+      "removeAriaLabel": "Remove",
+      "filterPlaceholder": "Search campaigns",
+      "filterAriaLabel": "Search campaigns",
+      "loadingText": "Loading campaigns",
+      "errorText": "Error loading campaigns",
+      "retryText": "Retry",
+      "emptyText": "No campaigns available",
+      "rankHeader": "Rank",
+      "campaignNameHeader": "Campaign Name",
+      "statusHeader": "Status",
+      "totalSessionsHeader": "Total Sessions",
+      "completedSessionsHeader": "Completed Sessions",
+      "completionRateHeader": "Completion Rate",
+      "dateRangeHeader": "Date Range",
+      "ownerHeader": "Owner",
+      "startLabel": "Start",
+      "endLabel": "End",
+      "statusActive": "Active",
+      "statusCompleted": "Completed",
+      "statusPaused": "Paused",
+      "statusCancelled": "Cancelled",
+      "loadingComparison": "Loading comparison",
+      "noDataTitle": "No Comparison Data",
+      "noDataDescription": "Select campaigns and click compare to view results",
+      "resultsTitle": "Comparison Results",
+      "resultsDescription": "Campaigns ranked by completion rate"
+    },
+    "reportExport": {
+      "exportButton": "Export Report",
+      "summaryCsvOption": "Export Summary (CSV)",
+      "summaryCsvDescription": "Campaign metrics and analytics",
+      "sessionsCsvOption": "Export Sessions (CSV)",
+      "sessionsCsvDescription": "Detailed session data",
+      "htmlOption": "Export HTML Report",
+      "htmlDescription": "Formatted HTML report",
+      "metricHeader": "Metric",
+      "valueHeader": "Value",
+      "descriptionHeader": "Description",
+      "reportTitle": "Campaign Report",
+      "reportGeneratedAt": "Report generated at",
+      "campaignNameRow": "Campaign Name",
+      "campaignCodeRow": "Campaign Code",
+      "campaignStatusRow": "Campaign Status",
+      "startDateRow": "Start Date",
+      "endDateRow": "End Date",
+      "campaignOwnerRow": "Campaign Owner",
+      "totalSessionsRow": "Total Sessions",
+      "activeSessionsRow": "Active Sessions",
+      "completedSessionsRow": "Completed Sessions",
+      "completionRateRow": "Completion Rate",
+      "averageDurationRow": "Average Duration",
+      "completedSessionsOnlyNote": "Completed sessions only",
+      "topPurposesRow": "Top Consultation Purposes",
+      "customerCompaniesRow": "Customer Companies",
+      "sessionIdHeader": "Session ID",
+      "statusHeader": "Status",
+      "customerNameHeader": "Customer Name",
+      "customerEmailHeader": "Customer Email",
+      "customerCompanyHeader": "Customer Company",
+      "customerTitleHeader": "Customer Title",
+      "consultationPurposesHeader": "Consultation Purposes",
+      "salesRepEmailHeader": "Sales Rep Email",
+      "createdAtHeader": "Created At",
+      "completedAtHeader": "Completed At",
+      "durationMinutesHeader": "Duration (minutes)",
+      "purposeHeader": "Purpose",
+      "sessionsHeader": "Sessions",
+      "percentageHeader": "Percentage",
+      "companyHeader": "Company",
+      "ownerHeader": "Owner",
+      "dateRangeLabel": "Date Range",
+      "codeLabel": "Campaign Code"
+    }
+  },
+  "adminAgents": {
+    "header": {
+      "title": "PreChat Agents",
+      "description": "Manage AI agents (AgentCore Agents) that handle customer consultations. Configured agents must be prepared.",
+      "allSessionsButton": "All Sessions 💬",
+      "refreshButton": "Refresh",
+      "createAgentButton": "Create Agent"
+    },
+    "table": {
+      "agentNameHeader": "Agent Name",
+      "agentRoleHeader": "Agent Role",
+      "foundationModelHeader": "Foundation Model",
+      "statusHeader": "Status",
+      "actionsHeader": "Actions",
+      "editAgentItem": "Edit Agent",
+      "removeAgentItem": "Remove Agent",
+      "actionsButton": "Actions"
+    },
+    "empty": {
+      "noAgentsTitle": "No agents",
+      "noAgentsDescription": "No AgentCore agents found.",
+      "createAgentButton": "Create Agent"
+    }
+  },
+  "adminAgentCreate": {
+    "header": {
+      "title": "Register a new PreChat Agent 🤖",
+      "toDashboardButton": "To Dashboard"
+    },
+    "alert": {
+      "createdSuccess": "Agent \"{{name}}\" created successfully!",
+      "failedCreate": "Failed to create agent"
+    },
+    "form": {
+      "cancelButton": "Cancel",
+      "createAgentButton": "Create Agent",
+      "agentNameLabel": "Agent Name",
+      "agentNameDescription": "Agent Name",
+      "agentNamePlaceholder": "Enter agent name",
+      "agentRoleLabel": "Agent Role",
+      "agentRoleDescription": "Select which system agent this configuration applies to",
+      "agentRolePlaceholder": "Select agent role",
+      "foundationModelLabel": "Foundation Model",
+      "foundationModelDescription": "Agent's foundation model",
+      "foundationModelPlaceholder": "Select a foundation model",
+      "promptOverrideLabel": "Prompt Override",
+      "promptOverrideDescription": "Enable to customize the agent's system prompt. If disabled, the agent will use its default prompt.",
+      "promptOverrideCheckbox": "Enable custom prompt override",
+      "agentInstructionsLabel": "Agent Instructions",
+      "agentInstructionsDescription": "Write detailed instructions for agent behavior. You can use placeholders to include dynamic information.",
+      "agentInstructionsPlaceholder": "Enter agent instructions...",
+      "defaultInstructionsButton": "Default Agent Instructions"
+    }
+  },
+  "adminAgentEdit": {
+    "header": {
+      "title": "Edit PreChat Agent 🤖",
+      "toDashboardButton": "To Dashboard"
+    },
+    "loading": {
+      "pageTitle": "Edit PreChat Agent 🤖",
+      "agentDetails": "Loading agent details..."
+    },
+    "alert": {
+      "failedLoadAgent": "Failed to load agent details",
+      "updatedSuccess": "Agent \"{{name}}\" updated successfully!",
+      "failedUpdateAgent": "Failed to update agent"
+    },
+    "form": {
+      "cancelButton": "Cancel",
+      "updateAgentButton": "Update Agent",
+      "agentRoleLabel": "Agent Role",
+      "agentRoleReadonlyDescription": "This field is read-only. The role is set at creation time.",
+      "agentNameLabel": "Agent Name",
+      "agentNameDescription": "Agent Name",
+      "agentNamePlaceholder": "Enter agent name",
+      "foundationModelLabel": "Foundation Model",
+      "foundationModelDescription": "Select a Foundation model",
+      "foundationModelPlaceholder": "Select a foundation model",
+      "promptOverrideLabel": "Prompt Override",
+      "promptOverrideDescription": "Enable to customize the agent's system prompt. If disabled, the agent will use its default prompt.",
+      "promptOverrideCheckbox": "Enable custom prompt override",
+      "agentInstructionsLabel": "Agent Instructions",
+      "agentInstructionsDescription": "Write detailed instructions for agent behavior. You can use placeholders to include dynamic information.",
+      "agentInstructionsPlaceholder": "Enter agent instructions...",
+      "defaultInstructionsButton": "Default Agent Instructions"
+    }
+  },
+  "adminCampaignEdit": {
+    "header": {
+      "title": "Edit Campaign",
+      "cancelButton": "Cancel"
+    },
+    "alert": {
+      "notFound": "Campaign not found.",
+      "notFoundRedirect": "Campaign not found.",
+      "failedLoadCampaign": "Failed to load campaign details. Please try again.",
+      "failedLoadUsers": "Failed to load users. Some features may not work properly.",
+      "campaignCodeExists": "Campaign code already exists. Please choose a different code.",
+      "invalidOwner": "Invalid owner selected. Please choose a valid user.",
+      "failedUpdate": "Failed to update campaign. Please try again.",
+      "updatedSuccess": "Campaign updated successfully"
+    },
+    "loading": {
+      "campaignDetails": "Loading campaign details..."
+    },
+    "form": {
+      "cancelButton": "Cancel",
+      "saveButton": "Save Campaign",
+      "campaignNameLabel": "Campaign Name",
+      "campaignNameDescription": "Enter a descriptive name for the campaign",
+      "campaignNamePlaceholder": "e.g., Q1 2025 Enterprise Migration",
+      "campaignCodeLabel": "Campaign Code",
+      "campaignCodeDescription": "Enter a unique code for the campaign",
+      "campaignCodePlaceholder": "e.g., Q1-ENT-MIG",
+      "campaignCodeExistsError": "Campaign code already exists",
+      "descriptionLabel": "Description",
+      "descriptionDescription": "Provide a detailed description of the campaign",
+      "descriptionPlaceholder": "Describe the campaign objectives, target audience, and key goals...",
+      "startDateLabel": "Start Date",
+      "startDateDescription": "Campaign start date",
+      "endDateLabel": "End Date",
+      "endDateDescription": "Campaign end date",
+      "datePlaceholder": "YYYY-MM-DD",
+      "ownerLabel": "Campaign Owner",
+      "ownerDescription": "Select the campaign owner from Cognito users",
+      "ownerPlaceholder": "Select campaign owner...",
+      "ownerLoadingText": "Loading users...",
+      "ownerEmpty": "No users available",
+      "ownerInvalidError": "Invalid owner selected",
+      "statusLabel": "Status",
+      "statusDescription": "Select the current status of the campaign",
+      "statusPlaceholder": "Select status...",
+      "statusActive": "Active",
+      "statusCompleted": "Completed",
+      "statusPaused": "Paused",
+      "statusCancelled": "Cancelled"
+    },
+    "validation": {
+      "campaignNameRequired": "Campaign name is required",
+      "campaignCodeRequired": "Campaign code is required",
+      "descriptionRequired": "Campaign description is required",
+      "startDateRequired": "Start date is required",
+      "endDateRequired": "End date is required",
+      "ownerRequired": "Campaign owner is required",
+      "invalidDateRange": "End date must be after start date"
     }
   }
 }

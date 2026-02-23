@@ -96,7 +96,7 @@ export class TranslationManager {
     const attempts = this.retryAttempts.get(locale) || 0;
     
     try {
-      const response = await fetch(`/i18n/locales/${locale}.json`);
+      const response = await fetch(`/i18n/locales/locale.${locale}.json`);
       
       if (!response.ok) {
         const error: TranslationError = {
