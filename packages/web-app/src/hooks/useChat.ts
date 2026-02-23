@@ -194,6 +194,37 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
     [inputValue, streamingMessage, sessionId, wsSendMessage, createBotPlaceholder]
   )
 
+  // 프로그래밍 방식 텍스트 메시지 전송 (입력 폼 요청 등)
+  const sendDirectMessage = useCallback(
+    (
+      text: string,
+      onMessageAdd: (message: Message) => void,
+      onComplete: (complete: boolean) => void
+    ) => {
+      if (!text.trim() || streamingMessage || !sessionId) return
+
+      const messageId = Date.now().toString()
+      const userMessage: Message = {
+        id: messageId,
+        content: text,
+        sender: 'customer',
+        timestamp: new Date().toISOString(),
+        stage: 'conversation',
+      }
+
+      onMessageAddRef.current = onMessageAdd
+      onCompleteRef.current = onComplete
+      currentMessageIdRef.current = messageId
+
+      onMessageAdd(userMessage)
+      setError('')
+      setStreamingMessage(createBotPlaceholder(messageId))
+
+      wsSendMessage(text, messageId)
+    },
+    [streamingMessage, sessionId, wsSendMessage, createBotPlaceholder]
+  )
+
   // 폼 제출 메시지 전송
   const sendFormSubmission = useCallback(
     (
@@ -239,6 +270,7 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
     loading,
     error,
     sendMessage,
+    sendDirectMessage,
     sendFormSubmission,
     clearInput,
     streamingMessage,

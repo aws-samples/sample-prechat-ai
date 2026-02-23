@@ -275,14 +275,13 @@ export interface CognitoUsersResponse {
 
 // Trigger Types
 export type TriggerType = 'slack' | 'sns' | 'webhook';
-export type TriggerEventType = 'SessionCreated' | 'SessionCompleted' | 'SessionInactivated' | 'CampaignCreated' | 'CampaignClosed';
+export type TriggerEventType = 'SessionCreated' | 'SessionCompleted' | 'SessionInactivated' | 'CampaignCreated' | 'CampaignCompleted';
 export type TriggerStatus = 'active' | 'inactive';
 
 export interface Trigger {
   triggerId: string;
   triggerType: TriggerType;
   eventType: TriggerEventType;
-  messageTemplate: string;
   deliveryEndpoint: string;
   status: TriggerStatus;
   campaignId?: string;
@@ -295,14 +294,12 @@ export interface Trigger {
 export interface CreateTriggerRequest {
   triggerType: TriggerType;
   eventType: TriggerEventType;
-  messageTemplate?: string;
   deliveryEndpoint: string;
   campaignId?: string;
   isGlobal: boolean;
 }
 
 export interface UpdateTriggerRequest {
-  messageTemplate?: string;
   deliveryEndpoint?: string;
   status?: TriggerStatus;
   eventType?: TriggerEventType;
@@ -313,14 +310,6 @@ export interface UpdateTriggerRequest {
 export interface TriggerListResponse {
   triggers: Trigger[];
   count: number;
-}
-
-export interface TriggerTemplatesResponse {
-  templates: Record<string, {
-    template: string;
-    description: string;
-    variables: string[];
-  }>;
 }
 
 

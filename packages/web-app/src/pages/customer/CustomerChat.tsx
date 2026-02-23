@@ -76,6 +76,7 @@ export default function CustomerChat() {
     setInputValue,
     loading: chatLoading,
     sendMessage,
+    sendDirectMessage,
     sendFormSubmission,
     clearInput,
     streamingMessage,
@@ -178,6 +179,10 @@ export default function CustomerChat() {
   const handleFormSubmit = (messageId: string) => (formData: Record<string, string>) => {
     setSubmittedFormIds(prev => new Set(prev).add(messageId))
     sendFormSubmission(formData, addMessage, updateSessionComplete)
+  }
+
+  const handleRequestForm = () => {
+    sendDirectMessage(t('request_form_message'), addMessage, updateSessionComplete)
   }
 
   const handleFeedbackSubmit = async (rating: number, feedback: string) => {
@@ -452,6 +457,7 @@ export default function CustomerChat() {
                         isStreaming={isCurrentlyStreaming}
                         salesRepInfo={sessionData?.salesRepInfo}
                         onFormSubmit={!isFormSubmitted ? handleFormSubmit(message.id) : undefined}
+                        onRequestForm={!isComplete && !chatLoading ? handleRequestForm : undefined}
                       />
                     )
                   }

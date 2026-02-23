@@ -48,7 +48,8 @@ sam deploy \
   --stack-name $STACK_NAME \
   --resolve-s3 \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-  --parameter-overrides "Stage=\"$STAGE\" BedrockRegion=\"$BEDROCK_REGION\""
+  --parameter-overrides "Stage=\"$STAGE\" BedrockRegion=\"$BEDROCK_REGION\"" \
+  || echo "⚠️  sam deploy failed (exit code: $?), continuing with website deployment..."
 
 # Step 5: Update environment variables
 echo "🔧 Updating environment variables..."

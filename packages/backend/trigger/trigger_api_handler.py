@@ -16,8 +16,7 @@ import boto3
 import os
 
 from utils import lambda_response, parse_body, get_timestamp, generate_id
-from models.trigger import Trigger, VALID_EVENT_TYPES, VALID_TRIGGER_TYPES, DEFAULT_SLACK_TEMPLATES
-from trigger_manager import TriggerManager
+from models.trigger import Trigger, VALID_EVENT_TYPES, VALID_TRIGGER_TYPES
 
 dynamodb = boto3.resource('dynamodb')
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
@@ -27,45 +26,22 @@ def create_trigger(event, context):
     """새로운 트리거를 생성합니다."""
     body = parse_body(event)
 
-    trigger_type = body.get('triggerType', '')
-    event_type = body.get('eventType', '')
-    message_template = body.get('messageTemplate', '')
-    delivery_endpoint = body.get('deliveryEndpoint', '')
-    campaign_id = body.get('campaignId')
-    is_global = body.get('isGlobal', False)
-
-    # Slack 트리거에 messageTemplate이 없으면 기본 템플릿 자동 적용
-    if trigger_type == 'slack' and not message_template:
-        message_template = DEFAULT_SLACK_TEMPLATES.get(event_type, '')
-
-    # 사용자 정보 추출
-    created_by = _get_user_id(event)
-    timestamp = get_timestamp()
-
     trigger = Trigger(
         trigger_id=generate_id(),
-        trigger_type=trigger_type,
-        event_type=event_type,
-        message_template=message_template,
-        delivery_endpoint=delivery_endpoint,
-        campaign_id=campaign_id,
-        is_global=is_global,
-        created_at=timestamp,
-        updated_at=timestamp,
-        created_by=created_by,
+        trigger_type=body.get('triggerType', ''),
+        event_type=body.get('eventType', ''),
+        delivery_endpoint=body.get('deliveryEndpoint', ''),
+        campaign_id=body.get('campaignId'),
+        is_global=body.get('isGlobal', False),
+        created_at=get_timestamp(),
+        updated_at=get_timestamp(),
+        created_by=_get_user_id(event),
     )
 
-    # 검증
     errors = trigger.validate()
     if errors:
         return lambda_response(400, {'error': 'Validation failed', 'details': errors})
 
-    # 템플릿 문법 검증
-    valid, err = TriggerManager.validate_template(message_template)
-    if not valid:
-        return lambda_response(400, {'error': err})
-
-    # 저장
     try:
         table = dynamodb.Table(SESSIONS_TABLE)
         table.put_item(Item=trigger.to_dynamodb_item())
@@ -86,21 +62,18 @@ def list_triggers(event, context):
 
     try:
         if event_type:
-            # 이벤트 타입별 조회 (GSI1)
             resp = table.query(
                 IndexName='GSI1',
                 KeyConditionExpression='GSI1PK = :pk',
                 ExpressionAttributeValues={':pk': f'EVENT#{event_type}'}
             )
         elif campaign_id:
-            # 캠페인별 조회 (GSI2)
             resp = table.query(
                 IndexName='GSI2',
                 KeyConditionExpression='GSI2PK = :pk',
                 ExpressionAttributeValues={':pk': f'CAMPAIGN#{campaign_id}'}
             )
         else:
-            # 전체 스캔 (TRIGGER# prefix 필터)
             resp = table.scan(
                 FilterExpression='begins_with(PK, :prefix) AND SK = :sk',
                 ExpressionAttributeValues={
@@ -150,7 +123,6 @@ def update_trigger(event, context):
     body = parse_body(event)
     table = dynamodb.Table(SESSIONS_TABLE)
 
-    # 기존 트리거 조회
     try:
         resp = table.get_item(Key={'PK': f'TRIGGER#{trigger_id}', 'SK': 'METADATA'})
         if 'Item' not in resp:
@@ -159,13 +131,6 @@ def update_trigger(event, context):
         return lambda_response(500, {'error': 'Database error'})
 
     existing = Trigger.from_dynamodb_item(resp['Item'])
-
-    # 업데이트 가능한 필드 적용
-    if 'messageTemplate' in body:
-        valid, err = TriggerManager.validate_template(body['messageTemplate'])
-        if not valid:
-            return lambda_response(400, {'error': err})
-        existing.message_template = body['messageTemplate']
 
     if 'deliveryEndpoint' in body:
         existing.delivery_endpoint = body['deliveryEndpoint']
@@ -180,12 +145,10 @@ def update_trigger(event, context):
 
     existing.updated_at = get_timestamp()
 
-    # 검증
     errors = existing.validate()
     if errors:
         return lambda_response(400, {'error': 'Validation failed', 'details': errors})
 
-    # 저장
     try:
         table.put_item(Item=existing.to_dynamodb_item())
         print(f"Trigger updated: {trigger_id}")
@@ -204,7 +167,6 @@ def delete_trigger(event, context):
     try:
         table = dynamodb.Table(SESSIONS_TABLE)
 
-        # 존재 확인
         resp = table.get_item(Key={'PK': f'TRIGGER#{trigger_id}', 'SK': 'METADATA'})
         if 'Item' not in resp:
             return lambda_response(404, {'error': 'Trigger not found'})
@@ -226,29 +188,30 @@ def _get_user_id(event) -> str:
         return 'unknown'
 
 
-def get_default_templates(event, context):
-    """
-    이벤트 타입별 기본 Slack Workflow 메시지 템플릿을 반환합니다.
+def list_sns_topics(event, context):
+    """리전 내 SNS 토픽 목록을 반환합니다."""
+    try:
+        sns = boto3.client('sns')
+        topics = []
+        next_token = None
 
-    GET /api/admin/triggers/templates
+        while True:
+            kwargs = {}
+            if next_token:
+                kwargs['NextToken'] = next_token
 
-    관리자가 트리거 생성 시 참고할 수 있는 기본 템플릿 목록입니다.
-    Slack Workflow Webhook의 데이터 변수 스키마에 맞춰져 있습니다.
-    """
-    templates = {}
-    for event_type, template in DEFAULT_SLACK_TEMPLATES.items():
-        templates[event_type] = {
-            'template': template,
-            'description': f'Default Slack Workflow template for {event_type}',
-            'variables': _extract_template_variables(template),
-        }
+            resp = sns.list_topics(**kwargs)
+            for topic in resp.get('Topics', []):
+                arn = topic['TopicArn']
+                # ARN에서 토픽 이름 추출
+                name = arn.split(':')[-1]
+                topics.append({'topicArn': arn, 'topicName': name})
 
-    return lambda_response(200, {'templates': templates})
+            next_token = resp.get('NextToken')
+            if not next_token:
+                break
 
-
-def _extract_template_variables(template: str) -> list[str]:
-    """Jinja2 템플릿에서 변수 이름을 추출합니다."""
-    import re
-    # {{ variable_name }} 또는 {{ variable_name | filter }} 패턴 매칭
-    matches = re.findall(r'\{\{\s*(\w+)', template)
-    return sorted(set(matches))
+        return lambda_response(200, {'topics': topics, 'count': len(topics)})
+    except Exception as e:
+        print(f"Failed to list SNS topics: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to list SNS topics'})

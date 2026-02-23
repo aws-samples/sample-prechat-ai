@@ -45,9 +45,13 @@ def handle_session_stream(event, context):
                     'campaign_id': campaign_id,
                     'campaign_name': new_image.get('campaignName', {}).get('S', ''),
                     'customer_name': customer_info.get('name', {}).get('S', ''),
-                    'customer_email': customer_info.get('email', {}).get('S', ''),
                     'customer_company': customer_info.get('company', {}).get('S', ''),
-                    'created_at': new_image.get('createdAt', {}).get('S', ''),
+                    'customer_email': customer_info.get('email', {}).get('S', ''),
+                    'sales_rep_email': new_image.get('salesRepEmail', {}).get('S', ''),
+                    'message_count': '',
+                    'duration_minutes': '',
+                    'admin_url': f"{os.environ.get('CLOUDFRONT_URL', '')}/admin/sessions/{session_id}" if os.environ.get('CLOUDFRONT_URL') else '',
+                    'event_time': new_image.get('createdAt', {}).get('S', ''),
                 }
                 
                 print(f"Session {session_id} created - executing triggers")
@@ -78,17 +82,16 @@ def handle_session_stream(event, context):
                     'campaign_id': campaign_id,
                     'campaign_name': new_image.get('campaignName', {}).get('S', ''),
                     'customer_name': customer_info.get('name', {}).get('S', ''),
-                    'customer_email': customer_info.get('email', {}).get('S', ''),
                     'customer_company': customer_info.get('company', {}).get('S', ''),
+                    'customer_email': customer_info.get('email', {}).get('S', ''),
                     'sales_rep_email': sales_rep_email,
-                    'completed_at': new_image.get('completedAt', {}).get('S', ''),
-                    'created_at': new_image.get('createdAt', {}).get('S', ''),
-                    'message_count': session_data.get('message_count', 0),
-                    'duration_minutes': _calc_duration_minutes(
+                    'message_count': str(session_data.get('message_count', 0)),
+                    'duration_minutes': str(_calc_duration_minutes(
                         new_image.get('createdAt', {}).get('S', ''),
                         new_image.get('completedAt', {}).get('S', '')
-                    ),
+                    )),
                     'admin_url': f"{cloudfront_url}/admin/sessions/{session_id}" if cloudfront_url else '',
+                    'event_time': new_image.get('completedAt', {}).get('S', ''),
                 }
                 trigger_manager.execute_triggers('SessionCompleted', event_data, campaign_id)
                 
@@ -105,8 +108,15 @@ def handle_session_stream(event, context):
                     'event_type': 'SessionInactivated',
                     'session_id': session_id,
                     'campaign_id': campaign_id,
+                    'campaign_name': new_image.get('campaignName', {}).get('S', ''),
                     'customer_name': customer_info.get('name', {}).get('S', ''),
-                    'inactivated_at': get_timestamp(),
+                    'customer_company': customer_info.get('company', {}).get('S', ''),
+                    'customer_email': customer_info.get('email', {}).get('S', ''),
+                    'sales_rep_email': '',
+                    'message_count': '',
+                    'duration_minutes': '',
+                    'admin_url': f"{os.environ.get('CLOUDFRONT_URL', '')}/admin/sessions/{session_id}" if os.environ.get('CLOUDFRONT_URL') else '',
+                    'event_time': get_timestamp(),
                 }
                 trigger_manager.execute_triggers('SessionInactivated', event_data, campaign_id)
     
@@ -132,13 +142,17 @@ def handle_campaign_stream(event, context):
                 campaign_id = new_image.get('campaignId', {}).get('S', '')
                 event_data = {
                     'event_type': 'CampaignCreated',
+                    'session_id': '',
                     'campaign_id': campaign_id,
                     'campaign_name': new_image.get('campaignName', {}).get('S', ''),
-                    'campaign_code': new_image.get('campaignCode', {}).get('S', ''),
-                    'owner_email': new_image.get('ownerEmail', {}).get('S', ''),
-                    'created_at': new_image.get('createdAt', {}).get('S', ''),
-                    'start_date': new_image.get('startDate', {}).get('S', ''),
-                    'end_date': new_image.get('endDate', {}).get('S', ''),
+                    'customer_name': '',
+                    'customer_company': '',
+                    'customer_email': '',
+                    'sales_rep_email': new_image.get('ownerEmail', {}).get('S', ''),
+                    'message_count': '',
+                    'duration_minutes': '',
+                    'admin_url': f"{os.environ.get('CLOUDFRONT_URL', '')}/admin/campaigns/{campaign_id}" if os.environ.get('CLOUDFRONT_URL') else '',
+                    'event_time': new_image.get('createdAt', {}).get('S', ''),
                 }
                 print(f"Campaign {campaign_id} created - executing triggers")
                 trigger_manager.execute_triggers('CampaignCreated', event_data, campaign_id)
@@ -152,18 +166,25 @@ def handle_campaign_stream(event, context):
                 old_status = old_image.get('status', {}).get('S', '')
                 new_status = new_image.get('status', {}).get('S', '')
 
-                # 캠페인 종료 이벤트 (active → inactive)
-                if old_status == 'active' and new_status == 'inactive':
+                # 캠페인 완료 이벤트 (status → completed)
+                if new_status == 'completed' and old_status != 'completed':
                     campaign_id = new_image.get('campaignId', {}).get('S', '')
                     event_data = {
-                        'event_type': 'CampaignClosed',
+                        'event_type': 'CampaignCompleted',
+                        'session_id': '',
                         'campaign_id': campaign_id,
                         'campaign_name': new_image.get('campaignName', {}).get('S', ''),
-                        'closed_at': get_timestamp(),
-                        'total_sessions': int(new_image.get('sessionCount', {}).get('N', '0')),
+                        'customer_name': '',
+                        'customer_company': '',
+                        'customer_email': '',
+                        'sales_rep_email': '',
+                        'message_count': str(int(new_image.get('sessionCount', {}).get('N', '0'))),
+                        'duration_minutes': '',
+                        'admin_url': f"{os.environ.get('CLOUDFRONT_URL', '')}/admin/campaigns/{campaign_id}" if os.environ.get('CLOUDFRONT_URL') else '',
+                        'event_time': get_timestamp(),
                     }
-                    print(f"Campaign {campaign_id} closed - executing triggers")
-                    trigger_manager.execute_triggers('CampaignClosed', event_data, campaign_id)
+                    print(f"Campaign {campaign_id} completed - executing triggers")
+                    trigger_manager.execute_triggers('CampaignCompleted', event_data, campaign_id)
 
     return lambda_response(200, {'message': 'Campaign stream processed successfully'})
 

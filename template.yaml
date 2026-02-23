@@ -1152,24 +1152,6 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  GetTriggerTemplatesFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/trigger/
-      Handler: trigger_api_handler.get_default_templates
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-      Events:
-        GetTriggerTemplates:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/triggers/templates
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer
-
   GetTriggerFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -1221,6 +1203,27 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/triggers/{triggerId}
             Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  ListSnsTopicsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/trigger/
+      Handler: trigger_api_handler.list_sns_topics
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - sns:ListTopics
+            Resource: '*'
+      Events:
+        ListSnsTopics:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/triggers/sns-topics
+            Method: get
             Auth:
               Authorizer: CognitoAuthorizer
 
@@ -2075,11 +2078,13 @@ Resources:
               Authorizer: CognitoAuthorizer
 
   # DynamoDB Streams Handler
+  # NOTE: VPC 밖에 배치 - Slack Webhook 등 외부 아웃바운드 호출을 위해 퍼블릭 네트워크 필요 (NAT 미사용)
   SessionStreamHandler:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/stream/
       Handler: stream_handler.handle_session_stream
+      VpcConfig: !Ref AWS::NoValue
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
@@ -2098,6 +2103,11 @@ Resources:
             Resource: 
               - !GetAtt WebsiteBucket.Arn
               - !Sub "${WebsiteBucket.Arn}/uploads/*"
+        - Statement:
+            Effect: Allow
+            Action:
+              - sns:Publish
+            Resource: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
       Environment:
         Variables:
           ANALYSIS_QUEUE_URL: !Ref AnalysisQueue
@@ -2113,16 +2123,23 @@ Resources:
             MaximumBatchingWindowInSeconds: 5
 
   # DynamoDB Streams Handler for Campaign lifecycle events
+  # NOTE: VPC 밖에 배치 - Slack Webhook 등 외부 아웃바운드 호출을 위해 퍼블릭 네트워크 필요 (NAT 미사용)
   CampaignStreamHandler:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/stream/
       Handler: stream_handler.handle_campaign_stream
+      VpcConfig: !Ref AWS::NoValue
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref CampaignsTable
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - sns:Publish
+            Resource: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
       Events:
         CampaignStream:
           Type: DynamoDB

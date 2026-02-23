@@ -1,7 +1,7 @@
 """
 SNS Trigger Executor
 
-Amazon SNS Topic으로 메시지를 발행하는 트리거 실행기입니다.
+Amazon SNS Topic으로 event_data를 JSON 문자열로 발행합니다.
 """
 
 import json
@@ -14,20 +14,20 @@ class SNSTriggerExecutor:
     def __init__(self):
         self.sns = boto3.client('sns')
 
-    def execute(self, topic_arn: str, message: str) -> bool:
+    def execute(self, topic_arn: str, payload: dict) -> bool:
         """
-        SNS Topic에 메시지를 발행합니다.
+        SNS Topic에 event_data를 발행합니다.
 
         Args:
             topic_arn: SNS Topic ARN
-            message: 발행할 메시지
+            payload: event_data dict
 
         Returns:
             성공 여부
         """
         try:
-            # 메시지에서 subject 추출 시도
-            subject = self._extract_subject(message)
+            message = json.dumps(payload, ensure_ascii=False)
+            subject = f"PreChat {payload.get('event_type', 'Event')}"[:100]
 
             response = self.sns.publish(
                 TopicArn=topic_arn,
@@ -42,22 +42,3 @@ class SNSTriggerExecutor:
         except Exception as e:
             print(f"SNS publish error to {topic_arn}: {str(e)}")
             return False
-
-    @staticmethod
-    def _extract_subject(message: str) -> str:
-        """메시지에서 subject를 추출합니다."""
-        try:
-            parsed = json.loads(message)
-            if isinstance(parsed, dict):
-                # content.title 또는 subject 필드에서 추출
-                content = parsed.get('content', {})
-                if isinstance(content, dict):
-                    title = content.get('title', '')
-                    if title:
-                        # SNS subject 최대 100자
-                        return title[:100]
-                return parsed.get('subject', 'PreChat Notification')[:100]
-        except (json.JSONDecodeError, TypeError):
-            pass
-
-        return 'PreChat Notification'

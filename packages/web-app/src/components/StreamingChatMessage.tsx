@@ -7,12 +7,14 @@ import ReactMarkdown from 'react-markdown'
 import type { Message, SalesRepInfo } from '../types'
 import { replaceSalesRepPlaceholders } from '../utils/placeholderReplacer'
 import { DivReturnRenderer } from './DivReturnRenderer'
+import { useI18n } from '../i18n'
 
 interface StreamingChatMessageProps {
   message: Message
   isStreaming?: boolean
   salesRepInfo?: SalesRepInfo
   onFormSubmit?: (formData: Record<string, string>) => void
+  onRequestForm?: () => void
 }
 
 export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({ 
@@ -20,7 +22,9 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
   isStreaming = false,
   salesRepInfo,
   onFormSubmit,
+  onRequestForm,
 }) => {
+  const { t } = useI18n()
   const [showCursor, setShowCursor] = useState(isStreaming)
   const [formSubmitted, setFormSubmitted] = useState(false)
 
@@ -62,9 +66,8 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
       case 'copy':
         navigator.clipboard.writeText(message.content)
         break
-      case 'helpful':
-        const button = document.querySelector('[data-testid="helpful-btn"]')
-        if (button) button.classList.add('success-animation')
+      case 'request-form':
+        onRequestForm?.()
         break
       default:
         break
@@ -90,28 +93,16 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
               ariaLabel="Message actions"
               variant="icon"
               items={[
+                ...(onRequestForm ? [{
+                  type: "icon-button" as const,
+                  id: "request-form",
+                  iconName: "insert-row" as const,
+                  text: t('btn_request_form')
+                }] : []),
                 {
-                  type: "group",
-                  text: "Feedback",
-                  items: [
-                    {
-                      type: "icon-button",
-                      id: "helpful",
-                      iconName: "thumbs-up",
-                      text: "Helpful"
-                    },
-                    {
-                      type: "icon-button",
-                      id: "not-helpful",
-                      iconName: "thumbs-down",
-                      text: "Not helpful"
-                    }
-                  ]
-                },
-                {
-                  type: "icon-button",
+                  type: "icon-button" as const,
                   id: "copy",
-                  iconName: "copy",
+                  iconName: "copy" as const,
                   text: "Copy",
                   popoverFeedback: (
                     <StatusIndicator type="success">

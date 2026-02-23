@@ -7,24 +7,25 @@ import type { Message, SalesRepInfo } from '../types'
 import { replaceSalesRepPlaceholders } from '../utils/placeholderReplacer'
 import { DivReturnRenderer } from './DivReturnRenderer'
 import { FormSubmissionSummary } from './FormSubmissionSummary'
+import { useI18n } from '../i18n'
 
 interface ChatMessageProps {
   message: Message
   isCustomer?: boolean
   salesRepInfo?: SalesRepInfo
   onFormSubmit?: (formData: Record<string, string>) => void
+  onRequestForm?: () => void
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = false, salesRepInfo, onFormSubmit }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = false, salesRepInfo, onFormSubmit, onRequestForm }) => {
+  const { t } = useI18n()
   const handleActionClick = (actionId: string) => {
     switch (actionId) {
       case 'copy':
         navigator.clipboard.writeText(message.content)
         break
-      case 'helpful':
-        // Success feedback animation
-        const button = document.querySelector('[data-testid="helpful-btn"]')
-        if (button) button.classList.add('success-animation')
+      case 'request-form':
+        onRequestForm?.()
         break
       default:
         break
@@ -99,28 +100,16 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
             ariaLabel="Message actions"
             variant="icon"
             items={[
+              ...(onRequestForm ? [{
+                type: "icon-button" as const,
+                id: "request-form",
+                iconName: "insert-row" as const,
+                text: t('btn_request_form')
+              }] : []),
               {
-                type: "group",
-                text: "Feedback",
-                items: [
-                  {
-                    type: "icon-button",
-                    id: "helpful",
-                    iconName: "thumbs-up",
-                    text: "Helpful"
-                  },
-                  {
-                    type: "icon-button",
-                    id: "not-helpful",
-                    iconName: "thumbs-down",
-                    text: "Not helpful"
-                  }
-                ]
-              },
-              {
-                type: "icon-button",
+                type: "icon-button" as const,
                 id: "copy",
-                iconName: "copy",
+                iconName: "copy" as const,
                 text: "Copy",
                 popoverFeedback: (
                   <StatusIndicator type="success">

@@ -3,9 +3,12 @@ Trigger 도메인 모델
 
 도메인 이벤트에 반응하여 외부 시스템(Slack, SNS 등)으로 알림을 전송하는
 Trigger 엔티티를 정의합니다.
+
+모든 이벤트는 동일한 고정 스키마(12개 key)의 dict를 그대로 JSON 전송합니다.
+Jinja2 템플릿 렌더링 없이 event_data dict를 직접 사용합니다.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 from enum import Enum
 
@@ -23,7 +26,7 @@ class EventType(str, Enum):
     SESSION_COMPLETED = 'SessionCompleted'
     SESSION_INACTIVATED = 'SessionInactivated'
     CAMPAIGN_CREATED = 'CampaignCreated'
-    CAMPAIGN_CLOSED = 'CampaignClosed'
+    CAMPAIGN_CLOSED = 'CampaignCompleted'
 
 
 class TriggerStatus(str, Enum):
@@ -37,74 +40,12 @@ VALID_EVENT_TYPES = {e.value for e in EventType}
 VALID_TRIGGER_STATUSES = {s.value for s in TriggerStatus}
 
 
-# ============================================
-# Slack Workflow Webhook 기본 메시지 템플릿
-# ============================================
-# Slack Workflow의 "웹후크에서" 트리거는 플랫한 JSON key-value를 기대합니다.
-# 아래 템플릿은 Jinja2로 렌더링되어 Webhook URL로 POST됩니다.
-# Slack Workflow 내에서 각 변수를 메시지 블록에 매핑하여 사용합니다.
-
-SLACK_TEMPLATE_SESSION_COMPLETED = """{
-  "session_id": "{{ session_id }}",
-  "customer": "{{ customer_name }}{% if customer_company %} ({{ customer_company }}){% endif %}",
-  "sales_rep": "{{ sales_rep_email | default('N/A') }}",
-  "old_status": "active",
-  "new_status": "completed",
-  "duration": "{{ duration_minutes }} minutes",
-  "completed_at": "{{ completed_at }}",
-  "message_stats": "{{ message_count | default(0) }} messages",
-  "conversation_preview": "Campaign: {{ campaign_name | default('N/A') }}",
-  "admin_url": "{{ admin_url | default('') }}"
-}"""
-
-SLACK_TEMPLATE_SESSION_CREATED = """{
-  "session_id": "{{ session_id }}",
-  "customer": "{{ customer_name }}{% if customer_company %} ({{ customer_company }}){% endif %}",
-  "sales_rep": "",
-  "old_status": "",
-  "new_status": "created",
-  "duration": "",
-  "completed_at": "",
-  "message_stats": "",
-  "conversation_preview": "Campaign: {{ campaign_name | default('N/A') }}",
-  "admin_url": "{{ admin_url | default('') }}"
-}"""
-
-SLACK_TEMPLATE_CAMPAIGN_CREATED = """{
-  "campaign_id": "{{ campaign_id }}",
-  "campaign_name": "{{ campaign_name }}",
-  "campaign_code": "{{ campaign_code }}",
-  "owner": "{{ owner_email | default('N/A') }}",
-  "event_type": "CampaignCreated",
-  "start_date": "{{ start_date | default('') }}",
-  "end_date": "{{ end_date | default('') }}",
-  "created_at": "{{ created_at }}"
-}"""
-
-SLACK_TEMPLATE_CAMPAIGN_CLOSED = """{
-  "campaign_id": "{{ campaign_id }}",
-  "campaign_name": "{{ campaign_name }}",
-  "event_type": "CampaignClosed",
-  "closed_at": "{{ closed_at }}",
-  "total_sessions": "{{ total_sessions | default(0) }}"
-}"""
-
-# 이벤트 타입별 기본 템플릿 매핑
-DEFAULT_SLACK_TEMPLATES = {
-    EventType.SESSION_COMPLETED.value: SLACK_TEMPLATE_SESSION_COMPLETED,
-    EventType.SESSION_CREATED.value: SLACK_TEMPLATE_SESSION_CREATED,
-    EventType.CAMPAIGN_CREATED.value: SLACK_TEMPLATE_CAMPAIGN_CREATED,
-    EventType.CAMPAIGN_CLOSED.value: SLACK_TEMPLATE_CAMPAIGN_CLOSED,
-}
-
-
 @dataclass
 class Trigger:
     """Trigger 엔티티"""
     trigger_id: str
     trigger_type: str
     event_type: str
-    message_template: str
     delivery_endpoint: str
     status: str = TriggerStatus.ACTIVE.value
     campaign_id: Optional[str] = None
@@ -125,9 +66,6 @@ class Trigger:
 
         if self.event_type not in VALID_EVENT_TYPES:
             errors.append(f'Invalid event_type: {self.event_type}. Must be one of {VALID_EVENT_TYPES}')
-
-        if not self.message_template:
-            errors.append('message_template is required')
 
         if not self.delivery_endpoint:
             errors.append('delivery_endpoint is required')
@@ -157,14 +95,12 @@ class Trigger:
             'triggerId': self.trigger_id,
             'triggerType': self.trigger_type,
             'eventType': self.event_type,
-            'messageTemplate': self.message_template,
             'deliveryEndpoint': self.delivery_endpoint,
             'status': self.status,
             'isGlobal': self.is_global,
             'createdAt': self.created_at,
             'updatedAt': self.updated_at,
             'createdBy': self.created_by,
-            # GSI for event type lookup
             'GSI1PK': f'EVENT#{self.event_type}',
             'GSI1SK': f'TRIGGER#{self.trigger_id}',
         }
@@ -183,7 +119,6 @@ class Trigger:
             trigger_id=item.get('triggerId', ''),
             trigger_type=item.get('triggerType', ''),
             event_type=item.get('eventType', ''),
-            message_template=item.get('messageTemplate', ''),
             delivery_endpoint=item.get('deliveryEndpoint', ''),
             status=item.get('status', TriggerStatus.ACTIVE.value),
             campaign_id=item.get('campaignId'),
@@ -199,7 +134,6 @@ class Trigger:
             'triggerId': self.trigger_id,
             'triggerType': self.trigger_type,
             'eventType': self.event_type,
-            'messageTemplate': self.message_template,
             'deliveryEndpoint': self.delivery_endpoint,
             'status': self.status,
             'isGlobal': self.is_global,

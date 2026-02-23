@@ -13,8 +13,7 @@ import type {
   Trigger,
   CreateTriggerRequest,
   UpdateTriggerRequest,
-  TriggerListResponse,
-  TriggerTemplatesResponse
+  TriggerListResponse
 } from '../types'
 import { API_BASE_URL } from '../config/api'
 
@@ -672,14 +671,15 @@ export const triggerApi = {
     }
   },
 
-  getDefaultTemplates: async (): Promise<TriggerTemplatesResponse> => {
+  listSnsTopics: async (): Promise<{ topics: Array<{ topicArn: string; topicName: string }>; count: number }> => {
     try {
       return await retryWithBackoff(async () => {
-        const response = await api.get('/admin/triggers/templates')
+        const response = await api.get('/admin/triggers/sns-topics')
         return response.data
       })
     } catch (error) {
-      return handleApiError(error, 'Get Default Templates')
+      return handleApiError(error, 'List SNS Topics')
     }
-  }
+  },
+
 }

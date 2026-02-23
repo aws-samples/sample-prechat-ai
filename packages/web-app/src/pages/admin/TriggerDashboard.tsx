@@ -14,17 +14,16 @@ import {
   FormField,
   Input,
   Select,
-  Textarea,
   Toggle,
   ColumnLayout,
-  Tabs
+  ExpandableSection
 } from '@cloudscape-design/components'
 import { triggerApi, campaignApi } from '../../services/api'
+import { useI18n } from '../../i18n'
 import type {
   Trigger,
   TriggerType,
   TriggerEventType,
-  TriggerTemplatesResponse,
   Campaign
 } from '../../types'
 
@@ -33,7 +32,7 @@ const EVENT_TYPE_OPTIONS = [
   { label: 'Session Completed', value: 'SessionCompleted' },
   { label: 'Session Inactivated', value: 'SessionInactivated' },
   { label: 'Campaign Created', value: 'CampaignCreated' },
-  { label: 'Campaign Closed', value: 'CampaignClosed' },
+  { label: 'Campaign Completed', value: 'CampaignCompleted' },
 ]
 
 const TRIGGER_TYPE_OPTIONS = [
@@ -41,11 +40,67 @@ const TRIGGER_TYPE_OPTIONS = [
   { label: 'SNS', value: 'sns' },
 ]
 
+// 이벤트별 실제 값이 차는 필드 (i18n key 매핑)
+const EVENT_ACTIVE_FIELD_KEYS: Record<string, Record<string, string>> = {
+  SessionCreated: {
+    event_type: 'SessionCreated',
+    session_id: 'trigger_field_session_id',
+    campaign_id: 'trigger_field_campaign_id',
+    campaign_name: 'trigger_field_campaign_name',
+    customer_name: 'trigger_field_customer_name',
+    customer_company: 'trigger_field_customer_company',
+    customer_email: 'trigger_field_customer_email',
+    sales_rep_email: 'trigger_field_sales_rep_email',
+    admin_url: 'trigger_field_admin_url',
+    event_time: 'trigger_field_event_time_created',
+  },
+  SessionCompleted: {
+    event_type: 'SessionCompleted',
+    session_id: 'trigger_field_session_id',
+    campaign_id: 'trigger_field_campaign_id',
+    campaign_name: 'trigger_field_campaign_name',
+    customer_name: 'trigger_field_customer_name',
+    customer_company: 'trigger_field_customer_company',
+    customer_email: 'trigger_field_customer_email',
+    sales_rep_email: 'trigger_field_sales_rep_email',
+    message_count: 'trigger_field_message_count',
+    duration_minutes: 'trigger_field_duration_minutes',
+    admin_url: 'trigger_field_admin_url',
+    event_time: 'trigger_field_event_time_completed',
+  },
+  SessionInactivated: {
+    event_type: 'SessionInactivated',
+    session_id: 'trigger_field_session_id',
+    campaign_id: 'trigger_field_campaign_id',
+    campaign_name: 'trigger_field_campaign_name',
+    customer_name: 'trigger_field_customer_name',
+    customer_company: 'trigger_field_customer_company',
+    customer_email: 'trigger_field_customer_email',
+    admin_url: 'trigger_field_admin_url',
+    event_time: 'trigger_field_event_time_inactivated',
+  },
+  CampaignCreated: {
+    event_type: 'CampaignCreated',
+    campaign_id: 'trigger_field_campaign_id',
+    campaign_name: 'trigger_field_campaign_name',
+    sales_rep_email: 'trigger_field_owner_email',
+    admin_url: 'trigger_field_admin_url',
+    event_time: 'trigger_field_event_time_created',
+  },
+  CampaignCompleted: {
+    event_type: 'CampaignCompleted',
+    campaign_id: 'trigger_field_campaign_id',
+    campaign_name: 'trigger_field_campaign_name',
+    message_count: 'trigger_field_total_sessions',
+    admin_url: 'trigger_field_admin_url',
+    event_time: 'trigger_field_event_time_completed',
+  },
+}
+
 interface TriggerFormState {
   triggerType: TriggerType
   eventType: TriggerEventType
   deliveryEndpoint: string
-  messageTemplate: string
   isGlobal: boolean
   campaignId: string
   status: 'active' | 'inactive'
@@ -55,13 +110,13 @@ const INITIAL_FORM: TriggerFormState = {
   triggerType: 'slack',
   eventType: 'SessionCompleted',
   deliveryEndpoint: '',
-  messageTemplate: '',
   isGlobal: true,
   campaignId: '',
   status: 'active',
 }
 
 export default function TriggerDashboard() {
+  const { t } = useI18n()
   const [triggers, setTriggers] = useState<Trigger[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -69,18 +124,15 @@ export default function TriggerDashboard() {
   const [currentPageIndex, setCurrentPageIndex] = useState(1)
   const pageSize = 10
 
-  // Modal state
   const [modalVisible, setModalVisible] = useState(false)
   const [editingTrigger, setEditingTrigger] = useState<Trigger | null>(null)
   const [form, setForm] = useState<TriggerFormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [modalError, setModalError] = useState('')
 
-  // Templates & campaigns
-  const [templates, setTemplates] = useState<TriggerTemplatesResponse | null>(null)
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
-
-  // Delete confirmation
+  const [snsTopics, setSnsTopics] = useState<Array<{ topicArn: string; topicName: string }>>([])
+  const [snsTopicsLoading, setSnsTopicsLoading] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Trigger | null>(null)
 
   const loadTriggers = useCallback(async () => {
@@ -96,29 +148,26 @@ export default function TriggerDashboard() {
     }
   }, [])
 
-  const loadTemplates = useCallback(async () => {
-    try {
-      const resp = await triggerApi.getDefaultTemplates()
-      setTemplates(resp)
-    } catch {
-      // 템플릿 로드 실패는 무시
-    }
-  }, [])
-
   const loadCampaigns = useCallback(async () => {
     try {
       const resp = await campaignApi.listCampaigns()
       setCampaigns(resp.campaigns)
-    } catch {
-      // 캠페인 로드 실패는 무시
-    }
+    } catch { /* ignore */ }
+  }, [])
+
+  const loadSnsTopics = useCallback(async () => {
+    try {
+      setSnsTopicsLoading(true)
+      const resp = await triggerApi.listSnsTopics()
+      setSnsTopics(resp.topics)
+    } catch { /* ignore */ }
+    finally { setSnsTopicsLoading(false) }
   }, [])
 
   useEffect(() => {
     loadTriggers()
-    loadTemplates()
     loadCampaigns()
-  }, [loadTriggers, loadTemplates, loadCampaigns])
+  }, [loadTriggers, loadCampaigns])
 
   const openCreateModal = () => {
     setEditingTrigger(null)
@@ -133,13 +182,13 @@ export default function TriggerDashboard() {
       triggerType: trigger.triggerType,
       eventType: trigger.eventType,
       deliveryEndpoint: trigger.deliveryEndpoint,
-      messageTemplate: trigger.messageTemplate,
       isGlobal: trigger.isGlobal,
       campaignId: trigger.campaignId || '',
       status: trigger.status,
     })
     setModalError('')
     setModalVisible(true)
+    if (trigger.triggerType === 'sns') loadSnsTopics()
   }
 
   const handleSave = async () => {
@@ -148,7 +197,6 @@ export default function TriggerDashboard() {
     try {
       if (editingTrigger) {
         await triggerApi.updateTrigger(editingTrigger.triggerId, {
-          messageTemplate: form.messageTemplate,
           deliveryEndpoint: form.deliveryEndpoint,
           status: form.status,
           eventType: form.eventType,
@@ -160,7 +208,6 @@ export default function TriggerDashboard() {
           triggerType: form.triggerType,
           eventType: form.eventType,
           deliveryEndpoint: form.deliveryEndpoint,
-          messageTemplate: form.messageTemplate || undefined,
           isGlobal: form.isGlobal,
           campaignId: form.isGlobal ? undefined : form.campaignId,
         })
@@ -196,23 +243,10 @@ export default function TriggerDashboard() {
     }
   }
 
-  // 이벤트 타입 변경 시 기본 템플릿 자동 적용
-  const handleEventTypeChange = (eventType: TriggerEventType) => {
-    setForm(prev => {
-      const newForm = { ...prev, eventType }
-      if (prev.triggerType === 'slack' && !prev.messageTemplate && templates) {
-        const tpl = templates.templates[eventType]
-        if (tpl) newForm.messageTemplate = tpl.template
-      }
-      return newForm
-    })
-  }
-
-  // 필터링
-  const filteredTriggers = triggers.filter(t =>
-    t.eventType.toLowerCase().includes(filteringText.toLowerCase()) ||
-    t.triggerType.toLowerCase().includes(filteringText.toLowerCase()) ||
-    t.deliveryEndpoint.toLowerCase().includes(filteringText.toLowerCase())
+  const filteredTriggers = triggers.filter(tr =>
+    tr.eventType.toLowerCase().includes(filteringText.toLowerCase()) ||
+    tr.triggerType.toLowerCase().includes(filteringText.toLowerCase()) ||
+    tr.deliveryEndpoint.toLowerCase().includes(filteringText.toLowerCase())
   )
 
   const startIndex = (currentPageIndex - 1) * pageSize
@@ -220,103 +254,84 @@ export default function TriggerDashboard() {
 
   const getEventBadge = (eventType: string) => {
     const colors: Record<string, 'blue' | 'green' | 'grey' | 'red'> = {
-      SessionCreated: 'blue',
-      SessionCompleted: 'green',
-      SessionInactivated: 'grey',
-      CampaignCreated: 'blue',
-      CampaignClosed: 'red',
+      SessionCreated: 'blue', SessionCompleted: 'green', SessionInactivated: 'grey',
+      CampaignCreated: 'blue', CampaignCompleted: 'green',
     }
     return <Badge color={colors[eventType] || 'grey'}>{eventType}</Badge>
   }
 
-
   const getTypeBadge = (type: string) => (
     <Badge color={type === 'slack' ? 'blue' : 'grey'}>{type.toUpperCase()}</Badge>
   )
+
+  // 이벤트별 스키마를 i18n 번역된 값으로 구성
+  const getTranslatedSchema = (eventType: string) => {
+    const fieldKeys = EVENT_ACTIVE_FIELD_KEYS[eventType]
+    if (!fieldKeys) return {}
+    const result: Record<string, string> = {}
+    for (const [key, val] of Object.entries(fieldKeys)) {
+      result[key] = key === 'event_type' ? val : t(val)
+    }
+    return result
+  }
 
   return (
     <Container>
       <SpaceBetween size="l">
         <Header
           variant="h1"
-          description="도메인 이벤트에 반응하여 Slack, SNS 등으로 알림을 전송하는 트리거를 관리합니다."
-          actions={
-            <Button variant="primary" onClick={openCreateModal}>
-              트리거 생성
-            </Button>
-          }
+          description={t('trigger_management_description')}
+          actions={<Button variant="primary" onClick={openCreateModal}>{t('trigger_create')}</Button>}
         >
-          트리거 관리
+          {t('trigger_management')}
         </Header>
 
         {error && <Alert type="error" dismissible onDismiss={() => setError('')}>{error}</Alert>}
 
         <Table
           columnDefinitions={[
+            { id: 'eventType', header: t('trigger_event'), cell: item => getEventBadge(item.eventType), width: 180 },
+            { id: 'triggerType', header: t('trigger_type'), cell: item => getTypeBadge(item.triggerType), width: 100 },
             {
-              id: 'eventType',
-              header: '이벤트',
-              cell: item => getEventBadge(item.eventType),
-              width: 180,
-            },
-            {
-              id: 'triggerType',
-              header: '유형',
-              cell: item => getTypeBadge(item.triggerType),
-              width: 100,
-            },
-            {
-              id: 'scope',
-              header: '범위',
+              id: 'scope', header: t('trigger_scope'), width: 160,
               cell: item => item.isGlobal
-                ? <Badge color="blue">전역</Badge>
+                ? <Badge color="blue">{t('trigger_global')}</Badge>
                 : <Box fontSize="body-s">{campaigns.find(c => c.campaignId === item.campaignId)?.campaignName || item.campaignId}</Box>,
-              width: 160,
             },
             {
-              id: 'endpoint',
-              header: '엔드포인트',
+              id: 'endpoint', header: t('trigger_endpoint'),
               cell: item => (
                 <Box fontSize="body-s" variant="code">
-                  {item.deliveryEndpoint.length > 50
-                    ? item.deliveryEndpoint.substring(0, 50) + '...'
-                    : item.deliveryEndpoint}
+                  {item.deliveryEndpoint.length > 50 ? item.deliveryEndpoint.substring(0, 50) + '...' : item.deliveryEndpoint}
                 </Box>
               ),
             },
             {
-              id: 'status',
-              header: '상태',
+              id: 'status', header: t('trigger_status'), width: 130,
               cell: item => (
-                <Toggle
-                  checked={item.status === 'active'}
-                  onChange={() => handleToggleStatus(item)}
-                >
-                  {item.status === 'active' ? '활성' : '비활성'}
+                <Toggle checked={item.status === 'active'} onChange={() => handleToggleStatus(item)}>
+                  {item.status === 'active' ? t('trigger_active') : t('trigger_inactive')}
                 </Toggle>
               ),
-              width: 130,
             },
             {
-              id: 'actions',
-              header: '작업',
+              id: 'actions', header: t('trigger_actions'), width: 140,
               cell: item => (
                 <SpaceBetween direction="horizontal" size="xs">
-                  <Button variant="link" onClick={() => openEditModal(item)}>수정</Button>
-                  <Button variant="link" onClick={() => setDeleteTarget(item)}>삭제</Button>
+                  <Button variant="link" onClick={() => openEditModal(item)}>{t('trigger_edit_btn')}</Button>
+                  <Button variant="link" onClick={() => setDeleteTarget(item)}>{t('trigger_delete_btn')}</Button>
                 </SpaceBetween>
               ),
-              width: 140,
             },
           ]}
           items={paginatedTriggers}
           loading={loading}
-          loadingText="트리거 로딩 중..."
+          loadingText={t('trigger_loading')}
           filter={
             <TextFilter
               filteringText={filteringText}
               onChange={({ detail }) => setFilteringText(detail.filteringText)}
-              filteringPlaceholder="트리거 검색..."
+              filteringPlaceholder={t('trigger_search_placeholder')}
             />
           }
           pagination={
@@ -328,11 +343,9 @@ export default function TriggerDashboard() {
           }
           empty={
             <Box textAlign="center" color="inherit">
-              <Box variant="strong">등록된 트리거가 없습니다</Box>
-              <Box variant="p" padding={{ bottom: 's' }}>
-                트리거를 생성하여 도메인 이벤트 알림을 설정하세요.
-              </Box>
-              <Button onClick={openCreateModal}>트리거 생성</Button>
+              <Box variant="strong">{t('trigger_empty_title')}</Box>
+              <Box variant="p" padding={{ bottom: 's' }}>{t('trigger_empty_description')}</Box>
+              <Button onClick={openCreateModal}>{t('trigger_create')}</Button>
             </Box>
           }
         />
@@ -342,14 +355,14 @@ export default function TriggerDashboard() {
       <Modal
         visible={modalVisible}
         onDismiss={() => setModalVisible(false)}
-        header={editingTrigger ? '트리거 수정' : '트리거 생성'}
+        header={editingTrigger ? t('trigger_edit') : t('trigger_create')}
         size="large"
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setModalVisible(false)}>취소</Button>
+              <Button variant="link" onClick={() => setModalVisible(false)}>{t('trigger_cancel')}</Button>
               <Button variant="primary" loading={saving} onClick={handleSave}>
-                {editingTrigger ? '저장' : '생성'}
+                {editingTrigger ? t('trigger_save') : t('trigger_create')}
               </Button>
             </SpaceBetween>
           </Box>
@@ -359,125 +372,109 @@ export default function TriggerDashboard() {
           {modalError && <Alert type="error">{modalError}</Alert>}
 
           <ColumnLayout columns={2}>
-            <FormField label="트리거 유형">
+            <FormField label={t('trigger_type_label')}>
               <Select
                 selectedOption={TRIGGER_TYPE_OPTIONS.find(o => o.value === form.triggerType) || null}
-                onChange={({ detail }) =>
-                  setForm(prev => ({ ...prev, triggerType: detail.selectedOption.value as TriggerType }))
-                }
+                onChange={({ detail }) => {
+                  const newType = detail.selectedOption.value as TriggerType
+                  setForm(prev => ({ ...prev, triggerType: newType, deliveryEndpoint: '' }))
+                  if (newType === 'sns') loadSnsTopics()
+                }}
                 options={TRIGGER_TYPE_OPTIONS}
                 disabled={!!editingTrigger}
               />
             </FormField>
-
-            <FormField label="이벤트 유형">
+            <FormField label={t('trigger_event_type_label')}>
               <Select
                 selectedOption={EVENT_TYPE_OPTIONS.find(o => o.value === form.eventType) || null}
-                onChange={({ detail }) =>
-                  handleEventTypeChange(detail.selectedOption.value as TriggerEventType)
-                }
+                onChange={({ detail }) => setForm(prev => ({ ...prev, eventType: detail.selectedOption.value as TriggerEventType }))}
                 options={EVENT_TYPE_OPTIONS}
               />
             </FormField>
           </ColumnLayout>
 
           <FormField
-            label="전달 엔드포인트"
-            description={form.triggerType === 'slack'
-              ? 'Slack Workflow Webhook URL (https://hooks.slack.com/...)'
-              : 'SNS Topic ARN (arn:aws:sns:...)'
-            }
+            label={t('trigger_endpoint_label')}
+            description={form.triggerType === 'slack' ? t('trigger_endpoint_slack_description') : t('trigger_endpoint_sns_description')}
           >
-            <Input
-              value={form.deliveryEndpoint}
-              onChange={({ detail }) => setForm(prev => ({ ...prev, deliveryEndpoint: detail.value }))}
-              placeholder={form.triggerType === 'slack'
-                ? 'https://hooks.slack.com/triggers/...'
-                : 'arn:aws:sns:ap-northeast-2:123456789:my-topic'
-              }
-            />
+            {form.triggerType === 'sns' ? (
+              <Select
+                selectedOption={
+                  form.deliveryEndpoint
+                    ? { label: snsTopics.find(tp => tp.topicArn === form.deliveryEndpoint)?.topicName || form.deliveryEndpoint, value: form.deliveryEndpoint }
+                    : null
+                }
+                onChange={({ detail }) => setForm(prev => ({ ...prev, deliveryEndpoint: detail.selectedOption.value || '' }))}
+                options={snsTopics.map(tp => ({ label: tp.topicName, value: tp.topicArn, description: tp.topicArn }))}
+                placeholder={t('trigger_sns_placeholder')}
+                filteringType="auto"
+                statusType={snsTopicsLoading ? 'loading' : 'finished'}
+                loadingText={t('trigger_sns_loading')}
+                empty={t('trigger_sns_empty')}
+              />
+            ) : (
+              <Input
+                value={form.deliveryEndpoint}
+                onChange={({ detail }) => setForm(prev => ({ ...prev, deliveryEndpoint: detail.value }))}
+                placeholder="https://hooks.slack.com/triggers/..."
+              />
+            )}
           </FormField>
 
-          <FormField label="범위">
+          <FormField label={t('trigger_scope_label')}>
             <Toggle
               checked={form.isGlobal}
               onChange={({ detail }) => setForm(prev => ({ ...prev, isGlobal: detail.checked }))}
             >
-              전역 트리거 (모든 캠페인에 적용)
+              {t('trigger_global_toggle')}
             </Toggle>
           </FormField>
 
           {!form.isGlobal && (
-            <FormField label="캠페인">
+            <FormField label={t('trigger_campaign_label')}>
               <Select
                 selectedOption={
                   campaigns.find(c => c.campaignId === form.campaignId)
                     ? { label: campaigns.find(c => c.campaignId === form.campaignId)!.campaignName, value: form.campaignId }
                     : null
                 }
-                onChange={({ detail }) =>
-                  setForm(prev => ({ ...prev, campaignId: detail.selectedOption.value || '' }))
-                }
+                onChange={({ detail }) => setForm(prev => ({ ...prev, campaignId: detail.selectedOption.value || '' }))}
                 options={campaigns.map(c => ({ label: c.campaignName, value: c.campaignId }))}
-                placeholder="캠페인 선택..."
+                placeholder={t('trigger_campaign_placeholder')}
                 filteringType="auto"
               />
             </FormField>
           )}
 
           {editingTrigger && (
-            <FormField label="상태">
+            <FormField label={t('trigger_status_label')}>
               <Toggle
                 checked={form.status === 'active'}
-                onChange={({ detail }) =>
-                  setForm(prev => ({ ...prev, status: detail.checked ? 'active' : 'inactive' }))
-                }
+                onChange={({ detail }) => setForm(prev => ({ ...prev, status: detail.checked ? 'active' : 'inactive' }))}
               >
-                {form.status === 'active' ? '활성' : '비활성'}
+                {form.status === 'active' ? t('trigger_active') : t('trigger_inactive')}
               </Toggle>
             </FormField>
           )}
 
-          <Tabs
-            tabs={[
-              {
-                label: '메시지 템플릿',
-                id: 'template',
-                content: (
-                  <SpaceBetween size="s">
-                    <FormField
-                      description="Jinja2 문법을 사용합니다. 비워두면 이벤트 유형별 기본 템플릿이 적용됩니다."
-                    >
-                      <Textarea
-                        value={form.messageTemplate}
-                        onChange={({ detail }) => setForm(prev => ({ ...prev, messageTemplate: detail.value }))}
-                        rows={12}
-                        placeholder="기본 템플릿이 자동 적용됩니다..."
-                      />
-                    </FormField>
-                    {templates?.templates[form.eventType] && (
-                      <Box>
-                        <Button
-                          variant="link"
-                          onClick={() =>
-                            setForm(prev => ({
-                              ...prev,
-                              messageTemplate: templates!.templates[form.eventType].template
-                            }))
-                          }
-                        >
-                          기본 템플릿 불러오기
-                        </Button>
-                        <Box fontSize="body-s" color="text-status-inactive" margin={{ top: 'xxs' }}>
-                          사용 가능한 변수: {templates.templates[form.eventType].variables.join(', ')}
-                        </Box>
-                      </Box>
-                    )}
-                  </SpaceBetween>
-                ),
-              },
-            ]}
-          />
+          {EVENT_ACTIVE_FIELD_KEYS[form.eventType] && (
+            <ExpandableSection
+              headerText={`${t('trigger_webhook_schema_header')} (${form.eventType})`}
+              defaultExpanded={!editingTrigger}
+            >
+              <SpaceBetween size="xs">
+                <Box fontSize="body-s" color="text-status-inactive">
+                  {t(`trigger_event_desc_${form.eventType}`)}
+                  {' '}{t('trigger_schema_empty_fields_note')}
+                </Box>
+                <Box variant="code">
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontSize: '13px' }}>
+                    {JSON.stringify(getTranslatedSchema(form.eventType), null, 2)}
+                  </pre>
+                </Box>
+              </SpaceBetween>
+            </ExpandableSection>
+          )}
         </SpaceBetween>
       </Modal>
 
@@ -485,23 +482,23 @@ export default function TriggerDashboard() {
       <Modal
         visible={!!deleteTarget}
         onDismiss={() => setDeleteTarget(null)}
-        header="트리거 삭제"
+        header={t('trigger_delete')}
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setDeleteTarget(null)}>취소</Button>
-              <Button variant="primary" onClick={handleDelete}>삭제</Button>
+              <Button variant="link" onClick={() => setDeleteTarget(null)}>{t('trigger_cancel')}</Button>
+              <Button variant="primary" onClick={handleDelete}>{t('trigger_delete_btn')}</Button>
             </SpaceBetween>
           </Box>
         }
       >
         <Box>
-          이 트리거를 삭제하시겠습니까?
+          {t('trigger_delete_confirm')}
           {deleteTarget && (
             <Box margin={{ top: 's' }}>
-              <Box fontSize="body-s">이벤트: {deleteTarget.eventType}</Box>
-              <Box fontSize="body-s">유형: {deleteTarget.triggerType}</Box>
-              <Box fontSize="body-s">엔드포인트: {deleteTarget.deliveryEndpoint}</Box>
+              <Box fontSize="body-s">{t('trigger_delete_event')}: {deleteTarget.eventType}</Box>
+              <Box fontSize="body-s">{t('trigger_delete_type')}: {deleteTarget.triggerType}</Box>
+              <Box fontSize="body-s">{t('trigger_delete_endpoint')}: {deleteTarget.deliveryEndpoint}</Box>
             </Box>
           )}
         </Box>
