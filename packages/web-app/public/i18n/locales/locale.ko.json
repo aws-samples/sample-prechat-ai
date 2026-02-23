@@ -1,0 +1,501 @@
+{
+  "welcome": {
+    "header": {
+      "title": "✨ PreChat에 오신 것을 환영합니다!",
+      "subtitle": "AWS 만남전에 AI 에이전트와 대화하여 논의 주제와 기대사항을 공유해 주세요.",
+      "streamlineSubtitle": "지능형 챗봇 어시스턴트로 미팅 사전 준비를 간소화해 보세요."
+    },
+    "footer": {
+      "privacyLink": "Privacy",
+      "termsLink": "Terms",
+      "supportLink": "Support",
+      "licenseText": "This work is licensed under the",
+      "mitLicenseLink": "MIT-0 License",
+      "copyrightText": "Copyright (c) 2025 AWS PreChat"
+    },
+    "privacyTermsModal": {
+      "title": "개인정보 처리방침 및 서비스 이용약관",
+      "description": "AWS PreChat 서비스 이용과 관련된 개인정보 처리방침 및 서비스 이용약관입니다.",
+      "privacyPolicyTab": "개인정보 처리방침",
+      "termsOfServiceTab": "서비스 이용약관",
+      "confirmButton": "확인",
+      "privacyPolicyContent": "# 개인정보 처리방침\n\n**최종 업데이트: 2025년 8월**\n\n## 1. 개인정보 수집 및 이용 목적\n\nPreChat 서비스는 다음 목적으로 개인정보를 수집 및 이용합니다:\n\n### 수집 목적\n\n- 상담 서비스 진행을 위한 사전 정보 수집\n- 고객 요구사항 분석 및 맞춤형 솔루션 제안\n- 영업 담당자와의 효율적인 미팅 준비\n- 서비스 품질 향상 및 통계 분석\n\n### 법적 근거\n\n- 개인정보보호법 제15조 (정보주체의 동의)\n- 정보통신망 이용촉진 및 정보보호 등에 관한 법률 제22조\n\n## 2. 수집하는 개인정보 항목\n\n### 필수 수집 정보\n\n- **고객 정보**: 성명, 이메일 주소, 회사명, 직책\n- **대화 내용**: AI 에이전트와의 상담 대화 기록\n- **기술 정보**: IP 주소, 접속 시간, 브라우저 정보\n\n### 자동 수집 정보\n\n- 서비스 이용 기록\n- 접속 로그 및 쿠키 정보\n\n## 3. 개인정보 처리 및 보유 기간\n\n### 보유 기간\n\n- **상담 세션 데이터**: 30일 (자동 삭제)\n- **대화 기록**: 상담 완료 후 30일\n- **통계 분석 데이터**: 개인식별정보 제거 후 1년\n\n### 삭제 방법\n\n- 보유 기간 만료 시 자동 삭제\n- 정보주체 요청 시 즉시 삭제\n\n## 4. 개인정보 제3자 제공\n\n### 제공 범위\n\n- **영업 담당자**: 상담 목적으로 제한적 제공\n- **Amazon Bedrock**: AI 응답 생성을 위한 대화 내용 처리\n\n### 제공 조건\n\n- 정보주체의 사전 동의\n- 최소한의 정보만 제공\n- 목적 달성 후 즉시 삭제 요청\n\n## 5. 개인정보 처리 위탁\n\n### 위탁 업체\n\n- **Amazon Web Services**: 클라우드 인프라 및 AI 서비스\n- **위탁 업무**: 데이터 저장, AI 모델 처리, 시스템 운영\n\n### 위탁 관리\n\n- 위탁계약서 체결 및 관리·감독\n- 개인정보보호법 준수 의무 부과\n\n## 6. 정보주체의 권리\n\n### 행사 가능한 권리\n\n- **열람권**: 개인정보 처리 현황 확인\n- **정정·삭제권**: 잘못된 정보의 수정·삭제 요구\n- **처리정지권**: 개인정보 처리 중단 요구\n- **손해배상청구권**: 피해 발생 시 배상 청구\n\n### 권리 행사 방법\n\n- 이메일: aws-prechat@amazon.com\n\n## 7. 개인정보 보호 조치\n\n### 기술적 조치\n\n- 개인정보 암호화 저장\n- 접근 권한 관리 시스템\n- 침입 탐지 및 차단 시스템\n\n### 관리적 조치\n\n- 개인정보보호 담당자 지정\n- 정기적 보안 교육 실시\n- 개인정보 처리 현황 점검\n\n## 8. 개인정보보호 담당자\n\n### 개인정보보호책임자\n\n- **성명**: 주재빈\n- **부서**: Amazon Web Services / Cloud Sales Center\n- **연락처**: jaebin@amazon.com\n\n## 9. 고지 의무\n\n본 개인정보 처리방침은 시행일로부터 적용되며, 법령 및 방침에 따른 변경내용의 추가, 삭제 및 정정이 있는 경우에는 변경사항의 시행 7일 전부터 공지사항을 통하여 고지할 것입니다.\n\n**시행일자**: 2025년 8월 13일",
+      "termsOfServiceContent": "# 서비스 이용약관\n\n**최종 업데이트: 2025년 8월**\n\n## 1. 총칙\n\n### 목적\n\n본 약관은 PreChat 서비스(이하 \"서비스\")의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.\n\n### 정의\n\n- **\"회사\"**: PreChat 서비스를 제공하는 Amazon Web Services, Inc.\n- **\"이용자\"**: 본 약관에 따라 서비스를 이용하는 개인 또는 법인\n- **\"서비스\"**: 클라우드 사전 상담을 위한 AI 채팅 플랫폼\n\n## 2. 서비스 제공 및 이용\n\n### 서비스 내용\n\n- AI 에이전트를 통한 클라우드 사전 상담\n- 영업 담당자와의 미팅 준비 지원\n- 고객 요구사항 수집과 분석 및 솔루션 제안\n\n### 이용 조건\n\n- 만 14세 이상 개인 또는 법인\n- 유효한 이메일 주소 보유\n- 본 약관 및 개인정보 처리방침 동의\n\n### 서비스 제공 시간\n\n- 연중무휴 24시간 제공\n- 시스템 점검 시 사전 공지 후 일시 중단 가능\n\n## 3. 이용자의 의무\n\n### 금지 행위\n\n- 타인의 개인정보 도용 또는 허위 정보 입력\n- 서비스의 안정적 운영을 방해하는 행위\n- 법령에 위반되는 내용의 전송\n- 상업적 목적의 광고 또는 스팸 발송\n- 시스템 해킹 또는 악성코드 유포\n\n### 정보 제공 의무\n\n- 정확하고 최신의 정보 제공\n- 개인정보 변경 시 즉시 수정\n- 서비스 이용 목적에 부합하는 상담 내용\n\n## 4. 회사의 의무\n\n### 서비스 제공 의무\n\n- 안정적이고 지속적인 서비스 제공\n- 개인정보보호법 등 관련 법령 준수\n- 이용자 문의에 대한 신속한 응답\n\n### 면책 사항\n\n- 천재지변, 전쟁, 파업 등 불가항력적 사유\n- 이용자의 귀책사유로 인한 서비스 이용 장애\n- 제3자가 제공하는 서비스의 장애\n\n## 5. 개인정보 보호\n\n### 수집 및 이용\n\n- 서비스 제공에 필요한 최소한의 정보만 수집\n- 수집 목적 달성 후 지체 없이 삭제\n- 이용자 동의 없는 제3자 제공 금지\n\n### 보안 조치\n\n- 개인정보 암호화 및 접근 권한 관리\n- 정기적 보안 점검 및 취약점 개선\n- 개인정보 유출 시 즉시 통지\n\n## 6. 지적재산권\n\n### 저작권\n\n- 서비스 내 모든 콘텐츠의 저작권은 회사에 귀속\n- 이용자는 서비스 이용 목적으로만 사용 가능\n- 무단 복제, 배포, 전송 금지\n\n### 이용자 생성 콘텐츠\n\n- 대화 내용에 대한 권리는 이용자에게 귀속\n- 회사는 서비스 개선 목적으로 익명화하여 활용 가능\n\n## 7. 서비스 이용 제한\n\n### 제한 사유\n\n- 본 약관 위반 시\n- 법령 위반 또는 공공질서 위배 시\n- 서비스 운영에 심각한 지장을 초래하는 경우\n\n### 제한 절차\n\n- 사전 경고 및 시정 요구\n- 제한 사유 및 기간 통지\n- 이의제기 기회 제공\n\n## 8. 손해배상 및 면책\n\n### 손해배상\n\n- 회사의 고의 또는 중과실로 인한 손해 배상\n- 배상 범위는 통상손해에 한정\n- 간접손해, 특별손해, 결과적 손해 제외\n\n### 면책 조건\n\n- 이용자의 고의 또는 과실로 인한 손해\n- 제3자의 불법행위로 인한 손해\n- 서비스 이용으로 얻은 정보의 활용 결과\n\n## 9. 분쟁 해결\n\n### 준거법\n\n- 대한민국 법률을 준거법으로 함\n- 개인정보보호법, 정보통신망법 등 관련 법령 적용\n\n### 관할법원\n\n- 회사 소재지 관할법원을 전속관할로 함\n- 조정 및 중재를 통한 분쟁 해결 우선\n\n## 10. 기타\n\n### 약관 변경\n\n- 약관 변경 시 7일 전 공지\n- 중요한 변경사항은 30일 전 공지\n- 변경 약관에 동의하지 않을 경우 서비스 이용 중단 가능\n\n### 연락처\n\n- **이메일**: aws-prechat@amazon.com\n- **주소**: 서울특별시 강남구 테헤란로 231 (역삼동, 센터필드) East 건물12층\n\n**시행일자**: 2025년 8월 13일"
+    },
+    "topNavigation": {
+      "languageSelectorAriaLabel": "언어 변경",
+      "userMenuAriaLabel": "사용자 메뉴",
+      "profileMenuItem": "프로필",
+      "logoutMenuItem": "로그아웃"
+    }
+  },
+  "customer": {
+    "pin": {
+      "modalTitle": "영업 담당자로부터 받은 6자리 PIN 번호를 입력해주세요.",
+      "fieldLabel": "PIN 번호",
+      "placeholder": "6자리 숫자 입력",
+      "privacyAgreement": "개인정보 처리방침 및 서비스 이용약관",
+      "privacyAgreementSuffix": "에 동의합니다. (필수)",
+      "confirmButton": "확인",
+      "errorMessage": "PIN 번호가 올바르지 않습니다."
+    },
+    "purposeSelector": {
+      "modalTitle": "상담 목적을 선택해 주세요",
+      "headerTitle": "상담 목적을 선택해 주세요",
+      "headerDescription": "상담을 시작하기 전에 문의 목적을 선택해 주세요. 여러 목적을 선택하실 수 있습니다.",
+      "selectedTitle": "선택된 상담 목적",
+      "editButton": "수정",
+      "cancelButton": "취소",
+      "confirmButton": "선택 완료 ({{count}}개 선택됨)",
+      "alertMinimum": "최소 하나 이상의 상담 목적을 선택해 주세요.",
+      "purposeNewAdoption": "신규 도입 문의",
+      "purposeNewAdoptionDesc": "AWS 클라우드 서비스 신규 도입을 검토하고 계신가요?",
+      "purposeMigration": "마이그레이션 상담",
+      "purposeMigrationDesc": "기존 시스템을 AWS로 이전하는 방안을 논의하고 싶으신가요?",
+      "purposeTechnicalSupport": "기술 지원 문의",
+      "purposeTechnicalSupportDesc": "현재 사용 중인 AWS 서비스의 기술적 이슈나 개선 방안을 문의하시나요?",
+      "purposeCostOptimization": "비용 최적화 상담",
+      "purposeCostOptimizationDesc": "AWS 사용 비용을 최적화하고 효율성을 높이고 싶으신가요?",
+      "purposePartnerInquiry": "파트너 관련 문의",
+      "purposePartnerInquiryDesc": "AWS 파트너 프로그램이나 파트너사와의 협업을 문의하시나요?",
+      "purposeOther": "기타 문의",
+      "purposeOtherDesc": "위 항목에 해당하지 않는 기타 문의사항이 있으신가요?"
+    },
+    "chat": {
+      "title": "PreChat 에게 고민을 말씀해 보세요.",
+      "purposeLabel": "상담 목적",
+      "greetingMessage": "안녕하세요 저는 AWS PreChat 입니다. 저는 고객님의 클라우드 사용을 성공적으로 돕기위해 얘기를 나누고 싶습니다.\n\n  저희와 만남전에 논의할 내용과 기대하시는 내용을 알려주세요! 적합한 AWS 담당자께 전달해 드리겠습니다.\n  \n  아키텍처 다이어그램과 같이 미팅에 도움이 될 유첨파일을 제공해 주시면 함께 확인하겠습니다.",
+      "inputPlaceholder": "비즈니스 목표, 기술문의, AWS 관련 요구사항을 말씀해 주세요",
+      "inputSendAriaLabel": "메시지 전송",
+      "inputClearAriaLabel": "입력 내용 지우기",
+      "inputHintMobile": "💡 여러 줄 입력이 가능합니다. 전송하려면 아래 전송 버튼을 눌러주세요.",
+      "inputHintDesktop": "💡 Enter로 줄바꿈, 전송 버튼으로 메시지 전송",
+      "editPurposeButton": "상담 목적 변경",
+      "selectPurposeButton": "상담 목적 선택",
+      "attachFileButton": "첨부파일 제공",
+      "requestFormButton": "입력 폼으로 바꾸기",
+      "aiThinking": "답변을 생성하고 있습니다...",
+      "wsConnected": "연결됨",
+      "wsConnecting": "연결 중...",
+      "wsReconnecting": "재연결 중...",
+      "wsError": "연결 오류",
+      "greetingTemplate": "안녕하세요 저는 {{companyName}}에서 {{customerTitle}}로 있는 {{customerName}}입니다. AWS 미팅전에 고민을 공유하고자 참가했습니다.",
+      "requestFormMessage": "입력 form 을 주시겠어요?"
+    },
+    "salesRep": {
+      "sectionTitle": "담당자 정보",
+      "nameLabel": "담당자",
+      "emailLabel": "이메일",
+      "contactLabel": "연락처",
+      "ctaMessage": "추가 문의사항이 있으시면 위 담당자에게 직접 연락해 주세요."
+    },
+    "completion": {
+      "alertTitle": "✅ 상담이 완료되었습니다",
+      "alertDescription": "감사합니다. 답변이 기록되었습니다. 담당자가 연락드릴 예정입니다."
+    },
+    "feedback": {
+      "modalTitle": "사전상담 피드백",
+      "description": "사전상담 경험은 어떠셨나요? 소중한 피드백을 남겨주세요.",
+      "ratingLabel": "사전상담 경험 점수",
+      "ratingDescription": "별을 클릭하여 점수를 선택해주세요 (0.5점 단위)",
+      "ratingText": "{{rating}}점 / 5점",
+      "additionalFeedbackLabel": "추가 피드백 (선택사항)",
+      "additionalFeedbackDescription": "개선사항이나 좋았던 점을 자유롭게 작성해주세요",
+      "feedbackPlaceholder": "피드백을 입력해주세요...",
+      "submitButton": "전송"
+    },
+    "fileUpload": {
+      "modalTitle": "첨부파일 제공",
+      "closeButton": "확인",
+      "whyNeededTitle": "파일 업로드가 필요한 이유",
+      "whyNeededDescription": "더 정확한 상담을 위해 추가 자료를 제공해 주시면 도움이 됩니다.",
+      "architectureDiagramLabel": "현재 아키텍처 다이어그램",
+      "architectureDiagramDesc": ": 기존 시스템 구성 정보 제공",
+      "requirementsDocLabel": "요구사항 문서",
+      "requirementsDocDesc": ": 비즈니스 요구사항 제공",
+      "technicalSpecLabel": "기술 명세서",
+      "technicalSpecDesc": ": 기술적 제약사항과 선호사항을 확인",
+      "capacityPlanLabel": "성능/용량 계획서",
+      "capacityPlanDesc": ": 예상 트래픽과 데이터량 등",
+      "awsReviewNote": "💡 업로드된 파일은 AWS 담당자가 사전 검토하여 더욱 효과적인 미팅을 준비할 수 있습니다.",
+      "dropZoneActive": "파일을 여기에 놓으세요",
+      "dropZoneIdle": "파일을 드래그하거나 클릭하여 업로드",
+      "dropZoneSubtext": "최대 50MB • 이미지, PDF, Office 문서, 텍스트 파일 지원",
+      "selectFileButton": "파일 선택",
+      "uploadingProgress": "업로드 중...",
+      "uploadedFilesTitle": "업로드된 파일",
+      "noFilesTitle": "업로드된 파일이 없습니다",
+      "noFilesDescription": "파일을 업로드하여 상담에 필요한 자료를 제공해 주세요.",
+      "fileNameHeader": "파일명",
+      "fileSizeHeader": "크기",
+      "uploadTimeHeader": "업로드 시간",
+      "actionsHeader": "Actions",
+      "deleteButton": "Delete",
+      "deleteConfirm": "정말로 이 파일을 삭제하시겠습니까?",
+      "uploadSuccess": "파일이 성공적으로 업로드되었습니다.",
+      "uploadFailed": "파일 업로드에 실패했습니다.",
+      "uploadErrorStatus": "파일 업로드 중 오류가 발생했습니다. (Status:",
+      "deleteSuccess": "파일이 삭제되었습니다.",
+      "deleteFailed": "파일 삭제에 실패했습니다.",
+      "fileSizeExceeded": "파일 크기가 50MB를 초과합니다.",
+      "unsupportedFileType": "지원하지 않는 파일 형식입니다. 이미지, PDF, Office 문서만 업로드 가능합니다."
+    },
+    "fileList": {
+      "fileNameHeader": "파일명",
+      "fileSizeHeader": "크기",
+      "fileTypeHeader": "타입",
+      "uploadTimeHeader": "업로드 시간",
+      "actionsHeader": "Actions",
+      "downloadButton": "다운로드",
+      "prepareButton": "파일 준비",
+      "deleteButton": "Delete",
+      "noFilesTitle": "업로드된 파일이 없습니다",
+      "noFilesDescription": "파일을 업로드하여 상담에 필요한 자료를 제공해 주세요."
+    },
+    "imageGallery": {
+      "sectionTitle": "이미지 미리보기",
+      "noImages": "이미지 파일이 없습니다.",
+      "prepareButton": "이미지 준비",
+      "downloadAriaLabel": "다운로드",
+      "deleteAriaLabel": "삭제",
+      "modalTitle": "이미지 원본 보기",
+      "modalImageAlt": "원본 이미지",
+      "modalCloseButton": "닫기"
+    },
+    "sessionError": {
+      "header": "세션 오류"
+    }
+  },
+  "adminSessions": {
+    "sideNav": {
+      "sectionTitle": "세션",
+      "allSessions": "모든 세션 💬",
+      "addSession": "세션 추가",
+      "campaignsSectionTitle": "캠페인",
+      "allCampaigns": "모든 캠페인",
+      "createCampaign": "캠페인 생성",
+      "agentsSectionTitle": "PreChat 에이전트",
+      "allAgents": "모든 에이전트",
+      "createAgent": "에이전트 생성",
+      "portalTitle": "PreChat 어드민"
+    },
+    "header": {
+      "title": "모든 세션 💬",
+      "description": "고객이 AI 에이전트와 대화할 수 있는 상담 세션을 관리합니다. 필요 정보가 획득되면 세션이 완료되고, 30일이 경과한 모든 세션은 파기됩니다.",
+      "agentsButton": "PreChat 에이전트",
+      "addSessionButton": "세션 추가"
+    },
+    "filter": {
+      "campaignAssociationLabel": "캠페인 연결",
+      "allCampaigns": "모든 캠페인",
+      "noCampaign": "캠페인 없음",
+      "loadingCampaigns": "캠페인 로딩 중",
+      "mySessionsOnlyDescription": "내 세션만"
+    },
+    "table": {
+      "customerCompanyContact": "고객사/담당자명",
+      "campaignAssociation": "캠페인 연결",
+      "conversationAgent": "대화 에이전트",
+      "sessionStatus": "세션 상태",
+      "createdDate": "생성일",
+      "completedDate": "완료일",
+      "actions": "작업",
+      "consultationPurpose": "상담목적",
+      "noAgentAssigned": "No agent assigned",
+      "noCampaign": "캠페인 없음",
+      "noSessions": "No sessions",
+      "noSessionsFound": "No pre-consultation sessions found."
+    },
+    "actions": {
+      "conversationAnalysis": "대화 분석",
+      "entryInfoCsv": "진입 정보 CSV",
+      "inactivate": "Inactivate",
+      "delete": "Delete",
+      "actionsLabel": "작업"
+    },
+    "csv": {
+      "noInput": "미입력",
+      "pinContactSales": "PIN 정보는 영업 담당({{email}})에게 확인하세요"
+    }
+  },
+  "adminSessionCreate": {
+    "header": {
+      "title": "새 상담 세션을 만듭니다 💬",
+      "backButton": "대시보드로"
+    },
+    "alert": {
+      "failedLoadUser": "Failed to load current user. Please login again.",
+      "sessionCreatedSuccess": "Session created successfully! URL: {{url}} | PIN: {{pin}}",
+      "failedCreateSession": "Failed to create session"
+    },
+    "successInfo": {
+      "sectionTitle": "고객에게 전달할 정보",
+      "chatUrlLabel": "채팅 URL",
+      "copyUrlButton": "Copy URL",
+      "pinNumberLabel": "PIN 번호",
+      "copyPinButton": "Copy PIN",
+      "csvDownloadLabel": "CSV 파일 다운로드",
+      "csvAutoDownloaded": "CSV 파일이 자동으로 다운로드되었습니다.",
+      "downloadAgainButton": "다시 다운로드"
+    },
+    "form": {
+      "cancelButton": "취소",
+      "submitButton": "세션 추가",
+      "customerNameLabel": "Customer Name",
+      "customerNameDescription": "고객 담당자 이름",
+      "customerNamePlaceholder": "Enter customer name",
+      "customerEmailLabel": "Customer Email",
+      "customerEmailDescription": "고객 담당자 이메일",
+      "customerEmailPlaceholder": "Enter customer email",
+      "customerCompanyLabel": "Customer Company",
+      "customerCompanyDescription": "고객사 이름",
+      "customerCompanyPlaceholder": "Enter customer company",
+      "customerTitleLabel": "Customer Title",
+      "customerTitleDescription": "고객 직책",
+      "customerTitlePlaceholder": "고객 직함을 입력하세요",
+      "salesRepEmailLabel": "Sales Representative Email",
+      "salesRepEmailDescription": "영업 담당자(자동 입력)",
+      "salesRepEmailPlaceholder": "Current user email",
+      "salesRepEmailLoadingPlaceholder": "Loading current user...",
+      "agentLabel": "Select Agent",
+      "agentDescription": "고객과 대화를 담당할 PreChat Agent 를 선택합니다.",
+      "campaignLabel": "캠페인 연결",
+      "campaignDescription": "캠페인 선택",
+      "campaignPlaceholder": "캠페인 선택",
+      "campaignNoCampaign": "캠페인 없음",
+      "campaignEmpty": "캠페인을 찾을 수 없습니다",
+      "campaignLoading": "캠페인 로딩 중",
+      "pinLabel": "6자리 PIN 번호",
+      "pinDescription": "고객이 채팅에 접속할 때 사용할 PIN 번호입니다.",
+      "pinPlaceholder": "6자리 숫자 입력",
+      "pinHideButton": "숨기기",
+      "pinShowButton": "보기",
+      "pinRandomButton": "랜덤 생성",
+      "agentPlaceholder": "에이전트를 선택하세요",
+      "agentEmpty": "사용 가능한 에이전트가 없습니다"
+    },
+    "agentTable": {
+      "sectionTitle": "사용 가능한 에이전트 🤖",
+      "nameHeader": "에이전트 이름",
+      "modelHeader": "Foundation Model",
+      "statusHeader": "Status",
+      "noAgents": "No agents",
+      "noAgentsFoundWithCampaign": "No AgentCore agents found.",
+      "createAgentButton": "에이전트 생성",
+      "noAgentsFound": "에이전트를 찾을 수 없습니다"
+    },
+    "csv": {
+      "noInput": "미입력"
+    }
+  },
+  "adminSessionDetail": {
+    "header": {
+      "title": "사전상담 내용 검토",
+      "backButton": "대시보드로"
+    },
+    "alert": {
+      "failedLoadDetails": "Failed to load session details",
+      "sessionNotFound": "Session not found",
+      "errorOccurred": "오류가 발생했습니다"
+    },
+    "info": {
+      "customerLabel": "Customer",
+      "companyLabel": "Company",
+      "salesRepLabel": "담당자",
+      "consultationPurposeLabel": "상담목적",
+      "statusLabel": "Status",
+      "pinNumberLabel": "PIN 번호",
+      "createdLabel": "Created",
+      "privacyConsentLabel": "개인정보 동의",
+      "consentAgreed": "동의 완료",
+      "consentNotAgreed": "미동의",
+      "consentTimeLabel": "동의 시간",
+      "statusActive": "Active",
+      "statusCompleted": "Completed",
+      "statusExpired": "Expired"
+    },
+    "tabs": {
+      "meetingLog": "미팅 로그",
+      "discussion": "Discussion",
+      "attachments": "Attachments",
+      "conversation": "Conversation"
+    },
+    "feedback": {
+      "sectionTitle": "고객 피드백 (CSAT)",
+      "available": "피드백 있음",
+      "noFeedback": "피드백 없음",
+      "satisfactionScoreLabel": "만족도 점수",
+      "feedbackTimeLabel": "피드백 제출 시간",
+      "customerOpinionLabel": "고객 의견",
+      "noFeedbackSubmitted": "고객이 아직 피드백을 제출하지 않았습니다.",
+      "feedbackAfterCompletion": "세션이 완료된 후 고객 피드백을 확인할 수 있습니다."
+    },
+    "conversation": {
+      "sectionTitle": "대화 기록",
+      "customerSender": "Customer",
+      "assistantSender": "Assistant",
+      "stageLabel": "Stage",
+      "unknownStage": "Unknown",
+      "noMessages": "No messages yet"
+    },
+    "aiAnalysis": {
+      "sectionTitle": "AI 분석",
+      "agentSelectLabel": "분석 모델 선택",
+      "agentSelectPlaceholder": "요약 에이전트를 선택하세요",
+      "agentSelectEmpty": "캠페인에 연결된 요약 에이전트가 없습니다",
+      "startButton": "AI 분석 시작",
+      "inProgressButton": "AI 분석 중...",
+      "refreshButton": "새로고침",
+      "exportHtmlButton": "HTML 저장",
+      "retryButton": "다시 시도",
+      "analyzingMessage": ")가 대화 내용을 분석하고 있습니다...",
+      "analyzingProgress": "최대 5분까지 소요될 수 있습니다. (",
+      "analyzingProgressSuffix": "% 완료)",
+      "loadingResults": "분석 결과를 불러오는 중...",
+      "noResults": "분석 결과가 없습니다",
+      "noResultsDescription": "위의 \"AI 분석 시작\" 버튼을 클릭하여 대화 내용을 분석해보세요.",
+      "analysisComplete": "분석 완료:",
+      "modelUsed": "| \n                  사용 모델:",
+      "exportFilenamePrefix": "AI_분석_리포트_",
+      "failedLoad": "기존 분석 결과를 불러오는데 실패했습니다.",
+      "failedRequest": "분석 요청에 실패했습니다. 다시 시도해주세요.",
+      "failed": "AI 분석에 실패했습니다. 다시 시도해주세요.",
+      "failedStatusCheck": "분석 상태 확인에 실패했습니다.",
+      "timeout": "분석 시간이 초과되었습니다. 다시 시도해주세요.",
+      "noInfo": "정보 없음"
+    },
+    "summary": {
+      "sectionTitle": "요약 보고서",
+      "noSummary": "요약 보고서가 생성되지 않았습니다."
+    },
+    "bant": {
+      "sectionTitle": "BANT 분석",
+      "noResults": "BANT 분석 결과가 생성되지 않았습니다.",
+      "budgetLabel": "Budget (예산)",
+      "authorityLabel": "Authority (권한)",
+      "needLabel": "Need (필요성)",
+      "timelineLabel": "Timeline (일정)"
+    },
+    "awsServices": {
+      "sectionTitle": "추천 AWS 서비스",
+      "noResults": "추천 AWS 서비스가 생성되지 않았습니다.",
+      "reasonLabel": "추천 이유",
+      "implementationLabel": "구현 방안"
+    },
+    "customerCases": {
+      "sectionTitle": "관련 고객 사례",
+      "noResults": "관련 고객 사례가 생성되지 않았습니다.",
+      "descriptionLabel": "사례 설명",
+      "relevanceLabel": "관련성"
+    },
+    "meetingLog": {
+      "sectionTitle": "미팅 로그",
+      "editButton": "수정",
+      "cancelButton": "취소",
+      "saveButton": "저장",
+      "reanalyzeButton": "재분석",
+      "reanalyzingButton": "재분석 중...",
+      "exportHtmlButton": "HTML 저장",
+      "retryButton": "다시 시도",
+      "saveSuccess": "미팅 로그가 성공적으로 저장되었습니다.",
+      "failedLoad": "기존 데이터를 불러오는데 실패했습니다.",
+      "failedSave": "미팅 로그 저장에 실패했습니다.",
+      "failedReanalyze": "재분석 요청에 실패했습니다. 다시 시도해주세요.",
+      "failedAnalysis": "AI 분석에 실패했습니다. 다시 시도해주세요.",
+      "failedStatusCheck": "분석 상태 확인에 실패했습니다.",
+      "timeout": "분석 시간이 초과되었습니다. 다시 시도해주세요.",
+      "writeLabel": "초도미팅록 작성 (마크다운 형식 지원)",
+      "writePlaceholder": "미팅 내용을 자유롭게 작성해주세요. 마크다운 형식을 사용할 수 있습니다.",
+      "noMeetingLog": "미팅 로그가 없습니다",
+      "noMeetingLogDescription": "\"수정\" 버튼을 클릭하여 초도미팅록을 작성해보세요.",
+      "reanalyzeHint": "미팅 로그를 저장한 후 \"재분석\" 버튼을 클릭하면, 사전상담 대화 내용과 미팅 로그를 모두 고려하여 AI가 좌측의 분석 결과를 업데이트합니다.",
+      "analyzingMessage": "가 대화 내용과 미팅 로그를 함께 분석하고 있습니다...",
+      "analyzingProgress": "최대 5분까지 소요될 수 있습니다. (",
+      "analyzingProgressSuffix": "% 완료)",
+      "analysisComplete": "분석 완료:",
+      "modelUsed": "| \n                  에이전트:",
+      "noAnalysisResults": "분석 결과가 없습니다",
+      "noAnalysisResultsDescription": "\"재분석\" 버튼을 클릭하여 대화 내용과 미팅 로그를 함께 분석해보세요.",
+      "agentSelectLabel": "분석 에이전트 선택",
+      "agentSelectPlaceholder": "요약 에이전트를 선택하세요",
+      "agentSelectEmpty": "캠페인에 연결된 요약 에이전트가 없습니다"
+    },
+    "attachments": {
+      "uploadedFilesTitle": "업로드된 파일",
+      "failedLoad": "파일 목록을 불러오는데 실패했습니다.",
+      "failedDelete": "파일 삭제에 실패했습니다.",
+      "deleteConfirm": "정말로 이 파일을 삭제하시겠습니까?"
+    },
+    "discussion": {
+      "sectionTitle": "Discussion",
+      "sectionDescription": "팀원들과 어카운트 전략을 논의하세요",
+      "failedLoad": "Failed to load discussions",
+      "failedCreate": "Failed to create discussion",
+      "failedUpdate": "Failed to update discussion",
+      "failedDelete": "Failed to delete discussion",
+      "newCommentLabel": "새 댓글 작성",
+      "commentPlaceholder": "어카운트 전략에 대한 의견을 작성해주세요...",
+      "submitButton": "댓글 제출",
+      "noComments": "아직 작성된 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!",
+      "editedBadge": "수정됨",
+      "saveButton": "저장",
+      "cancelButton": "취소",
+      "editCommentAriaLabel": "댓글 수정",
+      "deleteCommentAriaLabel": "댓글 삭제",
+      "deleteModalTitle": "댓글 삭제",
+      "deleteConfirmation": "이 댓글을 삭제하시겠습니까? 삭제된 댓글은 복구할 수 없습니다.",
+      "deleteButton": "삭제"
+    }
+  },
+  "adminTriggers": {
+    "sideNav": {
+      "sectionTitle": "트리거",
+      "manageTriggers": "트리거 관리"
+    }
+  },
+  "login": {
+    "header": {
+      "title": "Admin Portal",
+      "subtitle": "영업 담당자 전용 접근"
+    },
+    "signIn": {
+      "tabLabel": "로그인",
+      "emailLabel": "이메일",
+      "emailPlaceholder": "이메일을 입력하세요",
+      "passwordLabel": "비밀번호",
+      "passwordPlaceholder": "비밀번호를 입력하세요",
+      "submitButton": "로그인"
+    },
+    "signUp": {
+      "tabLabel": "회원가입",
+      "fullNameLabel": "이름",
+      "fullNamePlaceholder": "이름을 입력하세요",
+      "emailLabel": "이메일",
+      "emailPlaceholder": "이메일 주소를 입력하세요",
+      "phoneNumberLabel": "전화번호",
+      "phoneNumberDescription": "국제 형식 (예: +821012345678)",
+      "passwordLabel": "비밀번호",
+      "passwordPlaceholder": "비밀번호를 만들어 주세요",
+      "submitButton": "계정 만들기"
+    },
+    "confirmEmail": {
+      "tabLabel": "이메일 인증",
+      "alertHeader": "이메일 인증 필요",
+      "alertDescription": "이메일을 확인하여 아래에 인증 코드를 입력해 주세요.",
+      "emailLabel": "이메일",
+      "emailPlaceholder": "이메일 주소를 입력하세요",
+      "confirmationCodeLabel": "인증 코드",
+      "confirmationCodeDescription": "이메일에서 6자리 코드를 확인하세요",
+      "confirmationCodePlaceholder": "6자리 코드 입력",
+      "backButton": "회원가입으로 돌아가기",
+      "submitButton": "이메일 인증"
+    },
+    "error": {
+      "fillAllFields": "모든 필드를 입력해 주세요",
+      "loginFailed": "로그인에 실패했습니다",
+      "enterConfirmationCode": "인증 코드를 입력해 주세요",
+      "confirmationFailed": "인증에 실패했습니다",
+      "signupFailed": "회원가입에 실패했습니다"
+    }
+  }
+}

@@ -1,0 +1,501 @@
+{
+  "welcome": {
+    "header": {
+      "title": "✨ Welcome to PreChat!",
+      "subtitle": "Share your discussion topics and expectations with our AI agent before your AWS meeting.",
+      "streamlineSubtitle": "Streamline your pre-meeting preparation with our intelligent chatbot assistant."
+    },
+    "footer": {
+      "privacyLink": "Privacy",
+      "termsLink": "Terms",
+      "supportLink": "Support",
+      "licenseText": "This work is licensed under the",
+      "mitLicenseLink": "MIT-0 License",
+      "copyrightText": "Copyright (c) 2025 AWS PreChat"
+    },
+    "privacyTermsModal": {
+      "title": "Privacy Policy and Terms of Service",
+      "description": "Privacy policy and terms of service related to the use of AWS PreChat service.",
+      "privacyPolicyTab": "Privacy Policy",
+      "termsOfServiceTab": "Terms of Service",
+      "confirmButton": "OK",
+      "privacyPolicyContent": "# Privacy Policy\n\n**Last Updated: August 2025**\n\n## 1. Purpose of Personal Information Collection and Use\n\nThe PreChat service collects and uses personal information for the following purposes:\n\n### Collection Purpose\n\n- Collecting preliminary information for consultation services\n- Analyzing customer requirements and proposing customized solutions\n- Efficient meeting preparation with sales representatives\n- Service quality improvement and statistical analysis\n\n### Legal Basis\n\n- Personal Information Protection Act Article 15 (Consent of data subject)\n- Act on Promotion of Information and Communications Network Utilization and Information Protection Article 22\n\n## 2. Personal Information Items Collected\n\n### Required Information\n\n- **Customer Information**: Name, email address, company name, position\n- **Conversation Content**: Consultation conversation records with AI agent\n- **Technical Information**: IP address, access time, browser information\n\n### Automatically Collected Information\n\n- Service usage records\n- Access logs and cookie information\n\n## 3. Personal Information Processing and Retention Period\n\n### Retention Period\n\n- **Consultation Session Data**: 30 days (automatic deletion)\n- **Conversation Records**: 30 days after consultation completion\n- **Statistical Analysis Data**: 1 year after removing personally identifiable information\n\n### Deletion Method\n\n- Automatic deletion upon expiration of retention period\n- Immediate deletion upon data subject request\n\n## 4. Third-Party Provision of Personal Information\n\n### Provision Scope\n\n- **Sales Representatives**: Limited provision for consultation purposes\n- **Amazon Bedrock**: Processing conversation content for AI response generation\n\n### Provision Conditions\n\n- Prior consent from data subject\n- Provision of minimal information only\n- Request for immediate deletion after purpose achievement\n\n## 5. Personal Information Processing Consignment\n\n### Consignee\n\n- **Amazon Web Services**: Cloud infrastructure and AI services\n- **Consigned Tasks**: Data storage, AI model processing, system operation\n\n### Consignment Management\n\n- Conclusion and management of consignment contracts\n- Imposition of Personal Information Protection Act compliance obligations\n\n## 6. Rights of Data Subjects\n\n### Exercisable Rights\n\n- **Right to Access**: Confirmation of personal information processing status\n- **Right to Correction/Deletion**: Request correction/deletion of incorrect information\n- **Right to Processing Suspension**: Request suspension of personal information processing\n- **Right to Claim Damages**: Claim compensation when damage occurs\n\n### Method of Exercising Rights\n\n- Email: aws-prechat@amazon.com\n\n## 7. Personal Information Protection Measures\n\n### Technical Measures\n\n- Encrypted storage of personal information\n- Access control management system\n- Intrusion detection and blocking system\n\n### Administrative Measures\n\n- Designation of personal information protection officer\n- Regular security training\n- Personal information processing status inspection\n\n## 8. Personal Information Protection Officer\n\n### Personal Information Protection Manager\n\n- **Name**: Jaebin Joo\n- **Department**: Amazon Web Services / Cloud Sales Center\n- **Contact**: jaebin@amazon.com\n\n## 9. Notification Obligation\n\nThis privacy policy applies from the effective date, and when there are additions, deletions, and corrections of changes according to laws and policies, we will notify through announcements 7 days before the implementation of changes.\n\n**Effective Date**: August 13, 2025",
+      "termsOfServiceContent": "# Terms of Service\n\n**Last Updated: August 2025**\n\n## 1. General Provisions\n\n### Purpose\n\nThese terms aim to stipulate the rights, obligations, and responsibilities between the company and users regarding the use of the PreChat service (hereinafter \"Service\").\n\n### Definitions\n\n- **\"Company\"**: Amazon Web Services, Inc. providing the PreChat service\n- **\"User\"**: Individual or corporation using the service according to these terms\n- **\"Service\"**: AI chat platform for cloud pre-consultation\n\n## 2. Service Provision and Use\n\n### Service Content\n\n- Cloud pre-consultation through AI agent\n- Meeting preparation support with sales representatives\n- Customer requirement collection, analysis, and solution proposals\n\n### Usage Conditions\n\n- Individual or corporation aged 14 or older\n- Valid email address possession\n- Consent to these terms and privacy policy\n\n### Service Provision Hours\n\n- 24/7 year-round provision\n- Temporary suspension possible after prior notice during system maintenance\n\n## 3. User Obligations\n\n### Prohibited Acts\n\n- Identity theft or false information input\n- Acts that interfere with stable service operation\n- Transmission of content violating laws\n- Commercial advertising or spam transmission\n- System hacking or malicious code distribution\n\n### Information Provision Obligation\n\n- Provision of accurate and up-to-date information\n- Immediate correction when personal information changes\n- Consultation content appropriate for service use purpose\n\n## 4. Company Obligations\n\n### Service Provision Obligation\n\n- Stable and continuous service provision\n- Compliance with related laws including Personal Information Protection Act\n- Prompt response to user inquiries\n\n### Disclaimer\n\n- Force majeure events such as natural disasters, wars, strikes\n- Service usage disruption due to user's fault\n- Disruption of services provided by third parties\n\n## 5. Personal Information Protection\n\n### Collection and Use\n\n- Collection of minimal information necessary for service provision\n- Immediate deletion after achieving collection purpose\n- Prohibition of third-party provision without user consent\n\n### Security Measures\n\n- Personal information encryption and access control management\n- Regular security inspections and vulnerability improvements\n- Immediate notification in case of personal information breach\n\n## 6. Intellectual Property Rights\n\n### Copyright\n\n- Copyright of all content within the service belongs to the company\n- Users can use only for service usage purposes\n- Prohibition of unauthorized reproduction, distribution, transmission\n\n### User-Generated Content\n\n- Rights to conversation content belong to users\n- Company may utilize anonymized content for service improvement purposes\n\n## 7. Service Usage Restrictions\n\n### Restriction Reasons\n\n- Violation of these terms\n- Violation of laws or public order\n- Causing serious disruption to service operation\n\n### Restriction Procedure\n\n- Prior warning and correction request\n- Notification of restriction reason and period\n- Opportunity for objection\n\n## 8. Damages and Disclaimer\n\n### Damage Compensation\n\n- Compensation for damages due to company's intent or gross negligence\n- Compensation scope limited to ordinary damages\n- Exclusion of indirect, special, consequential damages\n\n### Disclaimer Conditions\n\n- Damages due to user's intent or negligence\n- Damages due to third-party illegal acts\n- Results of utilizing information obtained through service use\n\n## 9. Dispute Resolution\n\n### Governing Law\n\n- Korean law as governing law\n- Application of related laws including Personal Information Protection Act and Information and Communications Network Act\n\n### Jurisdiction\n\n- Exclusive jurisdiction of courts in company's location\n- Priority on dispute resolution through mediation and arbitration\n\n## 10. Miscellaneous\n\n### Terms Amendment\n\n- 7-day advance notice for terms changes\n- 30-day advance notice for important changes\n- Service use may be discontinued if disagreeing with amended terms\n\n### Contact Information\n\n- **Email**: aws-prechat@amazon.com\n- **Address**: 12F East Building, Centerfield, 231 Teheran-ro, Gangnam-gu, Seoul\n\n**Effective Date**: August 13, 2025"
+    },
+    "topNavigation": {
+      "languageSelectorAriaLabel": "Change language",
+      "userMenuAriaLabel": "User menu",
+      "profileMenuItem": "Profile",
+      "logoutMenuItem": "Logout"
+    }
+  },
+  "customer": {
+    "pin": {
+      "modalTitle": "Please enter the 6-digit PIN number received from your sales representative.",
+      "fieldLabel": "PIN Number",
+      "placeholder": "Enter 6-digit number",
+      "privacyAgreement": "Privacy Policy and Terms of Service",
+      "privacyAgreementSuffix": " agree. (Required)",
+      "confirmButton": "Confirm",
+      "errorMessage": "PIN number is incorrect."
+    },
+    "purposeSelector": {
+      "modalTitle": "Please select your consultation purpose",
+      "headerTitle": "Please select your consultation purpose",
+      "headerDescription": "Please select your consultation purpose before starting the consultation. You can select multiple purposes.",
+      "selectedTitle": "Selected Consultation Purpose",
+      "editButton": "Edit",
+      "cancelButton": "Cancel",
+      "confirmButton": "Selection Complete ({{count}} selected)",
+      "alertMinimum": "Please select at least one consultation purpose.",
+      "purposeNewAdoption": "New Service Inquiry",
+      "purposeNewAdoptionDesc": "Are you considering adopting AWS cloud services for the first time?",
+      "purposeMigration": "Migration Consultation",
+      "purposeMigrationDesc": "Would you like to discuss migrating your existing system to AWS?",
+      "purposeTechnicalSupport": "Technical Support Inquiry",
+      "purposeTechnicalSupportDesc": "Do you have technical issues or improvement needs for your current AWS services?",
+      "purposeCostOptimization": "Cost Optimization Consultation",
+      "purposeCostOptimizationDesc": "Would you like to optimize AWS usage costs and increase efficiency?",
+      "purposePartnerInquiry": "Partner Inquiry",
+      "purposePartnerInquiryDesc": "Are you inquiring about AWS partner programs or collaboration with partners?",
+      "purposeOther": "Other Inquiry",
+      "purposeOtherDesc": "Do you have any other inquiries not covered by the above items?"
+    },
+    "chat": {
+      "title": "Share your concerns with PreChat.",
+      "purposeLabel": "Consultation Purpose",
+      "greetingMessage": "Hello, I am AWS PreChat. I would like to talk with you to help you successfully use the cloud.\n\n  Please let me know what you would like to discuss and what you expect before meeting with us! I will deliver it to the appropriate AWS representative.\n  \n  If you provide attachments that will help with the meeting, such as architecture diagrams, I will review them together.",
+      "inputPlaceholder": "💬 Tell me about your business goals, technical challenges, or AWS requirements... I'm here to help!",
+      "inputSendAriaLabel": "Send message",
+      "inputClearAriaLabel": "Clear input",
+      "inputHintMobile": "💡 Multi-line input is available. Press the Send button below to send.",
+      "inputHintDesktop": "💡 Press Enter for line break, use Send button to send message",
+      "editPurposeButton": "Edit Consultation Purpose",
+      "selectPurposeButton": "Select Consultation Purpose",
+      "attachFileButton": "Provide Attachments",
+      "requestFormButton": "Switch to Input Form",
+      "aiThinking": "Assistant is thinking...",
+      "wsConnected": "Connected",
+      "wsConnecting": "Connecting...",
+      "wsReconnecting": "Reconnecting...",
+      "wsError": "Connection error",
+      "greetingTemplate": "Hello, I am {{customerName}}, working as {{customerTitle}} at {{companyName}}. I joined this chat to share my concerns and expectations before our AWS meeting!",
+      "requestFormMessage": "Could you provide an input form?"
+    },
+    "salesRep": {
+      "sectionTitle": "Representative Information",
+      "nameLabel": "Representative",
+      "emailLabel": "Email",
+      "contactLabel": "Contact",
+      "ctaMessage": "If you have additional questions, please contact the representative above directly."
+    },
+    "completion": {
+      "alertTitle": "✅ Consultation completed",
+      "alertDescription": "Thank you. Your responses have been recorded. A representative will contact you."
+    },
+    "feedback": {
+      "modalTitle": "Pre-consultation Feedback",
+      "description": "How was your pre-consultation experience? Please leave your valuable feedback.",
+      "ratingLabel": "Pre-consultation Experience Score",
+      "ratingDescription": "Click the stars to select a score (0.5 point increments)",
+      "ratingText": "{{rating}} / 5 points",
+      "additionalFeedbackLabel": "Additional Feedback (Optional)",
+      "additionalFeedbackDescription": "Please freely write any improvements or things you liked",
+      "feedbackPlaceholder": "Please enter your feedback...",
+      "submitButton": "Submit"
+    },
+    "fileUpload": {
+      "modalTitle": "Provide Attachments",
+      "closeButton": "OK",
+      "whyNeededTitle": "Why File Upload is Needed",
+      "whyNeededDescription": "Providing additional materials would help us provide more accurate consultation.",
+      "architectureDiagramLabel": "Current Architecture Diagram",
+      "architectureDiagramDesc": ": Provide existing system configuration information",
+      "requirementsDocLabel": "Requirements Document",
+      "requirementsDocDesc": ": Provide business requirements",
+      "technicalSpecLabel": "Technical Specification",
+      "technicalSpecDesc": ": Check technical constraints and preferences",
+      "capacityPlanLabel": "Performance/Capacity Plan",
+      "capacityPlanDesc": ": Expected traffic and data volume, etc.",
+      "awsReviewNote": "💡 Uploaded files will be reviewed by AWS representatives in advance for more effective meeting preparation.",
+      "dropZoneActive": "Drop files here",
+      "dropZoneIdle": "Drag files or click to upload",
+      "dropZoneSubtext": "Max 50MB • Images, PDF, Office documents, text files supported",
+      "selectFileButton": "Select File",
+      "uploadingProgress": "Uploading...",
+      "uploadedFilesTitle": "Uploaded Files",
+      "noFilesTitle": "No uploaded files",
+      "noFilesDescription": "Please upload files to provide necessary materials for consultation.",
+      "fileNameHeader": "File Name",
+      "fileSizeHeader": "Size",
+      "uploadTimeHeader": "Upload Time",
+      "actionsHeader": "Actions",
+      "deleteButton": "Delete",
+      "deleteConfirm": "Are you sure you want to delete this file?",
+      "uploadSuccess": "File uploaded successfully.",
+      "uploadFailed": "File upload failed.",
+      "uploadErrorStatus": "An error occurred during file upload. (Status:",
+      "deleteSuccess": "File deleted successfully.",
+      "deleteFailed": "File deletion failed.",
+      "fileSizeExceeded": "File size exceeds 50MB limit.",
+      "unsupportedFileType": "Unsupported file format. Only images, PDF, and Office documents are allowed."
+    },
+    "fileList": {
+      "fileNameHeader": "File Name",
+      "fileSizeHeader": "Size",
+      "fileTypeHeader": "Type",
+      "uploadTimeHeader": "Upload Time",
+      "actionsHeader": "Actions",
+      "downloadButton": "Download",
+      "prepareButton": "File Preparation",
+      "deleteButton": "Delete",
+      "noFilesTitle": "No uploaded files",
+      "noFilesDescription": "Please upload files to provide necessary materials for consultation."
+    },
+    "imageGallery": {
+      "sectionTitle": "Image Preview",
+      "noImages": "No image files available.",
+      "prepareButton": "Prepare Image",
+      "downloadAriaLabel": "Download",
+      "deleteAriaLabel": "Delete",
+      "modalTitle": "View Original Image",
+      "modalImageAlt": "Original Image",
+      "modalCloseButton": "Close"
+    },
+    "sessionError": {
+      "header": "Session Error"
+    }
+  },
+  "adminSessions": {
+    "sideNav": {
+      "sectionTitle": "Sessions",
+      "allSessions": "All Sessions 💬",
+      "addSession": "Add Session",
+      "campaignsSectionTitle": "Campaigns",
+      "allCampaigns": "All Campaigns",
+      "createCampaign": "Create Campaign",
+      "agentsSectionTitle": "PreChat Agents",
+      "allAgents": "All Agents",
+      "createAgent": "Create Agent",
+      "portalTitle": "PreChat Admin"
+    },
+    "header": {
+      "title": "All Sessions 💬",
+      "description": "Manage consultation sessions where customers can chat with AI agents. Sessions are completed when necessary information is obtained, and all sessions are destroyed after 30 days.",
+      "agentsButton": "PreChat Agents",
+      "addSessionButton": "Add Session"
+    },
+    "filter": {
+      "campaignAssociationLabel": "Campaign Association",
+      "allCampaigns": "All Campaigns",
+      "noCampaign": "No Campaign",
+      "loadingCampaigns": "Loading campaigns",
+      "mySessionsOnlyDescription": "Created by me"
+    },
+    "table": {
+      "customerCompanyContact": "Customer Company/Contact",
+      "campaignAssociation": "Campaign Association",
+      "conversationAgent": "Conversation Agent",
+      "sessionStatus": "Session Status",
+      "createdDate": "Created Date",
+      "completedDate": "Completed Date",
+      "actions": "Actions",
+      "consultationPurpose": "Consultation Purpose",
+      "noAgentAssigned": "No agent assigned",
+      "noCampaign": "No Campaign",
+      "noSessions": "No sessions",
+      "noSessionsFound": "No pre-consultation sessions found."
+    },
+    "actions": {
+      "conversationAnalysis": "Conversation Analysis",
+      "entryInfoCsv": "Entry Information CSV",
+      "inactivate": "Inactivate",
+      "delete": "Delete",
+      "actionsLabel": "Actions"
+    },
+    "csv": {
+      "noInput": "No input",
+      "pinContactSales": "PIN information should be confirmed with sales representative ({{email}})"
+    }
+  },
+  "adminSessionCreate": {
+    "header": {
+      "title": "Create a new consultation session 💬",
+      "backButton": "To Dashboard"
+    },
+    "alert": {
+      "failedLoadUser": "Failed to load current user. Please login again.",
+      "sessionCreatedSuccess": "Session created successfully! URL: {{url}} | PIN: {{pin}}",
+      "failedCreateSession": "Failed to create session"
+    },
+    "successInfo": {
+      "sectionTitle": "Information to share with customer",
+      "chatUrlLabel": "Chat URL",
+      "copyUrlButton": "Copy URL",
+      "pinNumberLabel": "PIN Number",
+      "copyPinButton": "Copy PIN",
+      "csvDownloadLabel": "CSV File Download",
+      "csvAutoDownloaded": "CSV file has been automatically downloaded.",
+      "downloadAgainButton": "Download Again"
+    },
+    "form": {
+      "cancelButton": "Cancel",
+      "submitButton": "Add Session",
+      "customerNameLabel": "Customer Name",
+      "customerNameDescription": "Customer Contact Name",
+      "customerNamePlaceholder": "Enter customer name",
+      "customerEmailLabel": "Customer Email",
+      "customerEmailDescription": "Customer Contact Email",
+      "customerEmailPlaceholder": "Enter customer email",
+      "customerCompanyLabel": "Customer Company",
+      "customerCompanyDescription": "Customer Company Name",
+      "customerCompanyPlaceholder": "Enter customer company",
+      "customerTitleLabel": "Customer Title",
+      "customerTitleDescription": "Customer Position",
+      "customerTitlePlaceholder": "Enter customer title",
+      "salesRepEmailLabel": "Sales Representative Email",
+      "salesRepEmailDescription": "Sales Representative (Auto-filled)",
+      "salesRepEmailPlaceholder": "Current user email",
+      "salesRepEmailLoadingPlaceholder": "Loading current user...",
+      "agentLabel": "Select Agent",
+      "agentDescription": "Select a PreChat Agent to handle customer conversations.",
+      "campaignLabel": "Campaign Association",
+      "campaignDescription": "Select Campaign",
+      "campaignPlaceholder": "Select Campaign",
+      "campaignNoCampaign": "No Campaign",
+      "campaignEmpty": "No campaigns found",
+      "campaignLoading": "Loading campaigns",
+      "pinLabel": "6-digit PIN Number",
+      "pinDescription": "PIN number for customers to use when accessing the chat.",
+      "pinPlaceholder": "Enter 6-digit number",
+      "pinHideButton": "Hide",
+      "pinShowButton": "Show",
+      "pinRandomButton": "Random Generate",
+      "agentPlaceholder": "Select an agent",
+      "agentEmpty": "No agents available"
+    },
+    "agentTable": {
+      "sectionTitle": "Available Agents 🤖",
+      "nameHeader": "Agent Name",
+      "modelHeader": "Foundation Model",
+      "statusHeader": "Status",
+      "noAgents": "No agents",
+      "noAgentsFoundWithCampaign": "No AgentCore agents found.",
+      "createAgentButton": "Create Agent",
+      "noAgentsFound": "No agents found"
+    },
+    "csv": {
+      "noInput": "No input"
+    }
+  },
+  "adminSessionDetail": {
+    "header": {
+      "title": "Review pre-consultation content",
+      "backButton": "To Dashboard"
+    },
+    "alert": {
+      "failedLoadDetails": "Failed to load session details",
+      "sessionNotFound": "Session not found",
+      "errorOccurred": "An error occurred"
+    },
+    "info": {
+      "customerLabel": "Customer",
+      "companyLabel": "Company",
+      "salesRepLabel": "Representative",
+      "consultationPurposeLabel": "Consultation Purpose",
+      "statusLabel": "Status",
+      "pinNumberLabel": "PIN Number",
+      "createdLabel": "Created",
+      "privacyConsentLabel": "Privacy Consent",
+      "consentAgreed": "Consent Completed",
+      "consentNotAgreed": "Not Agreed",
+      "consentTimeLabel": "Consent Time",
+      "statusActive": "Active",
+      "statusCompleted": "Completed",
+      "statusExpired": "Expired"
+    },
+    "tabs": {
+      "meetingLog": "Meeting Log",
+      "discussion": "Discussion",
+      "attachments": "Attachments",
+      "conversation": "Conversation"
+    },
+    "feedback": {
+      "sectionTitle": "Customer Feedback (CSAT)",
+      "available": "Feedback Available",
+      "noFeedback": "No Feedback",
+      "satisfactionScoreLabel": "Satisfaction Score",
+      "feedbackTimeLabel": "Feedback Submission Time",
+      "customerOpinionLabel": "Customer Opinion",
+      "noFeedbackSubmitted": "Customer has not submitted feedback yet.",
+      "feedbackAfterCompletion": "Customer feedback can be checked once the session is completed."
+    },
+    "conversation": {
+      "sectionTitle": "Conversation History",
+      "customerSender": "Customer",
+      "assistantSender": "Assistant",
+      "stageLabel": "Stage",
+      "unknownStage": "Unknown",
+      "noMessages": "No messages yet"
+    },
+    "aiAnalysis": {
+      "sectionTitle": "AI Analysis",
+      "agentSelectLabel": "Analysis Model Selection",
+      "agentSelectPlaceholder": "Select a summary agent",
+      "agentSelectEmpty": "No summary agent connected to campaign",
+      "startButton": "Start AI Analysis",
+      "inProgressButton": "AI Analysis in progress...",
+      "refreshButton": "Refresh",
+      "exportHtmlButton": "Save HTML",
+      "retryButton": "Try Again",
+      "analyzingMessage": ") is analyzing the conversation content...",
+      "analyzingProgress": "May take up to 5 minutes. (",
+      "analyzingProgressSuffix": "% Complete)",
+      "loadingResults": "Loading analysis results...",
+      "noResults": "No analysis results available",
+      "noResultsDescription": "Click the \"Start AI Analysis\" button above to analyze the conversation content.",
+      "analysisComplete": "Analysis Complete:",
+      "modelUsed": "| \n                  Model Used:",
+      "exportFilenamePrefix": "AI_Analysis_Report_",
+      "failedLoad": "Failed to load existing analysis results.",
+      "failedRequest": "Analysis request failed. Please try again.",
+      "failed": "AI analysis failed. Please try again.",
+      "failedStatusCheck": "Failed to check analysis status.",
+      "timeout": "Analysis timed out. Please try again.",
+      "noInfo": "No information"
+    },
+    "summary": {
+      "sectionTitle": "Summary Report",
+      "noSummary": "No summary report was generated."
+    },
+    "bant": {
+      "sectionTitle": "BANT Analysis",
+      "noResults": "No BANT analysis results were generated.",
+      "budgetLabel": "Budget",
+      "authorityLabel": "Authority",
+      "needLabel": "Need",
+      "timelineLabel": "Timeline"
+    },
+    "awsServices": {
+      "sectionTitle": "Recommended AWS Services",
+      "noResults": "No recommended AWS services were generated.",
+      "reasonLabel": "Recommendation Reason",
+      "implementationLabel": "Implementation Plan"
+    },
+    "customerCases": {
+      "sectionTitle": "Related Customer Cases",
+      "noResults": "No related customer cases were generated.",
+      "descriptionLabel": "Case Description",
+      "relevanceLabel": "Relevance"
+    },
+    "meetingLog": {
+      "sectionTitle": "Meeting Log",
+      "editButton": "Edit",
+      "cancelButton": "Cancel",
+      "saveButton": "Save",
+      "reanalyzeButton": "Re-analyze",
+      "reanalyzingButton": "Re-analyzing...",
+      "exportHtmlButton": "Save HTML",
+      "retryButton": "Try Again",
+      "saveSuccess": "Meeting log has been successfully saved.",
+      "failedLoad": "Failed to load existing data.",
+      "failedSave": "Failed to save meeting log.",
+      "failedReanalyze": "Re-analysis request failed. Please try again.",
+      "failedAnalysis": "AI analysis failed. Please try again.",
+      "failedStatusCheck": "Failed to check analysis status.",
+      "timeout": "Analysis timed out. Please try again.",
+      "writeLabel": "Write Initial Meeting Log (Markdown supported)",
+      "writePlaceholder": "Please write the meeting content freely. Markdown format is supported.",
+      "noMeetingLog": "No meeting log",
+      "noMeetingLogDescription": "Click the \"Edit\" button to write the initial meeting log.",
+      "reanalyzeHint": "After saving the meeting log, click the \"Re-analyze\" button to have AI update the analysis results on the left, considering both the pre-consultation conversation and meeting log.",
+      "analyzingMessage": " is analyzing the conversation content and meeting log together...",
+      "analyzingProgress": "May take up to 5 minutes. (",
+      "analyzingProgressSuffix": "% Complete)",
+      "analysisComplete": "Analysis Complete:",
+      "modelUsed": "| \n                  Agent:",
+      "noAnalysisResults": "No analysis results",
+      "noAnalysisResultsDescription": "Click the \"Re-analyze\" button to analyze the conversation content and meeting log together.",
+      "agentSelectLabel": "Select Analysis Agent",
+      "agentSelectPlaceholder": "Select a summary agent",
+      "agentSelectEmpty": "No summary agent connected to campaign"
+    },
+    "attachments": {
+      "uploadedFilesTitle": "Uploaded Files",
+      "failedLoad": "Failed to load file list.",
+      "failedDelete": "Failed to delete file.",
+      "deleteConfirm": "Are you sure you want to delete this file?"
+    },
+    "discussion": {
+      "sectionTitle": "Discussion",
+      "sectionDescription": "Discuss account strategy with team members",
+      "failedLoad": "Failed to load discussions",
+      "failedCreate": "Failed to create discussion",
+      "failedUpdate": "Failed to update discussion",
+      "failedDelete": "Failed to delete discussion",
+      "newCommentLabel": "Write New Comment",
+      "commentPlaceholder": "Please write your opinion on account strategy...",
+      "submitButton": "Submit Comment",
+      "noComments": "No comments have been written yet. Write the first comment!",
+      "editedBadge": "Edited",
+      "saveButton": "Save",
+      "cancelButton": "Cancel",
+      "editCommentAriaLabel": "Edit Comment",
+      "deleteCommentAriaLabel": "Delete Comment",
+      "deleteModalTitle": "Delete Comment",
+      "deleteConfirmation": "Are you sure you want to delete this comment? Deleted comments cannot be recovered.",
+      "deleteButton": "Delete"
+    }
+  },
+  "adminTriggers": {
+    "sideNav": {
+      "sectionTitle": "Triggers",
+      "manageTriggers": "Manage Triggers"
+    }
+  },
+  "login": {
+    "header": {
+      "title": "Admin Portal",
+      "subtitle": "Sales Representative Access"
+    },
+    "signIn": {
+      "tabLabel": "Sign In",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter your email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submitButton": "Sign In"
+    },
+    "signUp": {
+      "tabLabel": "Sign Up",
+      "fullNameLabel": "Full Name",
+      "fullNamePlaceholder": "Enter your full name",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter your email address",
+      "phoneNumberLabel": "Phone Number",
+      "phoneNumberDescription": "International format (e.g., +1234567890)",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Create a password",
+      "submitButton": "Create Account"
+    },
+    "confirmEmail": {
+      "tabLabel": "Confirm Email",
+      "alertHeader": "Email Confirmation Required",
+      "alertDescription": "Please check your email and enter the confirmation code below.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter your email address",
+      "confirmationCodeLabel": "Confirmation Code",
+      "confirmationCodeDescription": "Check your email for the 6-digit code",
+      "confirmationCodePlaceholder": "Enter 6-digit code",
+      "backButton": "Back to Sign Up",
+      "submitButton": "Confirm Email"
+    },
+    "error": {
+      "fillAllFields": "Please fill in all fields",
+      "loginFailed": "Login failed",
+      "enterConfirmationCode": "Please enter confirmation code",
+      "confirmationFailed": "Confirmation failed",
+      "signupFailed": "Signup failed"
+    }
+  }
+}

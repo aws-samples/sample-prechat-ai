@@ -28,9 +28,9 @@ const globalMissingKeys = new Set<string>();
 const globalErrorLog: TranslationError[] = [];
 
 export class TranslationManager {
-  private translations: Map<SupportedLocale, Record<string, string>> = new Map();
+  private translations: Map<SupportedLocale, Record<string, any>> = new Map();
   private currentLocale: SupportedLocale = DEFAULT_LOCALE;
-  private loadingPromises: Map<SupportedLocale, Promise<Record<string, string>>> = new Map();
+  private loadingPromises: Map<SupportedLocale, Promise<Record<string, any>>> = new Map();
   private storageKey = 'prechat_locale';
   private errorHandlers: ((error: TranslationError) => void)[] = [];
   private retryAttempts: Map<SupportedLocale, number> = new Map();
@@ -66,7 +66,7 @@ export class TranslationManager {
     }
   }
 
-  async loadTranslations(locale: SupportedLocale): Promise<Record<string, string>> {
+  async loadTranslations(locale: SupportedLocale): Promise<Record<string, any>> {
     // Return cached translations if already loaded
     if (this.translations.has(locale)) {
       return this.translations.get(locale)!;
@@ -92,7 +92,7 @@ export class TranslationManager {
     }
   }
 
-  private async fetchTranslations(locale: SupportedLocale): Promise<Record<string, string>> {
+  private async fetchTranslations(locale: SupportedLocale): Promise<Record<string, any>> {
     const attempts = this.retryAttempts.get(locale) || 0;
     
     try {
@@ -145,7 +145,7 @@ export class TranslationManager {
     }
   }
 
-  private async retryFetchTranslations(locale: SupportedLocale, _lastError: TranslationError): Promise<Record<string, string>> {
+  private async retryFetchTranslations(locale: SupportedLocale, _lastError: TranslationError): Promise<Record<string, any>> {
     const attempts = this.retryAttempts.get(locale) || 0;
     const newAttempts = attempts + 1;
     this.retryAttempts.set(locale, newAttempts);
@@ -161,23 +161,53 @@ export class TranslationManager {
     return this.fetchTranslations(locale);
   }
 
+  // dot notation으로 중첩 JSON 객체를 탐색하여 문자열 값을 반환
+  private resolveNestedKey(obj: any, key: string): string | undefined {
+    const parts = key.split('.');
+    let current = obj;
+    for (const part of parts) {
+      if (current === undefined || current === null || typeof current !== 'object') {
+        return undefined;
+      }
+      current = current[part];
+    }
+    return typeof current === 'string' ? current : undefined;
+  }
+
   getTranslation(key: string, locale?: SupportedLocale, fallback?: string): string {
     const targetLocale = locale || this.currentLocale;
     const translations = this.translations.get(targetLocale);
     
-    // Check if translation exists in target locale
-    if (translations && translations[key]) {
-      return translations[key];
+    if (translations) {
+      // 먼저 플랫 키로 시도 (하위 호환성)
+      if (translations[key]) {
+        return translations[key];
+      }
+      // dot notation으로 중첩 키 탐색
+      const nested = this.resolveNestedKey(translations, key);
+      if (nested) {
+        return nested;
+      }
     }
 
     // Fallback to the other locale if available
     const otherLocale: SupportedLocale = targetLocale === 'ko' ? 'en' : 'ko';
     const otherTranslations = this.translations.get(otherLocale);
-    if (otherTranslations && otherTranslations[key]) {
-      if (isDevelopment) {
-        console.warn(`Translation key "${key}" not found in ${targetLocale}, using ${otherLocale} fallback`);
+    if (otherTranslations) {
+      // 폴백 로케일에서도 플랫 키 → 중첩 키 순서로 조회
+      if (otherTranslations[key]) {
+        if (isDevelopment) {
+          console.warn(`Translation key "${key}" not found in ${targetLocale}, using ${otherLocale} fallback`);
+        }
+        return otherTranslations[key];
       }
-      return otherTranslations[key];
+      const nestedFallback = this.resolveNestedKey(otherTranslations, key);
+      if (nestedFallback) {
+        if (isDevelopment) {
+          console.warn(`Translation key "${key}" not found in ${targetLocale}, using ${otherLocale} fallback`);
+        }
+        return nestedFallback;
+      }
     }
 
     // Log missing key in development mode

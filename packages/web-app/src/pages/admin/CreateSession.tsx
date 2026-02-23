@@ -48,6 +48,7 @@ export default function CreateSession() {
   useEffect(() => {
     loadCurrentUser()
     loadCampaigns()
+    loadAgentConfigs()
   }, [])
 
   const loadCurrentUser = async () => {
@@ -56,25 +57,22 @@ export default function CreateSession() {
       setFormData(prev => ({ ...prev, salesRepEmail: user.email }))
     } catch (err) {
       console.error('Failed to load current user:', err)
-      setError(t('admin_failed_load_user'))
+      setError(t('adminSessionCreate.alert.failedLoadUser'))
     } finally {
       setLoadingUser(false)
     }
   }
 
-  const loadAgentConfigs = async (campaignId: string) => {
-    if (!campaignId) {
-      setAgentConfigs([])
-      return
-    }
+  const loadAgentConfigs = async (campaignId?: string) => {
     try {
       setLoadingAgents(true)
+      // campaignId 없이 호출하면 전체 에이전트 목록 반환
       const response = await adminApi.listAgentConfigs(campaignId)
       const configs = (response.configs || []).filter(
         (c: AgentConfiguration) => c.agentRole === 'prechat' && c.status === 'active'
       )
       setAgentConfigs(configs)
-      // Auto-select if only one prechat config
+      // 단일 에이전트만 있을 경우 자동 선택
       if (configs.length === 1) {
         setFormData(prev => ({ ...prev, agentId: configs[0].configId }))
       }
@@ -120,14 +118,14 @@ export default function CreateSession() {
       }
       
       const fullUrl = `${window.location.origin}/customer/${response.sessionId}`
-      setSuccess(t('admin_session_created_success', { url: fullUrl, pin: formData.pinNumber }))
+      setSuccess(t('adminSessionCreate.alert.sessionCreatedSuccess', { url: fullUrl, pin: formData.pinNumber }))
       
       // CSV 파일 생성 및 다운로드
       generateAndDownloadCSV(fullUrl)
       
       setTimeout(() => navigate('/admin'), 3000)
     } catch (err) {
-      setError(t('admin_failed_create_session'))
+      setError(t('adminSessionCreate.alert.failedCreateSession'))
     } finally {
       setLoading(false)
     }
@@ -135,9 +133,9 @@ export default function CreateSession() {
 
   const generateAndDownloadCSV = (chatUrl: string) => {
     const csvData = {
-      customerCompany: formData.customerCompany || t('admin_no_input'),
+      customerCompany: formData.customerCompany || t('adminSessionCreate.csv.noInput'),
       customerName: formData.customerName,
-      customerTitle: formData.customerTitle || t('admin_no_input'),
+      customerTitle: formData.customerTitle || t('adminSessionCreate.csv.noInput'),
       chatUrl: chatUrl,
       pinNumber: formData.pinNumber,
       createdAt: new Date().toLocaleString('ko-KR')
@@ -160,11 +158,11 @@ export default function CreateSession() {
           variant="h1"
           actions={
             <Button variant="normal" onClick={() => navigate('/admin')}>
-              {t('admin_to_dashboard')}
+              {t('adminSessionCreate.header.backButton')}
             </Button>
           }
         >
-          {t('admin_create_new_session')}
+          {t('adminSessionCreate.header.title')}
         </Header>
 
         {error && <Alert type="error">{error}</Alert>}
@@ -173,11 +171,11 @@ export default function CreateSession() {
         {success && (
           <SpaceBetween size="m">
             <Box>
-              <Box fontWeight="bold" fontSize="heading-s">{t('admin_customer_info_to_share')}:</Box>
+              <Box fontWeight="bold" fontSize="heading-s">{t('adminSessionCreate.successInfo.sectionTitle')}:</Box>
             </Box>
             <SpaceBetween size="s">
               <Box>
-                <Box fontWeight="bold">{t('admin_chat_url')}:</Box>
+                <Box fontWeight="bold">{t('adminSessionCreate.successInfo.chatUrlLabel')}:</Box>
                 <SpaceBetween size="xs" direction="horizontal">
                   <Input
                     value={success.split('URL: ')[1]?.split(' | PIN: ')[0] || ''}
@@ -187,12 +185,12 @@ export default function CreateSession() {
                     onClick={() => navigator.clipboard.writeText(success.split('URL: ')[1]?.split(' | PIN: ')[0] || '')}
                     iconName="copy"
                   >
-                    {t('admin_copy_url')}
+                    {t('adminSessionCreate.successInfo.copyUrlButton')}
                   </Button>
                 </SpaceBetween>
               </Box>
               <Box>
-                <Box fontWeight="bold">{t('admin_pin_number')}:</Box>
+                <Box fontWeight="bold">{t('adminSessionCreate.successInfo.pinNumberLabel')}:</Box>
                 <SpaceBetween size="xs" direction="horizontal">
                   <Input
                     value={formData.pinNumber}
@@ -202,22 +200,22 @@ export default function CreateSession() {
                     onClick={() => navigator.clipboard.writeText(formData.pinNumber)}
                     iconName="copy"
                   >
-                    {t('admin_copy_pin')}
+                    {t('adminSessionCreate.successInfo.copyPinButton')}
                   </Button>
                 </SpaceBetween>
               </Box>
               <Box>
-                <Box fontWeight="bold">{t('admin_csv_download')}:</Box>
+                <Box fontWeight="bold">{t('adminSessionCreate.successInfo.csvDownloadLabel')}:</Box>
                 <SpaceBetween size="xs" direction="horizontal">
                   <Box fontSize="body-s" color="text-status-inactive">
-                    {t('admin_csv_auto_downloaded')}
+                    {t('adminSessionCreate.successInfo.csvAutoDownloaded')}
                   </Box>
                   <Button
                     onClick={() => generateAndDownloadCSV(success.split('URL: ')[1]?.split(' | PIN: ')[0] || '')}
                     iconName="download"
                     variant="normal"
                   >
-                    {t('admin_download_again')}
+                    {t('adminSessionCreate.successInfo.downloadAgainButton')}
                   </Button>
                 </SpaceBetween>
               </Box>
@@ -229,7 +227,7 @@ export default function CreateSession() {
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="link" onClick={() => navigate('/admin')}>
-                {t('cancel')}
+                {t('adminSessionCreate.form.cancelButton')}
               </Button>
               <Button
                 variant="primary"
@@ -237,66 +235,66 @@ export default function CreateSession() {
                 loading={loading}
                 disabled={!formData.customerName || !formData.customerEmail || !formData.salesRepEmail || !formData.agentId || !formData.pinNumber}
               >
-                {t('admin_add_session')}
+                {t('adminSessionCreate.form.submitButton')}
               </Button>
             </SpaceBetween>
           }
         >
           <SpaceBetween size="l">
             <FormField
-              label={t('customer_name')}
-              description={t('admin_customer_contact_name')}
+              label={t('adminSessionCreate.form.customerNameLabel')}
+              description={t('adminSessionCreate.form.customerNameDescription')}
               stretch>
               <Input
                 value={formData.customerName}
                 onChange={({ detail }) => updateFormData('customerName', detail.value)}
-                placeholder={t('enter_customer_name')}
+                placeholder={t('adminSessionCreate.form.customerNamePlaceholder')}
               />
             </FormField>
 
             <FormField
-              label={t('customer_email')}
-              description={t('admin_customer_contact_email')}
+              label={t('adminSessionCreate.form.customerEmailLabel')}
+              description={t('adminSessionCreate.form.customerEmailDescription')}
               stretch>
               <Input
                 value={formData.customerEmail}
                 onChange={({ detail }) => updateFormData('customerEmail', detail.value)}
-                placeholder={t('enter_customer_email')}
+                placeholder={t('adminSessionCreate.form.customerEmailPlaceholder')}
                 type="email"
               />
             </FormField>
 
             <FormField
-              label={t('customer_company')}
-              description={t('admin_customer_company_name')}
+              label={t('adminSessionCreate.form.customerCompanyLabel')}
+              description={t('adminSessionCreate.form.customerCompanyDescription')}
               stretch>
               <Input
                 value={formData.customerCompany}
                 onChange={({ detail }) => updateFormData('customerCompany', detail.value)}
-                placeholder={t('enter_customer_company')}
+                placeholder={t('adminSessionCreate.form.customerCompanyPlaceholder')}
               />
             </FormField>
 
             <FormField
-              label={t('customer_title')}
-              description={t('admin_customer_position')}
+              label={t('adminSessionCreate.form.customerTitleLabel')}
+              description={t('adminSessionCreate.form.customerTitleDescription')}
               stretch>
               <Input
                 value={formData.customerTitle}
                 onChange={({ detail }) => updateFormData('customerTitle', detail.value)}
-                placeholder={t('enter_customer_title')}
+                placeholder={t('adminSessionCreate.form.customerTitlePlaceholder')}
               />
             </FormField>
 
             <FormField
-              label={t('sales_representative_email')}
-              description={t('admin_sales_rep_auto_filled')}
+              label={t('adminSessionCreate.form.salesRepEmailLabel')}
+              description={t('adminSessionCreate.form.salesRepEmailDescription')}
               stretch
             >
               <Input
                 value={formData.salesRepEmail}
                 onChange={({ detail }) => updateFormData('salesRepEmail', detail.value)}
-                placeholder={loadingUser ? t('loading_current_user') : t('current_user_email')}
+                placeholder={loadingUser ? t('adminSessionCreate.form.salesRepEmailLoadingPlaceholder') : t('adminSessionCreate.form.salesRepEmailPlaceholder')}
                 type="email"
                 readOnly={true}
                 disabled={true}
@@ -304,8 +302,8 @@ export default function CreateSession() {
             </FormField>
 
             <FormField
-              label={t('select_agent')}
-              description={t('admin_select_prechat_agent')}
+              label={t('adminSessionCreate.form.agentLabel')}
+              description={t('adminSessionCreate.form.agentDescription')}
               stretch
             >
               <Select
@@ -321,16 +319,15 @@ export default function CreateSession() {
                   value: config.configId,
                   description: extractModelName(config.modelId)
                 }))}
-                placeholder={formData.campaignId ? t('select_an_agent') : t('select_campaign_first')}
-                empty={formData.campaignId ? t('admin_no_prepared_agents') : t('select_campaign_to_see_agents')}
-                disabled={!formData.campaignId}
+                placeholder={t('adminSessionCreate.form.agentPlaceholder')}
+                empty={t('adminSessionCreate.form.agentEmpty')}
                 statusType={loadingAgents ? 'loading' : 'finished'}
               />
             </FormField>
 
             <FormField
-              label={t('campaign_association')}
-              description={t('select_campaign')}
+              label={t('adminSessionCreate.form.campaignLabel')}
+              description={t('adminSessionCreate.form.campaignDescription')}
               stretch
             >
               <Select
@@ -342,10 +339,11 @@ export default function CreateSession() {
                   const campaignId = detail.selectedOption?.value || ''
                   updateFormData('campaignId', campaignId)
                   updateFormData('agentId', '')
-                  loadAgentConfigs(campaignId)
+                  // campaignId가 있으면 해당 캠페인 에이전트로 필터링, 없으면 전체 로드
+                  loadAgentConfigs(campaignId || undefined)
                 }}
                 options={[
-                  { label: t('no_campaign'), value: '' },
+                  { label: t('adminSessionCreate.form.campaignNoCampaign'), value: '' },
                   ...campaigns
                     .filter(campaign => campaign.status === 'active')
                     .map(campaign => ({
@@ -353,23 +351,23 @@ export default function CreateSession() {
                       value: campaign.campaignId
                     }))
                 ]}
-                placeholder={t('select_campaign')}
-                empty={t('no_campaigns_found')}
-                loadingText={t('loading_campaigns')}
+                placeholder={t('adminSessionCreate.form.campaignPlaceholder')}
+                empty={t('adminSessionCreate.form.campaignEmpty')}
+                loadingText={t('adminSessionCreate.form.campaignLoading')}
                 statusType={loadingCampaigns ? 'loading' : 'finished'}
               />
             </FormField>
 
             <FormField
-              label={t('admin_six_digit_pin')}
-              description={t('admin_pin_description')}
+              label={t('adminSessionCreate.form.pinLabel')}
+              description={t('adminSessionCreate.form.pinDescription')}
               stretch
             >
               <SpaceBetween direction="horizontal" size="xs">
                 <Input
                   value={formData.pinNumber}
                   onChange={({ detail }) => updateFormData('pinNumber', detail.value)}
-                  placeholder={t('admin_enter_six_digits')}
+                  placeholder={t('adminSessionCreate.form.pinPlaceholder')}
                   type={showPin ? "text" : "password"}
                   inputMode="numeric"
     
@@ -379,14 +377,14 @@ export default function CreateSession() {
                   onClick={() => setShowPin(!showPin)}
                   iconName={showPin ? "lock-private" : "security"}
                 >
-                  {showPin ? t('admin_hide') : t('admin_show')}
+                  {showPin ? t('adminSessionCreate.form.pinHideButton') : t('adminSessionCreate.form.pinShowButton')}
                 </Button>
                 <Button
                   variant="normal"
                   onClick={generateRandomPin}
                   iconName="refresh"
                 >
-                  {t('admin_random_generate')}
+                  {t('adminSessionCreate.form.pinRandomButton')}
                 </Button>
               </SpaceBetween>
             </FormField>
@@ -395,13 +393,13 @@ export default function CreateSession() {
           </SpaceBetween>
         </Form>
 
-        <Header variant="h2">{t('admin_available_agents')}</Header>
+        <Header variant="h2">{t('adminSessionCreate.agentTable.sectionTitle')}</Header>
         <div style={{ minHeight: '30vh' }}>
           <Table
             columnDefinitions={[
               {
                 id: 'name',
-                header: t('admin_agent_name'),
+                header: t('adminSessionCreate.agentTable.nameHeader'),
                 cell: (item) => (
                   <Box>
                     <Box fontWeight="bold">{item.agentName || `Consultation Agent`}</Box>
@@ -413,12 +411,12 @@ export default function CreateSession() {
               },
               {
                 id: 'model',
-                header: t('foundation_model'),
+                header: t('adminSessionCreate.agentTable.modelHeader'),
                 cell: (item) => extractModelName(item.modelId)
               },
               {
                 id: 'status',
-                header: t('status'),
+                header: t('adminSessionCreate.agentTable.statusHeader'),
                 cell: (item) => <StatusBadge status={item.status} type="session" />
               }
             ]}
@@ -427,13 +425,13 @@ export default function CreateSession() {
             empty={
               <Box textAlign="center" color="inherit">
                 <Box variant="strong" textAlign="center" color="inherit">
-                  {t('no_agents')}
+                  {t('adminSessionCreate.agentTable.noAgents')}
                 </Box>
                 <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                  {formData.campaignId ? t('no_bedrock_agents_found') : t('select_campaign_to_see_configs')}
+                  {formData.campaignId ? t('adminSessionCreate.agentTable.noAgentsFoundWithCampaign') : t('adminSessionCreate.agentTable.noAgentsFound')}
                 </Box>
                 <Button onClick={() => navigate('/admin/agents/create')}>
-                  {t('admin_create_agent')}
+                  {t('adminSessionCreate.agentTable.createAgentButton')}
                 </Button>
               </Box>
             }
