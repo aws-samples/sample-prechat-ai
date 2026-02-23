@@ -21,7 +21,7 @@ SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
 MESSAGES_TABLE = os.environ.get('MESSAGES_TABLE')
 CAMPAIGNS_TABLE = os.environ.get('CAMPAIGNS_TABLE')
 
-from agent_runtime import AgentCoreClient, get_agent_config_for_session
+from agent_runtime import AgentCoreClient, get_agent_config_for_session, get_agent_runtime_arn
 from models.agent_config import AgentConfiguration
 
 # AgentCore 클라이언트 (Analysis Agent 호출용)
@@ -269,12 +269,13 @@ def get_session_report(event, context):
             'sessionId': session_id,
             'status': 'completed',
             'analysis': {
-                'markdownSummary': analysis_data['markdownSummary'],
-                'bantAnalysis': analysis_data['bantAnalysis'],
-                'awsServices': analysis_data['awsServices'],
-                'customerCases': analysis_data['customerCases'],
-                'analyzedAt': analysis_data['analyzedAt'],
-                'modelUsed': analysis_data['modelUsed']
+                'markdownSummary': analysis_data.get('markdownSummary', ''),
+                'bantAnalysis': analysis_data.get('bantAnalysis', {}),
+                'awsServices': analysis_data.get('awsServices', []),
+                'customerCases': analysis_data.get('customerCases', []),
+                'analyzedAt': analysis_data.get('analyzedAt', ''),
+                'modelUsed': analysis_data.get('modelUsed', ''),
+                'agentName': analysis_data.get('agentName', ''),
             }
         })
         
@@ -518,9 +519,12 @@ def reanalyze_with_meeting_log(event, context):
             if 'Item' not in config_resp:
                 return lambda_response(404, {'error': 'Agent configuration not found'})
         else:
-            config = get_agent_config_for_session(session_id, 'summary')
+            _arn, config = get_agent_config_for_session(session_id, 'summary')
             if not config or not config.agent_runtime_arn:
-                return lambda_response(400, {'error': 'No summary agent configured for this session'})
+                if _arn:
+                    config = AgentConfiguration(config_id='fallback', agent_role='summary', agent_runtime_arn=_arn)
+                else:
+                    return lambda_response(400, {'error': 'No summary agent configured for this session'})
             config_id = config.config_id
 
         timestamp = get_timestamp()
@@ -605,9 +609,12 @@ def request_analysis(event, context):
             if 'Item' not in config_resp:
                 return lambda_response(404, {'error': 'Agent configuration not found'})
         else:
-            config = get_agent_config_for_session(session_id, 'summary')
+            _arn, config = get_agent_config_for_session(session_id, 'summary')
             if not config or not config.agent_runtime_arn:
-                return lambda_response(400, {'error': 'No summary agent configured for this session'})
+                if _arn:
+                    config = AgentConfiguration(config_id='fallback', agent_role='summary', agent_runtime_arn=_arn)
+                else:
+                    return lambda_response(400, {'error': 'No summary agent configured for this session'})
             config_id = config.config_id
 
         timestamp = get_timestamp()
@@ -702,6 +709,11 @@ def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False
         # 세션 및 메시지 조회
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
         if 'Item' not in session_resp:
+            sessions_table.update_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+                UpdateExpression='SET analysisStatus = :status',
+                ExpressionAttributeValues={':status': 'failed'}
+            )
             return {'success': False, 'error': 'Session not found'}
 
         session = session_resp['Item']
@@ -714,6 +726,11 @@ def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False
         )
         messages = messages_resp.get('Items', [])
         if not messages:
+            sessions_table.update_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+                UpdateExpression='SET analysisStatus = :status',
+                ExpressionAttributeValues={':status': 'failed'}
+            )
             return {'success': False, 'error': 'No conversation messages found'}
 
         # 대화 이력 텍스트 구성
@@ -731,22 +748,43 @@ def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False
             if 'Item' in config_resp:
                 config = AgentConfiguration.from_dynamodb_item(config_resp['Item'])
 
+        # config가 없으면 세션 캠페인의 summary 설정 자동 조회
         if not config:
-            config = get_agent_config_for_session(session_id, 'summary')
+            arn, config = get_agent_config_for_session(session_id, 'summary')
+            if config and not config.agent_runtime_arn and arn:
+                config.agent_runtime_arn = arn
+            elif not config and arn:
+                config = AgentConfiguration(
+                    config_id='fallback',
+                    agent_role='summary',
+                    agent_runtime_arn=arn,
+                )
+
+        # config는 있지만 ARN이 없으면 환경 변수에서 주입
+        if config and not config.agent_runtime_arn:
+            env_arn = get_agent_runtime_arn('summary')
+            if env_arn:
+                config.agent_runtime_arn = env_arn
+                logger.info(f"Injected ARN from env var for configId={config.config_id}: {env_arn}")
 
         if not config or not config.agent_runtime_arn:
             logger.error(f"No analysis agent ARN available for session {session_id}")
-            # 폴백: 기존 직접 LLM 호출
-            logger.info("Falling back to direct LLM analysis")
-            return _perform_conversation_analysis(session_id, 'global.anthropic.claude-sonnet-4-5-20250929-v1:0', include_meeting_log, meeting_log)
+            sessions_table.update_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+                UpdateExpression='SET analysisStatus = :status',
+                ExpressionAttributeValues={':status': 'failed'}
+            )
+            return {'success': False, 'error': 'Analysis Agent가 구성되지 않았습니다. SSM 파라미터(/prechat/{stage}/agents/analysis/runtime-arn)를 확인하세요.'}
 
         # AgentCore Analysis Agent 호출
         logger.info(f"Invoking AgentCore Analysis Agent: {config.agent_runtime_arn}")
+        locale = session.get('locale', 'ko')
         result = agentcore_client.invoke_analysis(
             agent_runtime_arn=config.agent_runtime_arn,
             session_id=session_id,
             conversation_history=conversation_text,
             config=config,
+            locale=locale,
         )
 
         if 'error' in result and not result.get('result'):
@@ -791,18 +829,20 @@ def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False
         return {'success': False, 'error': str(e)}
 
 
-def _parse_agentcore_analysis_result(result: dict, config: AgentConfiguration) -> dict:
-    """AgentCore Analysis Agent 응답을 분석 결과 형식으로 파싱합니다."""
-    timestamp = get_timestamp()
-    model_used = config.model_id if config else 'unknown'
-    agent_name = config.agent_name if config else 'unknown'
+def _parse_agentcore_analysis_result(result: dict, config) -> dict:
+    """AgentCore Analysis Agent 응답을 분석 결과 형식으로 파싱합니다.
 
-    # result가 이미 구조화된 JSON이면 그대로 사용
+    Structured Output 기반: 에이전트가 AnalysisOutput Pydantic 모델로
+    검증된 응답을 반환하므로, 최소한의 변환만 수행합니다.
+    """
+    timestamp = get_timestamp()
+    model_used = config.model_id if hasattr(config, 'model_id') and config.model_id else 'unknown'
+    agent_name = config.agent_name if hasattr(config, 'agent_name') and config.agent_name else 'unknown'
+
     raw = result.get('result', result)
 
     # 문자열이면 JSON 파싱 시도
     if isinstance(raw, str):
-        # JSON 코드 블록 제거
         cleaned = raw.strip()
         if cleaned.startswith('```'):
             cleaned = cleaned.split('\n', 1)[-1]
@@ -812,10 +852,9 @@ def _parse_agentcore_analysis_result(result: dict, config: AgentConfiguration) -
         try:
             raw = json.loads(cleaned)
         except json.JSONDecodeError:
-            # 파싱 실패 시 텍스트를 markdownSummary로 사용
             return {
                 'markdownSummary': raw,
-                'bantAnalysis': {'budget': '정보 없음', 'authority': '정보 없음', 'need': '정보 없음', 'timeline': '정보 없음'},
+                'bantAnalysis': {'budget': 'N/A', 'authority': 'N/A', 'need': 'N/A', 'timeline': 'N/A'},
                 'awsServices': [],
                 'customerCases': [],
                 'analyzedAt': timestamp,
@@ -823,22 +862,11 @@ def _parse_agentcore_analysis_result(result: dict, config: AgentConfiguration) -
                 'agentName': agent_name,
             }
 
-    # BANT 형식 (Analysis Agent 기본 출력)을 프론트엔드 형식으로 변환
     if isinstance(raw, dict):
-        bant = raw.get('bantAnalysis', {})
-        # Analysis Agent가 BANT 최상위 키로 반환하는 경우
-        if not bant and 'budget' in raw:
-            bant = {
-                'budget': _extract_bant_field(raw.get('budget', {})),
-                'authority': _extract_bant_field(raw.get('authority', {})),
-                'need': _extract_bant_field(raw.get('need', {})),
-                'timeline': _extract_bant_field(raw.get('timeline', {})),
-            }
-
         return {
-            'markdownSummary': raw.get('markdownSummary', raw.get('executive_summary', '')),
-            'bantAnalysis': bant or {'budget': '정보 없음', 'authority': '정보 없음', 'need': '정보 없음', 'timeline': '정보 없음'},
-            'awsServices': raw.get('awsServices', raw.get('additional_insights', {}).get('recommended_aws_services', [])),
+            'markdownSummary': raw.get('markdownSummary', ''),
+            'bantAnalysis': raw.get('bantAnalysis', {'budget': 'N/A', 'authority': 'N/A', 'need': 'N/A', 'timeline': 'N/A'}),
+            'awsServices': raw.get('awsServices', []),
             'customerCases': raw.get('customerCases', []),
             'analyzedAt': timestamp,
             'modelUsed': model_used,
@@ -847,23 +875,13 @@ def _parse_agentcore_analysis_result(result: dict, config: AgentConfiguration) -
 
     return {
         'markdownSummary': str(raw),
-        'bantAnalysis': {'budget': '정보 없음', 'authority': '정보 없음', 'need': '정보 없음', 'timeline': '정보 없음'},
+        'bantAnalysis': {'budget': 'N/A', 'authority': 'N/A', 'need': 'N/A', 'timeline': 'N/A'},
         'awsServices': [],
         'customerCases': [],
         'analyzedAt': timestamp,
         'modelUsed': model_used,
         'agentName': agent_name,
     }
-
-
-def _extract_bant_field(field_data) -> str:
-    """BANT 필드 데이터를 문자열로 추출합니다."""
-    if isinstance(field_data, str):
-        return field_data
-    if isinstance(field_data, dict):
-        parts = [f"{k}: {v}" for k, v in field_data.items() if v and v != '정보 없음']
-        return '; '.join(parts) if parts else '정보 없음'
-    return '정보 없음'
 
 
 def _perform_conversation_analysis(session_id, model_id, include_meeting_log=False, meeting_log=''):
@@ -1299,40 +1317,46 @@ def _store_analysis_results(session_id, analysis_data, max_retries=3):
     return False
 
 def _validate_analysis_data(analysis_data):
-    """Validate analysis data structure before storage"""
+    """Validate analysis data structure before storage.
+
+    Structured Output 기반 에이전트가 이미 Pydantic 검증을 수행하므로,
+    여기서는 최소한의 필수 필드 존재 여부만 확인합니다.
+    """
     required_fields = ['markdownSummary', 'bantAnalysis', 'awsServices', 'customerCases', 'analyzedAt', 'modelUsed']
-    
+
     for field in required_fields:
         if field not in analysis_data:
             raise ValueError(f"Missing required analysis field: {field}")
-    
+
     # Validate bantAnalysis structure
     bant_fields = ['budget', 'authority', 'need', 'timeline']
     for field in bant_fields:
         if field not in analysis_data['bantAnalysis']:
             raise ValueError(f"Missing BANT field: {field}")
-    
+
     # Validate awsServices is a list
     if not isinstance(analysis_data['awsServices'], list):
         raise ValueError("awsServices must be a list")
-    
-    # Validate each AWS service entry
+
+    # awsServices 내부 필드 검증: 객체 배열이면 필수 필드 확인
     for service in analysis_data['awsServices']:
-        service_fields = ['service', 'reason', 'implementation']
-        for field in service_fields:
-            if field not in service:
-                raise ValueError(f"Missing AWS service field: {field}")
-    
+        if isinstance(service, dict):
+            if 'service' not in service:
+                raise ValueError("Missing AWS service field: service")
+            # reason, implementation은 빈 문자열 허용
+            service.setdefault('reason', '')
+            service.setdefault('implementation', '')
+
     # Validate customerCases is a list
     if not isinstance(analysis_data['customerCases'], list):
         raise ValueError("customerCases must be a list")
-    
-    # Validate each customer case entry
+
     for case in analysis_data['customerCases']:
-        case_fields = ['title', 'description', 'relevance']
-        for field in case_fields:
-            if field not in case:
-                raise ValueError(f"Missing customer case field: {field}")
+        if isinstance(case, dict):
+            if 'title' not in case:
+                raise ValueError("Missing customer case field: title")
+            case.setdefault('description', '')
+            case.setdefault('relevance', '')
 
 def _get_stored_analysis(session_id):
     """Retrieve stored analysis results from DynamoDB"""
@@ -1491,7 +1515,7 @@ def submit_analysis(event, context):
     기존 analyze + reanalyze 엔드포인트를 통합합니다.
 
     Request Body:
-      - modelId (str, required): 분석에 사용할 모델 ID
+      - configId (str, optional): AgentConfiguration ID (빈 값이면 세션 캠페인의 summary 설정 자동 조회)
       - includeMeetingLog (bool, optional): 미팅 로그 포함 여부 (기존 reanalyze)
     """
     try:
@@ -1503,13 +1527,8 @@ def submit_analysis(event, context):
 
     try:
         body = parse_body(event)
-        model_id = body.get('modelId')
+        config_id = body.get('configId', '')
         include_meeting_log = body.get('includeMeetingLog', False)
-
-        if not model_id:
-            return lambda_response(400, {'error': 'Missing modelId parameter'})
-        if not isinstance(model_id, str) or not model_id.strip():
-            return lambda_response(400, {'error': 'Invalid modelId parameter'})
 
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
         session_resp = sessions_table.get_item(
@@ -1532,10 +1551,10 @@ def submit_analysis(event, context):
             }
         )
 
-        # Build SQS message
+        # Build SQS message - configId 기반으로 process_analysis에서 AgentConfiguration 조회
         message = {
             'sessionId': session_id,
-            'modelId': model_id,
+            'configId': config_id,
             'requestedAt': timestamp,
         }
 
