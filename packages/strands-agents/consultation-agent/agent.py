@@ -83,7 +83,7 @@ def render_form(form_title: str, fields: str) -> str:
 
         form_html += '</div>'
 
-    form_html += '<button type="submit">제출</button>'
+    form_html += '<button type="submit" data-i18n="submit">Submit</button>'
     form_html += '</form></div>'
 
     return form_html
@@ -166,11 +166,25 @@ DEFAULT_MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 DEFAULT_AGENT_NAME = "prechatConsultationAgent"
 
 
+def _get_locale_instruction(locale: str) -> str:
+    """locale 코드에 따른 언어 지시를 반환합니다."""
+    if locale == 'en':
+        return (
+            "## Language Instruction\n"
+            "IMPORTANT: You MUST respond in English. "
+            "All your messages, questions, summaries, and form labels must be written in English. "
+            "Do not use Korean in your responses."
+        )
+    # 기본값(ko)이면 추가 지시 불필요 (기본 프롬프트가 한국어)
+    return ""
+
+
 def create_consultation_agent(
     session_id: str,
     system_prompt: str | None = None,
     model_id: str | None = None,
     agent_name: str | None = None,
+    locale: str = 'ko',
 ) -> Agent:
     """PreChat User의 구성을 주입하여 Consultation Agent를 생성합니다.
 
@@ -179,6 +193,7 @@ def create_consultation_agent(
         system_prompt: 사용자 정의 시스템 프롬프트 (None이면 DEFAULT 사용)
         model_id: 사용자 정의 모델 ID (None이면 DEFAULT 사용)
         agent_name: 사용자 정의 에이전트 이름 (None이면 DEFAULT 사용)
+        locale: 응답 언어 코드 ('ko' 또는 'en')
 
     Returns:
         구성된 Strands Agent 인스턴스
@@ -197,6 +212,11 @@ def create_consultation_agent(
 
     # 시스템 프롬프트에 KB ID 주입
     effective_prompt = system_prompt or _default_system_prompt()
+
+    # locale에 따른 언어 지시 추가
+    locale_instruction = _get_locale_instruction(locale)
+    if locale_instruction:
+        effective_prompt = f"{effective_prompt}\n\n{locale_instruction}"
 
     return Agent(
         model=model_id or DEFAULT_MODEL_ID,
@@ -240,6 +260,7 @@ async def stream(payload: dict):
         system_prompt=config.get("system_prompt"),
         model_id=config.get("model_id"),
         agent_name=config.get("agent_name"),
+        locale=config.get("locale", "ko"),
     )
 
     # 현재 진행 중인 도구 사용을 추적 (중복 이벤트 방지)

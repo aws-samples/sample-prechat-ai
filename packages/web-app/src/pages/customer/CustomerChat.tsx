@@ -43,7 +43,7 @@ import {
 
 export default function CustomerChat() {
   const { sessionId } = useParams<{ sessionId: string }>()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [showPinModal, setShowPinModal] = useState(true)
   const [pinInput, setPinInput] = useState('')
   const [pinError, setPinError] = useState('')
@@ -81,7 +81,7 @@ export default function CustomerChat() {
     clearInput,
     streamingMessage,
     connectionState,
-  } = useChat(sessionId, verifiedPin || undefined)
+  } = useChat(sessionId, verifiedPin || undefined, locale)
 
   // 컴포넌트 로드 시 저장된 PIN 확인
   useEffect(() => {

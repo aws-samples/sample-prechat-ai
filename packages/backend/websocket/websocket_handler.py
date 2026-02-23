@@ -295,6 +295,7 @@ def handle_send_message(event, context):
     message = body.get('message', '')
     message_id = body.get('messageId', generate_id())
     request_content_type = body.get('contentType', 'text')
+    locale = body.get('locale', 'ko')
 
     # 필수 파라미터 검증
     if not session_id or not message:
@@ -337,6 +338,16 @@ def handle_send_message(event, context):
     # 1. 고객 메시지 DynamoDB 저장 (Requirement 2.1)
     timestamp = get_timestamp()
     ttl_value = get_ttl_timestamp(30)
+
+    # 세션에 locale 저장 (비동기 분석/플래닝 에이전트에서 참조)
+    try:
+        sessions_table.update_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            UpdateExpression='SET locale = :locale',
+            ExpressionAttributeValues={':locale': locale},
+        )
+    except Exception as e:
+        print(f"[WARN] 세션 locale 업데이트 실패: {str(e)}")
 
     customer_msg = {
         'PK': f'SESSION#{session_id}',
@@ -391,6 +402,7 @@ def handle_send_message(event, context):
             session_id=session_id,
             message=agent_message,
             config=config,
+            locale=locale,
         ):
             event_type = stream_event.get('type', '')
 

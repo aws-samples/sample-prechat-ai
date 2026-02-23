@@ -5,6 +5,7 @@ from utils import lambda_response, get_timestamp
 from trigger_manager import TriggerManager
 
 sqs = boto3.client('sqs')
+dynamodb = boto3.resource('dynamodb')
 ANALYSIS_QUEUE_URL = os.environ.get('ANALYSIS_QUEUE_URL')
 DEFAULT_MODEL_ID = 'apac.anthropic.claude-3-5-sonnet-20241022-v2:0'
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
@@ -263,11 +264,24 @@ def enqueue_analysis_request(session_id):
             print(f"No analysis queue URL configured, skipping analysis for session {session_id}")
             return
         
+        # 세션에서 locale 조회
+        locale = 'ko'
+        try:
+            sessions_table = dynamodb.Table(SESSIONS_TABLE)
+            resp = sessions_table.get_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
+            )
+            if 'Item' in resp:
+                locale = resp['Item'].get('locale', 'ko')
+        except Exception as e:
+            print(f"[WARN] 세션 locale 조회 실패, 기본값(ko) 사용: {str(e)}")
+
         message = {
             'sessionId': session_id,
             'configId': '',  # 빈 값이면 process_analysis에서 세션 캠페인의 summary 설정 자동 조회
             'requestedAt': get_timestamp(),
-            'triggeredBy': 'session_completion'
+            'triggeredBy': 'session_completion',
+            'locale': locale,
         }
         
         sqs.send_message(
@@ -275,7 +289,7 @@ def enqueue_analysis_request(session_id):
             MessageBody=json.dumps(message)
         )
         
-        print(f"AgentCore analysis request enqueued for session {session_id}")
+        print(f"AgentCore analysis request enqueued for session {session_id} (locale={locale})")
         
     except Exception as e:
         print(f"Error enqueuing analysis request for session {session_id}: {str(e)}")

@@ -324,11 +324,11 @@ def send_message_stream(event, context):
 
     # AgentCore Agent 스트리밍 응답 생성
     try:
-        config = get_agent_config_for_session(session_id, 'prechat')
+        arn, config = get_agent_config_for_session(session_id, 'prechat')
         # Strands Agent 스트리밍 호출
         full_response = ""
         for chunk in agentcore_client.invoke_consultation_stream(
-            agent_runtime_arn=config.agent_runtime_arn,
+            agent_runtime_arn=arn,
             session_id=session_id,
             message=agent_message,
             config=config,  # config 내부 필드는 None이어도 OK

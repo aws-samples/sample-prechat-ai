@@ -15,7 +15,7 @@ import { MESSAGES } from '../constants'
  * - streamingMessage.status === 'complete' → 응답 완료 (messages로 이동)
  * - streamingMessage.status === 'error' → 에러 발생
  */
-export const useChat = (sessionId: string | undefined, pin?: string) => {
+export const useChat = (sessionId: string | undefined, pin?: string, locale?: string) => {
   const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState('')
   const [streamingMessage, setStreamingMessage] = useState<Message | null>(null)
@@ -141,6 +141,7 @@ export const useChat = (sessionId: string | undefined, pin?: string) => {
     sessionId: sessionId || '',
     pin: pin || '',
     wsUrl: WS_URL,
+    locale,
     onChunk: handleChunk,
     onTool: handleTool,
     onComplete: handleComplete,

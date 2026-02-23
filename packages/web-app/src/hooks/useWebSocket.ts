@@ -12,6 +12,7 @@ export interface UseWebSocketOptions {
   sessionId: string
   pin: string
   wsUrl: string
+  locale?: string
   onChunk: (chunk: string) => void
   onTool?: (tool: {
     toolName: string
@@ -42,7 +43,7 @@ export interface UseWebSocketReturn {
  * - 연결 끊김 시 메시지 큐잉 및 재연결 후 재전송
  */
 export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
-  const { sessionId, pin, wsUrl, onChunk, onTool, onComplete, onError } = options
+  const { sessionId, pin, wsUrl, locale, onChunk, onTool, onComplete, onError } = options
 
   const [connectionState, setConnectionState] = useState<ConnectionState>('disconnected')
 
@@ -188,6 +189,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
         message,
         messageId,
         ...(contentType && { contentType }),
+        ...(locale && { locale }),
       }
 
       if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -197,7 +199,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
         messageQueueRef.current.push(payload)
       }
     },
-    [sessionId]
+    [sessionId, locale]
   )
 
   // 연결 수립 및 정리

@@ -60,75 +60,68 @@ def generate_meeting_plan(event, context):
     from agent_runtime import AgentCoreClient, get_agent_config_for_session
 
     campaign_id = session.get('campaignId', '')
-    planning_config = get_agent_config_for_session(session_id, 'planning')
-    references = []
+    planning_arn, planning_config = get_agent_config_for_session(session_id, 'planning')
 
-    if planning_config and planning_config.agent_runtime_arn:
-        try:
-            client = AgentCoreClient()
-            conversation_text = ' '.join([m.get('content', '') for m in messages])
-            plan_result = client.invoke_planning(
-                agent_runtime_arn=planning_config.agent_runtime_arn,
-                session_id=session_id,
-                session_summary=conversation_text[:3000],
-                config=planning_config,
-            )
-            # Planning Agent 결과에서 references 추출
-            result_text = plan_result.get('result', '')
+    if not planning_arn:
+        return lambda_response(400, {'error': 'No planning agent configured'})
+
+    # Planning Agent 호출 (Structured Output → PlanningOutput dict)
+    try:
+        client = AgentCoreClient()
+        conversation_text = ' '.join([m.get('content', '') for m in messages])
+        locale = session.get('locale', 'ko')
+        plan_result = client.invoke_planning(
+            agent_runtime_arn=planning_config.agent_runtime_arn if planning_config else planning_arn,
+            session_id=session_id,
+            session_summary=conversation_text[:3000],
+            config=planning_config,
+            locale=locale,
+        )
+
+        # Structured Output 결과 파싱
+        raw = plan_result.get('result', {})
+        if isinstance(raw, str):
             import json as json_mod
             try:
-                parsed = json_mod.loads(result_text) if isinstance(result_text, str) else result_text
-                if isinstance(parsed, dict):
-                    for ref in parsed.get('customer_references', []):
-                        references.append(MeetingPlanReference(
-                            summary=ref.get('summary', ''),
-                            source=ref.get('source', ''),
-                            relevance_score=0,
-                        ))
+                raw = json_mod.loads(raw)
             except (json_mod.JSONDecodeError, TypeError):
-                pass
-        except Exception as e:
-            print(f"Planning agent call failed, continuing without references: {str(e)}")
+                raw = {}
 
-    # 대화 요약 생성
-    conversation_summary = _summarize_conversation(messages)
-    customer_info = session.get('customerInfo', {})
-    company = customer_info.get('company', '')
-    purposes = session.get('consultationPurposes', '')
+        if not isinstance(raw, dict):
+            raw = {}
 
-    # Meeting Plan 생성
+    except Exception as e:
+        print(f"Planning agent call failed: {str(e)}")
+        raw = {}
+
+    # Meeting Plan 생성 — 에이전트 결과를 직접 매핑
     timestamp = get_timestamp()
     campaign_id = campaign_id or session.get('campaignId', '')
+    customer_info = session.get('customerInfo', {})
+    purposes = session.get('consultationPurposes', '')
+
+    references = [
+        MeetingPlanReference(
+            summary=ref.get('summary', ''),
+            source=ref.get('source', ''),
+            relevance_score=0,
+        )
+        for ref in raw.get('customer_references', [])
+    ]
 
     plan = MeetingPlan(
         session_id=session_id,
         campaign_id=campaign_id,
-        agenda=[
-            '인사 및 소개',
-            '고객 현황 확인',
-            '주요 논의 사항',
-            'AWS 솔루션 제안',
-            '다음 단계 합의',
-        ],
-        topics=_extract_topics(messages, purposes),
-        recommended_services=_recommend_services(conversation_summary),
-        ai_suggestions=[
-            f"고객사 ({company}) 맞춤 사례 준비 권장",
-            "기술 데모 환경 사전 준비 권장" if purposes else "",
-        ],
-        next_steps=[
-            '미팅 일정 확정',
-            '참석자 확인 및 초대',
-            '기술 데모 환경 준비',
-        ],
-        references=[ref for ref in references],  # Planning Agent에서 가져온 references
+        agenda=raw.get('agenda', []),
+        topics=raw.get('topics', _extract_topics(messages, purposes)),
+        recommended_services=raw.get('recommended_services', []),
+        ai_suggestions=[s for s in raw.get('ai_suggestions', []) if s],
+        next_steps=raw.get('next_steps', []),
+        references=references,
         status='draft',
         created_at=timestamp,
         updated_at=timestamp,
     )
-
-    # 빈 문자열 제거
-    plan.ai_suggestions = [s for s in plan.ai_suggestions if s]
 
     try:
         table.put_item(Item=plan.to_dynamodb_item())
@@ -237,40 +230,11 @@ def add_comment(event, context):
         return lambda_response(500, {'error': 'Failed to add comment'})
 
 
-def _summarize_conversation(messages: list) -> str:
-    """대화 메시지에서 핵심 내용을 추출합니다."""
-    customer_messages = [m.get('content', '') for m in messages if m.get('sender') == 'customer']
-    return ' '.join(customer_messages)[:2000]
-
-
 def _extract_topics(messages: list, purposes: str) -> list[str]:
-    """대화 내용과 상담 목적에서 주요 토픽을 추출합니다."""
+    """대화 내용과 상담 목적에서 주요 토픽을 추출합니다 (에이전트 폴백용)."""
     topics = []
     if purposes:
         topics.extend([p.strip() for p in purposes.split(',') if p.strip()])
     if not topics:
         topics = ['고객 요구사항 확인', 'AWS 솔루션 논의']
     return topics[:5]
-
-
-def _recommend_services(conversation_summary: str) -> list[str]:
-    """대화 내용 기반 AWS 서비스 추천 (키워드 매칭)."""
-    keywords_to_services = {
-        'migration': 'AWS Migration Hub',
-        'database': 'Amazon RDS / Aurora',
-        'container': 'Amazon ECS / EKS',
-        'serverless': 'AWS Lambda',
-        'ai': 'Amazon Bedrock',
-        'ml': 'Amazon SageMaker',
-        'storage': 'Amazon S3',
-        'analytics': 'Amazon Redshift / Athena',
-        'security': 'AWS Security Hub',
-    }
-
-    summary_lower = conversation_summary.lower()
-    services = []
-    for keyword, service in keywords_to_services.items():
-        if keyword in summary_lower:
-            services.append(service)
-
-    return services[:5] if services else ['Amazon Bedrock', 'AWS Lambda']

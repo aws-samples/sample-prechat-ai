@@ -330,6 +330,7 @@ export interface WebSocketClientMessage {
   message: string;
   messageId: string;
   contentType?: MessageContentType;
+  locale?: string;
 }
 
 export const BEDROCK_MODELS: BedrockModel[] = [

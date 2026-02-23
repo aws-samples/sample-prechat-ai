@@ -42,14 +42,14 @@ SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
 AGENTCORE_REGION = os.environ.get('BEDROCK_REGION', 'ap-northeast-2')
 
 
-def _build_config_payload(config: Optional[AgentConfiguration]) -> dict:
+def _build_config_payload(config: Optional[AgentConfiguration], locale: str = 'ko') -> dict:
     """AgentConfiguration에서 에이전트 주입용 config dict를 생성합니다.
 
     이 dict는 AgentCore payload의 "config" 키로 전달되어,
     에이전트 컨테이너의 invoke 엔트리포인트에서 Agent 객체 초기화에 사용됩니다.
     """
     if not config:
-        return {}
+        return {'locale': locale} if locale else {}
     result = {}
     if config.system_prompt:
         result['system_prompt'] = config.system_prompt
@@ -57,6 +57,8 @@ def _build_config_payload(config: Optional[AgentConfiguration]) -> dict:
         result['model_id'] = config.model_id
     if config.agent_name:
         result['agent_name'] = config.agent_name
+    if locale:
+        result['locale'] = locale
     return result
 
 
@@ -213,6 +215,7 @@ class AgentCoreClient:
         session_id: str,
         message: str,
         config: Optional[AgentConfiguration] = None,
+        locale: str = 'ko',
     ):
         """AgentCore 스트리밍 응답을 이벤트 단위로 yield합니다.
 
@@ -241,7 +244,7 @@ class AgentCoreClient:
                 "session_id": session_id,
                 "entrypoint": "stream",
             }
-            config_dict = _build_config_payload(config)
+            config_dict = _build_config_payload(config, locale)
             if config_dict:
                 payload["config"] = config_dict
 
@@ -329,11 +332,12 @@ class AgentCoreClient:
         session_id: str,
         conversation_history: str,
         config: Optional[AgentConfiguration] = None,
+        locale: str = 'ko',
     ) -> dict:
         """Analysis Agent를 호출하여 BANT 요약을 반환합니다."""
         try:
             payload = {"conversation_history": conversation_history}
-            config_dict = _build_config_payload(config)
+            config_dict = _build_config_payload(config, locale)
             if config_dict:
                 payload["config"] = config_dict
 
@@ -353,11 +357,12 @@ class AgentCoreClient:
         session_id: str,
         session_summary: str,
         config: Optional[AgentConfiguration] = None,
+        locale: str = 'ko',
     ) -> dict:
         """Planning Agent를 호출하여 미팅 플랜을 반환합니다."""
         try:
             payload = {"session_summary": session_summary}
-            config_dict = _build_config_payload(config)
+            config_dict = _build_config_payload(config, locale)
             if config_dict:
                 payload["config"] = config_dict
 
