@@ -39,32 +39,32 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigationItems: SideNavigationProps.Item[] = [
     {
       type: 'section',
-      text: t('admin_dashboard'),
+      text: t('adminSessions.sideNav.sectionTitle'),
       items: [
         {
           type: 'link',
-          text: t('admin_prechat_sessions'),
+          text: t('adminSessions.sideNav.allSessions'),
           href: '/admin',
         },
         {
           type: 'link',
-          text: t('admin_add_session'),
+          text: t('adminSessions.sideNav.addSession'),
           href: '/admin/sessions/create'
         }
       ]
     },
     {
       type: 'section',
-      text: t('campaigns'),
+      text: t('adminSessions.sideNav.campaignsSectionTitle'),
       items: [
         {
           type: 'link',
-          text: t('campaign_list_title'),
+          text: t('adminSessions.sideNav.allCampaigns'),
           href: '/admin/campaigns',
         },
         {
           type: 'link',
-          text: t('create_campaign'),
+          text: t('adminSessions.sideNav.createCampaign'),
           href: '/admin/campaigns/create'
         },
 
@@ -72,27 +72,27 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     },
     {
       type: 'section',
-      text: t('admin_prechat_agents'),
+      text: t('adminSessions.sideNav.agentsSectionTitle'),
       items: [
         {
           type: 'link',
-          text: t('admin_agents_list'),
+          text: t('adminSessions.sideNav.allAgents'),
           href: '/admin/agents',
         },
         {
           type: 'link',
-          text: t('admin_create_agent'),
+          text: t('adminSessions.sideNav.createAgent'),
           href: '/admin/agents/create'
         }
       ]
     },
     {
       type: 'section',
-      text: '트리거',
+      text: t('adminTriggers.sideNav.sectionTitle'),
       items: [
         {
           type: 'link',
-          text: '트리거 관리',
+          text: t('adminTriggers.sideNav.manageTriggers'),
           href: '/admin/triggers',
         }
       ]
@@ -133,10 +133,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <header className="header">
         <div className="header-content">
           <h1 className="welcome-title">
-            {t('welcome_title')}
+            {t('welcome.header.title')}
           </h1>
           <p className="header-subtitle">
-            {t('header_subtitle')}
+            {t('welcome.header.subtitle')}
           </p>
         </div>
         <div className="header-controls">
@@ -150,27 +150,27 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       <footer className="footer">
         <div className="footer-links">
-          <a href="#" onClick={handlePrivacyClick}>{t('privacy_link')}</a>
-          <a href="#" onClick={handleTermsClick}>{t('terms_link')}</a>
-          <a href="mailto:aws-prechat@amazon.com">{t('support_link')}</a>
+          <a href="#" onClick={handlePrivacyClick}>{t('welcome.footer.privacyLink')}</a>
+          <a href="#" onClick={handleTermsClick}>{t('welcome.footer.termsLink')}</a>
+          <a href="mailto:aws-prechat@amazon.com">{t('welcome.footer.supportLink')}</a>
         </div>
         <div className="footer-license">
           <div className="license-info">
             <span className="license-text">
-              {t('license_text')}{' '}
+              {t('welcome.footer.licenseText')}{' '}
               <a
                 href="https://opensource.org/licenses/MIT-0"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="license-link"
               >
-                {t('mit_license_link')}
+                {t('welcome.footer.mitLicenseLink')}
               </a>
             </span>
           </div>
         </div>
         <div className="footer-copyright">
-          <p className="copyright-text">{t('copyright_text')}</p>
+          <p className="copyright-text">{t('welcome.footer.copyrightText')}</p>
         </div>
       </footer>
 
@@ -194,7 +194,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <SideNavigation
               header={{
                 href: '/admin',
-                text: t('admin_portal')
+                text: t('adminSessions.sideNav.portalTitle')
               }}
               items={navigationItems}
               activeHref={getActiveHref()}

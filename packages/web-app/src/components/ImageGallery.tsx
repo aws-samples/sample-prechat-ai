@@ -72,9 +72,9 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
     console.log('ImageGallery - No image files found, returning null')
     return (
       <Container>
-        <Header variant="h3">{t('korean_c971d2e6')}</Header>
+        <Header variant="h3">{t('customer.imageGallery.sectionTitle')}</Header>
         <Box textAlign="center" color="text-status-inactive">
-          {t('image_gallery_no_images')}
+          {t('customer.imageGallery.noImages')}
         </Box>
       </Container>
     )
@@ -83,7 +83,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
   return (
     <>
       <Container>
-        <Header variant="h3">{t('korean_c971d2e6')}</Header>
+        <Header variant="h3">{t('customer.imageGallery.sectionTitle')}</Header>
         <Grid gridDefinition={[
           { colspan: { default: 12, xs: 6, s: 4, m: 3, l: 2 } },
           { colspan: { default: 12, xs: 6, s: 4, m: 3, l: 2 } },
@@ -138,7 +138,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
                         onClick={() => handlePrepareFile(file.fileKey)}
                         disabled={!sessionId}
                       >
-                        {t('image_gallery_prepare_image')}
+                        {t('customer.imageGallery.prepareButton')}
                       </Button>
                     )}
                   </div>
@@ -158,7 +158,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
                             href={preparedUrl}
                             target="_blank"
                             download={getDisplayFileName(file)}
-                            ariaLabel={t('image_gallery_download_aria')}
+                            ariaLabel={t('customer.imageGallery.downloadAriaLabel')}
                           />
                         )}
                         {onDelete && (
@@ -166,7 +166,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
                             variant="icon"
                             iconName="remove"
                             onClick={() => onDelete(file.fileKey)}
-                            ariaLabel={t('image_gallery_delete_aria')}
+                            ariaLabel={t('customer.imageGallery.deleteAriaLabel')}
                           />
                         )}
                       </SpaceBetween>
@@ -183,12 +183,12 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
       <Modal
         onDismiss={closeImageModal}
         visible={imageModalVisible}
-        header={t('image_gallery_modal_title')}
+        header={t('customer.imageGallery.modalTitle')}
         size="large"
         footer={
           <Box float="right">
             <Button variant="primary" onClick={closeImageModal}>
-              {t('image_gallery_modal_close')}
+              {t('customer.imageGallery.modalCloseButton')}
             </Button>
           </Box>
         }
@@ -197,7 +197,7 @@ export default function ImageGallery({ files, onDelete, sessionId }: ImageGaller
           <Box textAlign="center">
             <img
               src={selectedImage}
-              alt={t('image_gallery_modal_alt')}
+              alt={t('customer.imageGallery.modalImageAlt')}
               style={{
                 maxWidth: '100%',
                 maxHeight: '70vh',

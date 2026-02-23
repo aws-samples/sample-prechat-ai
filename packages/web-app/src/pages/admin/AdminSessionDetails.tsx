@@ -64,7 +64,7 @@ export default function AdminSessionDetails() {
         customerFeedback: feedbackData
       } : null)
     } catch (err) {
-      setError(t('session_failed_load_details'))
+      setError(t('adminSessionDetail.alert.failedLoadDetails'))
     } finally {
       setLoading(false)
     }
@@ -73,11 +73,11 @@ export default function AdminSessionDetails() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge color="blue">{t('active')}</Badge>
+        return <Badge color="blue">{t('adminSessionDetail.info.statusActive')}</Badge>
       case 'completed':
-        return <Badge color="green">{t('completed')}</Badge>
+        return <Badge color="green">{t('adminSessionDetail.info.statusCompleted')}</Badge>
       case 'expired':
-        return <Badge color="red">{t('expired')}</Badge>
+        return <Badge color="red">{t('adminSessionDetail.info.statusExpired')}</Badge>
       default:
         return <Badge>{status}</Badge>
     }
@@ -98,8 +98,8 @@ export default function AdminSessionDetails() {
   if (error || !session) {
     return (
       <Container>
-        <Alert type="error" header={t('error_occurred')}>
-          {error || t('session_not_found')}
+        <Alert type="error" header={t('adminSessionDetail.alert.errorOccurred')}>
+          {error || t('adminSessionDetail.alert.sessionNotFound')}
         </Alert>
       </Container>
     )
@@ -113,26 +113,26 @@ export default function AdminSessionDetails() {
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <AnimatedButton variant="normal" onClick={() => navigate('/admin')} animation="pulse">
-                {t('admin_to_dashboard')}
+                {t('adminSessionDetail.header.backButton')}
               </AnimatedButton>
             </SpaceBetween>
           }
         >
-          {t('session_review_consultation')}
+          {t('adminSessionDetail.header.title')}
         </Header>
 
         <ColumnLayout columns={3}>
           <Box>
-            <Box variant="awsui-key-label">{t('customer')}</Box>
+            <Box variant="awsui-key-label">{t('adminSessionDetail.info.customerLabel')}</Box>
             <Box>{session.customerInfo.name}</Box>
             <Box fontSize="body-s" color="text-status-inactive">{session.customerInfo.email}</Box>
           </Box>
           <Box>
-            <Box variant="awsui-key-label">{t('company')}</Box>
+            <Box variant="awsui-key-label">{t('adminSessionDetail.info.companyLabel')}</Box>
             <Box>{session.customerInfo.company}</Box>
           </Box>
           <Box>
-            <Box variant="awsui-key-label">{t('sales_rep')}</Box>
+            <Box variant="awsui-key-label">{t('adminSessionDetail.info.salesRepLabel')}</Box>
             <Box>{session.salesRepInfo?.name} / {session.salesRepEmail}</Box>
           </Box>
         </ColumnLayout>
@@ -140,7 +140,7 @@ export default function AdminSessionDetails() {
         {session.consultationPurposes && (
           <ColumnLayout columns={1}>
             <Box>
-              <Box variant="awsui-key-label">{t('admin_consultation_purpose')}</Box>
+              <Box variant="awsui-key-label">{t('adminSessionDetail.info.consultationPurposeLabel')}</Box>
               <Box>{formatPurposesForDisplay(session.consultationPurposes)}</Box>
             </Box>
           </ColumnLayout>
@@ -148,34 +148,34 @@ export default function AdminSessionDetails() {
 
         <ColumnLayout columns={3}>
           <Box>
-            <Box variant="awsui-key-label">{t('status')}</Box>
+            <Box variant="awsui-key-label">{t('adminSessionDetail.info.statusLabel')}</Box>
             {getStatusBadge(session.status)}
           </Box>
           <Box>
-            <Box variant="awsui-key-label">{t('admin_pin_number')}</Box>
+            <Box variant="awsui-key-label">{t('adminSessionDetail.info.pinNumberLabel')}</Box>
             <Box fontWeight="bold" fontSize="body-s">
               {session.pinNumber || 'N/A'}
             </Box>
           </Box>
           <Box>
-            <Box variant="awsui-key-label">{t('created')}</Box>
+            <Box variant="awsui-key-label">{t('adminSessionDetail.info.createdLabel')}</Box>
             <Box>{session.createdAt ? new Date(session.createdAt).toLocaleDateString() : 'N/A'}</Box>
           </Box>
         </ColumnLayout>
 
         <ColumnLayout columns={2}>
           <Box>
-            <Box variant="awsui-key-label">{t('session_privacy_consent')}</Box>
+            <Box variant="awsui-key-label">{t('adminSessionDetail.info.privacyConsentLabel')}</Box>
             <Box>
               {session.privacyConsentAgreed ? (
-                <Badge color="green">{t('session_consent_agreed')}</Badge>
+                <Badge color="green">{t('adminSessionDetail.info.consentAgreed')}</Badge>
               ) : (
-                <Badge color="grey">{t('session_consent_not_agreed')}</Badge>
+                <Badge color="grey">{t('adminSessionDetail.info.consentNotAgreed')}</Badge>
               )}
             </Box>
           </Box>
           <Box>
-            <Box variant="awsui-key-label">{t('session_consent_time')}</Box>
+            <Box variant="awsui-key-label">{t('adminSessionDetail.info.consentTimeLabel')}</Box>
             <Box>
               {session.privacyConsentTimestamp ?
                 new Date(session.privacyConsentTimestamp).toLocaleString('ko-KR') :

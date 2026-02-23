@@ -48,7 +48,7 @@ export default function AdminDashboard() {
   const [sortingColumn, setSortingColumn] = useState<any>({})
   const [sortingDescending, setSortingDescending] = useState(false)
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
-  const [selectedCampaign, setSelectedCampaign] = useState<{ label: string; value: string } | null>({ label: t('all_campaigns'), value: 'all' })
+  const [selectedCampaign, setSelectedCampaign] = useState<{ label: string; value: string } | null>({ label: t('adminSessions.filter.allCampaigns'), value: 'all' })
   const [campaignsLoading, setCampaignsLoading] = useState(false)
 
   useEffect(() => {
@@ -81,11 +81,11 @@ export default function AdminDashboard() {
         })
       } else {
         // Campaign code not found, reset to all campaigns
-        setSelectedCampaign({ label: t('all_campaigns'), value: 'all' })
+        setSelectedCampaign({ label: t('adminSessions.filter.allCampaigns'), value: 'all' })
       }
     } else if (!campaignCodeParam && campaigns.length > 0) {
       // No campaign code parameter, ensure "all campaigns" is selected
-      setSelectedCampaign({ label: t('all_campaigns'), value: 'all' })
+      setSelectedCampaign({ label: t('adminSessions.filter.allCampaigns'), value: 'all' })
     }
   }, [campaigns, searchParams, t])
 
@@ -141,11 +141,11 @@ export default function AdminDashboard() {
 
   const handleDownloadCSV = (session: SessionSummary) => {
     const csvData = {
-      customerCompany: session.customerCompany || t('admin_no_input'),
+      customerCompany: session.customerCompany || t('adminSessions.csv.noInput'),
       customerName: session.customerName,
-      customerTitle: session.customerTitle || t('admin_no_input'),
+      customerTitle: session.customerTitle || t('adminSessions.csv.noInput'),
       chatUrl: `${window.location.origin}/customer/${session.sessionId}`,
-      pinNumber: t('admin_pin_contact_sales', { email: session.salesRepEmail }),
+      pinNumber: t('adminSessions.csv.pinContactSales', { email: session.salesRepEmail }),
       createdAt: new Date(session.createdAt).toLocaleString('ko-KR')
     }
 
@@ -219,31 +219,31 @@ export default function AdminDashboard() {
         <BedrockQuotaNotification />
         <Header
           variant="h1"
-          description={t('admin_dashboard_description')}
+          description={t('adminSessions.header.description')}
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button
                 variant="normal"
                 onClick={() => navigate('/admin/agents')}
               >
-                {t('admin_prechat_agents')}
+                {t('adminSessions.header.agentsButton')}
               </Button>
               <Button
                 variant="primary"
                 onClick={() => navigate('/admin/sessions/create')}
               >
-                {t('admin_add_session')}
+                {t('adminSessions.header.addSessionButton')}
               </Button>
             </SpaceBetween>
           }
         >
-          {t('admin_prechat_sessions')}
+          {t('adminSessions.header.title')}
         </Header>
 
         <SpaceBetween direction="horizontal" size="l">          
           <Box>
             <FormField
-              label={t('campaign_association')}
+              label={t('adminSessions.filter.campaignAssociationLabel')}
             >
               <Select
                 selectedOption={selectedCampaign}
@@ -268,14 +268,14 @@ export default function AdminDashboard() {
                   setSearchParams(newSearchParams)
                 }}
                 options={[
-                  { label: t('all_campaigns'), value: 'all' },
-                  { label: t('no_campaign'), value: 'none' },
+                  { label: t('adminSessions.filter.allCampaigns'), value: 'all' },
+                  { label: t('adminSessions.filter.noCampaign'), value: 'none' },
                   ...campaigns.map(campaign => ({
                     label: campaign.campaignName,
                     value: campaign.campaignId
                   }))
                 ]}
-                loadingText={t('loading_campaigns')}
+                loadingText={t('adminSessions.filter.loadingCampaigns')}
                 statusType={campaignsLoading ? 'loading' : 'finished'}
               />
             </FormField>
@@ -283,7 +283,7 @@ export default function AdminDashboard() {
           <Box>
             <FormField
               label=""
-              description={t('admin_show_my_sessions_only')}
+              description={t('adminSessions.filter.mySessionsOnlyDescription')}
             >
               <Toggle
                 checked={showMySessionsOnly}
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
             columnDefinitions={[
               {
                 id: 'customer',
-                header: t('admin_customer_company_contact'),
+                header: t('adminSessions.table.customerCompanyContact'),
                 sortingField: 'customer',
                 cell: (item) => (
                   <Box>
@@ -314,12 +314,12 @@ export default function AdminDashboard() {
                     </Box>
                     {item.consultationPurposes && (
                       <Box fontSize="body-s" color="text-status-info" margin={{ top: 'xxs' }}>
-                        {t('admin_consultation_purpose')}: {formatPurposesForDisplay(item.consultationPurposes)}
+                        {t('adminSessions.table.consultationPurpose')}: {formatPurposesForDisplay(item.consultationPurposes)}
                       </Box>
                     )}
                     {item.campaignName && (
                       <Box fontSize="body-s" color="text-status-success" margin={{ top: 'xxs' }}>
-                        {t('campaign_association')}: {item.campaignName}
+                        {t('adminSessions.table.campaignAssociation')}: {item.campaignName}
                       </Box>
                     )}
                   </Box>
@@ -327,69 +327,69 @@ export default function AdminDashboard() {
               },
               {
                 id: 'campaign',
-                header: t('campaign_association'),
+                header: t('adminSessions.table.campaignAssociation'),
                 sortingField: 'campaign',
                 cell: (item) => (
                   <Box fontSize="body-s">
                     {item.campaignName ? (
                       <Box color="text-status-success">{item.campaignName}</Box>
                     ) : (
-                      <Box color="text-status-inactive">{t('no_campaign')}</Box>
+                      <Box color="text-status-inactive">{t('adminSessions.table.noCampaign')}</Box>
                     )}
                   </Box>
                 )
               },
               {
                 id: 'agent',
-                header: t('admin_conversation_agent'),
+                header: t('adminSessions.table.conversationAgent'),
                 sortingField: 'agent',
                 cell: (item) => (
                   <Box fontSize="body-s" color="text-status-inactive">
-                    {item.agentId ? `Agent: ${item.agentId}` : t('admin_no_agent_assigned')}
+                    {item.agentId ? `Agent: ${item.agentId}` : t('adminSessions.table.noAgentAssigned')}
                   </Box>
                 )
               },
               {
                 id: 'status',
-                header: t('admin_session_status'),
+                header: t('adminSessions.table.sessionStatus'),
                 sortingField: 'status',
                 cell: (item) => <StatusBadge status={item.status} type="session" />
               },
               {
                 id: 'created',
-                header: t('admin_created_date'),
+                header: t('adminSessions.table.createdDate'),
                 sortingField: 'created',
                 cell: (item) => new Date(item.createdAt).toLocaleDateString()
               },
               {
                 id: 'completed',
-                header: t('admin_completed_date'),
+                header: t('adminSessions.table.completedDate'),
                 sortingField: 'completed',
                 cell: (item) => item.completedAt ? new Date(item.completedAt).toLocaleDateString() : '-'
               },
               {
                 id: 'actions',
-                header: t('admin_actions'),
+                header: t('adminSessions.actions.actionsLabel'),
                 cell: (item) => (
                   <ButtonDropdown
                     expandToViewport
                     items={[
                       {
-                        text: t('admin_conversation_analysis'),
+                        text: t('adminSessions.actions.conversationAnalysis'),
                         id: 'view',
                         iconName: 'external'
                       },
                       {
-                        text: t('admin_entry_info_csv'),
+                        text: t('adminSessions.actions.entryInfoCsv'),
                         id: 'download-csv',
                         iconName: 'download'
                       },
                       ...(item.status === 'active' ? [{
-                        text: t('admin_inactivate'),
+                        text: t('adminSessions.actions.inactivate'),
                         id: 'inactivate', 
                       }] : []),
                       ...(item.status === 'inactive' ? [{
-                        text: t('admin_delete'),
+                        text: t('adminSessions.actions.delete'),
                         id: 'delete'
                       }] : [])
                     ]}
@@ -410,7 +410,7 @@ export default function AdminDashboard() {
                       }
                     }}
                   >
-                    {t('admin_actions')}
+                    {t('adminSessions.actions.actionsLabel')}
                   </ButtonDropdown>
                 )
               }
@@ -426,13 +426,13 @@ export default function AdminDashboard() {
             empty={
               <Box textAlign="center" color="inherit">
                 <Box variant="strong" textAlign="center" color="inherit">
-                  {t('admin_no_sessions')}
+                  {t('adminSessions.table.noSessions')}
                 </Box>
                 <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                  {t('admin_no_sessions_found')}
+                  {t('adminSessions.table.noSessionsFound')}
                 </Box>
                 <Button onClick={() => navigate('/admin/sessions/create')}>
-                  {t('admin_add_session')}
+                  {t('adminSessions.header.addSessionButton')}
                 </Button>
               </Box>
             }

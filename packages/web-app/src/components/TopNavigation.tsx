@@ -52,7 +52,7 @@ export const AppTopNavigation: React.FC = () => {
           type: "menu-dropdown",
           iconName: "settings",
           text: SUPPORTED_LOCALES.find(l => l.code === locale)?.nativeName || locale.toUpperCase(),
-          ariaLabel: t('language_selector_aria_label'),
+          ariaLabel: t('welcome.topNavigation.languageSelectorAriaLabel'),
           onItemClick: handleLanguageClick,
           items: SUPPORTED_LOCALES.map(localeConfig => ({
             id: `locale-${localeConfig.code}`,
@@ -63,11 +63,11 @@ export const AppTopNavigation: React.FC = () => {
         {
           type: "menu-dropdown",
           iconName: "user-profile",
-          ariaLabel: t('user_menu_aria_label'),
+          ariaLabel: t('welcome.topNavigation.userMenuAriaLabel'),
           onItemClick: handleUserMenuClick,
           items: [
-            { id: "profile", text: t('profile_menu_item') },
-            { id: "logout", text: t('logout_menu_item') }
+            { id: "profile", text: t('welcome.topNavigation.profileMenuItem') },
+            { id: "logout", text: t('welcome.topNavigation.logoutMenuItem') }
           ]
         }
       ]}

@@ -6,6 +6,7 @@ import {
   Textarea,
   SpaceBetween
 } from '@cloudscape-design/components'
+import { useI18n } from '../i18n'
 
 interface MultilineChatInputProps {
   value: string
@@ -20,10 +21,11 @@ export const MultilineChatInput: React.FC<MultilineChatInputProps> = ({
   value,
   onChange,
   onSend,
-  placeholder = "메시지를 입력하세요...",
+  placeholder,
   disabled = false,
   onClear
 }) => {
+  const { t } = useI18n()
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -58,20 +60,22 @@ export const MultilineChatInput: React.FC<MultilineChatInputProps> = ({
     return Math.min(Math.max(lineCount, 2), 6) // 최소 2줄, 최대 6줄
   }
 
+  const resolvedPlaceholder = placeholder ?? t('customer.chat.inputPlaceholder')
+
   return (
     <Box>
       <SpaceBetween size="xs">
         {/* 모바일에서 도움말 표시 */}
         {isMobile && (
           <Box fontSize="body-s" color="text-status-inactive">
-            💡 여러 줄 입력이 가능합니다. 전송하려면 아래 전송 버튼을 눌러주세요.
+            {t('customer.chat.inputHintMobile')}
           </Box>
         )}
         
         {/* 데스크톱에서 도움말 표시 */}
         {!isMobile && (
           <Box fontSize="body-s" color="text-status-inactive">
-            💡 Enter로 줄바꿈, 전송 버튼으로 메시지 전송
+            {t('customer.chat.inputHintDesktop')}
           </Box>
         )}
 
@@ -88,7 +92,7 @@ export const MultilineChatInput: React.FC<MultilineChatInputProps> = ({
             <Textarea
               value={value}
               onChange={({ detail }) => onChange(detail.value)}
-              placeholder={placeholder}
+              placeholder={resolvedPlaceholder}
               disabled={disabled}
               rows={calculateRows()}
             />
@@ -100,7 +104,7 @@ export const MultilineChatInput: React.FC<MultilineChatInputProps> = ({
               iconName="send"
               onClick={handleSend}
               disabled={!value.trim() || disabled}
-              ariaLabel="메시지 전송"
+              ariaLabel={t('customer.chat.inputSendAriaLabel')}
             />
             
             {onClear && (
@@ -109,7 +113,7 @@ export const MultilineChatInput: React.FC<MultilineChatInputProps> = ({
                 iconName="close"
                 onClick={handleClear}
                 disabled={!value || disabled}
-                ariaLabel="입력 내용 지우기"
+                ariaLabel={t('customer.chat.inputClearAriaLabel')}
               />
             )}
           </div>

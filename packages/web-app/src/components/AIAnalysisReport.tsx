@@ -70,7 +70,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
       console.error('Failed to load existing analysis:', err)
       // Don't show error for missing analysis - it's expected
       if (err.response?.status !== 404 && err.response?.status !== 202) {
-        setError(t('ai_analysis_load_failed'))
+        setError(t('adminSessionDetail.aiAnalysis.failedLoad'))
       }
     } finally {
       setIsLoading(false)
@@ -87,7 +87,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
       pollAnalysisStatus()
     } catch (err: any) {
       console.error('Failed to start analysis:', err)
-      setError(err.response?.data?.error || t('ai_analysis_request_failed'))
+      setError(err.response?.data?.error || t('adminSessionDetail.aiAnalysis.failedRequest'))
       setIsAnalyzing(false)
     }
   }
@@ -108,17 +108,17 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
           setTimeoutProgress(100)
         } else if (statusResponse.status === 'failed') {
           clearInterval(pollInterval)
-          setError(t('ai_analysis_failed'))
+          setError(t('adminSessionDetail.aiAnalysis.failed'))
           setIsAnalyzing(false)
           setTimeoutProgress(0)
         } else if (statusResponse.status === 'processing') {
-          // Update progress (simulate progress over 15 minutes)
-          setTimeoutProgress(prev => Math.min(prev + 2, 95))
+          // Update progress (simulate progress over ~1 minute, polling every 15s → ~4 ticks to 95%)
+          setTimeoutProgress(prev => Math.min(prev + 24, 95))
         }
       } catch (err: any) {
         console.error('Failed to check analysis status:', err)
         clearInterval(pollInterval)
-        setError(t('ai_analysis_status_check_failed'))
+        setError(t('adminSessionDetail.aiAnalysis.failedStatusCheck'))
         setIsAnalyzing(false)
       }
     }, 15000) // Poll every 15 seconds
@@ -127,7 +127,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
     setTimeout(() => {
       clearInterval(pollInterval)
       if (isAnalyzing) {
-        setError(t('ai_analysis_timeout'))
+        setError(t('adminSessionDetail.aiAnalysis.timeout'))
         setIsAnalyzing(false)
         setTimeoutProgress(0)
       }
@@ -153,7 +153,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
     }
 
     const htmlContent = generateAnalysisReportHTML(exportData)
-    const filename = `${t('ai_mixed_4b9ad9')}${session.customerInfo.company}_${session.customerInfo.name}_${new Date().toISOString().split('T')[0]}.html`
+    const filename = `${t('adminSessionDetail.aiAnalysis.exportFilenamePrefix')}${session.customerInfo.company}_${session.customerInfo.name}_${new Date().toISOString().split('T')[0]}.html`
     
     downloadHTMLFile(htmlContent, filename)
   }
@@ -162,13 +162,13 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
     <Container>
       <SpaceBetween size="l">
         <Header variant="h3">
-          {t('ai_mixed_993127')}
+          {t('adminSessionDetail.aiAnalysis.sectionTitle')}
         </Header>
 
         <ColumnLayout columns={2}>
           <Box>
             <Box variant="awsui-key-label" margin={{ bottom: 's' }}>
-              {t('analysis_7d2725cb')}
+              {t('adminSessionDetail.aiAnalysis.agentSelectLabel')}
             </Box>
             <Select
               selectedOption={selectedConfig ? {
@@ -183,9 +183,9 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
                 label: `${config.agentName || config.configId} (${config.modelId.split('.').pop()})`,
                 value: config.configId
               }))}
-              placeholder="요약 에이전트를 선택하세요"
+              placeholder={t('adminSessionDetail.aiAnalysis.agentSelectPlaceholder')}
               disabled={isAnalyzing || agentConfigs.length === 0}
-              empty="캠페인에 연결된 요약 에이전트가 없습니다"
+              empty={t('adminSessionDetail.aiAnalysis.agentSelectEmpty')}
             />
           </Box>
 
@@ -197,7 +197,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
                 loading={isAnalyzing}
                 disabled={isAnalyzing}
               >
-                {isAnalyzing ? t('ai_analysis_in_progress') : t('ai_analysis_start')}
+                {isAnalyzing ? t('adminSessionDetail.aiAnalysis.inProgressButton') : t('adminSessionDetail.aiAnalysis.startButton')}
               </Button>
               
               {analysisResults && (
@@ -209,7 +209,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
                     loading={isLoading}
                     disabled={isAnalyzing || isLoading}
                   >
-                    {t('korean_423c414d')}
+                    {t('adminSessionDetail.aiAnalysis.refreshButton')}
                   </Button>
                   <Button
                     variant="normal"
@@ -217,7 +217,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
                     onClick={exportToHTML}
                     disabled={isAnalyzing || isLoading || !session}
                   >
-                    {t('html_mixed_660e1c')}
+                    {t('adminSessionDetail.aiAnalysis.exportHtmlButton')}
                   </Button>
                 </>
               )}
@@ -234,7 +234,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
                 onClick={startAnalysis}
                 disabled={isAnalyzing}
               >
-                {t('korean_09c04194')}
+                {t('adminSessionDetail.aiAnalysis.retryButton')}
               </Button>
             }
           >
@@ -247,10 +247,10 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
             <SpaceBetween size="s">
               <LoadingBar variant="gen-ai" />
               <Box>
-                {t('analysis_23df3b00', { model: selectedConfig?.agentName || '분석 에이전트' })}
+                {t('adminSessionDetail.aiAnalysis.analyzingMessage', { model: selectedConfig?.agentName || t('adminSessionDetail.aiAnalysis.sectionTitle') })}
                 <br />
                 <Box fontSize="body-s" color="text-status-inactive">
-                  {t('korean_5b25d067')}{Math.round(timeoutProgress)}{t('korean_22dd3ccb')}
+                  {t('adminSessionDetail.aiAnalysis.analyzingProgress')}{Math.round(timeoutProgress)}{t('adminSessionDetail.aiAnalysis.analyzingProgressSuffix')}
                 </Box>
               </Box>
             </SpaceBetween>
@@ -266,7 +266,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
         <Container>
           <Box textAlign="center" padding="xl">
             <Spinner size="large" />
-            <Box margin={{ top: 's' }}>{t('result_a4f1ffb1')}</Box>
+            <Box margin={{ top: 's' }}>{t('adminSessionDetail.aiAnalysis.loadingResults')}</Box>
           </Box>
         </Container>
       )
@@ -277,10 +277,10 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
         <Container>
           <Box textAlign="center" padding="xl">
             <Box variant="h3" margin={{ bottom: 's' }}>
-              {t('result_ba11502e')}
+              {t('adminSessionDetail.aiAnalysis.noResults')}
             </Box>
             <Box color="text-status-inactive" margin={{ bottom: 'l' }}>
-              {t('ai_mixed_cd76bb')}
+              {t('adminSessionDetail.aiAnalysis.noResultsDescription')}
             </Box>
           </Box>
         </Container>
@@ -296,7 +296,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
         
         <Container>
           <Box fontSize="body-s" color="text-status-inactive" textAlign="center">
-            {t('analysis_fe53b01e')} {new Date(analysisResults.analyzedAt).toLocaleString()} {t('korean_9a9f5cbe')} {analysisResults.agentName || analysisResults.modelUsed}
+            {t('adminSessionDetail.aiAnalysis.analysisComplete')} {new Date(analysisResults.analyzedAt).toLocaleString()} {t('adminSessionDetail.aiAnalysis.modelUsed')} {analysisResults.agentName || analysisResults.modelUsed}
           </Box>
         </Container>
       </SpaceBetween>
@@ -322,9 +322,9 @@ function MarkdownSummaryContainer({ summary }: MarkdownSummaryContainerProps) {
   if (!summary) {
     return (
       <Container>
-        <Header variant="h3">{t('korean_63c7603c')}</Header>
+        <Header variant="h3">{t('adminSessionDetail.summary.sectionTitle')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          {t('korean_2a03e24d')}
+          {t('adminSessionDetail.summary.noSummary')}
         </Box>
       </Container>
     )
@@ -332,7 +332,7 @@ function MarkdownSummaryContainer({ summary }: MarkdownSummaryContainerProps) {
 
   return (
     <Container>
-      <Header variant="h3">{t('korean_63c7603c')}</Header>
+      <Header variant="h3">{t('adminSessionDetail.summary.sectionTitle')}</Header>
       <Box padding="l">
         <div 
           style={{ 
@@ -386,9 +386,9 @@ function BANTAnalysisContainer({ bantAnalysis }: BANTAnalysisContainerProps) {
   if (isEmpty) {
     return (
       <Container>
-        <Header variant="h3">{t('bant_mixed_cdfa13')}</Header>
+        <Header variant="h3">{t('adminSessionDetail.bant.sectionTitle')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          {t('bant_mixed_d35eff')}
+          {t('adminSessionDetail.bant.noResults')}
         </Box>
       </Container>
     )
@@ -396,30 +396,30 @@ function BANTAnalysisContainer({ bantAnalysis }: BANTAnalysisContainerProps) {
 
   return (
     <Container>
-      <Header variant="h3">{t('bant_mixed_cdfa13')}</Header>
+      <Header variant="h3">{t('adminSessionDetail.bant.sectionTitle')}</Header>
       <ColumnLayout columns={2}>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('budget_mixed_7317c4')}</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('adminSessionDetail.bant.budgetLabel')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.budget || t('ai_analysis_no_info')}
+            {bantAnalysis.budget || t('adminSessionDetail.aiAnalysis.noInfo')}
           </div>
         </Box>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('authority_mixed_279d34')}</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('adminSessionDetail.bant.authorityLabel')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.authority || t('ai_analysis_no_info')}
+            {bantAnalysis.authority || t('adminSessionDetail.aiAnalysis.noInfo')}
           </div>
         </Box>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('need_mixed_b69ac1')}</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('adminSessionDetail.bant.needLabel')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.need || t('ai_analysis_no_info')}
+            {bantAnalysis.need || t('adminSessionDetail.aiAnalysis.noInfo')}
           </div>
         </Box>
         <Box>
-          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('timeline_mixed_f7ee2d')}</Box>
+          <Box variant="awsui-key-label" margin={{ bottom: 's' }}>{t('adminSessionDetail.bant.timelineLabel')}</Box>
           <div style={{ backgroundColor: '#f8f9fa', borderRadius: '4px', minHeight: '60px', padding: '12px' }}>
-            {bantAnalysis.timeline || t('ai_analysis_no_info')}
+            {bantAnalysis.timeline || t('adminSessionDetail.aiAnalysis.noInfo')}
           </div>
         </Box>
       </ColumnLayout>
@@ -442,9 +442,9 @@ function AWSServicesContainer({ awsServices }: AWSServicesContainerProps) {
   if (!awsServices || awsServices.length === 0) {
     return (
       <Container>
-        <Header variant="h3">{t('aws_mixed_bed119')}</Header>
+        <Header variant="h3">{t('adminSessionDetail.awsServices.sectionTitle')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          {t('aws_mixed_a22600')}
+          {t('adminSessionDetail.awsServices.noResults')}
         </Box>
       </Container>
     )
@@ -452,18 +452,18 @@ function AWSServicesContainer({ awsServices }: AWSServicesContainerProps) {
 
   return (
     <Container>
-      <Header variant="h3">{t('aws_mixed_bed119')}</Header>
+      <Header variant="h3">{t('adminSessionDetail.awsServices.sectionTitle')}</Header>
       <ColumnLayout columns={awsServices.length > 2 ? 2 : 1}>
         {awsServices.map((service, index) => (
           <div key={index} style={{ border: '1px solid #e1e4e8', borderRadius: '8px', padding: '12px' }}>
             <SpaceBetween size="s">
               <Box variant="h4">{service.service}</Box>
               <Box>
-                <Box variant="awsui-key-label">{t('korean_9d6689cd')}</Box>
+                <Box variant="awsui-key-label">{t('adminSessionDetail.awsServices.reasonLabel')}</Box>
                 <Box fontSize="body-s">{service.reason}</Box>
               </Box>
               <Box>
-                <Box variant="awsui-key-label">{t('korean_850171d7')}</Box>
+                <Box variant="awsui-key-label">{t('adminSessionDetail.awsServices.implementationLabel')}</Box>
                 <Box fontSize="body-s">{service.implementation}</Box>
               </Box>
             </SpaceBetween>
@@ -489,9 +489,9 @@ function CustomerCasesContainer({ customerCases }: CustomerCasesContainerProps) 
   if (!customerCases || customerCases.length === 0) {
     return (
       <Container>
-        <Header variant="h3">{t('korean_25f2f297')}</Header>
+        <Header variant="h3">{t('adminSessionDetail.customerCases.sectionTitle')}</Header>
         <Box textAlign="center" padding="l" color="text-status-inactive">
-          {t('korean_e0bb057d')}
+          {t('adminSessionDetail.customerCases.noResults')}
         </Box>
       </Container>
     )
@@ -499,18 +499,18 @@ function CustomerCasesContainer({ customerCases }: CustomerCasesContainerProps) 
 
   return (
     <Container>
-      <Header variant="h3">{t('korean_25f2f297')}</Header>
+      <Header variant="h3">{t('adminSessionDetail.customerCases.sectionTitle')}</Header>
       <SpaceBetween size="m">
         {customerCases.map((customerCase, index) => (
           <div key={index} style={{ border: '1px solid #e1e4e8', borderRadius: '8px', backgroundColor: '#fafbfc', padding: '24px' }}>
             <SpaceBetween size="s">
               <Box variant="h4">{customerCase.title}</Box>
               <Box>
-                <Box variant="awsui-key-label">{t('korean_0508c5f0')}</Box>
+                <Box variant="awsui-key-label">{t('adminSessionDetail.customerCases.descriptionLabel')}</Box>
                 <Box>{customerCase.description}</Box>
               </Box>
               <Box>
-                <Box variant="awsui-key-label">{t('korean_8a0dfb9c')}</Box>
+                <Box variant="awsui-key-label">{t('adminSessionDetail.customerCases.relevanceLabel')}</Box>
                 <Box fontSize="body-s" color="text-status-info">{customerCase.relevance}</Box>
               </Box>
             </SpaceBetween>

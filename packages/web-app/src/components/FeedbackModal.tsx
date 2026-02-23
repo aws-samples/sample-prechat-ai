@@ -9,6 +9,7 @@ import {
   FormField,
   Textarea
 } from '@cloudscape-design/components';
+import { useI18n } from '../i18n';
 
 interface FeedbackModalProps {
   visible: boolean;
@@ -19,6 +20,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   visible,
   onSubmit
 }) => {
+  const { t } = useI18n();
   const [rating, setRating] = useState<number>(0);
   const [feedback, setFeedback] = useState<string>('');
   const [hoveredRating, setHoveredRating] = useState<number>(0);
@@ -103,7 +105,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       size="medium"
       header={
         <Header variant="h2">
-          사전상담 피드백
+          {t('customer.feedback.modalTitle')}
         </Header>
       }
       footer={
@@ -113,7 +115,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             onClick={handleSubmit}
             disabled={rating === 0}
           >
-            전송
+            {t('customer.feedback.submitButton')}
           </Button>
         </Box>
       }
@@ -121,31 +123,31 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
     >
       <SpaceBetween size="l">
         <Box>
-          <p>사전상담 경험은 어떠셨나요? 소중한 피드백을 남겨주세요.</p>
+          <p>{t('customer.feedback.description')}</p>
         </Box>
 
         <FormField
-          label="사전상담 경험 점수"
-          description="별을 클릭하여 점수를 선택해주세요 (0.5점 단위)"
+          label={t('customer.feedback.ratingLabel')}
+          description={t('customer.feedback.ratingDescription')}
         >
           <div className="star-rating">
             {renderStars()}
             {rating > 0 && (
               <span className="rating-text">
-                {rating}점 / 5점
+                {t('customer.feedback.ratingText', { rating: String(rating) })}
               </span>
             )}
           </div>
         </FormField>
 
         <FormField
-          label="추가 피드백 (선택사항)"
-          description="개선사항이나 좋았던 점을 자유롭게 작성해주세요"
+          label={t('customer.feedback.additionalFeedbackLabel')}
+          description={t('customer.feedback.additionalFeedbackDescription')}
         >
           <Textarea
             value={feedback}
             onChange={({ detail }) => setFeedback(detail.value)}
-            placeholder="피드백을 입력해주세요..."
+            placeholder={t('customer.feedback.feedbackPlaceholder')}
             rows={4}
           />
         </FormField>

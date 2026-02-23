@@ -7,7 +7,7 @@ export const WelcomeScreen: React.FC = () => {
 
   return (
     <p className="welcome-subtitle">
-      {t('korean_d15515d2')}
+      {t('welcome.header.streamlineSubtitle')}
     </p>
   );
 };

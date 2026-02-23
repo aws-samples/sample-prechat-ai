@@ -104,7 +104,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
                 type: "icon-button" as const,
                 id: "request-form",
                 iconName: "insert-row" as const,
-                text: t('btn_request_form')
+                text: t('customer.chat.requestFormButton')
               }] : []),
               {
                 type: "icon-button" as const,

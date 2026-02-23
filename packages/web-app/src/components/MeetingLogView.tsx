@@ -18,6 +18,7 @@ import ReactMarkdown from 'react-markdown'
 import { adminApi } from '../services/api'
 import { AnalysisResults, AgentConfiguration, Session } from '../types'
 import { generateMeetingLogReportHTML, downloadHTMLFile } from '../utils/htmlExport'
+import { useI18n } from '../i18n'
 
 interface MeetingLogViewProps {
   sessionId: string
@@ -25,6 +26,7 @@ interface MeetingLogViewProps {
 }
 
 export default function MeetingLogView({ sessionId, session }: MeetingLogViewProps) {
+  const { t } = useI18n()
   const [agentConfigs, setAgentConfigs] = useState<AgentConfiguration[]>([])
   const [selectedConfig, setSelectedConfig] = useState<AgentConfiguration | null>(null)
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null)
@@ -66,7 +68,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
     } catch (err: any) {
       console.error('Failed to load existing data:', err)
       if (err.response?.status !== 404 && err.response?.status !== 202) {
-        setError('기존 데이터를 불러오는데 실패했습니다.')
+        setError(t('adminSessionDetail.meetingLog.failedLoad'))
       }
     } finally {
       setIsLoading(false)
@@ -101,7 +103,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch (err: any) {
       console.error('Failed to save meeting log:', err)
-      setError('미팅 로그 저장에 실패했습니다.')
+      setError(t('adminSessionDetail.meetingLog.failedSave'))
     } finally {
       setIsSaving(false)
     }
@@ -151,7 +153,8 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
           setIsAnalyzing(false)
           setTimeoutProgress(0)
         } else if (statusResponse.status === 'processing') {
-          setTimeoutProgress(prev => Math.min(prev + 2, 95))
+          // Update progress (simulate progress over ~1 minute, polling every 15s → ~4 ticks to 95%)
+          setTimeoutProgress(prev => Math.min(prev + 24, 95))
         }
       } catch (err: any) {
         console.error('Failed to check analysis status:', err)

@@ -34,20 +34,20 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
       size="large"
       header={
         <Header variant="h1">
-          {t('privacy_terms_modal_title')}
+          {t('welcome.privacyTermsModal.title')}
         </Header>
       }
       footer={
         <Box float="right">
           <Button variant="primary" onClick={onDismiss}>
-            {t('modal_confirm_button')}
+            {t('welcome.privacyTermsModal.confirmButton')}
           </Button>
         </Box>
       }
     >
       <SpaceBetween size="l">
         <Box>
-          {t('privacy_terms_modal_description')}
+          {t('welcome.privacyTermsModal.description')}
         </Box>
         
         <Tabs
@@ -55,7 +55,7 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
           onChange={({ detail }) => setActiveTab(detail.activeTabId as 'privacy' | 'terms')}
           tabs={[
             {
-              label: t('privacy_policy_tab'),
+              label: t('welcome.privacyTermsModal.privacyPolicyTab'),
               id: 'privacy',
               content: (
                 <Box padding="s">
@@ -64,13 +64,13 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
                     overflowY: 'auto',
                     lineHeight: '1.6'
                   }}>
-                    <ReactMarkdown>{t('privacy_policy_content')}</ReactMarkdown>
+                    <ReactMarkdown>{t('welcome.privacyTermsModal.privacyPolicyContent')}</ReactMarkdown>
                   </div>
                 </Box>
               )
             },
             {
-              label: t('terms_of_service_tab'),
+              label: t('welcome.privacyTermsModal.termsOfServiceTab'),
               id: 'terms',
               content: (
                 <Box padding="s">
@@ -79,7 +79,7 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
                     overflowY: 'auto',
                     lineHeight: '1.6'
                   }}>
-                    <ReactMarkdown>{t('terms_of_service_content')}</ReactMarkdown>
+                    <ReactMarkdown>{t('welcome.privacyTermsModal.termsOfServiceContent')}</ReactMarkdown>
                   </div>
                 </Box>
               )

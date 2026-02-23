@@ -43,22 +43,22 @@ export default function FileList({ files, loading = false, showActions = true, o
   const columnDefinitions: any[] = [
     {
       id: 'fileName',
-      header: t('file_name_header'),
+      header: t('customer.fileList.fileNameHeader'),
       cell: (item: UploadedFile) => getDisplayFileName(item)
     },
     {
       id: 'fileSize',
-      header: t('file_size_header'),
+      header: t('customer.fileList.fileSizeHeader'),
       cell: (item: UploadedFile) => formatFileSize(item.fileSize)
     },
     {
       id: 'contentType',
-      header: t('file_type_header'),
+      header: t('customer.fileList.fileTypeHeader'),
       cell: (item: UploadedFile) => item.contentType
     },
     {
       id: 'uploadedAt',
-      header: t('upload_time_header'),
+      header: t('customer.fileList.uploadTimeHeader'),
       cell: (item: UploadedFile) => new Date(item.uploadedAt).toLocaleString('ko-KR')
     }
   ]
@@ -66,7 +66,7 @@ export default function FileList({ files, loading = false, showActions = true, o
   if (showActions) {
     columnDefinitions.push({
       id: 'actions',
-      header: t('actions'),
+      header: t('customer.fileList.actionsHeader'),
       cell: (item: UploadedFile) => {
         const isPreparing = preparingFiles.has(item.fileKey)
         const preparedUrl = preparedUrls.get(item.fileKey)
@@ -81,7 +81,7 @@ export default function FileList({ files, loading = false, showActions = true, o
                 target="_blank"
                 download={getDisplayFileName(item)}
               >
-                {t('loading_612ca27b')}
+                {t('customer.fileList.downloadButton')}
               </Button>
             ) : (
               <Button
@@ -91,7 +91,7 @@ export default function FileList({ files, loading = false, showActions = true, o
                 onClick={() => handlePrepareFile(item.fileKey)}
                 disabled={!sessionId}
               >
-                {t('file_0b7ade37')}
+                {t('customer.fileList.prepareButton')}
               </Button>
             )}
             {onDelete && (
@@ -100,7 +100,7 @@ export default function FileList({ files, loading = false, showActions = true, o
                 iconName="remove"
                 onClick={() => onDelete(item.fileKey)}
               >
-                {t('delete')}
+                {t('customer.fileList.deleteButton')}
               </Button>
             )}
           </SpaceBetween>
@@ -117,10 +117,10 @@ export default function FileList({ files, loading = false, showActions = true, o
       empty={
         <Box textAlign="center" color="inherit">
           <Box variant="strong" textAlign="center" color="inherit">
-            {t('loading_ec6095c4')}
+            {t('customer.fileList.noFilesTitle')}
           </Box>
           <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-            {t('loading_3d28a7fc')}
+            {t('customer.fileList.noFilesDescription')}
           </Box>
         </Box>
       }

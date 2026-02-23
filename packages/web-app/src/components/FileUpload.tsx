@@ -79,7 +79,7 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
     // Validate file size (50MB limit)
     const maxSize = 50 * 1024 * 1024 // 50MB
     if (file.size > maxSize) {
-      setError(t('file_size_exceeded_error'))
+      setError(t('customer.fileUpload.fileSizeExceeded'))
       return
     }
 
@@ -96,7 +96,7 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
     ]
 
     if (!allowedTypes.includes(file.type)) {
-      setError(t('unsupported_file_type_error'))
+      setError(t('customer.fileUpload.unsupportedFileType'))
       return
     }
 
@@ -122,11 +122,11 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
 
       xhr.addEventListener('load', () => {
         if (xhr.status === 200) {
-          setSuccess(t('file_upload_success'))
+          setSuccess(t('customer.fileUpload.uploadSuccess'))
           setUploadProgress(100)
           loadUploadedFiles() // Refresh file list
         } else {
-          setError(t('file_upload_failed'))
+          setError(t('customer.fileUpload.uploadFailed'))
         }
         setUploading(false)
       })
@@ -135,7 +135,7 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
         console.error('Upload error:', event)
         console.error('XHR status:', xhr.status)
         console.error('XHR response:', xhr.responseText)
-        setError(t('status_mixed_719b2f') + xhr.status + ')')
+        setError(t('customer.fileUpload.uploadErrorStatus') + xhr.status + ')')
         setUploading(false)
       })
 
@@ -144,7 +144,7 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
       xhr.send(file)
 
     } catch (err: any) {
-      setError(err.response?.data?.error || t('file_upload_failed'))
+      setError(err.response?.data?.error || t('customer.fileUpload.uploadFailed'))
       setUploading(false)
     }
   }
@@ -186,16 +186,16 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
   }
 
   const handleDeleteFile = async (fileKey: string) => {
-    if (!confirm(t('delete_c689deef'))) {
+    if (!confirm(t('customer.fileUpload.deleteConfirm'))) {
       return
     }
 
     try {
       await chatApi.deleteSessionFile(sessionId, fileKey)
-      setSuccess(t('file_delete_success'))
+      setSuccess(t('customer.fileUpload.deleteSuccess'))
       loadUploadedFiles() // Refresh file list
     } catch (err: any) {
-      setError(err.response?.data?.error || t('file_delete_failed'))
+      setError(err.response?.data?.error || t('customer.fileUpload.deleteFailed'))
     }
   }
 
@@ -231,13 +231,13 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
     <Modal
       onDismiss={onDismiss}
       visible={visible}
-      header={t('btn_file_attach')}
+      header={t('customer.fileUpload.modalTitle')}
       size="large"
       footer={
         <Box float="right">
           <SpaceBetween direction="horizontal" size="xs">
             <Button variant="link" onClick={onDismiss}>
-              {t('modal_confirm_button')}
+              {t('customer.fileUpload.closeButton')}
             </Button>
           </SpaceBetween>
         </Box>
@@ -246,27 +246,27 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
       <Container>
         <SpaceBetween size="s">
           <Box>
-            <Header variant="h3">{t('loading_154127e6')}</Header>
+            <Header variant="h3">{t('customer.fileUpload.whyNeededTitle')}</Header>
             <SpaceBetween size="s">
               <Box variant="p">
-                <strong>{t('consultation_dafee129')}</strong>
+                <strong>{t('customer.fileUpload.whyNeededDescription')}</strong>
               </Box>
               <Box>
                 <Box variant="p" margin={{ left: 'm' }}>
-                  • <strong>{t('korean_06584212')}</strong>{t('korean_8bb6b000')}
+                  • <strong>{t('customer.fileUpload.architectureDiagramLabel')}</strong>{t('customer.fileUpload.architectureDiagramDesc')}
                 </Box>
                 <Box variant="p" margin={{ left: 'm' }}>
-                  • <strong>{t('korean_988eb876')}</strong>{t('korean_60c989b4')}
+                  • <strong>{t('customer.fileUpload.requirementsDocLabel')}</strong>{t('customer.fileUpload.requirementsDocDesc')}
                 </Box>
                 <Box variant="p" margin={{ left: 'm' }}>
-                  • <strong>{t('korean_49462616')}</strong>{t('confirm_f32a7b34')}
+                  • <strong>{t('customer.fileUpload.technicalSpecLabel')}</strong>{t('customer.fileUpload.technicalSpecDesc')}
                 </Box>
                 <Box variant="p" margin={{ left: 'm' }}>
-                  • <strong>{t('korean_6d4a44dd')}</strong>{t('korean_25f3797a')}
+                  • <strong>{t('customer.fileUpload.capacityPlanLabel')}</strong>{t('customer.fileUpload.capacityPlanDesc')}
                 </Box>
               </Box>
               <Box variant="small" color="text-status-success">
-                {t('aws_mixed_5d79d8')}
+                {t('customer.fileUpload.awsReviewNote')}
               </Box>
             </SpaceBetween>
           </Box>
@@ -308,10 +308,10 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
               />
               <Box>
                 <Box variant="h3" color={isDragOver ? 'text-status-success' : 'inherit'}>
-                  {isDragOver ? t('drop_files_here') : t('drag_or_click_to_upload')}
+                  {isDragOver ? t('customer.fileUpload.dropZoneActive') : t('customer.fileUpload.dropZoneIdle')}
                 </Box>
                 <Box variant="p" color="text-status-inactive">
-                  {t('text_50mb_pdf_office_mixed_8cbfa2')}
+                  {t('customer.fileUpload.dropZoneSubtext')}
                 </Box>
               </Box>
               <Button
@@ -319,47 +319,47 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
                 disabled={uploading}
                 iconName="upload"
               >
-                {t('file_11f4a302')}
+                {t('customer.fileUpload.selectFileButton')}
               </Button>
             </SpaceBetween>
           </div>
 
           {uploading && (
             <Box>
-              <Box margin={{ bottom: 'xs' }}>{t('loading_0a4de75d')} {uploadProgress}%</Box>
+              <Box margin={{ bottom: 'xs' }}>{t('customer.fileUpload.uploadingProgress')} {uploadProgress}%</Box>
               <ProgressBar value={uploadProgress} />
             </Box>
           )}
 
-          <Header variant="h3">{t('loading_5d37a8ec')}</Header>
+          <Header variant="h3">{t('customer.fileUpload.uploadedFilesTitle')}</Header>
 
           <Table
             columnDefinitions={[
               {
                 id: 'fileName',
-                header: t('file_name_header'),
+                header: t('customer.fileUpload.fileNameHeader'),
                 cell: (item) => getDisplayFileName(item)
               },
               {
                 id: 'fileSize',
-                header: t('file_size_header'),
+                header: t('customer.fileUpload.fileSizeHeader'),
                 cell: (item) => formatFileSize(item.fileSize)
               },
               {
                 id: 'uploadedAt',
-                header: t('upload_time_header'),
+                header: t('customer.fileUpload.uploadTimeHeader'),
                 cell: (item) => new Date(item.uploadedAt).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US')
               },
               {
                 id: 'actions',
-                header: t('actions'),
+                header: t('customer.fileUpload.actionsHeader'),
                 cell: (item) => (
                   <Button
                     variant="normal"
                     iconName="remove"
                     onClick={() => handleDeleteFile(item.fileKey)}
                   >
-                    {t('delete')}
+                    {t('customer.fileUpload.deleteButton')}
                   </Button>
                 )
               }
@@ -369,10 +369,10 @@ export default function FileUpload({ sessionId, visible, onDismiss }: FileUpload
             empty={
               <Box textAlign="center" color="inherit">
                 <Box variant="strong" textAlign="center" color="inherit">
-                  {t('loading_ec6095c4')}
+                  {t('customer.fileUpload.noFilesTitle')}
                 </Box>
                 <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                  {t('loading_3d28a7fc')}
+                  {t('customer.fileUpload.noFilesDescription')}
                 </Box>
               </Box>
             }

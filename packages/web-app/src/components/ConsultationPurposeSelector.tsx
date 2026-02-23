@@ -9,6 +9,7 @@ import {
   Grid,
   Alert
 } from '@cloudscape-design/components'
+import { useI18n } from '../i18n'
 
 // ENUM for consultation purposes
 export enum ConsultationPurposeEnum {
@@ -22,60 +23,76 @@ export enum ConsultationPurposeEnum {
 
 export interface ConsultationPurpose {
   value: ConsultationPurposeEnum
-  label: string
-  description: string
+  labelKey: string
+  descriptionKey: string
   icon: string
 }
 
-export const CONSULTATION_PURPOSES: ConsultationPurpose[] = [
+export const CONSULTATION_PURPOSE_DEFS: ConsultationPurpose[] = [
   {
     value: ConsultationPurposeEnum.NEW_ADOPTION,
-    label: '신규 도입 문의',
-    description: 'AWS 클라우드 서비스 신규 도입을 검토하고 계신가요?',
+    labelKey: 'customer.purposeSelector.purposeNewAdoption',
+    descriptionKey: 'customer.purposeSelector.purposeNewAdoptionDesc',
     icon: 'add-plus'
   },
   {
     value: ConsultationPurposeEnum.MIGRATION,
-    label: '마이그레이션 상담',
-    description: '기존 시스템을 AWS로 이전하는 방안을 논의하고 싶으신가요?',
+    labelKey: 'customer.purposeSelector.purposeMigration',
+    descriptionKey: 'customer.purposeSelector.purposeMigrationDesc',
     icon: 'share'
   },
   {
     value: ConsultationPurposeEnum.TECHNICAL_SUPPORT,
-    label: '기술 지원 문의',
-    description: '현재 사용 중인 AWS 서비스의 기술적 이슈나 개선 방안을 문의하시나요?',
+    labelKey: 'customer.purposeSelector.purposeTechnicalSupport',
+    descriptionKey: 'customer.purposeSelector.purposeTechnicalSupportDesc',
     icon: 'settings'
   },
   {
     value: ConsultationPurposeEnum.COST_OPTIMIZATION,
-    label: '비용 최적화 상담',
-    description: 'AWS 사용 비용을 최적화하고 효율성을 높이고 싶으신가요?',
+    labelKey: 'customer.purposeSelector.purposeCostOptimization',
+    descriptionKey: 'customer.purposeSelector.purposeCostOptimizationDesc',
     icon: 'calculator'
   },
   {
     value: ConsultationPurposeEnum.PARTNER_INQUIRY,
-    label: '파트너 관련 문의',
-    description: 'AWS 파트너 프로그램이나 파트너사와의 협업을 문의하시나요?',
+    labelKey: 'customer.purposeSelector.purposePartnerInquiry',
+    descriptionKey: 'customer.purposeSelector.purposePartnerInquiryDesc',
     icon: 'contact'
   },
   {
     value: ConsultationPurposeEnum.OTHER,
-    label: '기타 문의',
-    description: '위 항목에 해당하지 않는 기타 문의사항이 있으신가요?',
+    labelKey: 'customer.purposeSelector.purposeOther',
+    descriptionKey: 'customer.purposeSelector.purposeOtherDesc',
     icon: 'ellipsis'
   }
 ]
 
+// Static label map for formatPurposesForDisplay (used by admin pages without i18n context)
+const PURPOSE_STATIC_LABELS: Record<ConsultationPurposeEnum, string> = {
+  [ConsultationPurposeEnum.NEW_ADOPTION]: '신규 도입 문의',
+  [ConsultationPurposeEnum.MIGRATION]: '마이그레이션 상담',
+  [ConsultationPurposeEnum.TECHNICAL_SUPPORT]: '기술 지원 문의',
+  [ConsultationPurposeEnum.COST_OPTIMIZATION]: '비용 최적화 상담',
+  [ConsultationPurposeEnum.PARTNER_INQUIRY]: '파트너 관련 문의',
+  [ConsultationPurposeEnum.OTHER]: '기타 문의',
+}
+
+// Legacy static array kept for backward compatibility
+export const CONSULTATION_PURPOSES = CONSULTATION_PURPOSE_DEFS.map(def => ({
+  value: def.value,
+  label: PURPOSE_STATIC_LABELS[def.value],
+  description: def.descriptionKey,
+  icon: def.icon
+}))
+
 // Utility functions for purpose handling
 export const formatPurposesForDisplay = (purposeString: string): string => {
   if (!purposeString) return ''
-  
   const purposes = purposeString.split('|').filter(p => p.trim())
   const labels = purposes.map(purpose => {
-    const found = CONSULTATION_PURPOSES.find(p => p.value === purpose.trim())
-    return found ? found.label : purpose
+    const key = purpose.trim() as ConsultationPurposeEnum
+    return PURPOSE_STATIC_LABELS[key] ?? purpose
   })
-  
   return labels.join(', ')
 }
 
@@ -104,6 +121,7 @@ export default function ConsultationPurposeSelector({
   allowEdit = false,
   onCancel
 }: ConsultationPurposeSelectorProps) {
+  const { t } = useI18n()
   const [localSelectedPurposes, setLocalSelectedPurposes] = useState<ConsultationPurposeEnum[]>(selectedPurposes)
   const [isEditing, setIsEditing] = useState(!allowEdit || selectedPurposes.length === 0)
 
@@ -143,11 +161,11 @@ export default function ConsultationPurposeSelector({
                 iconName="edit"
                 onClick={handleEdit}
               >
-                수정
+                {t('customer.purposeSelector.editButton')}
               </Button>
             }
           >
-            선택된 상담 목적
+            {t('customer.purposeSelector.selectedTitle')}
           </Header>
           
           <Grid gridDefinition={localSelectedPurposes.length <= 2 ? 
@@ -155,8 +173,8 @@ export default function ConsultationPurposeSelector({
             [{ colspan: 4 }, { colspan: 4 }, { colspan: 4 }]
           }>
             {localSelectedPurposes.map(purposeValue => {
-              const purpose = CONSULTATION_PURPOSES.find(p => p.value === purposeValue)
-              return purpose ? (
+              const purposeDef = CONSULTATION_PURPOSE_DEFS.find(p => p.value === purposeValue)
+              return purposeDef ? (
                 <div
                   key={purposeValue}
                   style={{
@@ -172,14 +190,14 @@ export default function ConsultationPurposeSelector({
                 >
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                     <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>
-                      {getIconForPurpose(purpose.icon)}
+                      {getIconForPurpose(purposeDef.icon)}
                     </span>
                     <Box fontSize="body-m" fontWeight="bold">
-                      {purpose.label}
+                      {t(purposeDef.labelKey)}
                     </Box>
                   </div>
                   <div style={{ fontSize: '12px', color: '#5f6b7a', lineHeight: '1.3' }}>
-                    {purpose.description}
+                    {t(purposeDef.descriptionKey)}
                   </div>
                 </div>
               ) : null
@@ -195,29 +213,29 @@ export default function ConsultationPurposeSelector({
       <SpaceBetween size="l">
         <Header
           variant="h2"
-          description="상담을 시작하기 전에 문의 목적을 선택해 주세요. 여러 목적을 선택하실 수 있습니다."
+          description={t('customer.purposeSelector.headerDescription')}
         >
-          상담 목적을 선택해 주세요
+          {t('customer.purposeSelector.headerTitle')}
         </Header>
 
         {localSelectedPurposes.length === 0 && (
           <Alert type="info">
-            최소 하나 이상의 상담 목적을 선택해 주세요.
+            {t('customer.purposeSelector.alertMinimum')}
           </Alert>
         )}
 
         <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }, { colspan: 4 }]}>
-          {CONSULTATION_PURPOSES.map(purpose => (
+          {CONSULTATION_PURPOSE_DEFS.map(purposeDef => (
             <div
-              key={purpose.value}
+              key={purposeDef.value}
               style={{
-                border: localSelectedPurposes.includes(purpose.value) 
+                border: localSelectedPurposes.includes(purposeDef.value) 
                   ? '2px solid #0972d3' 
                   : '1px solid #e9ebed',
                 borderRadius: '8px',
                 padding: '12px',
                 cursor: 'pointer',
-                backgroundColor: localSelectedPurposes.includes(purpose.value) 
+                backgroundColor: localSelectedPurposes.includes(purposeDef.value) 
                   ? '#f0f8ff' 
                   : '#ffffff',
                 transition: 'all 0.2s ease',
@@ -226,15 +244,15 @@ export default function ConsultationPurposeSelector({
                 flexDirection: 'column',
                 justifyContent: 'space-between'
               }}
-              onClick={() => handlePurposeToggle(purpose.value, !localSelectedPurposes.includes(purpose.value))}
+              onClick={() => handlePurposeToggle(purposeDef.value, !localSelectedPurposes.includes(purposeDef.value))}
               onMouseEnter={(e) => {
-                if (!localSelectedPurposes.includes(purpose.value)) {
+                if (!localSelectedPurposes.includes(purposeDef.value)) {
                   e.currentTarget.style.borderColor = '#879596'
                   e.currentTarget.style.backgroundColor = '#fafbfc'
                 }
               }}
               onMouseLeave={(e) => {
-                if (!localSelectedPurposes.includes(purpose.value)) {
+                if (!localSelectedPurposes.includes(purposeDef.value)) {
                   e.currentTarget.style.borderColor = '#e9ebed'
                   e.currentTarget.style.backgroundColor = '#ffffff'
                 }
@@ -243,19 +261,19 @@ export default function ConsultationPurposeSelector({
               <Box>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                   <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>
-                    {getIconForPurpose(purpose.icon)}
+                    {getIconForPurpose(purposeDef.icon)}
                   </span>
                   <Checkbox
-                    checked={localSelectedPurposes.includes(purpose.value)}
+                    checked={localSelectedPurposes.includes(purposeDef.value)}
                     onChange={() => {}} // Handled by parent div click
                   />
                 </div>
                 <Box fontSize="body-m" fontWeight="bold" margin={{ bottom: 'xs' }}>
-                  {purpose.label}
+                  {t(purposeDef.labelKey)}
                 </Box>
               </Box>
               <div style={{ fontSize: '12px', color: '#5f6b7a', lineHeight: '1.3' }}>
-                {purpose.description}
+                {t(purposeDef.descriptionKey)}
               </div>
             </div>
           ))}
@@ -268,7 +286,7 @@ export default function ConsultationPurposeSelector({
                 variant="link"
                 onClick={onCancel}
               >
-                취소
+                {t('customer.purposeSelector.cancelButton')}
               </Button>
             )}
             <Button
@@ -276,7 +294,7 @@ export default function ConsultationPurposeSelector({
               onClick={handleConfirm}
               disabled={localSelectedPurposes.length === 0}
             >
-              선택 완료 ({localSelectedPurposes.length}개 선택됨)
+              {t('customer.purposeSelector.confirmButton', { count: String(localSelectedPurposes.length) })}
             </Button>
           </SpaceBetween>
         </Box>

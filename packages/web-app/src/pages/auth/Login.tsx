@@ -14,9 +14,11 @@ import {
 } from '@cloudscape-design/components'
 import AnimatedButton from '../../components/AnimatedButton'
 import { authService, SignupRequest, SigninRequest, ConfirmSignupRequest } from '../../services/auth'
+import { useI18n } from '../../i18n'
 
 export default function Login() {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -42,7 +44,7 @@ export default function Login() {
 
   const handleSignin = async () => {
     if (!signinData.email || !signinData.password) {
-      setError('Please fill in all fields')
+      setError(t('login.error.fillAllFields'))
       return
     }
 
@@ -53,7 +55,7 @@ export default function Login() {
       await authService.signin(signinData)
       navigate('/admin')
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Login failed')
+      setError(err.response?.data?.error || t('login.error.loginFailed'))
     } finally {
       setLoading(false)
     }
@@ -61,7 +63,7 @@ export default function Login() {
 
   const handleConfirm = async () => {
     if (!confirmData.email || !confirmData.confirmationCode) {
-      setError('Please enter confirmation code')
+      setError(t('login.error.enterConfirmationCode'))
       return
     }
 
@@ -74,7 +76,7 @@ export default function Login() {
       setShowConfirmation(false)
       setConfirmData({ email: '', confirmationCode: '' })
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Confirmation failed')
+      setError(err.response?.data?.error || t('login.error.confirmationFailed'))
     } finally {
       setLoading(false)
     }
@@ -82,7 +84,7 @@ export default function Login() {
 
   const handleSignup = async () => {
     if (!signupData.email || !signupData.password || !signupData.name || !signupData.phoneNumber) {
-      setError('Please fill in all fields')
+      setError(t('login.error.fillAllFields'))
       return
     }
 
@@ -97,7 +99,7 @@ export default function Login() {
       setShowConfirmation(true)
       setSignupData({ email: '', password: '', name: '', phoneNumber: '' })
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Signup failed')
+      setError(err.response?.data?.error || t('login.error.signupFailed'))
     } finally {
       setLoading(false)
     }
@@ -107,9 +109,9 @@ export default function Login() {
     <Container>
       <div className="fade-in-up">
         <Box textAlign="center" padding={{ vertical: 'xl' }}>
-          <Header variant="h1">Admin Portal</Header>
+          <Header variant="h1">{t('login.header.title')}</Header>
           <Box color="text-status-inactive">
-            Sales Representative Access
+            {t('login.header.subtitle')}
           </Box>
         </Box>
 
@@ -130,15 +132,15 @@ export default function Login() {
           )}
 
           {showConfirmation && (
-            <Alert type="info" header="Email Confirmation Required">
-              Please check your email and enter the confirmation code below.
+            <Alert type="info" header={t('login.confirmEmail.alertHeader')}>
+              {t('login.confirmEmail.alertDescription')}
             </Alert>
           )}
 
           <Tabs
             tabs={[
               {
-                label: 'Sign In',
+                label: t('login.signIn.tabLabel'),
                 id: 'signin',
                 content: (
                   <Form
@@ -149,30 +151,30 @@ export default function Login() {
                         onClick={handleSignin}
                         animation="pulse"
                       >
-                        Sign In
+                        {t('login.signIn.submitButton')}
                       </AnimatedButton>
                     }
                   >
                     <SpaceBetween size="m">
-                      <FormField label="Email">
+                      <FormField label={t('login.signIn.emailLabel')}>
                         <Input
                           value={signinData.email}
                           onChange={({ detail }) =>
                             setSigninData(prev => ({ ...prev, email: detail.value }))
                           }
                           type="email"
-                          placeholder="Enter your email"
+                          placeholder={t('login.signIn.emailPlaceholder')}
                         />
                       </FormField>
 
-                      <FormField label="Password">
+                      <FormField label={t('login.signIn.passwordLabel')}>
                         <Input
                           value={signinData.password}
                           onChange={({ detail }) =>
                             setSigninData(prev => ({ ...prev, password: detail.value }))
                           }
                           type="password"
-                          placeholder="Enter your password"
+                          placeholder={t('login.signIn.passwordPlaceholder')}
                         />
                       </FormField>
                     </SpaceBetween>
@@ -180,7 +182,7 @@ export default function Login() {
                 )
               },
               {
-                label: showConfirmation ? 'Confirm Email' : 'Sign Up',
+                label: showConfirmation ? t('login.confirmEmail.tabLabel') : t('login.signUp.tabLabel'),
                 id: 'signup',
                 content: showConfirmation ? (
                   <Form
@@ -191,7 +193,7 @@ export default function Login() {
                           onClick={() => setShowConfirmation(false)}
                           animation="pulse"
                         >
-                          Back to Sign Up
+                          {t('login.confirmEmail.backButton')}
                         </AnimatedButton>
                         <AnimatedButton
                           variant="primary"
@@ -199,30 +201,33 @@ export default function Login() {
                           onClick={handleConfirm}
                           animation="pulse"
                         >
-                          Confirm Email
+                          {t('login.confirmEmail.submitButton')}
                         </AnimatedButton>
                       </SpaceBetween>
                     }
                   >
                     <SpaceBetween size="m">
-                      <FormField label="Email">
+                      <FormField label={t('login.confirmEmail.emailLabel')}>
                         <Input
                           value={confirmData.email}
                           onChange={({ detail }) =>
                             setConfirmData(prev => ({ ...prev, email: detail.value }))
                           }
                           type="email"
-                          placeholder="Enter your email address"
+                          placeholder={t('login.confirmEmail.emailPlaceholder')}
                         />
                       </FormField>
 
-                      <FormField label="Confirmation Code" description="Check your email for the 6-digit code">
+                      <FormField
+                        label={t('login.confirmEmail.confirmationCodeLabel')}
+                        description={t('login.confirmEmail.confirmationCodeDescription')}
+                      >
                         <Input
                           value={confirmData.confirmationCode}
                           onChange={({ detail }) =>
                             setConfirmData(prev => ({ ...prev, confirmationCode: detail.value }))
                           }
-                          placeholder="Enter 6-digit code"
+                          placeholder={t('login.confirmEmail.confirmationCodePlaceholder')}
                         />
                       </FormField>
                     </SpaceBetween>
@@ -236,33 +241,36 @@ export default function Login() {
                         onClick={handleSignup}
                         animation="pulse"
                       >
-                        Create Account
+                        {t('login.signUp.submitButton')}
                       </AnimatedButton>
                     }
                   >
                     <SpaceBetween size="m">
-                      <FormField label="Full Name">
+                      <FormField label={t('login.signUp.fullNameLabel')}>
                         <Input
                           value={signupData.name}
                           onChange={({ detail }) =>
                             setSignupData(prev => ({ ...prev, name: detail.value }))
                           }
-                          placeholder="Enter your full name"
+                          placeholder={t('login.signUp.fullNamePlaceholder')}
                         />
                       </FormField>
 
-                      <FormField label="Email">
+                      <FormField label={t('login.signUp.emailLabel')}>
                         <Input
                           value={signupData.email}
                           onChange={({ detail }) =>
                             setSignupData(prev => ({ ...prev, email: detail.value }))
                           }
                           type="email"
-                          placeholder="Enter your email address"
+                          placeholder={t('login.signUp.emailPlaceholder')}
                         />
                       </FormField>
 
-                      <FormField label="Phone Number" description="International format (e.g., +1234567890)">
+                      <FormField
+                        label={t('login.signUp.phoneNumberLabel')}
+                        description={t('login.signUp.phoneNumberDescription')}
+                      >
                         <Input
                           value={signupData.phoneNumber}
                           onChange={({ detail }) =>
@@ -273,14 +281,14 @@ export default function Login() {
                         />
                       </FormField>
 
-                      <FormField label="Password">
+                      <FormField label={t('login.signUp.passwordLabel')}>
                         <Input
                           value={signupData.password}
                           onChange={({ detail }) =>
                             setSignupData(prev => ({ ...prev, password: detail.value }))
                           }
                           type="password"
-                          placeholder="Create a password"
+                          placeholder={t('login.signUp.passwordPlaceholder')}
                         />
                       </FormField>
                     </SpaceBetween>

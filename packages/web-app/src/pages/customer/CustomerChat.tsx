@@ -22,7 +22,6 @@ import ReactMarkdown from 'react-markdown'
 
 import { useSession, useChat } from '../../hooks'
 import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload, MultilineChatInput, FeedbackModal, ConsultationPurposeSelector } from '../../components'
-import { MESSAGES } from '../../constants'
 import { chatApi } from '../../services/api'
 import { useI18n } from '../../i18n'
 import {
@@ -140,7 +139,7 @@ export default function CustomerChat() {
       const title = customerInfo.title || '담당자'
       const name = customerInfo.name || '고객'
 
-      const greetingMessage = t('customer_greeting_message', {
+      const greetingMessage = t('customer.chat.greetingTemplate', {
         companyName: company,
         customerTitle: title,
         customerName: name
@@ -166,7 +165,7 @@ export default function CustomerChat() {
 
       setShowPinModal(false)
     } catch (error: any) {
-      setPinError(error.response?.data?.error || t('pin_error_message'))
+      setPinError(error.response?.data?.error || t('customer.pin.errorMessage'))
     } finally {
       setPinLoading(false)
     }
@@ -182,7 +181,7 @@ export default function CustomerChat() {
   }
 
   const handleRequestForm = () => {
-    sendDirectMessage(t('request_form_message'), addMessage, updateSessionComplete)
+    sendDirectMessage(t('customer.chat.requestFormMessage'), addMessage, updateSessionComplete)
   }
 
   const handleFeedbackSubmit = async (rating: number, feedback: string) => {
@@ -241,7 +240,7 @@ export default function CustomerChat() {
       <Modal
         onDismiss={() => { }} // Prevent closing
         visible={true}
-        header={t('text_6_pin_mixed_1d6166')}
+        header={t('customer.pin.modalTitle')}
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
@@ -251,7 +250,7 @@ export default function CustomerChat() {
                 loading={pinLoading}
                 disabled={!pinInput || pinInput.length !== 6 || !privacyAgreed}
               >
-                {t('confirm_button')}
+                {t('customer.pin.confirmButton')}
               </Button>
             </SpaceBetween>
           </Box>
@@ -259,7 +258,7 @@ export default function CustomerChat() {
       >
         <SpaceBetween size="m">
           <Box>
-            {t('text_6_pin_mixed_1d6166')}
+            {t('customer.pin.modalTitle')}
           </Box>
 
           {pinError && (
@@ -268,7 +267,7 @@ export default function CustomerChat() {
             </Alert>
           )}
 
-          <FormField label={t('pin_mixed_56d5a8')}>
+          <FormField label={t('customer.pin.fieldLabel')}>
             <Input
               value={pinInput}
               onChange={({ detail }) => {
@@ -276,7 +275,7 @@ export default function CustomerChat() {
                 const numericValue = detail.value.replace(/\D/g, '').slice(0, 6)
                 setPinInput(numericValue)
               }}
-              placeholder={t('korean_33fc10eb')}
+              placeholder={t('customer.pin.placeholder')}
               type="password"
               inputMode="numeric"
               onKeyDown={(e) => {
@@ -300,9 +299,9 @@ export default function CustomerChat() {
                     setShowPrivacyModal(true)
                   }}
                 >
-                  {t('service_bece43ab')}
+                  {t('customer.pin.privacyAgreement')}
                 </Link>
-                {t('korean_b1f9a872')}
+                {t('customer.pin.privacyAgreementSuffix')}
               </Box>
             </Checkbox>
           </FormField>
@@ -323,7 +322,7 @@ export default function CustomerChat() {
 
     return (
       <Container>
-        <Alert type="error" header="Session Error">
+        <Alert type="error" header={t('customer.sessionError.header')}>
           {sessionError}
         </Alert>
       </Container>
@@ -336,7 +335,7 @@ export default function CustomerChat() {
       <Modal
         onDismiss={() => setShowPurposeSelector(false)} // Allow closing when editing
         visible={true}
-        header={t('consultation_5e21ae53')}
+        header={t('customer.purposeSelector.modalTitle')}
         size="large"
       >
         <ConsultationPurposeSelector
@@ -362,23 +361,23 @@ export default function CustomerChat() {
               description={
                 <SpaceBetween direction="horizontal" size="xs" alignItems="center">
                   {selectedPurposes.length > 0 && (
-                    <span>{`${t('chat_purpose')}: ${formatPurposesForDisplay(formatPurposesForStorage(selectedPurposes))}`}</span>
+                    <span>{`${t('customer.chat.purposeLabel')}: ${formatPurposesForDisplay(formatPurposesForStorage(selectedPurposes))}`}</span>
                   )}
                   {!selectedPurposes.length && (
-                    <span>{t('consultation_5e21ae53')}</span>
+                    <span>{t('customer.purposeSelector.modalTitle')}</span>
                   )}
                   {/* WebSocket 연결 상태 인디케이터 */}
                   {connectionState === 'connected' && (
-                    <StatusIndicator type="success">{t('ws_connected') || 'Connected'}</StatusIndicator>
+                    <StatusIndicator type="success">{t('customer.chat.wsConnected')}</StatusIndicator>
                   )}
                   {connectionState === 'connecting' && (
-                    <StatusIndicator type="in-progress">{t('ws_connecting') || 'Connecting...'}</StatusIndicator>
+                    <StatusIndicator type="in-progress">{t('customer.chat.wsConnecting')}</StatusIndicator>
                   )}
                   {connectionState === 'disconnected' && (
-                    <StatusIndicator type="warning">{t('ws_reconnecting') || 'Reconnecting...'}</StatusIndicator>
+                    <StatusIndicator type="warning">{t('customer.chat.wsReconnecting')}</StatusIndicator>
                   )}
                   {connectionState === 'error' && (
-                    <StatusIndicator type="error">{t('ws_error') || 'Connection error'}</StatusIndicator>
+                    <StatusIndicator type="error">{t('customer.chat.wsError')}</StatusIndicator>
                   )}
                 </SpaceBetween>
               }
@@ -389,19 +388,19 @@ export default function CustomerChat() {
                     iconName={selectedPurposes.length > 0 ? "edit" : "add-plus"}
                     onClick={() => setShowPurposeSelector(true)}
                   >
-                    {selectedPurposes.length > 0 ? t('consultation_purpose_edit') : t('consultation_purpose_select')}
+                    {selectedPurposes.length > 0 ? t('customer.chat.editPurposeButton') : t('customer.chat.selectPurposeButton')}
                   </Button>
                   <Button
                     variant="normal"
                     iconName="upload"
                     onClick={() => setShowFileUpload(true)}
                   >
-                    {t('btn_file_attach')}
+                    {t('customer.chat.attachFileButton')}
                   </Button>
                 </SpaceBetween>
               }
             >
-              {t('chat_title')}
+              {t('customer.chat.title')}
             </Header>
           </div>
 
@@ -418,7 +417,7 @@ export default function CustomerChat() {
             }
           >
             <ReactMarkdown>
-              {t('aws_prechat_aws_mixed_3049d8')}
+              {t('customer.chat.greetingMessage')}
             </ReactMarkdown>
           </ChatBubble>
 
@@ -528,7 +527,7 @@ export default function CustomerChat() {
                               <span></span>
                             </div>
                             <Box margin={{ left: 's' }} display="inline-block">
-                              {t(MESSAGES.AI_THINKING)}
+                              {t('customer.chat.aiThinking')}
                             </Box>
                           </>
                         )}
@@ -545,7 +544,7 @@ export default function CustomerChat() {
               value={inputValue}
               onChange={setInputValue}
               onSend={handleSendMessage}
-              placeholder={t(MESSAGES.CHAT_PLACEHOLDER)}
+              placeholder={t('customer.chat.inputPlaceholder')}
               disabled={chatLoading}
               onClear={clearInput}
             />
@@ -555,9 +554,9 @@ export default function CustomerChat() {
             <div className="fade-in-up success-animation">
               <Alert
                 type="success"
-                header={t(MESSAGES.CONSULTATION_COMPLETE)}
+                header={t('customer.completion.alertTitle')}
               >
-                {t(MESSAGES.CONSULTATION_COMPLETE_DESC)}
+                {t('customer.completion.alertDescription')}
               </Alert>
             </div>
           )}
@@ -566,7 +565,7 @@ export default function CustomerChat() {
       <Container>
         {sessionData?.salesRepInfo && (
           <Box margin={{ top: 'm' }}>
-            <Header variant="h3">{t('chat_sales_rep_info')}</Header>
+            <Header variant="h3">{t('customer.salesRep.sectionTitle')}</Header>
             <div
               style={{
                 backgroundColor: 'var(--awsui-color-background-container-content)',
@@ -577,19 +576,19 @@ export default function CustomerChat() {
             >
               <SpaceBetween size="s">
                 <Box>
-                  <Box display="inline" fontWeight="bold">{t('sales_rep')} </Box>
+                  <Box display="inline" fontWeight="bold">{t('customer.salesRep.nameLabel')} </Box>
                   <Box display="inline">{sessionData.salesRepInfo.name}</Box>
                 </Box>
                 <Box>
-                  <Box display="inline" fontWeight="bold">{t('email')} </Box>
+                  <Box display="inline" fontWeight="bold">{t('customer.salesRep.emailLabel')} </Box>
                   <Box display="inline">{sessionData.salesRepInfo.email}</Box>
                 </Box>
                 <Box>
-                  <Box display="inline" fontWeight="bold">{t('contact')} </Box>
+                  <Box display="inline" fontWeight="bold">{t('customer.salesRep.contactLabel')} </Box>
                   <Box display="inline">{sessionData.salesRepInfo.phone}</Box>
                 </Box>
                 <Box fontSize="body-s" color="text-status-inactive">
-                  {t('chat_sales_rep_cta')}
+                  {t('customer.salesRep.ctaMessage')}
                 </Box>
               </SpaceBetween>
             </div>
