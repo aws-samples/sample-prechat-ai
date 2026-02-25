@@ -414,7 +414,7 @@
       "noMeetingLogDescription": "Click the \"Edit\" button to write the initial meeting log.",
       "reanalyzeHint": "After saving the meeting log, click the \"Re-analyze\" button to have AI update the analysis results on the left, considering both the pre-consultation conversation and meeting log.",
       "analyzingMessage": " is analyzing the conversation content and meeting log together...",
-      "analyzingProgress": "May take up to 5 minutes. (",
+      "analyzingProgress": "May take up to 1 minute. (",
       "analyzingProgressSuffix": "% Complete)",
       "analysisComplete": "Analysis Complete:",
       "modelUsed": "| \n                  Agent:",

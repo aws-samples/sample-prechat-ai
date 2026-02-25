@@ -1,6 +1,7 @@
 import json
 import boto3
 import os
+import base64
 from botocore.exceptions import ClientError
 from utils import lambda_response
 
@@ -36,6 +37,12 @@ def list_session_files_admin(event, context):
                     # Extract encoded filename from S3 key
                     encoded_filename = obj['Key'].split('/')[-1]
                     
+                    # base64 디코딩으로 실제 파일명 복원
+                    try:
+                        decoded_filename = base64.b64decode(encoded_filename).decode('utf-8')
+                    except Exception:
+                        decoded_filename = encoded_filename
+                    
                     # Get content type
                     content_type = 'application/octet-stream'
                     try:
@@ -50,7 +57,7 @@ def list_session_files_admin(event, context):
                     
                     files.append({
                         'fileKey': obj['Key'],
-                        'fileName': encoded_filename,
+                        'fileName': decoded_filename,
                         'encodedFileName': encoded_filename,
                         'fileSize': obj['Size'],
                         'uploadedAt': obj['LastModified'].isoformat(),
@@ -66,10 +73,12 @@ def list_session_files_admin(event, context):
             print(f"S3 ClientError listing files for session {session_id}: {error_code} - {str(e)}")
             if error_code in ['NoSuchBucket', 'AccessDenied']:
                 return lambda_response(500, {'error': f'S3 configuration error: {error_code}'})
-            return lambda_response(200, {'files': []})
+            return lambda_response(500, {'error': f'S3 error: {error_code}'})
         except Exception as e:
             print(f"Unexpected error listing files for session {session_id}: {str(e)}")
-            return lambda_response(200, {'files': []})
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
+            return lambda_response(500, {'error': f'Failed to list files: {str(e)}'})
         
     except KeyError as e:
         print(f"Missing required parameter in list_session_files_admin: {str(e)}")

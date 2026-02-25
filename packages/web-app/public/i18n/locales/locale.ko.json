@@ -414,7 +414,7 @@
       "noMeetingLogDescription": "\"수정\" 버튼을 클릭하여 초도미팅록을 작성해보세요.",
       "reanalyzeHint": "미팅 로그를 저장한 후 \"재분석\" 버튼을 클릭하면, 사전상담 대화 내용과 미팅 로그를 모두 고려하여 AI가 좌측의 분석 결과를 업데이트합니다.",
       "analyzingMessage": "가 대화 내용과 미팅 로그를 함께 분석하고 있습니다...",
-      "analyzingProgress": "최대 5분까지 소요될 수 있습니다. (",
+      "analyzingProgress": "최대 1분까지 소요될 수 있습니다. (",
       "analyzingProgressSuffix": "% 완료)",
       "analysisComplete": "분석 완료:",
       "modelUsed": "| \n                  에이전트:",

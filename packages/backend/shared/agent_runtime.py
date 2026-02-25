@@ -110,19 +110,13 @@ class AgentCoreClient:
                 result_text = ''.join(content)
                 
             elif content_type == "application/json":
-                # JSON 응답 처리 (기존 방식)
-                content_chunks = []
-                for chunk in response.get("response", []):
-                    content_chunks.append(chunk.decode('utf-8'))
-                result_text = ''.join(content_chunks)
+                # JSON 응답 처리: StreamingBody.read()로 한 번에 읽기
+                result_text = response["response"].read().decode('utf-8')
                 
             else:
                 # 기타 응답 타입
                 print(f"[WARN] Unexpected contentType: {content_type}")
-                content_chunks = []
-                for chunk in response.get("response", []):
-                    content_chunks.append(chunk.decode('utf-8'))
-                result_text = ''.join(content_chunks)
+                result_text = response["response"].read().decode('utf-8')
 
             print(f"[INFO] Response length: {len(result_text)} chars")
 

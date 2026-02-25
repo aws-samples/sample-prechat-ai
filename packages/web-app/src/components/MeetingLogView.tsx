@@ -171,7 +171,7 @@ export default function MeetingLogView({ sessionId, session }: MeetingLogViewPro
         setIsAnalyzing(false)
         setTimeoutProgress(0)
       }
-    }, 1200000)
+    }, 60000)
   }
 
   const exportToHTML = () => {
