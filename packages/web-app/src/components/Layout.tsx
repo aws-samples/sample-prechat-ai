@@ -151,24 +151,22 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const contentWithHeader = (
     <div className="app-container">
       <header className="header">
-        <div className="header-content" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <div className="header-content">
           {welcomeLogoUrl && (
-            <div style={{ flexShrink: 0 }}>
+            <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
               <img
                 src={welcomeLogoUrl}
                 alt={t('welcome.welcomeScreen.logoAlt')}
-                style={{ maxHeight: '60px', maxWidth: '200px', objectFit: 'contain' }}
+                style={{ maxHeight: '120px', maxWidth: '320px', objectFit: 'contain' }}
               />
             </div>
           )}
-          <div>
-            <h1 className="welcome-title">
-              {customWelcomeTitle || t('welcome.header.title')}
-            </h1>
-            <p className="header-subtitle">
-              {customWelcomeSubtitle || t('welcome.header.subtitle')}
-            </p>
-          </div>
+          <h1 className="welcome-title">
+            {customWelcomeTitle || t('welcome.header.title')}
+          </h1>
+          <p className="header-subtitle">
+            {customWelcomeSubtitle || t('welcome.header.subtitle')}
+          </p>
         </div>
       </header>
 
