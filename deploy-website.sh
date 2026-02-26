@@ -46,10 +46,11 @@ WEBSITE_URL=$(aws cloudformation describe-stacks \
 
 echo "📤 Uploading to S3 bucket: $BUCKET_NAME"
 
-# Sync files to S3 (exclude uploads directory)
+# Sync files to S3 (exclude uploads and customization directories)
 aws s3 sync packages/web-app/dist/ s3://$BUCKET_NAME/ \
   --delete \
   --exclude "uploads/*" \
+  --exclude "customization/*" \
   --cache-control "public, max-age=31536000" \
   --exclude "*.html" \
   --profile $PROFILE
@@ -58,6 +59,7 @@ aws s3 sync packages/web-app/dist/ s3://$BUCKET_NAME/ \
 aws s3 sync packages/web-app/dist/ s3://$BUCKET_NAME/ \
   --delete \
   --exclude "uploads/*" \
+  --exclude "customization/*" \
   --cache-control "public, max-age=0, must-revalidate" \
   --include "*.html" \
   --profile $PROFILE
