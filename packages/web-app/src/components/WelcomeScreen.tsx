@@ -9,27 +9,16 @@ export const WelcomeScreen: React.FC = () => {
 
   const subtitle = getLocalizedValue(customizingSet.welcome.subtitle) || t('welcome.header.streamlineSubtitle');
   const logoUrl = customizingSet.welcome.logoUrl;
-  const logoLink = customizingSet.welcome.logoLink;
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
       {logoUrl && (
         <div className="welcome-logo" style={{ flexShrink: 0 }}>
-          {logoLink ? (
-            <a href={logoLink} target="_blank" rel="noopener noreferrer">
-              <img
-                src={logoUrl}
-                alt={t('welcome.welcomeScreen.logoAlt')}
-                style={{ maxHeight: '60px', maxWidth: '200px', objectFit: 'contain' }}
-              />
-            </a>
-          ) : (
-            <img
-              src={logoUrl}
-              alt={t('welcome.welcomeScreen.logoAlt')}
-              style={{ maxHeight: '60px', maxWidth: '200px', objectFit: 'contain' }}
-            />
-          )}
+          <img
+            src={logoUrl}
+            alt={t('welcome.welcomeScreen.logoAlt')}
+            style={{ maxHeight: '60px', maxWidth: '200px', objectFit: 'contain' }}
+          />
         </div>
       )}
       <p className="welcome-subtitle" style={{ margin: 0 }}>

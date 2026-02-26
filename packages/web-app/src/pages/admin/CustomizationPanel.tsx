@@ -122,11 +122,6 @@ const CustomizationPanel: React.FC = () => {
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // 환영 문구 로고 링크 검증
-    if (data.welcome.logoLink && !validateHttpsUrl(data.welcome.logoLink)) {
-      newErrors['welcome.logoLink'] = t('adminCustomizing.welcome.logo.errorInvalidUrl');
-    }
-
     // 헤더 라벨 검증 (양쪽 로케일)
     if (data.header.label) {
       if (data.header.label.ko && data.header.label.ko.length > MAX_HEADER_LABEL_LENGTH) {
@@ -433,16 +428,6 @@ const CustomizationPanel: React.FC = () => {
                 />
               </Box>
             )}
-          </FormField>
-          <FormField
-            label={t('adminCustomizing.welcome.logo.linkLabel')}
-            errorText={errors['welcome.logoLink']}
-          >
-            <Input
-              value={data.welcome.logoLink || ''}
-              placeholder={t('adminCustomizing.welcome.logo.linkPlaceholder')}
-              onChange={({ detail }) => updateField('welcome.logoLink', detail.value || null)}
-            />
           </FormField>
         </SpaceBetween>
       </Container>

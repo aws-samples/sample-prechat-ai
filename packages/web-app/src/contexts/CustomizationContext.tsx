@@ -40,7 +40,14 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
         });
         if (response.ok) {
           const data = await response.json();
-          setCustomizingSet({ ...DEFAULT_CUSTOMIZING_SET, ...data });
+          // 깊은 병합: 각 섹션별로 기본값과 병합하여 누락 필드 방지
+          setCustomizingSet({
+            header: { ...DEFAULT_CUSTOMIZING_SET.header, ...data.header },
+            welcome: { ...DEFAULT_CUSTOMIZING_SET.welcome, ...data.welcome },
+            background: { ...DEFAULT_CUSTOMIZING_SET.background, ...data.background },
+            legal: { ...DEFAULT_CUSTOMIZING_SET.legal, ...data.legal },
+            meta: { ...DEFAULT_CUSTOMIZING_SET.meta, ...data.meta },
+          });
         }
       } catch {
         // fetch 실패 시 기본값 유지 (콘솔 경고)
