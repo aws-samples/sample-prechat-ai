@@ -49,6 +49,8 @@ DEFAULT_CUSTOMIZING_SET = {
         "labelLink": None
     },
     "welcome": {
+        "logoUrl": None,
+        "logoLink": None,
         "title": None,
         "subtitle": None
     },
@@ -373,13 +375,12 @@ def upload_logo(event, context):
             ContentType=content_type
         )
 
-        # S3 URL 생성
-        region = os.environ.get('AWS_REGION', 'ap-northeast-2')
-        s3_url = f"https://{bucket_name}.s3.{region}.amazonaws.com/{s3_key}"
+        # 상대 경로 반환 (프론트엔드에서 CloudFront origin과 조합)
+        relative_url = f"/{s3_key}"
 
         print(f"Logo uploaded to S3: {s3_key} ({len(file_data)} bytes)")
         return lambda_response(200, {
-            'url': s3_url,
+            'url': relative_url,
             'key': s3_key,
             'filename': filename,
             'size': len(file_data)
@@ -459,13 +460,12 @@ def upload_legal_doc(event, context):
             CacheControl=CACHE_CONTROL_NO_CACHE
         )
 
-        # S3 URL 생성
-        region = os.environ.get('AWS_REGION', 'ap-northeast-2')
-        s3_url = f"https://{bucket_name}.s3.{region}.amazonaws.com/{s3_key}"
+        # 상대 경로 반환 (프론트엔드에서 CloudFront origin과 조합)
+        relative_url = f"/{s3_key}"
 
         print(f"Legal doc uploaded to S3: {s3_key} ({len(file_data)} bytes)")
         return lambda_response(200, {
-            'url': s3_url,
+            'url': relative_url,
             'key': s3_key,
             'docType': doc_type,
             'locale': locale,

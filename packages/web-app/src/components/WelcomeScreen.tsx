@@ -8,8 +8,8 @@ export const WelcomeScreen: React.FC = () => {
   const { customizingSet, getLocalizedValue } = useCustomizationContext();
 
   const subtitle = getLocalizedValue(customizingSet.welcome.subtitle) || t('welcome.header.streamlineSubtitle');
-  const logoUrl = customizingSet.header.logoUrl;
-  const logoLink = customizingSet.header.logoLink;
+  const logoUrl = customizingSet.welcome.logoUrl;
+  const logoLink = customizingSet.welcome.logoLink;
 
   return (
     <>

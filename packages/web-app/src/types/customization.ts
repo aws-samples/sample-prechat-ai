@@ -22,6 +22,8 @@ export interface CustomizingSet {
     labelLink: string | null;
   };
   welcome: {
+    logoUrl: string | null;
+    logoLink: string | null;
     title: LocalizedString;
     subtitle: LocalizedString;
   };
@@ -48,6 +50,8 @@ export const DEFAULT_CUSTOMIZING_SET: CustomizingSet = {
     labelLink: null,
   },
   welcome: {
+    logoUrl: null,
+    logoLink: null,
     title: null,
     subtitle: null,
   },

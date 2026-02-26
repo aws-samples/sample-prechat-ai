@@ -1052,7 +1052,19 @@
       "subtitleLabel": "Welcome Subtitle",
       "subtitlePlaceholder": "Enter welcome subtitle (max 500 characters)",
       "errorTitleTooLong": "Title must not exceed 100 characters.",
-      "errorSubtitleTooLong": "Subtitle must not exceed 500 characters."
+      "errorSubtitleTooLong": "Subtitle must not exceed 500 characters.",
+      "logo": {
+        "sectionTitle": "Welcome Logo",
+        "uploadLabel": "Logo Image",
+        "uploadDescription": "Upload a brand logo image to display on the welcome screen (PNG, JPG, SVG, WebP, max 2MB)",
+        "uploadButton": "Choose File",
+        "currentPreview": "Current Logo Preview",
+        "linkLabel": "Logo Click URL",
+        "linkPlaceholder": "https://example.com",
+        "errorInvalidExtension": "Only PNG, JPG, JPEG, SVG, WebP files are allowed.",
+        "errorFileTooLarge": "File size must not exceed 2MB.",
+        "errorInvalidUrl": "URL must start with https://"
+      }
     },
     "background": {
       "sectionTitle": "Background Color",

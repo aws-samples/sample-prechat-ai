@@ -122,9 +122,9 @@ const CustomizationPanel: React.FC = () => {
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // 로고 링크 검증
-    if (data.header.logoLink && !validateHttpsUrl(data.header.logoLink)) {
-      newErrors['header.logoLink'] = t('adminCustomizing.header.logo.errorInvalidUrl');
+    // 환영 문구 로고 링크 검증
+    if (data.welcome.logoLink && !validateHttpsUrl(data.welcome.logoLink)) {
+      newErrors['welcome.logoLink'] = t('adminCustomizing.welcome.logo.errorInvalidUrl');
     }
 
     // 헤더 라벨 검증 (양쪽 로케일)
@@ -182,18 +182,18 @@ const CustomizationPanel: React.FC = () => {
     if (!file) return;
 
     if (!validateImageExtension(file.name)) {
-      setErrors((prev) => ({ ...prev, 'header.logo': t('adminCustomizing.header.logo.errorInvalidExtension') }));
+      setErrors((prev) => ({ ...prev, 'welcome.logo': t('adminCustomizing.welcome.logo.errorInvalidExtension') }));
       return;
     }
     if (!validateFileSize(file.size, MAX_LOGO_SIZE)) {
-      setErrors((prev) => ({ ...prev, 'header.logo': t('adminCustomizing.header.logo.errorFileTooLarge') }));
+      setErrors((prev) => ({ ...prev, 'welcome.logo': t('adminCustomizing.welcome.logo.errorFileTooLarge') }));
       return;
     }
 
-    setErrors((prev) => { const n = { ...prev }; delete n['header.logo']; return n; });
+    setErrors((prev) => { const n = { ...prev }; delete n['welcome.logo']; return n; });
     const url = await uploadLogo(file);
     if (url) {
-      updateField('header.logoUrl', url);
+      updateField('welcome.logoUrl', url);
       showFlash('success', 'adminCustomizing.notification.uploadSuccess');
     } else {
       showFlash('error', 'adminCustomizing.notification.uploadError');
@@ -315,13 +315,13 @@ const CustomizationPanel: React.FC = () => {
         ]}
       />
 
-      {/* 헤더 로고 섹션 */}
-      <Container header={<Header variant="h2">{t('adminCustomizing.header.logo.sectionTitle')}</Header>}>
+      {/* 환영 문구 로고 섹션 */}
+      <Container header={<Header variant="h2">{t('adminCustomizing.welcome.logo.sectionTitle')}</Header>}>
         <SpaceBetween size="m">
           <FormField
-            label={t('adminCustomizing.header.logo.uploadLabel')}
-            description={t('adminCustomizing.header.logo.uploadDescription')}
-            errorText={errors['header.logo']}
+            label={t('adminCustomizing.welcome.logo.uploadLabel')}
+            description={t('adminCustomizing.welcome.logo.uploadDescription')}
+            errorText={errors['welcome.logo']}
           >
             <input
               type="file"
@@ -329,13 +329,13 @@ const CustomizationPanel: React.FC = () => {
               onChange={handleLogoUpload}
               style={{ marginBottom: '8px' }}
             />
-            {data.header.logoUrl && (
+            {data.welcome.logoUrl && (
               <Box margin={{ top: 's' }}>
                 <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                  {t('adminCustomizing.header.logo.currentPreview')}
+                  {t('adminCustomizing.welcome.logo.currentPreview')}
                 </div>
                 <img
-                  src={data.header.logoUrl}
+                  src={data.welcome.logoUrl}
                   alt="Logo preview"
                   style={{ maxHeight: '60px', maxWidth: '200px', objectFit: 'contain' }}
                 />
@@ -343,13 +343,13 @@ const CustomizationPanel: React.FC = () => {
             )}
           </FormField>
           <FormField
-            label={t('adminCustomizing.header.logo.linkLabel')}
-            errorText={errors['header.logoLink']}
+            label={t('adminCustomizing.welcome.logo.linkLabel')}
+            errorText={errors['welcome.logoLink']}
           >
             <Input
-              value={data.header.logoLink || ''}
-              placeholder={t('adminCustomizing.header.logo.linkPlaceholder')}
-              onChange={({ detail }) => updateField('header.logoLink', detail.value || null)}
+              value={data.welcome.logoLink || ''}
+              placeholder={t('adminCustomizing.welcome.logo.linkPlaceholder')}
+              onChange={({ detail }) => updateField('welcome.logoLink', detail.value || null)}
             />
           </FormField>
         </SpaceBetween>

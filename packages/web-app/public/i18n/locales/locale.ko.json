@@ -1052,7 +1052,19 @@
       "subtitleLabel": "환영 부제목",
       "subtitlePlaceholder": "환영 부제목을 입력하세요 (최대 500자)",
       "errorTitleTooLong": "제목은 100자를 초과할 수 없습니다.",
-      "errorSubtitleTooLong": "부제목은 500자를 초과할 수 없습니다."
+      "errorSubtitleTooLong": "부제목은 500자를 초과할 수 없습니다.",
+      "logo": {
+        "sectionTitle": "환영 문구 로고",
+        "uploadLabel": "로고 이미지",
+        "uploadDescription": "환영 화면에 표시할 브랜드 로고 이미지를 업로드하세요 (PNG, JPG, SVG, WebP, 최대 2MB)",
+        "uploadButton": "파일 선택",
+        "currentPreview": "현재 로고 미리보기",
+        "linkLabel": "로고 클릭 URL",
+        "linkPlaceholder": "https://example.com",
+        "errorInvalidExtension": "PNG, JPG, JPEG, SVG, WebP 파일만 허용됩니다.",
+        "errorFileTooLarge": "파일 크기는 2MB를 초과할 수 없습니다.",
+        "errorInvalidUrl": "URL은 https://로 시작해야 합니다."
+      }
     },
     "background": {
       "sectionTitle": "배경 색상",
