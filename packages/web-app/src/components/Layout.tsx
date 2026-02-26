@@ -146,17 +146,29 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const customWelcomeTitle = getLocalizedValue(customizingSet.welcome.title);
   const customWelcomeSubtitle = getLocalizedValue(customizingSet.welcome.subtitle);
+  const welcomeLogoUrl = customizingSet.welcome.logoUrl;
 
   const contentWithHeader = (
     <div className="app-container">
       <header className="header">
-        <div className="header-content">
-          <h1 className="welcome-title">
-            {customWelcomeTitle || t('welcome.header.title')}
-          </h1>
-          <p className="header-subtitle">
-            {customWelcomeSubtitle || t('welcome.header.subtitle')}
-          </p>
+        <div className="header-content" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          {welcomeLogoUrl && (
+            <div style={{ flexShrink: 0 }}>
+              <img
+                src={welcomeLogoUrl}
+                alt={t('welcome.welcomeScreen.logoAlt')}
+                style={{ maxHeight: '60px', maxWidth: '200px', objectFit: 'contain' }}
+              />
+            </div>
+          )}
+          <div>
+            <h1 className="welcome-title">
+              {customWelcomeTitle || t('welcome.header.title')}
+            </h1>
+            <p className="header-subtitle">
+              {customWelcomeSubtitle || t('welcome.header.subtitle')}
+            </p>
+          </div>
         </div>
       </header>
 
