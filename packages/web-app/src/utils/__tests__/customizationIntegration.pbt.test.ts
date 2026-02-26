@@ -22,6 +22,8 @@ const validCustomizingSetArbitrary: fc.Arbitrary<CustomizingSet> = fc.record({
     labelLink: fc.option(fc.webUrl(), { nil: null }),
   }),
   welcome: fc.record({
+    logoUrl: fc.option(fc.webUrl(), { nil: null }),
+    logoLink: fc.option(fc.webUrl(), { nil: null }),
     title: localizedStringArb,
     subtitle: fc.option(
       fc.record({
@@ -32,7 +34,11 @@ const validCustomizingSetArbitrary: fc.Arbitrary<CustomizingSet> = fc.record({
     ),
   }),
   background: fc.record({
-    color: fc.option(
+    startColor: fc.option(
+      fc.stringMatching(/^#[0-9A-Fa-f]{6}$/),
+      { nil: null }
+    ),
+    endColor: fc.option(
       fc.stringMatching(/^#[0-9A-Fa-f]{6}$/),
       { nil: null }
     ),
