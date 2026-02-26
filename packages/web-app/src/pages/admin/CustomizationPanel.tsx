@@ -14,6 +14,7 @@ import {
   Box,
   ColumnLayout,
   Modal,
+  Link,
 } from '@cloudscape-design/components';
 import { useI18n } from '../../i18n';
 import { useCustomization } from '../../hooks/useCustomization';
@@ -517,10 +518,25 @@ const CustomizationPanel: React.FC = () => {
               accept=".md"
               onChange={(e) => handleLegalUpload(e, 'privacy')}
             />
-            {data.legal.privacyTermUrl && getLocalizedFieldValue(data.legal.privacyTermUrl) && (
+            {data.legal.privacyTermUrl && getLocalizedFieldValue(data.legal.privacyTermUrl) ? (
               <Box margin={{ top: 'xs' }}>
-                <span style={{ fontSize: '12px', color: '#666' }}>
-                  {t('adminCustomizing.legal.currentFile')}: {selectedLocale}
+                <SpaceBetween direction="horizontal" size="xs">
+                  <span style={{ fontSize: '12px', color: '#666', lineHeight: '32px' }}>
+                    {t('adminCustomizing.legal.currentFile')}: {selectedLocale}
+                  </span>
+                  <Link
+                    href={getLocalizedFieldValue(data.legal.privacyTermUrl) || ''}
+                    external
+                    variant="primary"
+                  >
+                    {t('adminCustomizing.legal.getLinkButton')}
+                  </Link>
+                </SpaceBetween>
+              </Box>
+            ) : (
+              <Box margin={{ top: 'xs' }}>
+                <span style={{ fontSize: '12px', color: '#999' }}>
+                  {t('adminCustomizing.legal.noFileUploaded')}
                 </span>
               </Box>
             )}
@@ -534,10 +550,25 @@ const CustomizationPanel: React.FC = () => {
               accept=".md"
               onChange={(e) => handleLegalUpload(e, 'service')}
             />
-            {data.legal.serviceTermUrl && getLocalizedFieldValue(data.legal.serviceTermUrl) && (
+            {data.legal.serviceTermUrl && getLocalizedFieldValue(data.legal.serviceTermUrl) ? (
               <Box margin={{ top: 'xs' }}>
-                <span style={{ fontSize: '12px', color: '#666' }}>
-                  {t('adminCustomizing.legal.currentFile')}: {selectedLocale}
+                <SpaceBetween direction="horizontal" size="xs">
+                  <span style={{ fontSize: '12px', color: '#666', lineHeight: '32px' }}>
+                    {t('adminCustomizing.legal.currentFile')}: {selectedLocale}
+                  </span>
+                  <Link
+                    href={getLocalizedFieldValue(data.legal.serviceTermUrl) || ''}
+                    external
+                    variant="primary"
+                  >
+                    {t('adminCustomizing.legal.getLinkButton')}
+                  </Link>
+                </SpaceBetween>
+              </Box>
+            ) : (
+              <Box margin={{ top: 'xs' }}>
+                <span style={{ fontSize: '12px', color: '#999' }}>
+                  {t('adminCustomizing.legal.noFileUploaded')}
                 </span>
               </Box>
             )}
