@@ -42,7 +42,9 @@ export const useCustomization = () => {
     setError(null);
     try {
       const result = await customizationApi.uploadLogo(file);
-      return result.url;
+      // 상대 경로를 CloudFront origin과 조합하여 절대 URL로 변환
+      const url = result.url.startsWith('/') ? `${window.location.origin}${result.url}` : result.url;
+      return url;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to upload logo';
       setError(message);
@@ -73,7 +75,9 @@ export const useCustomization = () => {
       setError(null);
       try {
         const result = await customizationApi.uploadLegalDoc(file, docType, locale);
-        return result.url;
+        // 상대 경로를 CloudFront origin과 조합하여 절대 URL로 변환
+        const url = result.url.startsWith('/') ? `${window.location.origin}${result.url}` : result.url;
+        return url;
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Failed to upload legal document';
         setError(message);

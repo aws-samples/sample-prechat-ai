@@ -50,10 +50,12 @@ describe('CustomizationContext', () => {
           labelLink: 'https://example.com/label',
         },
         welcome: {
+          logoUrl: null,
+          logoLink: null,
           title: { ko: '환영합니다!', en: 'Welcome!' },
           subtitle: { ko: '서브타이틀', en: 'Subtitle' },
         },
-        background: { color: '#FF9900' },
+        background: { startColor: '#FF9900', endColor: '#FF6600' },
         legal: {
           privacyTermUrl: { ko: 'https://s3/privacy.ko.md', en: 'https://s3/privacy.en.md' },
           serviceTermUrl: { ko: 'https://s3/service.ko.md', en: 'https://s3/service.en.md' },
@@ -70,7 +72,8 @@ describe('CustomizationContext', () => {
       expect(result.header.labelLink).toBe('https://example.com/label');
       expect(result.welcome.title).toEqual({ ko: '환영합니다!', en: 'Welcome!' });
       expect(result.welcome.subtitle).toEqual({ ko: '서브타이틀', en: 'Subtitle' });
-      expect(result.background.color).toBe('#FF9900');
+      expect(result.background.startColor).toBe('#FF9900');
+      expect(result.background.endColor).toBe('#FF6600');
       expect(result.legal.privacyTermUrl).toEqual({
         ko: 'https://s3/privacy.ko.md',
         en: 'https://s3/privacy.en.md',
@@ -84,9 +87,10 @@ describe('CustomizationContext', () => {
     });
 
     it('부분 데이터 fetch 시 나머지는 기본값으로 병합되어야 한다', () => {
-      const result = applyFetchResult({ background: { color: '#000000' } });
+      const result = applyFetchResult({ background: { startColor: '#000000', endColor: '#333333' } });
 
-      expect(result.background.color).toBe('#000000');
+      expect(result.background.startColor).toBe('#000000');
+      expect(result.background.endColor).toBe('#333333');
       // 기본값 유지 확인
       expect(result.header.logoUrl).toBeNull();
       expect(result.header.label).toBeNull();
@@ -157,7 +161,8 @@ describe('CustomizationContext', () => {
       expect(DEFAULT_CUSTOMIZING_SET.header.labelLink).toBeNull();
       expect(DEFAULT_CUSTOMIZING_SET.welcome.title).toBeNull();
       expect(DEFAULT_CUSTOMIZING_SET.welcome.subtitle).toBeNull();
-      expect(DEFAULT_CUSTOMIZING_SET.background.color).toBeNull();
+      expect(DEFAULT_CUSTOMIZING_SET.background.startColor).toBeNull();
+      expect(DEFAULT_CUSTOMIZING_SET.background.endColor).toBeNull();
       expect(DEFAULT_CUSTOMIZING_SET.legal.privacyTermUrl).toBeNull();
       expect(DEFAULT_CUSTOMIZING_SET.legal.serviceTermUrl).toBeNull();
       expect(DEFAULT_CUSTOMIZING_SET.legal.supportChannel).toBeNull();

@@ -199,6 +199,7 @@ describe('CustomizationPanel', () => {
         label: { ko: '한국어 라벨', en: 'English Label' },
       },
       welcome: {
+        ...DEFAULT_CUSTOMIZING_SET.welcome,
         title: { ko: '환영합니다!', en: 'Welcome!' },
         subtitle: { ko: '서브타이틀입니다', en: 'This is subtitle' },
       },
@@ -311,10 +312,11 @@ describe('CustomizationPanel', () => {
           label: { ko: '한국어', en: 'English' },
         },
         welcome: {
+          ...DEFAULT_CUSTOMIZING_SET.welcome,
           title: { ko: '제목', en: 'Title' },
           subtitle: { ko: '부제', en: 'Subtitle' },
         },
-        background: { color: '#FF9900' },
+        background: { startColor: '#FF9900', endColor: '#FF6600' },
       };
 
       const mockSave = vi.fn().mockResolvedValue(true);
@@ -326,7 +328,8 @@ describe('CustomizationPanel', () => {
       expect(savedData.header.label).toEqual({ ko: '한국어', en: 'English' });
       expect(savedData.welcome.title).toEqual({ ko: '제목', en: 'Title' });
       expect(savedData.welcome.subtitle).toEqual({ ko: '부제', en: 'Subtitle' });
-      expect(savedData.background.color).toBe('#FF9900');
+      expect(savedData.background.startColor).toBe('#FF9900');
+      expect(savedData.background.endColor).toBe('#FF6600');
       expect(result.flash!.type).toBe('success');
     });
   });
