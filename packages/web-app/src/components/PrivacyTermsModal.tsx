@@ -9,6 +9,7 @@ import {
   Header
 } from '@cloudscape-design/components'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useI18n } from '../i18n'
 import { useCustomizationContext } from '../contexts/CustomizationContext'
 
@@ -96,7 +97,7 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
                     overflowY: 'auto',
                     lineHeight: '1.6'
                   }}>
-                    <ReactMarkdown>{privacyContent || t('welcome.privacyTermsModal.privacyPolicyContent')}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{privacyContent || t('welcome.privacyTermsModal.privacyPolicyContent')}</ReactMarkdown>
                   </div>
                 </Box>
               )
@@ -111,7 +112,7 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
                     overflowY: 'auto',
                     lineHeight: '1.6'
                   }}>
-                    <ReactMarkdown>{serviceContent || t('welcome.privacyTermsModal.termsOfServiceContent')}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{serviceContent || t('welcome.privacyTermsModal.termsOfServiceContent')}</ReactMarkdown>
                   </div>
                 </Box>
               )

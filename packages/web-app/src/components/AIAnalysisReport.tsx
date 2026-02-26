@@ -13,6 +13,7 @@ import {
 } from '@cloudscape-design/components'
 import LoadingBar from '@cloudscape-design/chat-components/loading-bar'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { adminApi } from '../services/api'
 import { AnalysisResults, AgentConfiguration, Session } from '../types'
 import { generateAnalysisReportHTML, downloadHTMLFile } from '../utils/htmlExport'
@@ -347,6 +348,7 @@ function MarkdownSummaryContainer({ summary }: MarkdownSummaryContainerProps) {
           }}
         >
           <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
             components={{
               p: ({ children }) => <p style={{ lineHeight: '1.6', margin: '0 0 16px 0' }}>{children}</p>,
               h1: ({ children }) => <h1 style={{ lineHeight: '1.4', margin: '0 0 20px 0', fontSize: '24px', fontWeight: 'bold' }}>{children}</h1>,

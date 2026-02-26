@@ -19,6 +19,7 @@ import {
 import Avatar from '@cloudscape-design/chat-components/avatar'
 import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 import { useSession, useChat } from '../../hooks'
 import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload, MultilineChatInput, FeedbackModal, ConsultationPurposeSelector } from '../../components'
@@ -416,7 +417,7 @@ export default function CustomerChat() {
               />
             }
           >
-            <ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {t('customer.chat.greetingMessage')}
             </ReactMarkdown>
           </ChatBubble>
