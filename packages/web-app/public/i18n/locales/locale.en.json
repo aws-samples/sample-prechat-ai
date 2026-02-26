@@ -1074,12 +1074,21 @@
       "saveSuccess": "Customization saved successfully.",
       "saveError": "Failed to save customization. Please try again.",
       "uploadSuccess": "File uploaded successfully.",
-      "uploadError": "Failed to upload file. Please try again."
+      "uploadError": "Failed to upload file. Please try again.",
+      "resetSuccess": "Customization has been reset to defaults.",
+      "resetError": "Failed to reset customization. Please try again."
     },
     "actions": {
       "save": "Save Changes",
       "saving": "Saving...",
-      "reset": "Reset to Defaults"
+      "reset": "Reset to Defaults",
+      "resetting": "Resetting..."
+    },
+    "resetModal": {
+      "title": "Confirm Reset",
+      "description": "All customization settings will be restored to defaults. Uploaded logos and legal documents will be retained, but references will be removed from the configuration. Do you want to continue?",
+      "cancelButton": "Cancel",
+      "confirmButton": "Reset"
     }
   }
 }

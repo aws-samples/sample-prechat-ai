@@ -282,6 +282,40 @@ def save_customization(event, context):
         print(f"Unexpected error in save_customization: {str(e)}")
         return lambda_response(500, {'error': 'Failed to save customization'})
 
+# ---------------------------------------------------------------------------
+# DELETE /api/admin/customization — 초기화
+# ---------------------------------------------------------------------------
+
+def reset_customization(event, context):
+    """Customizing Set을 초기 상태로 복원합니다.
+
+    S3에서 customizing-set.json을 삭제하여 기본값으로 되돌립니다.
+    이후 get_customization 호출 시 DEFAULT_CUSTOMIZING_SET이 반환됩니다.
+    """
+    try:
+        bucket_name = _get_bucket_name()
+    except ValueError as e:
+        print(f"Configuration error: {str(e)}")
+        return lambda_response(500, {'error': 'Server configuration error'})
+
+    try:
+        s3_client.delete_object(
+            Bucket=bucket_name,
+            Key=CUSTOMIZATION_KEY
+        )
+        print(f"Customizing Set reset: {CUSTOMIZATION_KEY} deleted from S3")
+        return lambda_response(200, DEFAULT_CUSTOMIZING_SET)
+
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        print(f"S3 ClientError resetting customization: {error_code} - {str(e)}")
+        return lambda_response(500, {'error': 'Failed to reset customization'})
+
+    except Exception as e:
+        print(f"Unexpected error in reset_customization: {str(e)}")
+        return lambda_response(500, {'error': 'Failed to reset customization'})
+
+
 
 
 # ---------------------------------------------------------------------------

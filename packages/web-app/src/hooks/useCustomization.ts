@@ -52,6 +52,21 @@ export const useCustomization = () => {
     }
   }, []);
 
+  const resetCustomization = useCallback(async (): Promise<CustomizingSet | null> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await customizationApi.resetCustomization();
+      return data;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to reset customization';
+      setError(message);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const uploadLegalDoc = useCallback(
     async (file: File, docType: 'privacy' | 'service', locale: 'ko' | 'en'): Promise<string | null> => {
       setIsLoading(true);
@@ -76,6 +91,7 @@ export const useCustomization = () => {
     clearError: () => setError(null),
     fetchCustomization,
     saveCustomization,
+    resetCustomization,
     uploadLogo,
     uploadLegalDoc,
   };

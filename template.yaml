@@ -2131,6 +2131,30 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  CustomizationResetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/admin/
+      Handler: customization_handler.reset_customization
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:DeleteObject
+            Resource: !Sub "${WebsiteBucket.Arn}/customization/*"
+      Events:
+        ResetCustomization:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/customization
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   CustomizationUploadLogoFunction:
     Type: AWS::Serverless::Function
     Properties:

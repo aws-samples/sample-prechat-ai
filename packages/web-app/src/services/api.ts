@@ -723,6 +723,17 @@ export const customizationApi = {
     }
   },
 
+  resetCustomization: async () => {
+    try {
+      return await retryWithBackoff(async () => {
+        const response = await api.delete('/admin/customization')
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Reset Customization')
+    }
+  },
+
   uploadLegalDoc: async (
     file: File,
     docType: 'privacy' | 'service',

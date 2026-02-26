@@ -13,6 +13,7 @@ import {
   FlashbarProps,
   Box,
   ColumnLayout,
+  Modal,
 } from '@cloudscape-design/components';
 import { useI18n } from '../../i18n';
 import { useCustomization } from '../../hooks/useCustomization';
@@ -43,6 +44,7 @@ const CustomizationPanel: React.FC = () => {
     error: apiError,
     fetchCustomization,
     saveCustomization,
+    resetCustomization,
     uploadLogo,
     uploadLegalDoc,
   } = useCustomization();
@@ -52,6 +54,8 @@ const CustomizationPanel: React.FC = () => {
   const [flashItems, setFlashItems] = useState<FlashbarProps.MessageDefinition[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -253,6 +257,21 @@ const CustomizationPanel: React.FC = () => {
     }
   };
 
+  // 리셋 핸들러
+  const handleReset = async () => {
+    setShowResetModal(false);
+    setIsResetting(true);
+    const result = await resetCustomization();
+    setIsResetting(false);
+    if (result) {
+      setData(DEFAULT_CUSTOMIZING_SET);
+      setErrors({});
+      showFlash('success', 'adminCustomizing.notification.resetSuccess');
+    } else {
+      showFlash('error', 'adminCustomizing.notification.resetError');
+    }
+  };
+
   const hasErrors = Object.keys(errors).length > 0;
 
   return (
@@ -263,14 +282,24 @@ const CustomizationPanel: React.FC = () => {
         variant="h1"
         description={t('adminCustomizing.panel.description')}
         actions={
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            loading={isSaving || isLoading}
-            disabled={hasErrors}
-          >
-            {isSaving ? t('adminCustomizing.actions.saving') : t('adminCustomizing.actions.save')}
-          </Button>
+          <SpaceBetween direction="horizontal" size="xs">
+            <Button
+              variant="normal"
+              onClick={() => setShowResetModal(true)}
+              loading={isResetting}
+              disabled={isSaving || isLoading}
+            >
+              {t('adminCustomizing.actions.reset')}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSave}
+              loading={isSaving || isLoading}
+              disabled={hasErrors}
+            >
+              {isSaving ? t('adminCustomizing.actions.saving') : t('adminCustomizing.actions.save')}
+            </Button>
+          </SpaceBetween>
         }
       >
         {t('adminCustomizing.panel.title')}
@@ -466,6 +495,27 @@ const CustomizationPanel: React.FC = () => {
           ]}
         />
       )}
+
+      {/* 리셋 확인 모달 */}
+      <Modal
+        visible={showResetModal}
+        onDismiss={() => setShowResetModal(false)}
+        header={t('adminCustomizing.resetModal.title')}
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button variant="link" onClick={() => setShowResetModal(false)}>
+                {t('adminCustomizing.resetModal.cancelButton')}
+              </Button>
+              <Button variant="primary" onClick={handleReset}>
+                {t('adminCustomizing.resetModal.confirmButton')}
+              </Button>
+            </SpaceBetween>
+          </Box>
+        }
+      >
+        {t('adminCustomizing.resetModal.description')}
+      </Modal>
     </SpaceBetween>
   );
 };
