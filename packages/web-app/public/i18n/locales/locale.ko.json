@@ -31,6 +31,9 @@
       "userMenuAriaLabel": "사용자 메뉴",
       "profileMenuItem": "프로필",
       "logoutMenuItem": "로그아웃"
+    },
+    "welcomeScreen": {
+      "logoAlt": "로고"
     }
   },
   "customer": {

@@ -31,6 +31,9 @@
       "userMenuAriaLabel": "User menu",
       "profileMenuItem": "Profile",
       "logoutMenuItem": "Logout"
+    },
+    "welcomeScreen": {
+      "logoAlt": "Logo"
     }
   },
   "customer": {

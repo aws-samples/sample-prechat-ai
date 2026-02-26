@@ -144,10 +144,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return '/admin';
   };
 
-  const customLogoUrl = customizingSet.header.logoUrl;
-  const customLogoLink = customizingSet.header.logoLink;
-  const customLabel = getLocalizedValue(customizingSet.header.label);
-  const customLabelLink = customizingSet.header.labelLink;
   const customWelcomeTitle = getLocalizedValue(customizingSet.welcome.title);
   const customWelcomeSubtitle = getLocalizedValue(customizingSet.welcome.subtitle);
 
@@ -155,33 +151,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="app-container">
       <header className="header">
         <div className="header-content">
-          {customLogoUrl ? (
-            customLogoLink ? (
-              <a href={customLogoLink} target="_blank" rel="noopener noreferrer">
-                <img src={customLogoUrl} alt="Logo" style={{ maxHeight: '40px', maxWidth: '160px', objectFit: 'contain' }} />
-              </a>
-            ) : (
-              <img src={customLogoUrl} alt="Logo" style={{ maxHeight: '40px', maxWidth: '160px', objectFit: 'contain' }} />
-            )
-          ) : null}
           <h1 className="welcome-title">
             {customWelcomeTitle || t('welcome.header.title')}
           </h1>
           <p className="header-subtitle">
             {customWelcomeSubtitle || t('welcome.header.subtitle')}
           </p>
-        </div>
-        <div className="header-controls">
-          {customLabel && (
-            customLabelLink ? (
-              <a href={customLabelLink} target="_blank" rel="noopener noreferrer" style={{ marginRight: '12px', color: 'inherit', textDecoration: 'underline' }}>
-                {customLabel}
-              </a>
-            ) : (
-              <span style={{ marginRight: '12px' }}>{customLabel}</span>
-            )
-          )}
-          <span>🌙</span>
         </div>
       </header>
 

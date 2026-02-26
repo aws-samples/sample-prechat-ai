@@ -5,48 +5,61 @@ import { TopNavigation } from '@cloudscape-design/components';
 import { authService } from '../services/auth';
 import { useI18n } from '../i18n';
 import { SUPPORTED_LOCALES, SupportedLocale } from '../i18n/types';
+import { useCustomizationContext } from '../contexts/CustomizationContext';
 
 export const AppTopNavigation: React.FC = () => {
   const { t, locale, setLocale } = useI18n();
   const navigate = useNavigate();
+  const { customizingSet, getLocalizedValue } = useCustomizationContext();
+
+  // 헤더 커스터마이제이션 값
+  const logoUrl = customizingSet.header.logoUrl;
+  const logoLink = customizingSet.header.logoLink;
+  const label = getLocalizedValue(customizingSet.header.label);
+  const labelLink = customizingSet.header.labelLink;
 
   const handleLanguageClick = (event: any) => {
-    console.log('Language click event:', event); // Debug log
-    console.log('Event detail:', event.detail); // Debug log
-    
     if (event.detail && event.detail.id) {
       const selectedLocale = event.detail.id.replace('locale-', '') as SupportedLocale;
-      console.log('Setting locale to:', selectedLocale); // Debug log
-      
-      // Ensure it's a valid locale
       if (selectedLocale === 'ko' || selectedLocale === 'en') {
         setLocale(selectedLocale);
-      } else {
-        console.error('Invalid locale:', selectedLocale);
       }
-    } else {
-      console.error('No event detail or id found:', event);
     }
   };
 
   const handleUserMenuClick = (event: any) => {
-    console.log('User menu click event:', event); // Debug log
     if (event.detail.id === 'logout') {
       authService.signout();
       navigate('/login');
     }
   };
 
+  // identity 구성: 커스터마이제이션 값 우선, 없으면 기본값
+  const identity: {
+    href: string;
+    title: string;
+    logo?: { src: string; alt: string };
+  } = {
+    href: labelLink || '#',
+    title: label || 'PreChat',
+    ...(logoUrl
+      ? {
+          logo: {
+            src: logoUrl,
+            alt: label || 'Logo',
+          },
+        }
+      : {}),
+  };
+
+  // 로고 클릭 시 logoLink로 이동 (identity.href와 별도로 로고 자체 링크)
+  if (logoUrl && logoLink) {
+    identity.href = logoLink;
+  }
+
   return (
     <TopNavigation
-      identity={{
-        href: "https://aws.amazon.com",
-        title: "Amazon Web Services",
-        logo: {
-          src: "https://a0.awsstatic.com/libra-css/images/logos/aws_logo_smile_1200x630.png",
-          alt: "Amazon Web Services"
-        }
-      }}
+      identity={identity}
       utilities={[
         {
           type: "menu-dropdown",

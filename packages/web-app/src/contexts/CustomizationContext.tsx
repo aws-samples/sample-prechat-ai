@@ -62,9 +62,17 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
   useEffect(() => {
     if (customizingSet.background.color) {
       document.documentElement.style.setProperty('--brand-color', customizingSet.background.color);
+      document.documentElement.style.setProperty(
+        '--gradient-bg',
+        `linear-gradient(135deg, ${customizingSet.background.color} 0%, ${customizingSet.background.color} 100%)`
+      );
     }
     return () => {
       document.documentElement.style.removeProperty('--brand-color');
+      document.documentElement.style.setProperty(
+        '--gradient-bg',
+        'linear-gradient(135deg, #ffeef8 0%, #e8f4fd 100%)'
+      );
     };
   }, [customizingSet.background.color]);
 
