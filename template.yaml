@@ -2077,6 +2077,103 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  # Customization Functions
+  CustomizationGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/admin/
+      Handler: customization_handler.get_customization
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/customization/*"
+      Events:
+        GetCustomization:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/customization
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CustomizationSaveFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/admin/
+      Handler: customization_handler.save_customization
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource: !Sub "${WebsiteBucket.Arn}/customization/*"
+      Events:
+        SaveCustomization:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/customization
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CustomizationUploadLogoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/admin/
+      Handler: customization_handler.upload_logo
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource: !Sub "${WebsiteBucket.Arn}/customization/logos/*"
+      Events:
+        UploadLogo:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/customization/upload/logo
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CustomizationUploadLegalFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/admin/
+      Handler: customization_handler.upload_legal_doc
+      Environment:
+        Variables:
+          WEBSITE_BUCKET: !Ref WebsiteBucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource: !Sub "${WebsiteBucket.Arn}/customization/legal/*"
+      Events:
+        UploadLegalDoc:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/customization/upload/legal/{docType}
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   # DynamoDB Streams Handler
   # NOTE: VPC 밖에 배치 - Slack Webhook 등 외부 아웃바운드 호출을 위해 퍼블릭 네트워크 필요 (NAT 미사용)
   SessionStreamHandler:
