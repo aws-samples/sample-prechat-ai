@@ -2092,6 +2092,11 @@ Resources:
             Action:
               - s3:GetObject
             Resource: !Sub "${WebsiteBucket.Arn}/customization/*"
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource: !GetAtt WebsiteBucket.Arn
       Events:
         GetCustomization:
           Type: Api

@@ -1005,5 +1005,81 @@
       "ownerRequired": "Campaign owner is required",
       "invalidDateRange": "End date must be after start date"
     }
+  },
+  "adminCustomizing": {
+    "sideNav": {
+      "sectionTitle": "Customization",
+      "manageCustomizing": "UI Customizing"
+    },
+    "panel": {
+      "title": "UI Customization",
+      "description": "Configure the customer-facing chat interface appearance.",
+      "localeTabs": {
+        "ko": "Korean (한국어)",
+        "en": "English"
+      }
+    },
+    "header": {
+      "logo": {
+        "sectionTitle": "Header Logo",
+        "uploadLabel": "Logo Image",
+        "uploadDescription": "Upload a brand logo image (PNG, JPG, SVG, WebP, max 2MB)",
+        "uploadButton": "Choose File",
+        "currentPreview": "Current Logo Preview",
+        "linkLabel": "Logo Click URL",
+        "linkPlaceholder": "https://example.com",
+        "errorInvalidExtension": "Only PNG, JPG, JPEG, SVG, WebP files are allowed.",
+        "errorFileTooLarge": "File size must not exceed 2MB.",
+        "errorInvalidUrl": "URL must start with https://"
+      },
+      "label": {
+        "sectionTitle": "Header Label",
+        "textLabel": "Label Text",
+        "textPlaceholder": "Enter additional header label (max 100 characters)",
+        "linkLabel": "Label Link URL",
+        "linkPlaceholder": "https://example.com",
+        "errorTooLong": "Label must not exceed 100 characters.",
+        "errorInvalidUrl": "URL must start with https://"
+      }
+    },
+    "welcome": {
+      "sectionTitle": "Welcome Message",
+      "titleLabel": "Welcome Title",
+      "titlePlaceholder": "Enter welcome title (max 100 characters)",
+      "subtitleLabel": "Welcome Subtitle",
+      "subtitlePlaceholder": "Enter welcome subtitle (max 500 characters)",
+      "errorTitleTooLong": "Title must not exceed 100 characters.",
+      "errorSubtitleTooLong": "Subtitle must not exceed 500 characters."
+    },
+    "background": {
+      "sectionTitle": "Background Color",
+      "colorLabel": "HEX Color Code",
+      "colorPlaceholder": "#RRGGBB",
+      "colorPickerLabel": "Color Picker",
+      "errorInvalidHex": "Please enter a valid 6-digit HEX color code (e.g. #FF5733)."
+    },
+    "legal": {
+      "sectionTitle": "Legal Documents",
+      "privacyLabel": "Privacy Policy (.md)",
+      "serviceLabel": "Terms of Service (.md)",
+      "supportLabel": "Support Channel",
+      "supportPlaceholder": "Enter support channel info (URL or text, max 500 characters)",
+      "uploadButton": "Choose File",
+      "currentFile": "Current file uploaded",
+      "errorInvalidExtension": "Only .md (Markdown) files are allowed.",
+      "errorFileTooLarge": "File size must not exceed 1MB.",
+      "errorSupportTooLong": "Support channel must not exceed 500 characters."
+    },
+    "notification": {
+      "saveSuccess": "Customization saved successfully.",
+      "saveError": "Failed to save customization. Please try again.",
+      "uploadSuccess": "File uploaded successfully.",
+      "uploadError": "Failed to upload file. Please try again."
+    },
+    "actions": {
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "reset": "Reset to Defaults"
+    }
   }
 }

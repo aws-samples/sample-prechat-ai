@@ -1005,5 +1005,81 @@
       "ownerRequired": "캠페인 담당자는 필수입니다",
       "invalidDateRange": "종료일은 시작일보다 늦어야 합니다"
     }
+  },
+  "adminCustomizing": {
+    "sideNav": {
+      "sectionTitle": "커스터마이징",
+      "manageCustomizing": "UI 커스터마이징"
+    },
+    "panel": {
+      "title": "UI 커스터마이징",
+      "description": "고객 대면 채팅 인터페이스의 외관을 설정합니다.",
+      "localeTabs": {
+        "ko": "한국어",
+        "en": "English (영어)"
+      }
+    },
+    "header": {
+      "logo": {
+        "sectionTitle": "헤더 로고",
+        "uploadLabel": "로고 이미지",
+        "uploadDescription": "브랜드 로고 이미지를 업로드하세요 (PNG, JPG, SVG, WebP, 최대 2MB)",
+        "uploadButton": "파일 선택",
+        "currentPreview": "현재 로고 미리보기",
+        "linkLabel": "로고 클릭 URL",
+        "linkPlaceholder": "https://example.com",
+        "errorInvalidExtension": "PNG, JPG, JPEG, SVG, WebP 파일만 허용됩니다.",
+        "errorFileTooLarge": "파일 크기는 2MB를 초과할 수 없습니다.",
+        "errorInvalidUrl": "URL은 https://로 시작해야 합니다."
+      },
+      "label": {
+        "sectionTitle": "헤더 라벨",
+        "textLabel": "라벨 텍스트",
+        "textPlaceholder": "추가 헤더 라벨을 입력하세요 (최대 100자)",
+        "linkLabel": "라벨 링크 URL",
+        "linkPlaceholder": "https://example.com",
+        "errorTooLong": "라벨은 100자를 초과할 수 없습니다.",
+        "errorInvalidUrl": "URL은 https://로 시작해야 합니다."
+      }
+    },
+    "welcome": {
+      "sectionTitle": "환영 문구",
+      "titleLabel": "환영 제목",
+      "titlePlaceholder": "환영 제목을 입력하세요 (최대 100자)",
+      "subtitleLabel": "환영 부제목",
+      "subtitlePlaceholder": "환영 부제목을 입력하세요 (최대 500자)",
+      "errorTitleTooLong": "제목은 100자를 초과할 수 없습니다.",
+      "errorSubtitleTooLong": "부제목은 500자를 초과할 수 없습니다."
+    },
+    "background": {
+      "sectionTitle": "배경 색상",
+      "colorLabel": "HEX 색상 코드",
+      "colorPlaceholder": "#RRGGBB",
+      "colorPickerLabel": "색상 선택기",
+      "errorInvalidHex": "유효한 6자리 HEX 색상 코드를 입력하세요 (예: #FF5733)."
+    },
+    "legal": {
+      "sectionTitle": "리갈 문서",
+      "privacyLabel": "개인정보 처리방침 (.md)",
+      "serviceLabel": "서비스 이용약관 (.md)",
+      "supportLabel": "고객 지원 채널",
+      "supportPlaceholder": "고객 지원 채널 정보를 입력하세요 (URL 또는 텍스트, 최대 500자)",
+      "uploadButton": "파일 선택",
+      "currentFile": "현재 업로드된 파일",
+      "errorInvalidExtension": ".md (마크다운) 파일만 허용됩니다.",
+      "errorFileTooLarge": "파일 크기는 1MB를 초과할 수 없습니다.",
+      "errorSupportTooLong": "고객 지원 채널은 500자를 초과할 수 없습니다."
+    },
+    "notification": {
+      "saveSuccess": "커스터마이징이 성공적으로 저장되었습니다.",
+      "saveError": "커스터마이징 저장에 실패했습니다. 다시 시도해주세요.",
+      "uploadSuccess": "파일이 성공적으로 업로드되었습니다.",
+      "uploadError": "파일 업로드에 실패했습니다. 다시 시도해주세요."
+    },
+    "actions": {
+      "save": "변경사항 저장",
+      "saving": "저장 중...",
+      "reset": "기본값으로 초기화"
+    }
   }
 }

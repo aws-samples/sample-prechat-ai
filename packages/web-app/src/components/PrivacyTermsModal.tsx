@@ -1,5 +1,5 @@
 // nosemgrep
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Modal,
   Box,
@@ -10,6 +10,7 @@ import {
 } from '@cloudscape-design/components'
 import ReactMarkdown from 'react-markdown'
 import { useI18n } from '../i18n'
+import { useCustomizationContext } from '../contexts/CustomizationContext'
 
 interface PrivacyTermsModalProps {
   visible: boolean
@@ -25,7 +26,38 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
   initialTab = 'privacy'
 }) => {
   const { t } = useI18n();
+  const { customizingSet, getLocalizedValue } = useCustomizationContext();
   const [activeTab, setActiveTab] = useState(initialTab)
+  const [privacyContent, setPrivacyContent] = useState<string | null>(null)
+  const [serviceContent, setServiceContent] = useState<string | null>(null)
+
+  // 커스텀 리갈 문서 fetch
+  useEffect(() => {
+    if (!visible) return;
+
+    const privacyUrl = getLocalizedValue(customizingSet.legal.privacyTermUrl);
+    const serviceUrl = getLocalizedValue(customizingSet.legal.serviceTermUrl);
+
+    if (privacyUrl) {
+      fetch(privacyUrl, { cache: 'no-store' })
+        .then((res) => (res.ok ? res.text() : null))
+        .then((text) => setPrivacyContent(text))
+        .catch(() => setPrivacyContent(null));
+    } else {
+      setPrivacyContent(null);
+    }
+
+    if (serviceUrl) {
+      fetch(serviceUrl, { cache: 'no-store' })
+        .then((res) => (res.ok ? res.text() : null))
+        .then((text) => setServiceContent(text))
+        .catch(() => setServiceContent(null));
+    } else {
+      setServiceContent(null);
+    }
+  }, [visible, customizingSet.legal, getLocalizedValue]);
+
+  const supportChannel = customizingSet.legal.supportChannel;
 
   return (
     <Modal
@@ -64,7 +96,7 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
                     overflowY: 'auto',
                     lineHeight: '1.6'
                   }}>
-                    <ReactMarkdown>{t('welcome.privacyTermsModal.privacyPolicyContent')}</ReactMarkdown>
+                    <ReactMarkdown>{privacyContent || t('welcome.privacyTermsModal.privacyPolicyContent')}</ReactMarkdown>
                   </div>
                 </Box>
               )
@@ -79,13 +111,24 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
                     overflowY: 'auto',
                     lineHeight: '1.6'
                   }}>
-                    <ReactMarkdown>{t('welcome.privacyTermsModal.termsOfServiceContent')}</ReactMarkdown>
+                    <ReactMarkdown>{serviceContent || t('welcome.privacyTermsModal.termsOfServiceContent')}</ReactMarkdown>
                   </div>
                 </Box>
               )
             }
           ]}
         />
+
+        {supportChannel && (
+          <Box>
+            <strong>{t('adminCustomizing.legal.supportLabel')}:</strong>{' '}
+            {supportChannel.startsWith('https://') ? (
+              <a href={supportChannel} target="_blank" rel="noopener noreferrer">{supportChannel}</a>
+            ) : (
+              supportChannel
+            )}
+          </Box>
+        )}
       </SpaceBetween>
     </Modal>
   )

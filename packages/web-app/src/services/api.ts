@@ -16,6 +16,7 @@ import type {
   TriggerListResponse
 } from '../types'
 import { API_BASE_URL } from '../config/api'
+import type { CustomizingSet } from '../types/customization'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -682,4 +683,64 @@ export const triggerApi = {
     }
   },
 
+}
+
+export const customizationApi = {
+  getCustomization: async () => {
+    try {
+      return await retryWithBackoff(async () => {
+        const response = await api.get('/admin/customization')
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Get Customization')
+    }
+  },
+
+  saveCustomization: async (data: CustomizingSet) => {
+    try {
+      return await retryWithBackoff(async () => {
+        const response = await api.post('/admin/customization', data)
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Save Customization')
+    }
+  },
+
+  uploadLogo: async (file: File): Promise<{ url: string }> => {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      return await retryWithBackoff(async () => {
+        const response = await api.post('/admin/customization/upload/logo', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Upload Logo')
+    }
+  },
+
+  uploadLegalDoc: async (
+    file: File,
+    docType: 'privacy' | 'service',
+    locale: 'ko' | 'en'
+  ): Promise<{ url: string }> => {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      return await retryWithBackoff(async () => {
+        const response = await api.post(
+          `/admin/customization/upload/legal/${docType}?locale=${locale}`,
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        )
+        return response.data
+      })
+    } catch (error) {
+      return handleApiError(error, 'Upload Legal Document')
+    }
+  },
 }

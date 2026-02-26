@@ -16,14 +16,17 @@ import CreateCampaign from './pages/admin/CreateCampaign'
 import EditCampaign from './pages/admin/EditCampaign'
 import CampaignDetails from './pages/admin/CampaignDetails'
 import TriggerDashboard from './pages/admin/TriggerDashboard'
+import CustomizationPanel from './pages/admin/CustomizationPanel'
 
 import Login from './pages/auth/Login'
 import { I18nProvider } from './i18n/I18nContext'
+import { CustomizationProvider } from './contexts/CustomizationContext'
 import './styles/animations.css'
 
 function App() {
   return (
     <I18nProvider>
+      <CustomizationProvider>
       <AppTopNavigation />
       <Layout>
         <Routes>
@@ -77,6 +80,11 @@ function App() {
             <TriggerDashboard />
           </ProtectedRoute>
         } />
+        <Route path="/admin/customizing" element={
+          <ProtectedRoute>
+            <CustomizationPanel />
+          </ProtectedRoute>
+        } />
         <Route path="/admin/agents/create" element={
           <ProtectedRoute>
             <CreateAgent />
@@ -89,6 +97,7 @@ function App() {
         } />
         </Routes>
       </Layout>
+      </CustomizationProvider>
     </I18nProvider>
   )
 }
