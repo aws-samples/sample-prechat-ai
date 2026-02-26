@@ -3,6 +3,7 @@ import { ButtonGroup, StatusIndicator } from '@cloudscape-design/components'
 import Avatar from '@cloudscape-design/chat-components/avatar'
 import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import type { Message, SalesRepInfo } from '../types'
 import { replaceSalesRepPlaceholders } from '../utils/placeholderReplacer'
 import { DivReturnRenderer } from './DivReturnRenderer'
@@ -48,7 +49,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
         return <FormSubmissionSummary content={message.content} />;
       case 'text':
       default:
-        return <ReactMarkdown>{replaceSalesRepPlaceholders(message.content, salesRepInfo)}</ReactMarkdown>;
+        return <ReactMarkdown remarkPlugins={[remarkGfm]}>{replaceSalesRepPlaceholders(message.content, salesRepInfo)}</ReactMarkdown>;
     }
   };
 

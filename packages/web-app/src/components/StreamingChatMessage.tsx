@@ -4,6 +4,7 @@ import { ButtonGroup, StatusIndicator } from '@cloudscape-design/components'
 import Avatar from '@cloudscape-design/chat-components/avatar'
 import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import type { Message, SalesRepInfo } from '../types'
 import { replaceSalesRepPlaceholders } from '../utils/placeholderReplacer'
 import { DivReturnRenderer } from './DivReturnRenderer'
@@ -120,7 +121,7 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
           {isStreaming ? (
             <>
               {completedLines && (
-                <ReactMarkdown>{replaceSalesRepPlaceholders(completedLines, salesRepInfo)}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{replaceSalesRepPlaceholders(completedLines, salesRepInfo)}</ReactMarkdown>
               )}
               {currentLine && <span>{currentLine}</span>}
             </>
@@ -134,7 +135,7 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
               disabled={formSubmitted}
             />
           ) : (
-            <ReactMarkdown>{replaceSalesRepPlaceholders(message.content, salesRepInfo)}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{replaceSalesRepPlaceholders(message.content, salesRepInfo)}</ReactMarkdown>
           )}
           {isStreaming && (
             <span 

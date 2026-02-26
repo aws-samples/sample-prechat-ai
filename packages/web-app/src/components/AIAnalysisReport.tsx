@@ -13,6 +13,7 @@ import {
 } from '@cloudscape-design/components'
 import LoadingBar from '@cloudscape-design/chat-components/loading-bar'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { adminApi } from '../services/api'
 import { AnalysisResults, AgentConfiguration, Session } from '../types'
 import { generateAnalysisReportHTML, downloadHTMLFile } from '../utils/htmlExport'
@@ -347,22 +348,8 @@ function MarkdownSummaryContainer({ summary }: MarkdownSummaryContainerProps) {
           }}
         >
           <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
             components={{
-              p: ({ children }) => <p style={{ lineHeight: '1.6', margin: '0 0 16px 0' }}>{children}</p>,
-              h1: ({ children }) => <h1 style={{ lineHeight: '1.4', margin: '0 0 20px 0', fontSize: '24px', fontWeight: 'bold' }}>{children}</h1>,
-              h2: ({ children }) => <h2 style={{ lineHeight: '1.4', margin: '20px 0 16px 0', fontSize: '20px', fontWeight: 'bold' }}>{children}</h2>,
-              h3: ({ children }) => <h3 style={{ lineHeight: '1.4', margin: '16px 0 12px 0', fontSize: '18px', fontWeight: 'bold' }}>{children}</h3>,
-              h4: ({ children }) => <h4 style={{ lineHeight: '1.4', margin: '12px 0 8px 0', fontSize: '16px', fontWeight: 'bold' }}>{children}</h4>,
-              ul: ({ children }) => <ul style={{ lineHeight: '1.6', margin: '0 0 16px 0', paddingLeft: '20px' }}>{children}</ul>,
-              ol: ({ children }) => <ol style={{ lineHeight: '1.6', margin: '0 0 16px 0', paddingLeft: '20px' }}>{children}</ol>,
-              li: ({ children }) => <li style={{ lineHeight: '1.6', margin: '4px 0' }}>{children}</li>,
-              blockquote: ({ children }) => <blockquote style={{ lineHeight: '1.6', margin: '16px 0', paddingLeft: '16px', borderLeft: '4px solid #e1e4e8', fontStyle: 'italic' }}>{children}</blockquote>,
-              code: ({ children }) => <code style={{ backgroundColor: '#f6f8fa', padding: '2px 4px', borderRadius: '3px', fontSize: '14px' }}>{children}</code>,
-              pre: ({ children }) => <pre style={{ backgroundColor: '#f6f8fa', padding: '16px', borderRadius: '6px', overflow: 'auto', margin: '16px 0' }}>{children}</pre>
-            }}
-          >
-            {summary}
-          </ReactMarkdown>
         </div>
       </Box>
     </Container>
