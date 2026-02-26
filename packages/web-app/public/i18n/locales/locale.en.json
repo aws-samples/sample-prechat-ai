@@ -1042,7 +1042,15 @@
         "linkLabel": "Label Link URL",
         "linkPlaceholder": "https://example.com",
         "errorTooLong": "Label must not exceed 100 characters.",
-        "errorInvalidUrl": "URL must start with https://"
+        "errorInvalidUrl": "URL must start with https://",
+        "logoUploadLabel": "Logo Image",
+        "logoUploadDescription": "Upload a logo image for TopNavigation (PNG, JPG, SVG, WebP, max 2MB)",
+        "logoCurrentPreview": "Current Logo Preview",
+        "logoLinkLabel": "Logo Click URL",
+        "logoLinkPlaceholder": "https://example.com",
+        "logoErrorInvalidExtension": "Only PNG, JPG, JPEG, SVG, WebP files are allowed.",
+        "logoErrorFileTooLarge": "File size must not exceed 2MB.",
+        "logoErrorInvalidUrl": "URL must start with https://"
       }
     },
     "welcome": {

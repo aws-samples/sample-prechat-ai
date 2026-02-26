@@ -142,6 +142,11 @@ const CustomizationPanel: React.FC = () => {
       newErrors['header.labelLink'] = t('adminCustomizing.header.label.errorInvalidUrl');
     }
 
+    // 헤더 로고 링크 검증
+    if (data.header.logoLink && !validateHttpsUrl(data.header.logoLink)) {
+      newErrors['header.logoLink'] = t('adminCustomizing.header.label.logoErrorInvalidUrl');
+    }
+
     // 웰컴 제목 검증
     if (data.welcome.title) {
       if (data.welcome.title.ko && data.welcome.title.ko.length > MAX_WELCOME_TITLE_LENGTH) {
@@ -179,7 +184,31 @@ const CustomizationPanel: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   }, [data, t]);
 
-  // 로고 파일 업로드 핸들러
+  // 헤더 로고 파일 업로드 핸들러
+  const handleHeaderLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!validateImageExtension(file.name)) {
+      setErrors((prev) => ({ ...prev, 'header.logo': t('adminCustomizing.header.label.logoErrorInvalidExtension') }));
+      return;
+    }
+    if (!validateFileSize(file.size, MAX_LOGO_SIZE)) {
+      setErrors((prev) => ({ ...prev, 'header.logo': t('adminCustomizing.header.label.logoErrorFileTooLarge') }));
+      return;
+    }
+
+    setErrors((prev) => { const n = { ...prev }; delete n['header.logo']; return n; });
+    const url = await uploadLogo(file);
+    if (url) {
+      updateField('header.logoUrl', url);
+      showFlash('success', 'adminCustomizing.notification.uploadSuccess');
+    } else {
+      showFlash('error', 'adminCustomizing.notification.uploadError');
+    }
+  };
+
+  // 환영 화면 로고 파일 업로드 핸들러
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -318,6 +347,66 @@ const CustomizationPanel: React.FC = () => {
         ]}
       />
 
+      {/* 헤더 라벨 섹션 */}
+      <Container header={<Header variant="h2">{t('adminCustomizing.header.label.sectionTitle')}</Header>}>
+        <SpaceBetween size="m">
+          <FormField
+            label={t('adminCustomizing.header.label.logoUploadLabel')}
+            description={t('adminCustomizing.header.label.logoUploadDescription')}
+            errorText={errors['header.logo']}
+          >
+            <input
+              type="file"
+              accept=".png,.jpg,.jpeg,.svg,.webp"
+              onChange={handleHeaderLogoUpload}
+              style={{ marginBottom: '8px' }}
+            />
+            {data.header.logoUrl && (
+              <Box margin={{ top: 's' }}>
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                  {t('adminCustomizing.header.label.logoCurrentPreview')}
+                </div>
+                <img
+                  src={data.header.logoUrl}
+                  alt="Header logo preview"
+                  style={{ maxHeight: '40px', maxWidth: '160px', objectFit: 'contain' }}
+                />
+              </Box>
+            )}
+          </FormField>
+          <FormField
+            label={t('adminCustomizing.header.label.logoLinkLabel')}
+            errorText={errors['header.logoLink']}
+          >
+            <Input
+              value={data.header.logoLink || ''}
+              placeholder={t('adminCustomizing.header.label.logoLinkPlaceholder')}
+              onChange={({ detail }) => updateField('header.logoLink', detail.value || null)}
+            />
+          </FormField>
+          <FormField
+            label={t('adminCustomizing.header.label.textLabel')}
+            errorText={errors[`header.label.${selectedLocale}`]}
+          >
+            <Input
+              value={getLocalizedFieldValue(data.header.label)}
+              placeholder={t('adminCustomizing.header.label.textPlaceholder')}
+              onChange={({ detail }) => updateLocalized('header.label', detail.value)}
+            />
+          </FormField>
+          <FormField
+            label={t('adminCustomizing.header.label.linkLabel')}
+            errorText={errors['header.labelLink']}
+          >
+            <Input
+              value={data.header.labelLink || ''}
+              placeholder={t('adminCustomizing.header.label.linkPlaceholder')}
+              onChange={({ detail }) => updateField('header.labelLink', detail.value || null)}
+            />
+          </FormField>
+        </SpaceBetween>
+      </Container>
+
       {/* 환영 문구 로고 섹션 */}
       <Container header={<Header variant="h2">{t('adminCustomizing.welcome.logo.sectionTitle')}</Header>}>
         <SpaceBetween size="m">
@@ -353,32 +442,6 @@ const CustomizationPanel: React.FC = () => {
               value={data.welcome.logoLink || ''}
               placeholder={t('adminCustomizing.welcome.logo.linkPlaceholder')}
               onChange={({ detail }) => updateField('welcome.logoLink', detail.value || null)}
-            />
-          </FormField>
-        </SpaceBetween>
-      </Container>
-
-      {/* 헤더 라벨 섹션 */}
-      <Container header={<Header variant="h2">{t('adminCustomizing.header.label.sectionTitle')}</Header>}>
-        <SpaceBetween size="m">
-          <FormField
-            label={t('adminCustomizing.header.label.textLabel')}
-            errorText={errors[`header.label.${selectedLocale}`]}
-          >
-            <Input
-              value={getLocalizedFieldValue(data.header.label)}
-              placeholder={t('adminCustomizing.header.label.textPlaceholder')}
-              onChange={({ detail }) => updateLocalized('header.label', detail.value)}
-            />
-          </FormField>
-          <FormField
-            label={t('adminCustomizing.header.label.linkLabel')}
-            errorText={errors['header.labelLink']}
-          >
-            <Input
-              value={data.header.labelLink || ''}
-              placeholder={t('adminCustomizing.header.label.linkPlaceholder')}
-              onChange={({ detail }) => updateField('header.labelLink', detail.value || null)}
             />
           </FormField>
         </SpaceBetween>

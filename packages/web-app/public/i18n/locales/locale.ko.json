@@ -1042,7 +1042,15 @@
         "linkLabel": "라벨 링크 URL",
         "linkPlaceholder": "https://example.com",
         "errorTooLong": "라벨은 100자를 초과할 수 없습니다.",
-        "errorInvalidUrl": "URL은 https://로 시작해야 합니다."
+        "errorInvalidUrl": "URL은 https://로 시작해야 합니다.",
+        "logoUploadLabel": "로고 이미지",
+        "logoUploadDescription": "TopNavigation에 표시할 로고 이미지를 업로드하세요 (PNG, JPG, SVG, WebP, 최대 2MB)",
+        "logoCurrentPreview": "현재 로고 미리보기",
+        "logoLinkLabel": "로고 클릭 URL",
+        "logoLinkPlaceholder": "https://example.com",
+        "logoErrorInvalidExtension": "PNG, JPG, JPEG, SVG, WebP 파일만 허용됩니다.",
+        "logoErrorFileTooLarge": "파일 크기는 2MB를 초과할 수 없습니다.",
+        "logoErrorInvalidUrl": "URL은 https://로 시작해야 합니다."
       }
     },
     "welcome": {

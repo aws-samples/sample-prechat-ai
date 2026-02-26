@@ -12,9 +12,9 @@ export const WelcomeScreen: React.FC = () => {
   const logoLink = customizingSet.welcome.logoLink;
 
   return (
-    <>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
       {logoUrl && (
-        <div className="welcome-logo" style={{ marginBottom: '1.5rem' }}>
+        <div className="welcome-logo" style={{ flexShrink: 0 }}>
           {logoLink ? (
             <a href={logoLink} target="_blank" rel="noopener noreferrer">
               <img
@@ -32,9 +32,9 @@ export const WelcomeScreen: React.FC = () => {
           )}
         </div>
       )}
-      <p className="welcome-subtitle">
+      <p className="welcome-subtitle" style={{ margin: 0 }}>
         {subtitle}
       </p>
-    </>
+    </div>
   );
 };
