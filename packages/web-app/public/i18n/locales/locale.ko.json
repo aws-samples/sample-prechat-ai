@@ -1067,11 +1067,13 @@
       }
     },
     "background": {
-      "sectionTitle": "배경 색상",
-      "colorLabel": "HEX 색상 코드",
-      "colorPlaceholder": "#RRGGBB",
-      "colorPickerLabel": "색상 선택기",
-      "errorInvalidHex": "유효한 6자리 HEX 색상 코드를 입력하세요 (예: #FF5733)."
+      "sectionTitle": "배경 그라디언트",
+      "startColorLabel": "시작 색상 (HEX)",
+      "startColorPickerLabel": "시작 색상 선택",
+      "endColorLabel": "끝 색상 (HEX)",
+      "endColorPickerLabel": "끝 색상 선택",
+      "colorPlaceholder": "#FFFFFF",
+      "errorInvalidHex": "올바른 HEX 색상 코드를 입력하세요 (예: #FF9900)"
     },
     "legal": {
       "sectionTitle": "리갈 문서",

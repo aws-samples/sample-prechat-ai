@@ -162,9 +162,12 @@ const CustomizationPanel: React.FC = () => {
       }
     }
 
-    // 배경 색상 검증
-    if (data.background.color && !validateHexColor(data.background.color)) {
-      newErrors['background.color'] = t('adminCustomizing.background.errorInvalidHex');
+    // 배경 그라디언트 색상 검증
+    if (data.background.startColor && !validateHexColor(data.background.startColor)) {
+      newErrors['background.startColor'] = t('adminCustomizing.background.errorInvalidHex');
+    }
+    if (data.background.endColor && !validateHexColor(data.background.endColor)) {
+      newErrors['background.endColor'] = t('adminCustomizing.background.errorInvalidHex');
     }
 
     // 지원 채널 검증
@@ -408,28 +411,50 @@ const CustomizationPanel: React.FC = () => {
         </SpaceBetween>
       </Container>
 
-      {/* 배경 색상 섹션 */}
+      {/* 배경 그라디언트 섹션 */}
       <Container header={<Header variant="h2">{t('adminCustomizing.background.sectionTitle')}</Header>}>
-        <ColumnLayout columns={2}>
-          <FormField
-            label={t('adminCustomizing.background.colorLabel')}
-            errorText={errors['background.color']}
-          >
-            <Input
-              value={data.background.color || ''}
-              placeholder={t('adminCustomizing.background.colorPlaceholder')}
-              onChange={({ detail }) => updateField('background.color', detail.value || null)}
-            />
-          </FormField>
-          <FormField label={t('adminCustomizing.background.colorPickerLabel')}>
-            <input
-              type="color"
-              value={data.background.color || '#232F3E'}
-              onChange={(e) => updateField('background.color', e.target.value)}
-              style={{ width: '60px', height: '36px', border: 'none', cursor: 'pointer' }}
-            />
-          </FormField>
-        </ColumnLayout>
+        <SpaceBetween size="m">
+          <ColumnLayout columns={2}>
+            <FormField
+              label={t('adminCustomizing.background.startColorLabel')}
+              errorText={errors['background.startColor']}
+            >
+              <Input
+                value={data.background.startColor || ''}
+                placeholder={t('adminCustomizing.background.colorPlaceholder')}
+                onChange={({ detail }) => updateField('background.startColor', detail.value || null)}
+              />
+            </FormField>
+            <FormField label={t('adminCustomizing.background.startColorPickerLabel')}>
+              <input
+                type="color"
+                value={data.background.startColor || '#ffeef8'}
+                onChange={(e) => updateField('background.startColor', e.target.value)}
+                style={{ width: '60px', height: '36px', border: 'none', cursor: 'pointer' }}
+              />
+            </FormField>
+          </ColumnLayout>
+          <ColumnLayout columns={2}>
+            <FormField
+              label={t('adminCustomizing.background.endColorLabel')}
+              errorText={errors['background.endColor']}
+            >
+              <Input
+                value={data.background.endColor || ''}
+                placeholder={t('adminCustomizing.background.colorPlaceholder')}
+                onChange={({ detail }) => updateField('background.endColor', detail.value || null)}
+              />
+            </FormField>
+            <FormField label={t('adminCustomizing.background.endColorPickerLabel')}>
+              <input
+                type="color"
+                value={data.background.endColor || '#e8f4fd'}
+                onChange={(e) => updateField('background.endColor', e.target.value)}
+                style={{ width: '60px', height: '36px', border: 'none', cursor: 'pointer' }}
+              />
+            </FormField>
+          </ColumnLayout>
+        </SpaceBetween>
       </Container>
 
       {/* 리갈 문서 섹션 */}

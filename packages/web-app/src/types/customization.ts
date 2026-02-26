@@ -28,7 +28,8 @@ export interface CustomizingSet {
     subtitle: LocalizedString;
   };
   background: {
-    color: string | null;
+    startColor: string | null;
+    endColor: string | null;
   };
   legal: {
     privacyTermUrl: LocalizedString;
@@ -56,7 +57,8 @@ export const DEFAULT_CUSTOMIZING_SET: CustomizingSet = {
     subtitle: null,
   },
   background: {
-    color: null,
+    startColor: null,
+    endColor: null,
   },
   legal: {
     privacyTermUrl: null,

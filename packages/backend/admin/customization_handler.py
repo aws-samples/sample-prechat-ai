@@ -55,7 +55,8 @@ DEFAULT_CUSTOMIZING_SET = {
         "subtitle": None
     },
     "background": {
-        "color": None
+        "startColor": None,
+        "endColor": None
     },
     "legal": {
         "privacyTermUrl": None,

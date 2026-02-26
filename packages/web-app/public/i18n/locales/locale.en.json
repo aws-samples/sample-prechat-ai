@@ -1067,11 +1067,13 @@
       }
     },
     "background": {
-      "sectionTitle": "Background Color",
-      "colorLabel": "HEX Color Code",
-      "colorPlaceholder": "#RRGGBB",
-      "colorPickerLabel": "Color Picker",
-      "errorInvalidHex": "Please enter a valid 6-digit HEX color code (e.g. #FF5733)."
+      "sectionTitle": "Background Gradient",
+      "startColorLabel": "Start Color (HEX)",
+      "startColorPickerLabel": "Start Color Picker",
+      "endColorLabel": "End Color (HEX)",
+      "endColorPickerLabel": "End Color Picker",
+      "colorPlaceholder": "#FFFFFF",
+      "errorInvalidHex": "Please enter a valid HEX color code (e.g. #FF9900)"
     },
     "legal": {
       "sectionTitle": "Legal Documents",

@@ -58,23 +58,24 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
     };
   }, []);
 
-  // 배경 색상 CSS 변수 적용
+  // 배경 그라디언트 CSS 변수 적용
   useEffect(() => {
-    if (customizingSet.background.color) {
-      document.documentElement.style.setProperty('--brand-color', customizingSet.background.color);
+    const { startColor, endColor } = customizingSet.background;
+    if (startColor || endColor) {
+      const start = startColor || '#ffeef8';
+      const end = endColor || '#e8f4fd';
       document.documentElement.style.setProperty(
         '--gradient-bg',
-        `linear-gradient(135deg, ${customizingSet.background.color} 0%, ${customizingSet.background.color} 100%)`
+        `linear-gradient(135deg, ${start} 0%, ${end} 100%)`
       );
     }
     return () => {
-      document.documentElement.style.removeProperty('--brand-color');
       document.documentElement.style.setProperty(
         '--gradient-bg',
         'linear-gradient(135deg, #ffeef8 0%, #e8f4fd 100%)'
       );
     };
-  }, [customizingSet.background.color]);
+  }, [customizingSet.background.startColor, customizingSet.background.endColor]);
 
   const getLocalizedValue = useCallback(
     (value: LocalizedString): string | null => resolveLocalized(value, locale),
