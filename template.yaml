@@ -661,6 +661,9 @@ Resources:
         AllowMethods: "'*'"
         AllowHeaders: "'*'"
         AllowOrigin: "'*'"
+      BinaryMediaTypes:
+        - "multipart/form-data"
+        - "image/*"
       Auth:
         Authorizers:
           CognitoAuthorizer:

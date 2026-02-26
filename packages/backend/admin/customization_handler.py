@@ -105,8 +105,13 @@ def parse_multipart(event):
     if event.get('isBase64Encoded', False):
         body_bytes = base64.b64decode(body)
     else:
+        # API Gateway가 바이너리를 base64로 보내지만 isBase64Encoded가 누락될 수 있음
+        # base64 디코딩을 먼저 시도하고, 실패하면 원본 사용
         if isinstance(body, str):
-            body_bytes = body.encode('utf-8')
+            try:
+                body_bytes = base64.b64decode(body)
+            except Exception:
+                body_bytes = body.encode('latin-1')
         else:
             body_bytes = body
 
