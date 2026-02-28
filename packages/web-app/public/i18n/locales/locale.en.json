@@ -324,7 +324,7 @@
     "tabs": {
       "meetingLog": "Meeting Log",
       "discussion": "Discussion",
-      "attachments": "Attachments",
+      "attachments": "Attachment",
       "conversation": "Conversation"
     },
     "feedback": {
@@ -1130,7 +1130,9 @@
       "annotationPlaceholder": "e.g., Service recommendation insights",
       "captureContentLabel": "Content to Capture",
       "captureSuccess": "Capture completed successfully.",
-      "captureError": "Capture failed. Please try again."
+      "captureError": "Capture failed. Please try again.",
+      "toolRunning": "Running...",
+      "toolComplete": "Complete"
     }
   },
   "common": {

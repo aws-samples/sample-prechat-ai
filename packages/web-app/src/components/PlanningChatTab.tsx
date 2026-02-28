@@ -354,6 +354,38 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
                   </div>
                 ) : (
                   <div>
+                    {/* Tool 사용 이벤트 말풍선 */}
+                    {msg.toolEvents && msg.toolEvents.length > 0 && (
+                      <SpaceBetween size="xs">
+                        {msg.toolEvents.map((tool) => (
+                          <Box
+                            key={tool.toolUseId}
+                            padding="xs"
+                            color="text-body-secondary"
+                            fontSize="body-s"
+                          >
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '4px 10px',
+                              borderRadius: '8px',
+                              backgroundColor: tool.status === 'running'
+                                ? '#f2f8fd'
+                                : '#f2f8f2',
+                              border: `1px solid ${tool.status === 'running' ? '#d1e3f6' : '#d1e8d1'}`,
+                            }}>
+                              {tool.status === 'running' ? '🔄' : '✅'}
+                              {' '}
+                              <strong>{tool.toolName}</strong>
+                              {tool.status === 'running'
+                                ? ` ${t('admin.planningChat.toolRunning') || '실행 중...'}`
+                                : ` ${t('admin.planningChat.toolComplete') || '완료'}`}
+                            </span>
+                          </Box>
+                        ))}
+                      </SpaceBetween>
+                    )}
                     <StreamingChatMessage
                       message={toStreamingMessage(msg)}
                       isStreaming={msg.isStreaming}

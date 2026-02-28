@@ -194,23 +194,6 @@ export default function AdminSessionDetails() {
               content: sessionId ? <MeetingLogView sessionId={sessionId} session={session} /> : null
             },
             {
-              label: t('adminSessionDetail.tabs.discussion'),
-              id: 'discussion',
-              content: sessionId ? <DiscussionTab sessionId={sessionId} /> : null
-            },
-            {
-              label: t('adminSessionDetail.tabs.attachments'),
-              id: 'attachments',
-              content: sessionId ? <SessionAttachments sessionId={sessionId} /> : null
-            },
-            {
-              label: t('admin.planningChat.tabLabel') || 'Planning Chat',
-              id: 'planning-chat',
-              content: sessionId ? (
-                <PlanningChatTab sessionId={sessionId} session={session} />
-              ) : null
-            },
-            {
               label: t('adminSessionDetail.tabs.conversation'),
               id: 'conversation',
               content: (
@@ -327,7 +310,24 @@ export default function AdminSessionDetails() {
                   </Container>
                 </SpaceBetween>
               )
-            }
+            },
+            {
+              label: t('adminSessionDetail.tabs.attachments'),
+              id: 'attachments',
+              content: sessionId ? <SessionAttachments sessionId={sessionId} /> : null
+            },
+            {
+              label: t('admin.planningChat.tabLabel'),
+              id: 'planning-chat',
+              content: sessionId ? (
+                <PlanningChatTab sessionId={sessionId} session={session} />
+              ) : null
+            },
+            {
+              label: t('adminSessionDetail.tabs.discussion'),
+              id: 'discussion',
+              content: sessionId ? <DiscussionTab sessionId={sessionId} /> : null
+            },
           ]}
         />
       </SpaceBetween>
