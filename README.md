@@ -1,6 +1,6 @@
 # PreChat: AI-Powered Pre-Consultation System on AWS
 
-> Amazon Bedrock AgentCore + Strands SDK 기반 대화형 사전 상담 시스템
+> Build a chat-based pre-consultation system using Amazon Bedrock AgentCore and Strands SDK for intelligent customer interactions and automated report generation.
 
 [![License: MIT-0](https://img.shields.io/badge/License-MIT--0-blue.svg)](LICENSE)
 [![AWS](https://img.shields.io/badge/AWS-Serverless-orange.svg)](https://aws.amazon.com/serverless/)
@@ -11,16 +11,24 @@ Last Updated: 2026-02-28
 
 ## Overview
 
-PreChat은 전통적인 폼 기반 데이터 수집을 AI 챗봇 인터페이스로 대체하는 사전 상담 시스템입니다. 고객과의 자연스러운 대화를 통해 비즈니스 요구사항을 수집하고, BANT 분석 리포트와 미팅 플랜을 자동 생성합니다.
+PreChat replaces traditional form-based data collection with an AI chatbot interface. Through natural conversations, it collects business requirements from customers and automatically generates BANT analysis reports and meeting plans.
 
-### 핵심 기능
+### Key Features
 
-- **대화형 상담**: Strands SDK 에이전트가 고객과 구조화된 대화를 진행
-- **BANT 분석**: 상담 완료 후 AI가 Budget/Authority/Need/Timeline 프레임워크로 자동 분석
-- **미팅 플랜 생성**: 유사 고객사례 검색(KB RAG) + AWS Documentation MCP 연동
-- **실시간 스트리밍**: WebSocket 기반 SSE 스트리밍 응답
-- **다국어 지원**: 한국어/영어 완전 지원 (i18n)
-- **이벤트 트리거**: 세션 완료 시 Slack/SNS 자동 알림
+- **Conversational Consultation**: Strands SDK agents guide customers through structured dialogues
+- **BANT Analysis**: AI automatically analyzes Budget/Authority/Need/Timeline after session completion
+- **Meeting Plan Generation**: Customer reference search (KB RAG) + AWS Documentation MCP integration
+- **Real-time Streaming**: WebSocket-based SSE streaming responses
+- **Multilingual Support**: Full Korean/English support (i18n)
+- **Event Triggers**: Automatic Slack/SNS notifications on session completion
+
+## Website Sections After Deployment
+
+| Section | Description | Preview |
+|---------|-------------|---------|
+| **Customer Chat Interface** | Interactive chatbot where customers engage in guided conversations. Features real-time AI responses, mobile-responsive design, and secure PIN-protected sessions. | ![Customer Chat](repo/images/customer_chat.png) |
+| **Admin Dashboard** | Management interface for consultation sessions. Includes session creation, monitoring, analytics with AI-generated reports and conversation history. | ![Admin Dashboard](repo/images/admin_dashboard.png) |
+| **Meeting Log Analysis** | AI-powered analysis and reporting system that generates session summaries, insights, and consultation effectiveness metrics from conversation data. | ![Meeting Log Analysis](repo/images/meetlog_analysis.png) |
 
 ## Architecture
 
@@ -28,12 +36,12 @@ PreChat은 전통적인 폼 기반 데이터 수집을 AI 챗봇 인터페이스
 ┌─────────────────┐     ┌──────────────────┐     ┌──────────────────────────┐
 │   React SPA     │     │   API Gateway    │     │   Lambda Functions       │
 │  (CloudFront)   │◄───►│   (REST + WS)    │◄───►│   (Python 3.13)          │
-│  Cloudscape UI  │     │                  │     │   도메인별 격리           │
+│  Cloudscape UI  │     │                  │     │   Domain-isolated        │
 └─────────────────┘     └──────────────────┘     └──────────┬───────────────┘
                                                             │
 ┌─────────────────┐     ┌──────────────────┐     ┌──────────▼───────────────┐
 │  Cognito        │     │   DynamoDB       │     │  Bedrock AgentCore       │
-│  (Admin Auth)   │     │  (KMS 암호화)     │     │  ┌─────────────────────┐ │
+│  (Admin Auth)   │     │  (KMS Encrypted) │     │  ┌─────────────────────┐ │
 └─────────────────┘     │  Sessions Table  │     │  │ Consultation Agent  │ │
                         │  Messages Table  │     │  │ Summary Agent       │ │
 ┌─────────────────┐     │  Campaigns Table │     │  │ Planning Agent      │ │
@@ -42,178 +50,177 @@ PreChat은 전통적인 폼 기반 데이터 수집을 AI 챗봇 인터페이스
 └─────────────────┘                              └──────────────────────────┘
 ```
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 prechat/
 ├── packages/
-│   ├── backend/              # Python Lambda (도메인별 분리)
-│   │   ├── session/          # 세션 CRUD, PIN 인증, 메시지
-│   │   ├── campaign/         # 캠페인 CRUD, 분석
-│   │   ├── admin/            # 관리자 API, 커스터마이징
-│   │   ├── auth/             # Cognito 인증
-│   │   ├── agent/            # Agent 관리/설정
-│   │   ├── trigger/          # 이벤트 트리거 (Slack/SNS)
-│   │   ├── file/             # 파일 업로드 (S3)
+│   ├── backend/              # Python Lambda (domain-isolated)
+│   │   ├── session/          # Session CRUD, PIN auth, messages
+│   │   ├── campaign/         # Campaign CRUD, analytics
+│   │   ├── admin/            # Admin API, customization
+│   │   ├── auth/             # Cognito authentication
+│   │   ├── agent/            # Agent management/config
+│   │   ├── trigger/          # Event triggers (Slack/SNS)
+│   │   ├── file/             # File upload (S3)
 │   │   ├── stream/           # DynamoDB Streams
-│   │   ├── websocket/        # WebSocket 핸들러
-│   │   ├── meeting/          # 미팅 플랜
-│   │   ├── migration/        # 마이그레이션
-│   │   └── shared/           # Lambda Layer 공통 코드
+│   │   ├── websocket/        # WebSocket handler
+│   │   ├── meeting/          # Meeting plan
+│   │   ├── migration/        # Migration
+│   │   └── shared/           # Lambda Layer shared code
 │   ├── web-app/              # React SPA (Vite + Cloudscape)
-│   └── strands-agents/       # Strands SDK AI 에이전트 (AgentCore)
-│       ├── consultation-agent/  # 고객 상담 에이전트
-│       ├── summary-agent/       # BANT 요약 에이전트
-│       └── planning-agent/      # 미팅 플랜 + 채팅 에이전트
+│   └── strands-agents/       # Strands SDK AI Agents (AgentCore)
+│       ├── consultation-agent/  # Customer consultation agent
+│       ├── summary-agent/       # BANT summary agent
+│       └── planning-agent/      # Meeting plan + Sales Rep chat agent
 ├── template.yaml             # AWS SAM IaC
-├── deploy-full.sh            # 전체 배포 (에이전트 → SAM → 프론트엔드)
-├── deploy-website.sh         # 프론트엔드만 배포
-└── package.json              # Yarn Workspaces 루트
+├── deploy-full.sh            # Full deploy (agents → SAM → frontend)
+├── deploy-website.sh         # Frontend-only deploy
+└── package.json              # Yarn Workspaces root
 ```
 
-## 기술 스택
+## Tech Stack
 
-| 계층 | 기술 | 비고 |
-|------|------|------|
+| Layer | Technology | Notes |
+|-------|-----------|-------|
 | Frontend | React 18 + Vite + Cloudscape | TypeScript, i18n (ko/en) |
-| Backend | Python 3.13 Lambda | 도메인별 격리, SharedLayer |
-| AI Agents | Strands SDK + Bedrock AgentCore | Docker 컨테이너 배포 |
-| MCP 연동 | AWS Documentation MCP Server | uvx 기반, Dockerfile 사전 설치 |
-| Database | DynamoDB (KMS 암호화) | TTL 자동 만료, GSI |
-| Auth | Cognito (Admin) + PIN (Customer) | JWT + 6자리 PIN |
+| Backend | Python 3.13 Lambda | Domain-isolated, SharedLayer |
+| AI Agents | Strands SDK + Bedrock AgentCore | Docker container deployment |
+| MCP | AWS Documentation MCP Server | uvx-based, pre-installed in Dockerfile |
+| Database | DynamoDB (KMS encrypted) | TTL auto-expiry, GSI |
+| Auth | Cognito (Admin) + PIN (Customer) | JWT + 6-digit PIN |
 | Infra | SAM + CloudFront + VPC | IaC, Private Subnet |
-| Test | Vitest + fast-check | Property-based 테스트 |
+| Test | Vitest + fast-check | Property-based testing |
 
 ## Quick Start
 
-### 사전 요구사항
+### Prerequisites
 
 - Node.js v20.18.1+, Yarn v1.22.22+
 - Python 3.13, uv (uvx)
 - AWS CLI v2, SAM CLI v1
-- Docker (에이전트 빌드용)
+- Docker (for agent builds)
 - `bedrock-agentcore-starter-toolkit` (`pip install bedrock-agentcore-starter-toolkit`)
 
-### 배포
+### Deployment
 
 ```bash
-# 1. 의존성 설치
+# 1. Install dependencies
 yarn install
 
-# 2. 전체 배포 (에이전트 → SAM → 프론트엔드)
+# 2. Full deploy (agents → SAM → frontend)
 chmod +x deploy-full.sh deploy-website.sh
 ./deploy-full.sh [AWS_PROFILE] [STAGE] [REGION] [BEDROCK_REGION] [STACK_NAME] [BEDROCK_KB_ID]
 
-# 기본값: default / dev / ap-northeast-2 / (REGION) / mte-prechat
+# Defaults: default / dev / ap-northeast-2 / (REGION) / mte-prechat
 ```
 
+Deploy order: `deploy-agents.sh` (AgentCore) → `sam deploy` (infra) → `deploy-website.sh` (frontend)
 
-배포 순서: `deploy-agents.sh` (AgentCore) → `sam deploy` (인프라) → `deploy-website.sh` (프론트엔드)
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `AWS_PROFILE` | `default` | AWS CLI profile |
+| `STAGE` | `dev` | Deploy environment (dev/prod) |
+| `REGION` | `ap-northeast-2` | AWS region |
+| `BEDROCK_REGION` | Same as REGION | Bedrock model region |
+| `STACK_NAME` | `mte-prechat` | CloudFormation stack name |
+| `BEDROCK_KB_ID` | (none) | Knowledge Base ID (for reference search) |
 
-| 파라미터 | 기본값 | 설명 |
-|---------|--------|------|
-| `AWS_PROFILE` | `default` | AWS CLI 프로파일 |
-| `STAGE` | `dev` | 배포 환경 (dev/prod) |
-| `REGION` | `ap-northeast-2` | AWS 리전 |
-| `BEDROCK_REGION` | REGION과 동일 | Bedrock 모델 리전 |
-| `STACK_NAME` | `mte-prechat` | CloudFormation 스택명 |
-| `BEDROCK_KB_ID` | (없음) | Knowledge Base ID (유사사례 검색용) |
+### Post-Deployment
 
-### 배포 후 확인
+1. AWS Console → Amazon Bedrock → Model access: approve Claude/Nova models
+2. Sign up for an admin account at `https://[cloudfront-domain]/admin`
+3. Create PreChat Agent → Create Campaign → Create Session → Test customer chat
 
-1. AWS Console → Amazon Bedrock → Model access에서 Claude/Nova 모델 접근 승인
-2. `https://[cloudfront-domain]/admin`에서 관리자 계정 생성
-3. PreChat Agent 생성 → 캠페인 생성 → 세션 생성 → 고객 채팅 테스트
-
-## 개발
+## Development
 
 ```bash
-# 프론트엔드 개발 서버 (포트 5173)
+# Frontend dev server (port 5173)
 yarn dev
 
-# 전체 린팅
+# Lint all
 yarn lint
 
-# 전체 테스트 (Vitest, 단일 실행)
+# Test all (Vitest, single run)
 yarn test
 
-# SAM 백엔드 빌드
+# SAM backend build
 sam build
 
-# 번역 키 관리
+# Translation management
 cd packages/web-app
-yarn extract-text           # 번역 키 추출
-yarn manage-translations    # 번역 파일 관리
-yarn validate-translations  # 번역 검증
+yarn extract-text           # Extract translation keys
+yarn manage-translations    # Manage translation files
+yarn validate-translations  # Validate translations
 ```
 
-### 변경 시 재배포 범위
+### Redeployment Scope
 
-| 변경 대상 | 재배포 범위 | 명령어 |
-|-----------|------------|--------|
-| `packages/web-app/` | 프론트엔드만 | `./deploy-website.sh` |
-| 도메인 디렉토리 (`session/`, `campaign/` 등) | 해당 Lambda만 | `sam build && sam deploy` |
-| `shared/` | Lambda Layer 전체 | `sam build && sam deploy` |
-| `template.yaml` | SAM 전체 | `sam build && sam deploy` |
-| `strands-agents/` | 해당 에이전트만 | `./deploy-agents.sh` |
+| Changed | Scope | Command |
+|---------|-------|---------|
+| `packages/web-app/` | Frontend only | `./deploy-website.sh` |
+| Domain dirs (`session/`, `campaign/`, etc.) | That Lambda only | `sam build && sam deploy` |
+| `shared/` | Entire Lambda Layer | `sam build && sam deploy` |
+| `template.yaml` | Full SAM | `sam build && sam deploy` |
+| `strands-agents/` | That agent only | `./deploy-agents.sh` |
 
-## AI 에이전트
+## AI Agents
 
-3개의 Strands SDK 에이전트가 Bedrock AgentCore Runtime에 Docker 컨테이너로 배포됩니다.
+Three Strands SDK agents are deployed as Docker containers on Bedrock AgentCore Runtime.
 
-| 에이전트 | 역할 | Memory | 도구 |
-|---------|------|--------|------|
-| Consultation Agent | 고객 사전 상담 수행 | STM (AgentCore Memory) | retrieve (KB RAG), render_form, current_time, AWS Docs MCP |
-| Summary Agent | BANT 프레임워크 분석 | 없음 | 없음 (Structured Output) |
-| Planning Agent | 미팅 플랜 생성 + Sales Rep 채팅 | 없음 | retrieve (KB RAG), http_request, AWS Docs MCP |
+| Agent | Role | Memory | Tools |
+|-------|------|--------|-------|
+| Consultation Agent | Customer pre-consultation | STM (AgentCore Memory) | retrieve (KB RAG), render_form, current_time, AWS Docs MCP |
+| Summary Agent | BANT framework analysis | None | None (Structured Output) |
+| Planning Agent | Meeting plan + Sales Rep chat | None | retrieve (KB RAG), http_request, AWS Docs MCP |
 
-Consultation Agent와 Planning Agent는 AWS Documentation MCP Server가 연동되어 있어, 에이전트가 AWS 공식 문서를 실시간으로 검색하여 고객에게 정확한 정보를 제공할 수 있습니다.
+Consultation Agent and Planning Agent integrate with AWS Documentation MCP Server, enabling real-time search of official AWS documentation to provide accurate information to customers.
 
-자세한 내용은 [packages/strands-agents/README.md](packages/strands-agents/README.md)를 참조하세요.
+See [packages/strands-agents/README.md](packages/strands-agents/README.md) for details.
 
-## 데이터 모델
+## Data Model
 
-### DynamoDB 테이블
+### DynamoDB Tables
 
-| 테이블 | PK | SK | 용도 |
-|--------|----|----|------|
-| SessionsTable | `SESSION#{sessionId}` | `METADATA` | 세션 데이터, 고객 정보 |
-| MessagesTable | `SESSION#{sessionId}` | `MESSAGE#{messageId}` | 대화 메시지 |
-| CampaignsTable | `CAMPAIGN#{campaignId}` | `METADATA` | 캠페인 설정 |
+| Table | PK | SK | Purpose |
+|-------|----|----|---------|
+| SessionsTable | `SESSION#{sessionId}` | `METADATA` | Session data, customer info |
+| MessagesTable | `SESSION#{sessionId}` | `MESSAGE#{messageId}` | Conversation messages |
+| CampaignsTable | `CAMPAIGN#{campaignId}` | `METADATA` | Campaign settings |
 
-모든 테이블은 KMS 암호화, TTL 자동 만료(30일), GSI를 지원합니다.
+All tables support KMS encryption, TTL auto-expiry (30 days), and GSI.
 
-## 보안
+## Security
 
-- VPC Private Subnet에서 Lambda 실행
-- DynamoDB KMS 암호화 (저장 시)
-- HTTPS TLS 1.2+ (전송 시)
-- Cognito JWT 인증 (관리자)
-- PIN 6자리 인증 (고객)
-- IAM 최소 권한 원칙
-- API 키/시크릿 환경 변수 관리 (하드코딩 금지)
+- Lambda runs in VPC Private Subnet
+- DynamoDB KMS encryption (at rest)
+- HTTPS TLS 1.2+ (in transit)
+- Cognito JWT authentication (admin)
+- 6-digit PIN authentication (customer)
+- IAM least-privilege principle
+- API keys/secrets managed via environment variables only (no hardcoding)
 
-## 주요 워크플로우
+## Workflow
 
 ```
-1. 관리자: 캠페인 생성 → 세션 생성 → 고객에게 URL + PIN 전달
-2. 고객: PIN 인증 → 상담 목적 선택 → AI 챗봇과 대화 → 피드백 제출
-3. 시스템: 세션 완료 → Summary Agent (BANT 분석) → Planning Agent (미팅 플랜)
-4. 관리자: AI 리포트 확인 → 미팅 로그 작성 → Planning Agent와 채팅으로 미팅 준비
+1. Admin: Create campaign → Create session → Send URL + PIN to customer
+2. Customer: PIN auth → Select consultation purpose → Chat with AI → Submit feedback
+3. System: Session complete → Summary Agent (BANT analysis) → Planning Agent (meeting plan)
+4. Admin: Review AI report → Write meeting log → Chat with Planning Agent for meeting prep
 ```
 
-## 라이선스
+## License
 
-[MIT-0 (MIT No Attribution)](LICENSE) — 상업적 사용 포함 모든 사용 허용, 저작자 표시 불필요.
+[MIT-0 (MIT No Attribution)](LICENSE) — All use permitted including commercial use, no attribution required.
 
-## 문서
+## Documentation
 
-- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) — 상세 배포 가이드
-- [docs/API_REFERENCE.md](docs/API_REFERENCE.md) — API 엔드포인트 레퍼런스
-- [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md) — 마이그레이션 가이드
-- [packages/strands-agents/README.md](packages/strands-agents/README.md) — AI 에이전트 상세
-- [packages/web-app/README.md](packages/web-app/README.md) — 프론트엔드 상세
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) — Detailed deployment guide
+- [docs/API_REFERENCE.md](docs/API_REFERENCE.md) — API endpoint reference
+- [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md) — Migration guide
+- [packages/strands-agents/README.md](packages/strands-agents/README.md) — AI agents detail
+- [packages/web-app/README.md](packages/web-app/README.md) — Frontend detail
 
-## 연락처
+## Contact
 
 📧 aws-prechat@amazon.com / jaebin@amazon.com
