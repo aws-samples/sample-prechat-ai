@@ -11,6 +11,7 @@ import { StreamingChatMessage } from './StreamingChatMessage';
 import { MultilineChatInput } from './MultilineChatInput';
 import { WS_URL } from '../config/api';
 import { useI18n } from '../i18n';
+import { CaptureDiscussionModal } from './CaptureDiscussionModal';
 import type { Session, Message } from '../types';
 
 // --- 타입 정의 ---
@@ -172,7 +173,7 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [_captureTarget, setCaptureTarget] = useState<PlanningMessage | null>(null);
+  const [captureTarget, setCaptureTarget] = useState<PlanningMessage | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 스크롤을 최하단으로 이동
@@ -389,21 +390,12 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
                     <StreamingChatMessage
                       message={toStreamingMessage(msg)}
                       isStreaming={msg.isStreaming}
+                      onCapture={
+                        !msg.isStreaming && msg.content
+                          ? () => setCaptureTarget(msg)
+                          : undefined
+                      }
                     />
-                    {/* Capture to Discussion 버튼 */}
-                    {!msg.isStreaming && msg.content && (
-                      <Box margin={{ top: 'xxs' }}>
-                        <Button
-                          variant="inline-link"
-                          iconName="share"
-                          onClick={() => setCaptureTarget(msg)}
-                        >
-                          {t(
-                            'admin.planningChat.captureToDiscussion'
-                          ) || 'Capture to Discussion'}
-                        </Button>
-                      </Box>
-                    )}
                   </div>
                 )}
               </div>
@@ -423,6 +415,15 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
             'Planning Agent에게 질문하세요...'
           }
           disabled={isStreaming || !isConnected}
+        />
+
+        {/* Capture to Discussion 모달 */}
+        <CaptureDiscussionModal
+          visible={captureTarget !== null}
+          messageContent={captureTarget?.content || ''}
+          sessionId={sessionId}
+          onDismiss={() => setCaptureTarget(null)}
+          onSuccess={() => setCaptureTarget(null)}
         />
       </SpaceBetween>
     </Box>
