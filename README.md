@@ -163,9 +163,9 @@ yarn validate-translations  # 번역 검증
 
 | 에이전트 | 역할 | Memory | 도구 |
 |---------|------|--------|------|
-| Consultation Agent | 고객 사전 상담 수행 | STM (AgentCore Memory) | KB RAG, render_form, current_time, AWS Docs MCP |
-| Summary Agent | BANT 프레임워크 분석 | 없음 | (프롬프트 기반) |
-| Planning Agent | 미팅 플랜 생성 + Sales Rep 채팅 | 없음 | KB RAG, http_request, AWS Docs MCP |
+| Consultation Agent | 고객 사전 상담 수행 | STM (AgentCore Memory) | retrieve (KB RAG), render_form, current_time, AWS Docs MCP |
+| Summary Agent | BANT 프레임워크 분석 | 없음 | 없음 (Structured Output) |
+| Planning Agent | 미팅 플랜 생성 + Sales Rep 채팅 | 없음 | retrieve (KB RAG), http_request, AWS Docs MCP |
 
 Consultation Agent와 Planning Agent는 AWS Documentation MCP Server가 연동되어 있어, 에이전트가 AWS 공식 문서를 실시간으로 검색하여 고객에게 정확한 정보를 제공할 수 있습니다.
 
@@ -178,7 +178,7 @@ Consultation Agent와 Planning Agent는 AWS Documentation MCP Server가 연동�
 | 테이블 | PK | SK | 용도 |
 |--------|----|----|------|
 | SessionsTable | `SESSION#{sessionId}` | `METADATA` | 세션 데이터, 고객 정보 |
-| MessagesTable | `SESSION#{sessionId}` | `MESSAGE#{timestamp}#{messageId}` | 대화 메시지 |
+| MessagesTable | `SESSION#{sessionId}` | `MESSAGE#{messageId}` | 대화 메시지 |
 | CampaignsTable | `CAMPAIGN#{campaignId}` | `METADATA` | 캠페인 설정 |
 
 모든 테이블은 KMS 암호화, TTL 자동 만료(30일), GSI를 지원합니다.
