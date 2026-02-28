@@ -109,9 +109,6 @@ def create_discussion(event, context):
         
         if not content:
             return lambda_response(400, {'error': 'Discussion content is required'})
-        
-        if len(content) > 2000:  # Limit content length
-            return lambda_response(400, {'error': 'Discussion content too long (max 2000 characters)'})
             
     except (ValueError, TypeError) as e:
         logger.error(f"Invalid request body for discussion creation: {str(e)}")
@@ -189,9 +186,6 @@ def update_discussion(event, context):
         
         if not content:
             return lambda_response(400, {'error': 'Discussion content is required'})
-        
-        if len(content) > 2000:  # Limit content length
-            return lambda_response(400, {'error': 'Discussion content too long (max 2000 characters)'})
             
     except (ValueError, TypeError) as e:
         logger.error(f"Invalid request body for discussion update: {str(e)}")
