@@ -15,6 +15,8 @@ import {
 import { adminApi } from '../services/api'
 import { Discussion } from '../types'
 import { useI18n } from '../i18n'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 
 
@@ -223,7 +225,11 @@ export default function DiscussionTab({ sessionId }: DiscussionTabProps) {
                   ) : (
                     <Box>
                       <Box padding={{ bottom: 's' }}>
-                        {item.content}
+                        <div style={{ lineHeight: 1.6 }}>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {item.content}
+                          </ReactMarkdown>
+                        </div>
                       </Box>
                       <SpaceBetween direction="horizontal" size="xs" alignItems="center">
                         <Box fontSize="body-s" color="text-status-inactive">
