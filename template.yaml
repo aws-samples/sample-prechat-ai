@@ -20,10 +20,6 @@ Parameters:
       - ap-northeast-2
       - eu-west-1
       - eu-central-1
-  BedrockAgentAliasId:
-    Type: String
-    Default: TSTALIASID
-    Description: AgentCore Agent Alias ID to use for invocations
   AllowedEmailDomains:
     Type: String
     Default: amazon.com,your-email-domain.com
@@ -61,9 +57,7 @@ Globals:
         CLIENT_ID: !Ref AdminUserPoolClient
         ALLOWED_EMAIL_DOMAINS: !Ref AllowedEmailDomains
         BEDROCK_AGENT_ROLE_ARN: !GetAtt BedrockAgentServiceRole.Arn
-        BEDROCK_AGENT_ALIAS_ID: !Ref BedrockAgentAliasId
         BEDROCK_KB_ID: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/bedrock-kb-id}}'
-        # Strands Agent Runtime ARNs (SSM Parameter Store에서 resolve)
         CONSULTATION_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/consultation/runtime-arn}}'
         SUMMARY_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/summary/runtime-arn}}'
         PLANNING_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/planning/runtime-arn}}'
