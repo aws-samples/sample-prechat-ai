@@ -383,22 +383,24 @@ export default function CustomerChat() {
                 </SpaceBetween>
               }
               actions={
-                <SpaceBetween direction="horizontal" size="xs">
-                  <Button
-                    variant="normal"
-                    iconName={selectedPurposes.length > 0 ? "edit" : "add-plus"}
-                    onClick={() => setShowPurposeSelector(true)}
-                  >
-                    {selectedPurposes.length > 0 ? t('customer.chat.editPurposeButton') : t('customer.chat.selectPurposeButton')}
-                  </Button>
-                  <Button
-                    variant="normal"
-                    iconName="upload"
-                    onClick={() => setShowFileUpload(true)}
-                  >
-                    {t('customer.chat.attachFileButton')}
-                  </Button>
-                </SpaceBetween>
+                !isComplete ? (
+                  <SpaceBetween direction="horizontal" size="xs">
+                    <Button
+                      variant="normal"
+                      iconName={selectedPurposes.length > 0 ? "edit" : "add-plus"}
+                      onClick={() => setShowPurposeSelector(true)}
+                    >
+                      {selectedPurposes.length > 0 ? t('customer.chat.editPurposeButton') : t('customer.chat.selectPurposeButton')}
+                    </Button>
+                    <Button
+                      variant="normal"
+                      iconName="upload"
+                      onClick={() => setShowFileUpload(true)}
+                    >
+                      {t('customer.chat.attachFileButton')}
+                    </Button>
+                  </SpaceBetween>
+                ) : undefined
               }
             >
               {t('customer.chat.title')}

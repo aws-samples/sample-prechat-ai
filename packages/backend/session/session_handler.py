@@ -223,8 +223,9 @@ def verify_session_pin(event, context):
         
         session = session_resp['Item']
         
-        # Check if session is active
-        if session.get('status') != 'active':
+        # Check if session is accessible (active or completed)
+        session_status = session.get('status')
+        if session_status not in ('active', 'completed'):
             return lambda_response(403, {'error': 'Session is not active'})
         
         # Verify PIN
