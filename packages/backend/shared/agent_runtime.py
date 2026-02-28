@@ -202,6 +202,89 @@ class AgentCoreClient:
             print(f"AgentCore streaming invoke error: {str(e)}")
             yield self._handle_error(e)
 
+    @staticmethod
+    def _parse_sse_stream(response):
+        """SSE(text/event-stream) 응답을 파싱하여 이벤트 딕셔너리를 yield합니다.
+
+        AgentCore Runtime의 스트리밍 응답에서 SSE data: 라인을 추출하고,
+        JSON 파싱하여 이벤트 타입별로 반환하는 공통 헬퍼입니다.
+
+        invoke_consultation_stream_chunks와 invoke_planning_stream_chunks에서
+        동일한 SSE 파싱 로직을 재활용합니다.
+
+        Args:
+            response: invoke_agent_runtime의 응답 딕셔너리.
+                response["response"]가 iter_lines()를 지원해야 합니다.
+
+        Yields:
+            dict: 파싱된 이벤트 딕셔너리. type 필드로 분류:
+                - {"type": "chunk", "content": "텍스트 조각"}
+                - {"type": "tool", "toolName": "...", "toolUseId": "...", "status": "running|complete", ...}
+                - {"type": "result", "message": "전체 응답 텍스트"}
+                - {"type": "error", "message": "에러 메시지"}
+        """
+        content_type = response.get("contentType", "")
+        print(f"[INFO] Stream response contentType: {content_type}")
+
+        # text/event-stream 응답의 SSE data: 라인을 파싱
+        # 각 라인을 순회하며 "data: " 접두사가 있는 라인에서 JSON 이벤트를 추출
+        for line in response["response"].iter_lines(chunk_size=10):
+            if not line:
+                # 빈 라인은 SSE 이벤트 구분자이므로 건너뜀
+                continue
+
+            line_str = line.decode("utf-8")
+
+            # SSE data: 접두사 제거
+            if line_str.startswith("data: "):
+                line_str = line_str[6:]
+            elif line_str.startswith("data:"):
+                line_str = line_str[5:]
+            else:
+                # data: 접두사가 없는 라인 (comment, event, id 등)은 건너뜀
+                continue
+
+            # 빈 데이터 라인 건너뜀
+            stripped = line_str.strip()
+            if not stripped:
+                continue
+
+            # AgentCore SSE 응답은 JSON이 이중 따옴표로 감싸질 수 있음
+            # 예: data: "{"type": "chunk", "content": "Hello"}"
+            # 바깥 따옴표를 제거하여 내부 JSON을 추출
+            if stripped.startswith('"') and stripped.endswith('"'):
+                # 이중 따옴표 감싸기 제거 후 이스케이프된 따옴표 복원
+                inner = stripped[1:-1].replace('\\"', '"').replace('\\\\', '\\')
+                stripped = inner
+
+            # JSON 파싱하여 이벤트 타입별로 yield
+            try:
+                event = json.loads(stripped)
+                if isinstance(event, dict) and "type" in event:
+                    # content가 JSON 문자열로 이중 직렬화된 경우 내부 파싱
+                    if event.get("type") == "chunk" and isinstance(event.get("content"), str):
+                        try:
+                            inner = json.loads(event["content"])
+                            if isinstance(inner, dict) and "type" in inner:
+                                yield inner
+                                continue
+                        except (json.JSONDecodeError, TypeError):
+                            pass
+                    # result의 message가 문자열인 경우 파싱
+                    if event.get("type") == "result" and isinstance(event.get("message"), str):
+                        try:
+                            inner_msg = json.loads(event["message"])
+                            event["message"] = inner_msg
+                        except (json.JSONDecodeError, TypeError):
+                            pass
+                    yield event
+                else:
+                    # type 필드가 없는 JSON은 chunk로 래핑
+                    yield {"type": "chunk", "content": json.dumps(event, ensure_ascii=False) if isinstance(event, dict) else stripped}
+            except json.JSONDecodeError:
+                # JSON이 아닌 텍스트 데이터는 chunk로 래핑
+                yield {"type": "chunk", "content": stripped}
+
     def invoke_consultation_stream_chunks(
         self,
         agent_runtime_arn: str,
@@ -250,70 +333,90 @@ class AgentCoreClient:
                 payload=json.dumps(payload).encode('utf-8'),
             )
 
-            content_type = response.get("contentType", "")
-            print(f"[INFO] Stream response contentType: {content_type}")
-
-            # text/event-stream 응답의 SSE data: 라인을 파싱
-            # 각 라인을 순회하며 "data: " 접두사가 있는 라인에서 JSON 이벤트를 추출
-            for line in response["response"].iter_lines(chunk_size=10):
-                if not line:
-                    # 빈 라인은 SSE 이벤트 구분자이므로 건너뜀
-                    continue
-
-                line_str = line.decode("utf-8")
-
-                # SSE data: 접두사 제거
-                if line_str.startswith("data: "):
-                    line_str = line_str[6:]
-                elif line_str.startswith("data:"):
-                    line_str = line_str[5:]
-                else:
-                    # data: 접두사가 없는 라인 (comment, event, id 등)은 건너뜀
-                    continue
-
-                # 빈 데이터 라인 건너뜀
-                stripped = line_str.strip()
-                if not stripped:
-                    continue
-
-                # AgentCore SSE 응답은 JSON이 이중 따옴표로 감싸질 수 있음
-                # 예: data: "{"type": "chunk", "content": "Hello"}"
-                # 바깥 따옴표를 제거하여 내부 JSON을 추출
-                if stripped.startswith('"') and stripped.endswith('"'):
-                    # 이중 따옴표 감싸기 제거 후 이스케이프된 따옴표 복원
-                    inner = stripped[1:-1].replace('\\"', '"').replace('\\\\', '\\')
-                    stripped = inner
-
-                # JSON 파싱하여 이벤트 타입별로 yield
-                try:
-                    event = json.loads(stripped)
-                    if isinstance(event, dict) and "type" in event:
-                        # content가 JSON 문자열로 이중 직렬화된 경우 내부 파싱
-                        if event.get("type") == "chunk" and isinstance(event.get("content"), str):
-                            try:
-                                inner = json.loads(event["content"])
-                                if isinstance(inner, dict) and "type" in inner:
-                                    yield inner
-                                    continue
-                            except (json.JSONDecodeError, TypeError):
-                                pass
-                        # result의 message가 문자열인 경우 파싱
-                        if event.get("type") == "result" and isinstance(event.get("message"), str):
-                            try:
-                                inner_msg = json.loads(event["message"])
-                                event["message"] = inner_msg
-                            except (json.JSONDecodeError, TypeError):
-                                pass
-                        yield event
-                    else:
-                        # type 필드가 없는 JSON은 chunk로 래핑
-                        yield {"type": "chunk", "content": json.dumps(event, ensure_ascii=False) if isinstance(event, dict) else stripped}
-                except json.JSONDecodeError:
-                    # JSON이 아닌 텍스트 데이터는 chunk로 래핑
-                    yield {"type": "chunk", "content": stripped}
+            # 공통 SSE 파싱 헬퍼를 사용하여 이벤트를 yield
+            yield from self._parse_sse_stream(response)
 
         except Exception as e:
             print(f"[ERROR] AgentCore stream chunks error: {str(e)}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            yield {"type": "error", "message": self._handle_error(e)}
+
+    def invoke_planning_stream_chunks(
+        self,
+        agent_runtime_arn: str,
+        session_id: str,
+        prompt: str,
+        customer_info: dict = None,
+        conversation_history: str = '',
+        config: Optional[AgentConfiguration] = None,
+        locale: str = 'ko',
+    ):
+        """Planning Agent 스트리밍 응답을 이벤트 단위로 yield합니다.
+
+        Planning Agent의 'stream' 엔트리포인트를 호출하고,
+        공통 SSE 파싱 헬퍼(_parse_sse_stream)를 사용하여
+        텍스트 청크 또는 tool_use 이벤트로 반환합니다.
+
+        Planning_Chat_Payload 형식으로 페이로드를 구성합니다:
+        prompt, session_id, customer_info, conversation_history, config
+
+        Args:
+            agent_runtime_arn: Planning Agent의 AgentCore Runtime ARN
+            session_id: PreChat 세션 ID
+            prompt: Sales Rep 질문
+            customer_info: 고객 정보 (name, email, company)
+            conversation_history: 고객-AI 대화 이력 텍스트
+            config: 에이전트 설정 (AgentConfiguration)
+            locale: 언어 설정 (기본값: 'ko')
+
+        Yields:
+            dict: 파싱된 이벤트 딕셔너리. type 필드로 분류:
+                - {"type": "chunk", "content": "텍스트 조각"}
+                - {"type": "tool", "toolName": "...", "toolUseId": "...", "status": "running|complete", ...}
+                - {"type": "result", "message": "전체 응답 텍스트"}
+                - {"type": "error", "message": "에러 메시지"}
+        """
+        # runtimeSessionId는 최소 33자 이상이어야 함
+        runtime_session_id = session_id
+        if len(runtime_session_id) < 33:
+            runtime_session_id = runtime_session_id + '-' + uuid.uuid4().hex[:10]
+
+        try:
+            # Planning 전용 페이로드 구성
+            payload = {
+                "prompt": prompt,
+                "session_id": session_id,
+                "entrypoint": "stream",
+            }
+
+            # 고객 정보가 있으면 페이로드에 포함
+            if customer_info:
+                payload["customer_info"] = customer_info
+
+            # 대화 이력이 있으면 페이로드에 포함
+            if conversation_history:
+                payload["conversation_history"] = conversation_history
+
+            # 에이전트 설정 구성
+            config_dict = _build_config_payload(config, locale)
+            if config_dict:
+                payload["config"] = config_dict
+
+            print(f"[INFO] Invoking Planning AgentCore stream - ARN: {agent_runtime_arn}")
+            print(f"[INFO] Runtime Session ID: {runtime_session_id}")
+
+            response = self.client.invoke_agent_runtime(
+                agentRuntimeArn=agent_runtime_arn,
+                runtimeSessionId=runtime_session_id,
+                payload=json.dumps(payload).encode('utf-8'),
+            )
+
+            # 공통 SSE 파싱 헬퍼를 사용하여 이벤트를 yield
+            yield from self._parse_sse_stream(response)
+
+        except Exception as e:
+            print(f"[ERROR] Planning AgentCore stream chunks error: {str(e)}")
             import traceback
             print(f"[ERROR] Traceback: {traceback.format_exc()}")
             yield {"type": "error", "message": self._handle_error(e)}

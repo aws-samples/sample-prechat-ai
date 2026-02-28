@@ -2691,6 +2691,30 @@ Resources:
               - execute-api:ManageConnections
             Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Stage}/POST/@connections/*'
 
+  # WebSocket sendPlanningMessage 핸들러 - Planning Agent 스트리밍
+  WebSocketSendPlanningMessageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/websocket/
+      Handler: websocket_handler.handle_send_planning_message
+      Timeout: 300
+      VpcConfig: !Ref AWS::NoValue
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock-agentcore:InvokeAgentRuntime
+            Resource: '*'
+        - Statement:
+            Effect: Allow
+            Action:
+              - execute-api:ManageConnections
+            Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Stage}/POST/@connections/*'
+
   # WebSocket $default 핸들러 - 알 수 없는 액션 처리
   WebSocketDefaultFunction:
     Type: AWS::Serverless::Function
@@ -2729,6 +2753,14 @@ Resources:
       FunctionName: !Ref WebSocketSendMessageFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/sendMessage'
+
+  WebSocketSendPlanningMessagePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketSendPlanningMessageFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/sendPlanningMessage'
 
   WebSocketDefaultPermission:
     Type: AWS::Lambda::Permission
@@ -2811,6 +2843,22 @@ Resources:
       RouteKey: sendMessage
       AuthorizationType: NONE
       Target: !Sub 'integrations/${WebSocketSendMessageIntegration}'
+
+  # ---- sendPlanningMessage 라우트 ----
+  WebSocketSendPlanningMessageIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketSendPlanningMessageFunction.Arn}/invocations'
+
+  WebSocketSendPlanningMessageRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: sendPlanningMessage
+      AuthorizationType: NONE
+      Target: !Sub 'integrations/${WebSocketSendPlanningMessageIntegration}'
 
   # ---- $default 라우트 ----
   WebSocketDefaultIntegration:

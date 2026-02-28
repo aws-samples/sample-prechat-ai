@@ -525,3 +525,215 @@ def handle_send_message(event, context):
           f"isComplete={is_complete}, contentType={response_content_type}")
 
     return {'statusCode': 200}
+
+
+def handle_send_planning_message(event, context):
+    """sendPlanningMessage 라우트 핸들러
+
+    Sales Rep의 Planning Agent 질문을 수신하여 AgentCore 스트리밍 응답을
+    WebSocket Management API로 클라이언트에 실시간 전달합니다.
+    DynamoDB에 메시지를 저장하지 않습니다 (Stateless).
+
+    Args:
+        event: API Gateway WebSocket sendPlanningMessage 이벤트
+            body: {action, sessionId, message, locale?}
+        context: Lambda 컨텍스트
+
+    Returns:
+        statusCode 200
+
+    Side Effects:
+        - DynamoDB에서 세션 정보 및 대화 이력 조회 (읽기 전용)
+        - AgentCore Planning Agent 스트리밍 호출
+        - 청크별 post_to_connection
+        - 완료 메타데이터 (type: done) 전송
+        - 메시지 저장 없음 (Stateless)
+
+    Requirements: 3.1, 3.2, 3.3, 3.4, 6.1
+    """
+    connection_id = event.get('requestContext', {}).get('connectionId', '')
+    domain_name = event.get('requestContext', {}).get('domainName', '')
+    stage = event.get('requestContext', {}).get('stage', '')
+
+    # Management API 클라이언트 초기화
+    endpoint_url = f'https://{domain_name}/{stage}'
+    print(f"[DEBUG] Planning WebSocket endpoint: {endpoint_url}, connectionId: {connection_id}")
+    apigw_management = boto3.client(
+        'apigatewaymanagementapi',
+        endpoint_url=endpoint_url,
+    )
+
+    # 요청 body 파싱
+    body = {}
+    try:
+        raw_body = event.get('body', '{}')
+        if raw_body:
+            body = json.loads(raw_body)
+    except (json.JSONDecodeError, TypeError):
+        _post_to_connection(apigw_management, connection_id, {
+            'type': 'error',
+            'message': '잘못된 요청 형식입니다.',
+        })
+        return {'statusCode': 200}
+
+    session_id = body.get('sessionId', '')
+    message = body.get('message', '')
+    locale = body.get('locale', 'ko')
+
+    # 필수 파라미터 검증
+    if not session_id:
+        _post_to_connection(apigw_management, connection_id, {
+            'type': 'error',
+            'message': 'sessionId는 필수입니다.',
+        })
+        return {'statusCode': 200}
+
+    if not message:
+        _post_to_connection(apigw_management, connection_id, {
+            'type': 'error',
+            'message': 'message는 필수입니다.',
+        })
+        return {'statusCode': 200}
+
+    # 세션 조회 (읽기 전용 - 고객 정보 추출용)
+    sessions_table = dynamodb.Table(SESSIONS_TABLE)
+    messages_table = dynamodb.Table(MESSAGES_TABLE)
+
+    try:
+        session_resp = sessions_table.get_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
+        )
+        if 'Item' not in session_resp:
+            _post_to_connection(apigw_management, connection_id, {
+                'type': 'error',
+                'message': '세션을 찾을 수 없습니다.',
+            })
+            return {'statusCode': 200}
+
+        session = session_resp['Item']
+    except Exception as e:
+        print(f"[ERROR] 세션 조회 실패: {str(e)}")
+        _post_to_connection(apigw_management, connection_id, {
+            'type': 'error',
+            'message': '세션을 찾을 수 없습니다.',
+        })
+        return {'statusCode': 200}
+
+    # 고객 정보 추출 (Requirement 3.2)
+    customer_info = {
+        'name': session.get('customerName', ''),
+        'email': session.get('customerEmail', ''),
+        'company': session.get('customerCompany', ''),
+    }
+
+    # 대화 이력 조회 (Requirement 3.2)
+    conversation_history = ''
+    try:
+        messages_resp = messages_table.query(
+            KeyConditionExpression='PK = :pk',
+            ExpressionAttributeValues={
+                ':pk': f'SESSION#{session_id}',
+            },
+        )
+        items = messages_resp.get('Items', [])
+        if items:
+            history_lines = []
+            for item in items:
+                sender = item.get('sender', '')
+                content = item.get('content', '')
+                if sender and content:
+                    role = '고객' if sender == 'customer' else 'AI'
+                    history_lines.append(f"{role}: {content}")
+            conversation_history = '\n'.join(history_lines)
+    except Exception as e:
+        print(f"[WARN] 대화 이력 조회 실패: {str(e)}")
+
+    # Planning Agent ARN 조회 (Requirement 3.4)
+    try:
+        arn, config = get_agent_config_for_session(session_id, 'planning')
+
+        if not arn:
+            print(f"[ERROR] planning 역할의 AgentCore ARN을 찾을 수 없습니다")
+            _post_to_connection(apigw_management, connection_id, {
+                'type': 'error',
+                'message': 'Planning Agent가 구성되지 않았습니다.',
+            })
+            return {'statusCode': 200}
+    except Exception as e:
+        print(f"[ERROR] Planning Agent 설정 조회 실패: {str(e)}")
+        _post_to_connection(apigw_management, connection_id, {
+            'type': 'error',
+            'message': 'Planning Agent가 구성되지 않았습니다.',
+        })
+        return {'statusCode': 200}
+
+    # AgentCore Planning Agent 스트리밍 호출 (Requirement 3.1)
+    connection_alive = True
+
+    try:
+        print(f"[INFO] Planning AgentCore 스트리밍 호출 시작: ARN={arn}, sessionId={session_id}")
+
+        for stream_event in agentcore_client.invoke_planning_stream_chunks(
+            agent_runtime_arn=arn,
+            session_id=session_id,
+            prompt=message,
+            customer_info=customer_info,
+            conversation_history=conversation_history,
+            config=config,
+            locale=locale,
+        ):
+            event_type = stream_event.get('type', '')
+
+            if event_type == 'chunk':
+                # 텍스트 청크 클라이언트 전달
+                if connection_alive:
+                    connection_alive = _post_to_connection(
+                        apigw_management, connection_id, stream_event
+                    )
+
+            elif event_type == 'tool':
+                # 도구 사용 이벤트 클라이언트 전달
+                if connection_alive:
+                    connection_alive = _post_to_connection(
+                        apigw_management, connection_id, stream_event
+                    )
+
+            elif event_type == 'error':
+                # 에이전트 에러 이벤트
+                print(f"[ERROR] Planning Agent 에러: {stream_event.get('message', '')}")
+                if connection_alive:
+                    _post_to_connection(apigw_management, connection_id, stream_event)
+                return {'statusCode': 200}
+
+            # GoneException으로 연결이 끊어진 경우 스트리밍 중단
+            if not connection_alive:
+                print(f"[WARN] 클라이언트 연결 끊김, 스트리밍 중단: connectionId={connection_id}")
+                try:
+                    sessions_table.delete_item(
+                        Key={'PK': f'WSCONN#{connection_id}', 'SK': 'METADATA'}
+                    )
+                except Exception:
+                    pass
+                break
+
+    except Exception as e:
+        print(f"[ERROR] Planning AgentCore 스트리밍 호출 실패: {str(e)}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        if connection_alive:
+            _post_to_connection(apigw_management, connection_id, {
+                'type': 'error',
+                'message': '응답 생성 중 오류가 발생했습니다.',
+            })
+        return {'statusCode': 200}
+
+    # 완료 메타데이터 전송 (Requirement 3.3)
+    if connection_alive:
+        _post_to_connection(apigw_management, connection_id, {
+            'type': 'done',
+        })
+
+    print(f"[INFO] sendPlanningMessage 처리 완료: sessionId={session_id}")
+
+    return {'statusCode': 200}
+

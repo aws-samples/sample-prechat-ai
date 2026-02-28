@@ -906,7 +906,8 @@
       "agentInstructionsLabel": "Agent Instructions",
       "agentInstructionsDescription": "Write detailed instructions for agent behavior. You can use placeholders to include dynamic information.",
       "agentInstructionsPlaceholder": "Enter agent instructions...",
-      "defaultInstructionsButton": "Default Agent Instructions"
+      "defaultInstructionsButton": "Default Agent Instructions",
+      "readOnlyRoleInfo": "Summary Agent and Planning Agent are managed by the system. Prompt customization is not available, but model selection is supported."
     }
   },
   "adminAgentEdit": {
@@ -940,7 +941,8 @@
       "agentInstructionsLabel": "Agent Instructions",
       "agentInstructionsDescription": "Write detailed instructions for agent behavior. You can use placeholders to include dynamic information.",
       "agentInstructionsPlaceholder": "Enter agent instructions...",
-      "defaultInstructionsButton": "Default Agent Instructions"
+      "defaultInstructionsButton": "Default Agent Instructions",
+      "readOnlyRoleInfo": "Summary Agent and Planning Agent are managed by the system. Prompt customization is not available, but model selection is supported."
     }
   },
   "adminCampaignEdit": {
@@ -1111,5 +1113,28 @@
       "cancelButton": "Cancel",
       "confirmButton": "Reset"
     }
+  },
+  "admin": {
+    "planningChat": {
+      "tabLabel": "Planning Chat",
+      "title": "Planning Agent",
+      "description": "Get help with account analysis, service recommendations, and similar customer case searches.",
+      "suggestedQuestion1": "Suggest good services to recommend",
+      "suggestedQuestion2": "Find similar customer cases",
+      "suggestedQuestion3": "Suggest Action Items systematically",
+      "inputPlaceholder": "Ask the Planning Agent...",
+      "captureToDiscussion": "Capture to Discussion",
+      "captureModalTitle": "Capture to Discussion",
+      "annotationLabel": "Annotation",
+      "annotationDescription": "Enter an annotation for the content to capture.",
+      "annotationPlaceholder": "e.g., Service recommendation insights",
+      "captureContentLabel": "Content to Capture",
+      "captureSuccess": "Capture completed successfully.",
+      "captureError": "Capture failed. Please try again."
+    }
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   }
 }

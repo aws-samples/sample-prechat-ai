@@ -34,6 +34,8 @@ const DEFAULT_PROMPTS: Record<string, string> = {
   planning: planningPrompt,
 }
 
+const READONLY_ROLES = ['summary', 'planning']
+
 export default function CreateAgent() {
   const navigate = useNavigate()
   const { t } = useI18n()
@@ -47,6 +49,8 @@ export default function CreateAgent() {
     modelId: 'global.amazon.nova-2-lite-v1:0',
     systemPrompt: consultationPrompt
   })
+
+  const isReadOnlyRole = READONLY_ROLES.includes(formData.agentRole)
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -75,6 +79,10 @@ export default function CreateAgent() {
       // 역할 변경 시 해당 역할의 기본 프롬프트로 자동 전환
       if (field === 'agentRole' && DEFAULT_PROMPTS[value]) {
         updated.systemPrompt = DEFAULT_PROMPTS[value]
+      }
+      // 읽기 전용 역할 선택 시 프롬프트 오버라이드 비활성화
+      if (field === 'agentRole' && READONLY_ROLES.includes(value)) {
+        setOverridePrompt(false)
       }
       return updated
     })
@@ -151,6 +159,12 @@ export default function CreateAgent() {
               />
             </FormField>
 
+            {isReadOnlyRole && (
+              <Alert type="info">
+                {t('adminAgentCreate.form.readOnlyRoleInfo')}
+              </Alert>
+            )}
+
             <FormField
               label={t('adminAgentCreate.form.foundationModelLabel')}
               description={t('adminAgentCreate.form.foundationModelDescription')}
@@ -170,46 +184,50 @@ export default function CreateAgent() {
               />
             </FormField>
 
-            <FormField
-              label={t('adminAgentCreate.form.promptOverrideLabel')}
-              description={t('adminAgentCreate.form.promptOverrideDescription')}
-              stretch
-            >
-              <Checkbox
-                checked={overridePrompt}
-                onChange={({ detail }) => setOverridePrompt(detail.checked)}
-              >
-                {t('adminAgentCreate.form.promptOverrideCheckbox')}
-              </Checkbox>
-            </FormField>
-
-            {overridePrompt && (
-              <FormField
-                label={
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>{t('adminAgentCreate.form.agentInstructionsLabel')}</span>
-                    <PlaceholderTooltip />
-                  </div>
-                }
-                description={t('adminAgentCreate.form.agentInstructionsDescription')}
-                stretch
-                secondaryControl={
-                  <Button
-                    variant="normal"
-                    iconName="refresh"
-                    onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[formData.agentRole] || consultationPrompt)}
+            {!isReadOnlyRole && (
+              <>
+                <FormField
+                  label={t('adminAgentCreate.form.promptOverrideLabel')}
+                  description={t('adminAgentCreate.form.promptOverrideDescription')}
+                  stretch
+                >
+                  <Checkbox
+                    checked={overridePrompt}
+                    onChange={({ detail }) => setOverridePrompt(detail.checked)}
                   >
-                    {t('adminAgentCreate.form.defaultInstructionsButton')}
-                  </Button>
-                }
-              >
-                <Textarea
-                  value={formData.systemPrompt}
-                  onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
-                  placeholder={t('adminAgentCreate.form.agentInstructionsPlaceholder')}
-                  rows={15}
-                />
-              </FormField>
+                    {t('adminAgentCreate.form.promptOverrideCheckbox')}
+                  </Checkbox>
+                </FormField>
+
+                {overridePrompt && (
+                  <FormField
+                    label={
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>{t('adminAgentCreate.form.agentInstructionsLabel')}</span>
+                        <PlaceholderTooltip />
+                      </div>
+                    }
+                    description={t('adminAgentCreate.form.agentInstructionsDescription')}
+                    stretch
+                    secondaryControl={
+                      <Button
+                        variant="normal"
+                        iconName="refresh"
+                        onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[formData.agentRole] || consultationPrompt)}
+                      >
+                        {t('adminAgentCreate.form.defaultInstructionsButton')}
+                      </Button>
+                    }
+                  >
+                    <Textarea
+                      value={formData.systemPrompt}
+                      onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
+                      placeholder={t('adminAgentCreate.form.agentInstructionsPlaceholder')}
+                      rows={15}
+                    />
+                  </FormField>
+                )}
+              </>
             )}
           </SpaceBetween>
         </Form>

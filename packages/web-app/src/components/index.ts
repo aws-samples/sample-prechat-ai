@@ -26,3 +26,7 @@ export { CampaignReportExport } from './CampaignReportExport'
 // Div Return Protocol Components
 export { DivReturnRenderer } from './DivReturnRenderer'
 export { FormSubmissionSummary } from './FormSubmissionSummary'
+
+// Planning Agent Chat
+export { PlanningChatTab } from './PlanningChatTab'
+export { CaptureDiscussionModal } from './CaptureDiscussionModal'

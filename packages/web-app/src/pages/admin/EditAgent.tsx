@@ -36,6 +36,8 @@ const DEFAULT_PROMPTS: Record<string, string> = {
   planning: planningPrompt,
 }
 
+const READONLY_ROLES = ['summary', 'planning']
+
 export default function EditAgent() {
   const navigate = useNavigate()
   const { t } = useI18n()
@@ -46,6 +48,7 @@ export default function EditAgent() {
   const [success, setSuccess] = useState('')
   const [overridePrompt, setOverridePrompt] = useState(false)
   const [agentRole, setAgentRole] = useState('')
+  const isReadOnlyRole = READONLY_ROLES.includes(agentRole)
   const [formData, setFormData] = useState({
     agentName: '',
     modelId: '',
@@ -179,8 +182,15 @@ export default function EditAgent() {
                 value={formData.agentName}
                 onChange={({ detail }) => updateFormData('agentName', detail.value)}
                 placeholder={t('adminAgentEdit.form.agentNamePlaceholder')}
+                disabled={isReadOnlyRole}
               />
             </FormField>
+
+            {isReadOnlyRole && (
+              <Alert type="info">
+                {t('adminAgentEdit.form.readOnlyRoleInfo')}
+              </Alert>
+            )}
 
             <FormField
               label={t('adminAgentEdit.form.foundationModelLabel')}
@@ -201,46 +211,50 @@ export default function EditAgent() {
               />
             </FormField>
 
-            <FormField
-              label={t('adminAgentEdit.form.promptOverrideLabel')}
-              description={t('adminAgentEdit.form.promptOverrideDescription')}
-              stretch
-            >
-              <Checkbox
-                checked={overridePrompt}
-                onChange={({ detail }) => setOverridePrompt(detail.checked)}
-              >
-                {t('adminAgentEdit.form.promptOverrideCheckbox')}
-              </Checkbox>
-            </FormField>
-
-            {overridePrompt && (
-              <FormField
-                label={
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>{t('adminAgentEdit.form.agentInstructionsLabel')}</span>
-                    <PlaceholderTooltip />
-                  </div>
-                }
-                description={t('adminAgentEdit.form.agentInstructionsDescription')}
-                stretch
-                secondaryControl={
-                  <Button
-                    variant="normal"
-                    iconName="refresh"
-                    onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[agentRole] || consultationPrompt)}
+            {!isReadOnlyRole && (
+              <>
+                <FormField
+                  label={t('adminAgentEdit.form.promptOverrideLabel')}
+                  description={t('adminAgentEdit.form.promptOverrideDescription')}
+                  stretch
+                >
+                  <Checkbox
+                    checked={overridePrompt}
+                    onChange={({ detail }) => setOverridePrompt(detail.checked)}
                   >
-                    {t('adminAgentEdit.form.defaultInstructionsButton')}
-                  </Button>
-                }
-              >
-                <Textarea
-                  value={formData.systemPrompt}
-                  onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
-                  placeholder={t('adminAgentEdit.form.agentInstructionsPlaceholder')}
-                  rows={15}
-                />
-              </FormField>
+                    {t('adminAgentEdit.form.promptOverrideCheckbox')}
+                  </Checkbox>
+                </FormField>
+
+                {overridePrompt && (
+                  <FormField
+                    label={
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>{t('adminAgentEdit.form.agentInstructionsLabel')}</span>
+                        <PlaceholderTooltip />
+                      </div>
+                    }
+                    description={t('adminAgentEdit.form.agentInstructionsDescription')}
+                    stretch
+                    secondaryControl={
+                      <Button
+                        variant="normal"
+                        iconName="refresh"
+                        onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[agentRole] || consultationPrompt)}
+                      >
+                        {t('adminAgentEdit.form.defaultInstructionsButton')}
+                      </Button>
+                    }
+                  >
+                    <Textarea
+                      value={formData.systemPrompt}
+                      onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
+                      placeholder={t('adminAgentEdit.form.agentInstructionsPlaceholder')}
+                      rows={15}
+                    />
+                  </FormField>
+                )}
+              </>
             )}
           </SpaceBetween>
         </Form>
