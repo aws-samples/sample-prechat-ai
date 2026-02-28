@@ -171,6 +171,12 @@
     },
     "sessionError": {
       "header": "세션 오류"
+    },
+    "actions": {
+      "sectionTitle": "추가 액션",
+      "resumeChat": "대화 재개",
+      "submitFeedback": "피드백 전송",
+      "feedbackSubmitted": "피드백 전송 완료"
     }
   },
   "adminSessions": {
