@@ -9,6 +9,8 @@
 
 Last Updated: 2026-02-28
 
+**English** | [한국어](README.ko.md)
+
 ## Overview
 
 PreChat replaces traditional form-based data collection with an AI chatbot interface. Through natural conversations, it collects business requirements from customers and automatically generates BANT analysis reports and meeting plans.
