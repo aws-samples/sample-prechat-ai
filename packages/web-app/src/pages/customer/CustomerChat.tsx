@@ -32,7 +32,9 @@ import {
   getStoredPrivacyConsentForSession,
   removePinForSession,
   storeConsultationPurposesForSession,
-  getStoredConsultationPurposesForSession
+  getStoredConsultationPurposesForSession,
+  storeFeedbackSubmittedForSession,
+  isFeedbackSubmittedForSession
 } from '../../utils/sessionStorage'
 import {
   ConsultationPurposeEnum,
@@ -53,7 +55,9 @@ export default function CustomerChat() {
   const [isCheckingStoredPin, setIsCheckingStoredPin] = useState(true)
   const [showFileUpload, setShowFileUpload] = useState(false)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(() =>
+    sessionId ? isFeedbackSubmittedForSession(sessionId) : false
+  )
   const [selectedPurposes, setSelectedPurposes] = useState<ConsultationPurposeEnum[]>([])
   const [showPurposeSelector, setShowPurposeSelector] = useState(false)
   const [submittedFormIds, setSubmittedFormIds] = useState<Set<string>>(new Set())
@@ -190,11 +194,13 @@ export default function CustomerChat() {
       // Submit feedback to API
       await chatApi.submitFeedback(sessionId!, rating, feedback)
       setFeedbackSubmitted(true)
+      storeFeedbackSubmittedForSession(sessionId!)
       setShowFeedbackModal(false)
     } catch (error) {
       console.error('Failed to submit feedback:', error)
       // Still close modal even if submission fails
       setFeedbackSubmitted(true)
+      storeFeedbackSubmittedForSession(sessionId!)
       setShowFeedbackModal(false)
     }
   }
@@ -593,6 +599,12 @@ export default function CustomerChat() {
                 <Box fontSize="body-s" color="text-status-inactive">
                   {t('customer.salesRep.ctaMessage')}
                 </Box>
+                <Button
+                  iconName="thumbs-up"
+                  onClick={() => setShowFeedbackModal(true)}
+                >
+                  {t('customer.feedback.submitButton')}
+                </Button>
               </SpaceBetween>
             </div>
           </Box>

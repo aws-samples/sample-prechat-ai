@@ -133,3 +133,27 @@ export const storeConsultationPurposeForSession = (sessionId: string, purpose: s
 export const getStoredConsultationPurposeForSession = (sessionId: string): string | null => {
   return getStoredConsultationPurposesForSession(sessionId)
 }
+
+
+/**
+ * 피드백 제출 완료 상태를 localStorage에 저장 (탭/브라우저 종료 후에도 유지)
+ */
+export const storeFeedbackSubmittedForSession = (sessionId: string): void => {
+  try {
+    localStorage.setItem(`FeedbackSubmitted_${sessionId}`, 'true')
+  } catch (error) {
+    console.warn('Failed to store feedback status:', error)
+  }
+}
+
+/**
+ * 세션에 대한 피드백 제출 여부를 확인
+ */
+export const isFeedbackSubmittedForSession = (sessionId: string): boolean => {
+  try {
+    return localStorage.getItem(`FeedbackSubmitted_${sessionId}`) === 'true'
+  } catch (error) {
+    console.warn('Failed to get feedback status:', error)
+    return false
+  }
+}
