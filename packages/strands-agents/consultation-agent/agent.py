@@ -23,6 +23,8 @@ import json
 import logging
 from strands import Agent
 from strands.tools import tool
+from strands.tools.mcp import MCPClient
+from mcp import stdio_client, StdioServerParameters
 from strands_tools import retrieve, current_time
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from bedrock_agentcore.memory.integrations.strands.config import AgentCoreMemoryConfig
@@ -34,8 +36,16 @@ logging.getLogger("strands").setLevel(logging.INFO)
 # AgentCore Memory ID: deploy 시 env_vars로 컨테이너에 주입됨
 MEMORY_ID = os.environ.get('BEDROCK_AGENTCORE_MEMORY_ID', '')
 
-# Bedrock KB ID: deploy 시 launch(env_vars=...)로 컨테이너에 주입됨
+# Bedrock KB ID: deploy 시 env_vars로 컨테이너에 주입됨
 kb_id = os.environ.get('BEDROCK_KB_ID', '')
+
+# AWS Documentation MCP 클라이언트 (Dockerfile에서 사전 설치됨)
+aws_docs_mcp_client = MCPClient(lambda: stdio_client(
+    StdioServerParameters(
+        command="uvx",
+        args=["awslabs.aws-documentation-mcp-server@latest"]
+    )
+))
 
 
 @tool
@@ -228,7 +238,7 @@ def create_consultation_agent(
         model=model_id or DEFAULT_MODEL_ID,
         system_prompt=effective_prompt,
         name=agent_name or DEFAULT_AGENT_NAME,
-        tools=[retrieve, current_time, render_form],
+        tools=[retrieve, current_time, render_form, aws_docs_mcp_client],
         session_manager=session_manager,
     )
 

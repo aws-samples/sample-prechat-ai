@@ -19,6 +19,8 @@ import json
 import logging
 from pydantic import BaseModel, Field
 from strands import Agent
+from strands.tools.mcp import MCPClient
+from mcp import stdio_client, StdioServerParameters
 from strands_tools import retrieve, http_request
 from strands.types.exceptions import StructuredOutputException
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
@@ -30,6 +32,14 @@ logging.getLogger("strands").setLevel(logging.INFO)
 _kb_id = os.environ.get('BEDROCK_KB_ID', '')
 if _kb_id and _kb_id != 'NONE':
     os.environ['STRANDS_KNOWLEDGE_BASE_ID'] = _kb_id
+
+# AWS Documentation MCP 클라이언트 (Dockerfile에서 사전 설치됨)
+aws_docs_mcp_client = MCPClient(lambda: stdio_client(
+    StdioServerParameters(
+        command="uvx",
+        args=["awslabs.aws-documentation-mcp-server@latest"]
+    )
+))
 
 
 # ──────────────────────────────────────────────
@@ -125,7 +135,7 @@ def create_planning_agent(
         model=model_id or DEFAULT_MODEL_ID,
         system_prompt=effective_prompt,
         name=agent_name or DEFAULT_AGENT_NAME,
-        tools=[retrieve],
+        tools=[retrieve, aws_docs_mcp_client],
     )
 
 
@@ -291,7 +301,7 @@ def create_planning_chat_agent(
         model=model_id or DEFAULT_MODEL_ID,
         system_prompt=system_prompt,
         name=CHAT_AGENT_NAME,
-        tools=[retrieve, http_request],
+        tools=[retrieve, http_request, aws_docs_mcp_client],
     )
 
 
