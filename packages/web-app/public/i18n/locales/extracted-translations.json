@@ -1,0 +1,2514 @@
+{
+  "metadata": {
+    "extractedAt": "2025-10-23T10:18:41.863Z",
+    "totalTexts": 294,
+    "processedFiles": 55,
+    "sourceDirectory": "/Users/jaebin/AWS/repositories/mte-prechat/packages/web-app/src"
+  },
+  "translations": {
+    "actions": {
+      "korean": "Actions",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx",
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "active": {
+      "korean": "Active",
+      "english": "",
+      "context": "JSX text content in components/StatusBadge.tsx",
+      "files": [
+        "components/StatusBadge.tsx",
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "admin_portal": {
+      "korean": "Admin Portal",
+      "english": "",
+      "context": "JSX text content in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "agent": {
+      "korean": "Agent \"",
+      "english": "",
+      "context": "Template literal head in pages/admin/CreateAgent.tsx",
+      "files": [
+        "pages/admin/CreateAgent.tsx",
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "agent_instructions": {
+      "korean": "Agent Instructions",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateAgent.tsx",
+      "files": [
+        "pages/admin/CreateAgent.tsx",
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "ai_mixed_4b9ad9": {
+      "korean": "AI분석리포트_",
+      "english": "",
+      "context": "Template literal head in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx"
+      ]
+    },
+    "ai_mixed_59286a": {
+      "korean": "미팅 로그를 저장한 후 \"재분석\" 버튼을 클릭하면, 사전상담 대화 내용과 미팅 로그를 모두 고려하여 AI가 좌측의 분석 결과를 업데이트합니다.",
+      "english": "",
+      "context": "JSX text content in components/MeetingLogView.tsx",
+      "files": [
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "ai_mixed_993127": {
+      "korean": "AI 분석",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "ai_mixed_cd76bb": {
+      "korean": "위의 \"AI 분석 시작\" 버튼을 클릭하여 대화 내용을 분석해보세요.",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx"
+      ]
+    },
+    "amazon_web_services": {
+      "korean": "Amazon Web Services",
+      "english": "",
+      "context": "String literal in components/TopNavigation.tsx",
+      "files": [
+        "components/TopNavigation.tsx"
+      ]
+    },
+    "analysis_23df3b00": {
+      "korean": ")이 대화 내용을 분석하고 있습니다...",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx"
+      ]
+    },
+    "analysis_4c01fcdc": {
+      "korean": "대화 분석",
+      "english": "",
+      "context": "String literal in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "analysis_6e75ac42": {
+      "korean": "\"재분석\" 버튼을 클릭하여 대화 내용과 미팅 로그를 함께 분석해보세요.",
+      "english": "",
+      "context": "JSX text content in components/MeetingLogView.tsx",
+      "files": [
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "analysis_7d2725cb": {
+      "korean": "분석 모델 선택",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "analysis_bcfd38f9": {
+      "korean": ")이 대화 내용과 미팅 로그를 함께 분석하고 있습니다...",
+      "english": "",
+      "context": "JSX text content in components/MeetingLogView.tsx",
+      "files": [
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "analysis_fe53b01e": {
+      "korean": "분석 완료:",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "assistant": {
+      "korean": "Assistant",
+      "english": "",
+      "context": "String literal in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "assistant_at": {
+      "korean": "Assistant at",
+      "english": "",
+      "context": "Template literal head in components/ChatMessage.tsx",
+      "files": [
+        "components/ChatMessage.tsx",
+        "components/StreamingChatMessage.tsx"
+      ]
+    },
+    "authority_mixed_279d34": {
+      "korean": "Authority (권한)",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "aws_ai_mixed_51e5ce": {
+      "korean": "AWS 만남전에 AI 에이전트와 대화하여 논의 주제와 기대사항을 공유해 주세요.",
+      "english": "",
+      "context": "JSX text content in components/Layout.tsx",
+      "files": [
+        "components/Layout.tsx"
+      ]
+    },
+    "aws_mixed_3e64ae": {
+      "korean": "AWS 파트너 프로그램이나 파트너사와의 협업을 문의하시나요?",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "aws_mixed_5d79d8": {
+      "korean": "💡 업로드된 파일은 AWS 담당자가 사전 검토하여 더욱 효과적인 미팅을 준비할 수 있습니다.",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "aws_mixed_64d754": {
+      "korean": "AWS 클라우드 서비스 신규 도입을 검토하고 계신가요?",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "aws_mixed_67cd9d": {
+      "korean": "현재 사용 중인 AWS 서비스의 기술적 이슈나 개선 방안을 문의하시나요?",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "aws_mixed_a22600": {
+      "korean": "추천 AWS 서비스가 생성되지 않았습니다.",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "aws_mixed_acc690": {
+      "korean": "기존 시스템을 AWS로 이전하는 방안을 논의하고 싶으신가요?",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "aws_mixed_bed119": {
+      "korean": "추천 AWS 서비스",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "aws_mixed_f78bba": {
+      "korean": "AWS 사용 비용을 최적화하고 효율성을 높이고 싶으신가요?",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "aws_prechat": {
+      "korean": "AWS PreChat",
+      "english": "",
+      "context": "JSX text content in components/PageHeader.tsx",
+      "files": [
+        "components/PageHeader.tsx"
+      ]
+    },
+    "aws_prechat_aws_mixed_3049d8": {
+      "korean": "안녕하세요 저는 PreChat 사전상담 에이전트예요. 고객님의 클라우드 사용 지원에 필요한 이야기들을 나누고 싶습니다.\n\n  담당자와 만나기 전 궁금하신 정보나, 미팅에서 기대하시는 내용을 알려주세요! 적합한 AWS 담당자께 전달됩니다. \n  \n  아키텍처 다이어그램과 같이 미팅에 도움이 될 유첨파일이 있으시다면 더욱 좋습니다.",
+      "english": "",
+      "context": "Template literal in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "aws_prechat_is_a_conversational_ai_web_s": {
+      "korean": "AWS PreChat is a conversational AI web system designed to streamline the pre-meeting preparation process between AWS sales teams and customers. The system replaces traditional Excel-based forms with an intuitive chatbot interface that guides customers through a structured conversation to collect business requirements, technical constraints, and project timelines. The collected information is then processed and presented to AWS sales representatives and engineers in an organized, actionable format.",
+      "english": "",
+      "context": "JSX text content in components/PageHeader.tsx",
+      "files": [
+        "components/PageHeader.tsx"
+      ]
+    },
+    "aws_prechat_mixed_45e21b": {
+      "korean": "AWS PreChat 서비스 이용과 관련된 개인정보 처리방침 및 서비스 이용약관입니다.",
+      "english": "",
+      "context": "JSX text content in components/PrivacyTermsModal.tsx",
+      "files": [
+        "components/PrivacyTermsModal.tsx"
+      ]
+    },
+    "back_to_sign_up": {
+      "korean": "Back to Sign Up",
+      "english": "",
+      "context": "JSX text content in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "bant_mixed_cdfa13": {
+      "korean": "BANT 분석",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "bant_mixed_d35eff": {
+      "korean": "BANT 분석 결과가 생성되지 않았습니다.",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "bearer": {
+      "korean": "Bearer",
+      "english": "",
+      "context": "Template literal head in services/api.ts",
+      "files": [
+        "services/api.ts",
+        "services/auth.ts"
+      ]
+    },
+    "bedrock_quota_mixed_159a7b": {
+      "korean": "Bedrock Quota 가 한정된 환경이므로 어시스턴스 응답에 스로틀링이 발생할 수 있습니다.",
+      "english": "",
+      "context": "JSX text content in components/BedrockQuotaNotification.tsx",
+      "files": [
+        "components/BedrockQuotaNotification.tsx"
+      ]
+    },
+    "budget_mixed_7317c4": {
+      "korean": "Budget (예산)",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "company": {
+      "korean": "Company",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "completed": {
+      "korean": "Completed",
+      "english": "",
+      "context": "JSX text content in components/StatusBadge.tsx",
+      "files": [
+        "components/StatusBadge.tsx",
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "confirm_75e0bcad": {
+      "korean": "사전상담 내용을 확인합니다",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "confirm_a2770843": {
+      "korean": "세션이 완료되면 고객 피드백을 확인할 수 있습니다.",
+      "english": "",
+      "context": "String literal in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "confirm_ca1175c3": {
+      "korean": ")에게 확인하세요",
+      "english": "",
+      "context": "Template literal span in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "confirm_email": {
+      "korean": "Confirm Email",
+      "english": "",
+      "context": "String literal in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "confirm_f32a7b34": {
+      "korean": ": 기술적 제약사항과 선호사항을 확인",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "confirmation_code": {
+      "korean": "Confirmation Code",
+      "english": "",
+      "context": "JSX attribute: label in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "consultation_0de1a081": {
+      "korean": "상담 목적",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "consultation_214bbac5": {
+      "korean": "사전상담 경험은 어떠셨나요? 소중한 피드백을 남겨주세요.",
+      "english": "",
+      "context": "JSX text content in components/FeedbackModal.tsx",
+      "files": [
+        "components/FeedbackModal.tsx"
+      ]
+    },
+    "consultation_5a083bec": {
+      "korean": "사전상담 피드백",
+      "english": "",
+      "context": "JSX text content in components/FeedbackModal.tsx",
+      "files": [
+        "components/FeedbackModal.tsx"
+      ]
+    },
+    "consultation_5e21ae53": {
+      "korean": "상담 목적을 선택해 주세요",
+      "english": "",
+      "context": "JSX text content in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "consultation_7cd438a4": {
+      "korean": "마이그레이션 상담",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "consultation_a6e99d56": {
+      "korean": "상담목적:",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "consultation_b3a12a85": {
+      "korean": "상담 목적:",
+      "english": "",
+      "context": "Template literal head in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "consultation_d976e307": {
+      "korean": "선택된 상담 목적",
+      "english": "",
+      "context": "JSX text content in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "consultation_dafee129": {
+      "korean": "더 정확한 상담을 위해 추가 자료를 제공해 주시면 도움이 됩니다.",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "consultation_e39c4579": {
+      "korean": "새 상담 세션을 만듭니다 💬",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "consultation_ef0d8ca4": {
+      "korean": "비용 최적화 상담",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "consultation_f3d1727b": {
+      "korean": "최소 하나 이상의 상담 목적을 선택해 주세요.",
+      "english": "",
+      "context": "JSX text content in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "consultation_f8076c11": {
+      "korean": "사전상담 경험 점수",
+      "english": "",
+      "context": "JSX attribute: label in components/FeedbackModal.tsx",
+      "files": [
+        "components/FeedbackModal.tsx"
+      ]
+    },
+    "conversation": {
+      "korean": "Conversation",
+      "english": "",
+      "context": "String literal in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "copy": {
+      "korean": "Copy",
+      "english": "",
+      "context": "String literal in components/ChatMessage.tsx",
+      "files": [
+        "components/ChatMessage.tsx",
+        "components/StreamingChatMessage.tsx"
+      ]
+    },
+    "copy_pin": {
+      "korean": "Copy PIN",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "copy_url": {
+      "korean": "Copy URL",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "copyright_c_2025_aws_prechat": {
+      "korean": "Copyright (c) 2025 AWS PreChat",
+      "english": "",
+      "context": "JSX text content in components/Layout.tsx",
+      "files": [
+        "components/Layout.tsx"
+      ]
+    },
+    "create_a_password": {
+      "korean": "Create a password",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "create_account": {
+      "korean": "Create Account",
+      "english": "",
+      "context": "JSX text content in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "created": {
+      "korean": "Created",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "created_successfully": {
+      "korean": "\" created successfully!",
+      "english": "",
+      "context": "Template literal span in pages/admin/CreateAgent.tsx",
+      "files": [
+        "pages/admin/CreateAgent.tsx"
+      ]
+    },
+    "creating": {
+      "korean": "Creating",
+      "english": "",
+      "context": "JSX text content in components/StatusBadge.tsx",
+      "files": [
+        "components/StatusBadge.tsx",
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "csat_mixed_1ff51e": {
+      "korean": "고객 피드백 (CSAT)",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "csv_mixed_0e08ff": {
+      "korean": "CSV 파일 다운로드:",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "csv_mixed_48cb1e": {
+      "korean": "CSV 파일이 자동으로 다운로드되었습니다.",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "csv_mixed_9c9dbf": {
+      "korean": "진입 정보 CSV",
+      "english": "",
+      "context": "String literal in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "current_user_email": {
+      "korean": "Current user email",
+      "english": "",
+      "context": "String literal in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "customer": {
+      "korean": "Customer",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "customer_company": {
+      "korean": "Customer Company",
+      "english": "",
+      "context": "JSX attribute: label in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "customer_email": {
+      "korean": "Customer Email",
+      "english": "",
+      "context": "JSX attribute: label in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "customer_name": {
+      "korean": "Customer Name",
+      "english": "",
+      "context": "JSX attribute: label in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "customer_title": {
+      "korean": "Customer Title",
+      "english": "",
+      "context": "JSX attribute: label in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "delete": {
+      "korean": "Delete",
+      "english": "",
+      "context": "String literal in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "delete_b32553c0": {
+      "korean": "이 댓글을 삭제하시겠습니까? 삭제된 댓글은 복구할 수 없습니다.",
+      "english": "",
+      "context": "JSX text content in components/DiscussionTab.tsx",
+      "files": [
+        "components/DiscussionTab.tsx"
+      ]
+    },
+    "delete_c689deef": {
+      "korean": "정말로 이 파일을 삭제하시겠습니까?",
+      "english": "",
+      "context": "String literal in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx",
+        "components/SessionAttachments.tsx"
+      ]
+    },
+    "deleting": {
+      "korean": "Deleting",
+      "english": "",
+      "context": "JSX text content in components/StatusBadge.tsx",
+      "files": [
+        "components/StatusBadge.tsx",
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "discussion": {
+      "korean": "Discussion",
+      "english": "",
+      "context": "JSX text content in components/DiscussionTab.tsx",
+      "files": [
+        "components/DiscussionTab.tsx",
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "edit_c864820a": {
+      "korean": "에이전트 편집",
+      "english": "",
+      "context": "String literal in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "email": {
+      "korean": "Email",
+      "english": "",
+      "context": "JSX attribute: label in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "end_of_file_mixed_b8d4bd": {
+      "korean": "대화 종료 토큰 (End of File)",
+      "english": "",
+      "context": "String literal in components/PlaceholderTooltip.tsx",
+      "files": [
+        "components/PlaceholderTooltip.tsx"
+      ]
+    },
+    "enter_6_digit_code": {
+      "korean": "Enter 6-digit code",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "enter_agent_instructions": {
+      "korean": "Enter agent instructions...",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/admin/CreateAgent.tsx",
+      "files": [
+        "pages/admin/CreateAgent.tsx",
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "enter_agent_name": {
+      "korean": "Enter agent name",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/admin/EditAgent.tsx",
+      "files": [
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "enter_customer_company": {
+      "korean": "Enter customer company",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "enter_customer_email": {
+      "korean": "Enter customer email",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "enter_customer_name": {
+      "korean": "Enter customer name",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "enter_mixed_9a5744": {
+      "korean": "💡 Enter로 줄바꿈, 전송 버튼으로 메시지 전송",
+      "english": "",
+      "context": "JSX text content in components/MultilineChatInput.tsx",
+      "files": [
+        "components/MultilineChatInput.tsx"
+      ]
+    },
+    "enter_mixed_e6782b": {
+      "korean": "Enter 에이전트 이름",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/admin/CreateAgent.tsx",
+      "files": [
+        "pages/admin/CreateAgent.tsx"
+      ]
+    },
+    "enter_your_email": {
+      "korean": "Enter your email",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "enter_your_email_address": {
+      "korean": "Enter your email address",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "enter_your_full_name": {
+      "korean": "Enter your full name",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "enter_your_password": {
+      "korean": "Enter your password",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "error_loading_translations_for": {
+      "korean": "Error loading translations for",
+      "english": "",
+      "context": "Template literal head in i18n/TranslationManager.ts",
+      "files": [
+        "i18n/TranslationManager.ts"
+      ]
+    },
+    "expired": {
+      "korean": "Expired",
+      "english": "",
+      "context": "JSX text content in components/StatusBadge.tsx",
+      "files": [
+        "components/StatusBadge.tsx",
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "failed": {
+      "korean": "Failed",
+      "english": "",
+      "context": "JSX text content in components/StatusBadge.tsx",
+      "files": [
+        "components/StatusBadge.tsx",
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "failed_to_load_translations_for": {
+      "korean": "Failed to load translations for",
+      "english": "",
+      "context": "Template literal head in i18n/TranslationManager.ts",
+      "files": [
+        "i18n/TranslationManager.ts"
+      ]
+    },
+    "feedback": {
+      "korean": "Feedback",
+      "english": "",
+      "context": "String literal in components/ChatMessage.tsx",
+      "files": [
+        "components/ChatMessage.tsx",
+        "components/StreamingChatMessage.tsx"
+      ]
+    },
+    "file_0b7ade37": {
+      "korean": "파일 준비",
+      "english": "",
+      "context": "JSX text content in components/FileList.tsx",
+      "files": [
+        "components/FileList.tsx"
+      ]
+    },
+    "file_11f4a302": {
+      "korean": "파일 선택",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "file_2c7da4c6": {
+      "korean": "첨부파일 제공",
+      "english": "",
+      "context": "JSX text content in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "file_6a286723": {
+      "korean": "이미지 파일이 없습니다.",
+      "english": "",
+      "context": "JSX text content in components/ImageGallery.tsx",
+      "files": [
+        "components/ImageGallery.tsx"
+      ]
+    },
+    "file_b5df1518": {
+      "korean": "첨부 파일",
+      "english": "",
+      "context": "String literal in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "foundation_model": {
+      "korean": "Foundation Model",
+      "english": "",
+      "context": "JSX attribute: label in pages/admin/CreateAgent.tsx",
+      "files": [
+        "pages/admin/CreateAgent.tsx",
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "full_name": {
+      "korean": "Full Name",
+      "english": "",
+      "context": "JSX attribute: label in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "helpful": {
+      "korean": "Helpful",
+      "english": "",
+      "context": "String literal in components/ChatMessage.tsx",
+      "files": [
+        "components/ChatMessage.tsx",
+        "components/StreamingChatMessage.tsx"
+      ]
+    },
+    "html_mixed_660e1c": {
+      "korean": "HTML 저장",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "inactivate": {
+      "korean": "Inactivate",
+      "english": "",
+      "context": "String literal in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "inactive": {
+      "korean": "Inactive",
+      "english": "",
+      "context": "JSX text content in components/StatusBadge.tsx",
+      "files": [
+        "components/StatusBadge.tsx"
+      ]
+    },
+    "invalid_csv_format_for": {
+      "korean": "Invalid CSV format for",
+      "english": "",
+      "context": "Template literal head in i18n/TranslationManager.ts",
+      "files": [
+        "i18n/TranslationManager.ts"
+      ]
+    },
+    "ko_kr": {
+      "korean": "ko-KR",
+      "english": "",
+      "context": "String literal in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_002acf23": {
+      "korean": "어카운트 전략에 대한 의견을 작성해주세요...",
+      "english": "",
+      "context": "JSX attribute: placeholder in components/DiscussionTab.tsx",
+      "files": [
+        "components/DiscussionTab.tsx"
+      ]
+    },
+    "korean_04823d40": {
+      "korean": "피드백 제출 시간",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_0508c5f0": {
+      "korean": "사례 설명",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_06584212": {
+      "korean": "현재 아키텍처 다이어그램",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "korean_09350831": {
+      "korean": "피드백 있음",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_09c04194": {
+      "korean": "다시 시도",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_0d252f38": {
+      "korean": "담당자 연락처",
+      "english": "",
+      "context": "String literal in components/PlaceholderTooltip.tsx",
+      "files": [
+        "components/PlaceholderTooltip.tsx"
+      ]
+    },
+    "korean_1150aa68": {
+      "korean": "예시:",
+      "english": "",
+      "context": "JSX text content in components/PlaceholderTooltip.tsx",
+      "files": [
+        "components/PlaceholderTooltip.tsx"
+      ]
+    },
+    "korean_18e294dc": {
+      "korean": "담당자:",
+      "english": "",
+      "context": "JSX text content in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "korean_200a2ac1": {
+      "korean": "동의 시간",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_20a761fe": {
+      "korean": "안녕하세요, 저는",
+      "english": "",
+      "context": "Template literal head in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "korean_20ce916b": {
+      "korean": "새 댓글 작성",
+      "english": "",
+      "context": "JSX attribute: label in components/DiscussionTab.tsx",
+      "files": [
+        "components/DiscussionTab.tsx"
+      ]
+    },
+    "korean_21a4ed6d": {
+      "korean": "담당자 이메일",
+      "english": "",
+      "context": "String literal in components/PlaceholderTooltip.tsx",
+      "files": [
+        "components/PlaceholderTooltip.tsx"
+      ]
+    },
+    "korean_22dd3ccb": {
+      "korean": "% 완료)",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_230caa8c": {
+      "korean": "에이전트 준비",
+      "english": "",
+      "context": "String literal in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "korean_25f2f297": {
+      "korean": "관련 고객 사례",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_25f3797a": {
+      "korean": ": 예상 트래픽과 데이터량 등",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "korean_2693764c": {
+      "korean": "원본 이미지",
+      "english": "",
+      "context": "JSX attribute: alt in components/ImageGallery.tsx",
+      "files": [
+        "components/ImageGallery.tsx"
+      ]
+    },
+    "korean_2a03e24d": {
+      "korean": "요약 보고서가 생성되지 않았습니다.",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_2a608448": {
+      "korean": "💡 여러 줄 입력이 가능합니다. 전송하려면 아래 전송 버튼을 눌러주세요.",
+      "english": "",
+      "context": "JSX text content in components/MultilineChatInput.tsx",
+      "files": [
+        "components/MultilineChatInput.tsx"
+      ]
+    },
+    "korean_2bd2b6c5": {
+      "korean": "미팅 로그",
+      "english": "",
+      "context": "JSX text content in components/MeetingLogView.tsx",
+      "files": [
+        "components/MeetingLogView.tsx",
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_2fb47fac": {
+      "korean": "위 항목에 해당하지 않는 기타 문의사항이 있으신가요?",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "korean_332ec8fe": {
+      "korean": "에이전트 제거",
+      "english": "",
+      "context": "String literal in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "korean_33fc10eb": {
+      "korean": "6자리 숫자 입력",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx",
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "korean_36b9757a": {
+      "korean": "수정됨",
+      "english": "",
+      "context": "JSX text content in components/DiscussionTab.tsx",
+      "files": [
+        "components/DiscussionTab.tsx"
+      ]
+    },
+    "korean_36b9d3fb": {
+      "korean": "신규 도입 문의",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "korean_41c09c7e": {
+      "korean": "선택된 모델(",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_423c414d": {
+      "korean": "새로고침",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "korean_4788ffcd": {
+      "korean": "기본 에이전트 지침",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateAgent.tsx",
+      "files": [
+        "pages/admin/CreateAgent.tsx",
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "korean_485312b9": {
+      "korean": "사용 가능한 에이전트 🤖",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "korean_49462616": {
+      "korean": "기술 명세서",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "korean_4950989c": {
+      "korean": "개 선택됨)",
+      "english": "",
+      "context": "JSX text content in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "korean_50ea4ba0": {
+      "korean": "\"수정\" 버튼을 클릭하여 초도미팅록을 작성해보세요.",
+      "english": "",
+      "context": "JSX text content in components/MeetingLogView.tsx",
+      "files": [
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_514fcbcd": {
+      "korean": "이메일:",
+      "english": "",
+      "context": "JSX text content in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "korean_55f994e0": {
+      "korean": "플레이스홀더 사전",
+      "english": "",
+      "context": "JSX text content in components/PlaceholderTooltip.tsx",
+      "files": [
+        "components/PlaceholderTooltip.tsx"
+      ]
+    },
+    "korean_5b25d067": {
+      "korean": "최대 5분까지 소요될 수 있습니다. (",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_60c989b4": {
+      "korean": ": 비즈니스 요구사항 제공",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "korean_63c7603c": {
+      "korean": "요약 보고서",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_646f933d": {
+      "korean": "이미지 준비",
+      "english": "",
+      "context": "JSX text content in components/ImageGallery.tsx",
+      "files": [
+        "components/ImageGallery.tsx"
+      ]
+    },
+    "korean_6c4b973d": {
+      "korean": "로 있는",
+      "english": "",
+      "context": "Template literal span in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "korean_6ccbc25b": {
+      "korean": "점 / 5점",
+      "english": "",
+      "context": "JSX text content in components/FeedbackModal.tsx",
+      "files": [
+        "components/FeedbackModal.tsx"
+      ]
+    },
+    "korean_6d4a44dd": {
+      "korean": "성능/용량 계획서",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "korean_6d8bf33f": {
+      "korean": "담당자 정보",
+      "english": "",
+      "context": "JSX text content in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "korean_75eccdd6": {
+      "korean": "에이전트 생성",
+      "english": "",
+      "context": "JSX text content in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx",
+        "pages/admin/CreateAgent.tsx",
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "korean_780fce17": {
+      "korean": "추가 문의사항이 있으시면 위 담당자에게 직접 연락해 주세요.",
+      "english": "",
+      "context": "JSX text content in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "korean_7dd04027": {
+      "korean": "랜덤 생성",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "korean_84998217": {
+      "korean": "피드백을 입력해주세요...",
+      "english": "",
+      "context": "JSX attribute: placeholder in components/FeedbackModal.tsx",
+      "files": [
+        "components/FeedbackModal.tsx"
+      ]
+    },
+    "korean_850171d7": {
+      "korean": "구현 방안",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_89d34ebd": {
+      "korean": "세션 추가",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx",
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "korean_8a0dfb9c": {
+      "korean": "관련성",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_8b077219": {
+      "korean": "아직 작성된 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!",
+      "english": "",
+      "context": "JSX text content in components/DiscussionTab.tsx",
+      "files": [
+        "components/DiscussionTab.tsx"
+      ]
+    },
+    "korean_8bb6b000": {
+      "korean": ": 기존 시스템 구성 정보 제공",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "korean_8cbafb60": {
+      "korean": "고객이 아직 피드백을 제출하지 않았습니다.",
+      "english": "",
+      "context": "String literal in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_926ad4a6": {
+      "korean": "연락처:",
+      "english": "",
+      "context": "JSX text content in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "korean_98670aac": {
+      "korean": "담당자 이름",
+      "english": "",
+      "context": "String literal in components/PlaceholderTooltip.tsx",
+      "files": [
+        "components/PlaceholderTooltip.tsx"
+      ]
+    },
+    "korean_988eb876": {
+      "korean": "요구사항 문서",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "korean_9a9f5cbe": {
+      "korean": "| \n                  사용 모델:",
+      "english": "",
+      "context": "JSX text content in components/MeetingLogView.tsx",
+      "files": [
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_9ab19a87": {
+      "korean": "로그아웃",
+      "english": "",
+      "context": "String literal in components/TopNavigation.tsx",
+      "files": [
+        "components/TopNavigation.tsx"
+      ]
+    },
+    "korean_9ab6848d": {
+      "korean": "만족도 점수",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_9d6689cd": {
+      "korean": "추천 이유",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_a1d01821": {
+      "korean": "파트너 관련 문의",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "korean_a2125d4a": {
+      "korean": "추가 피드백 (선택사항)",
+      "english": "",
+      "context": "JSX attribute: label in components/FeedbackModal.tsx",
+      "files": [
+        "components/FeedbackModal.tsx"
+      ]
+    },
+    "korean_a2974c58": {
+      "korean": "에이전트 지침에서 사용할 수 있는 플레이스홀더들입니다. \n              고객과의 채팅에서 실제 값으로 자동 치환됩니다.",
+      "english": "",
+      "context": "JSX text content in components/PlaceholderTooltip.tsx",
+      "files": [
+        "components/PlaceholderTooltip.tsx"
+      ]
+    },
+    "korean_a47e2a04": {
+      "korean": "동의 완료",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_ab7b7914": {
+      "korean": "댓글 작성",
+      "english": "",
+      "context": "JSX text content in components/DiscussionTab.tsx",
+      "files": [
+        "components/DiscussionTab.tsx"
+      ]
+    },
+    "korean_ac2fe411": {
+      "korean": "선택 완료 (",
+      "english": "",
+      "context": "JSX text content in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "korean_b1f9a872": {
+      "korean": "에 동의합니다. (필수)",
+      "english": "",
+      "context": "JSX text content in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "korean_b94b561e": {
+      "korean": "에이전트 수정",
+      "english": "",
+      "context": "JSX text content in pages/admin/EditAgent.tsx",
+      "files": [
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "korean_bbcea42e": {
+      "korean": "대시보드로",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx",
+        "pages/admin/CreateAgent.tsx",
+        "pages/admin/CreateSession.tsx",
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "korean_bc32cf73": {
+      "korean": "대화 내역",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_be293b7a": {
+      "korean": "개인정보 처리방침",
+      "english": "",
+      "context": "String literal in components/PrivacyTermsModal.tsx",
+      "files": [
+        "components/PrivacyTermsModal.tsx"
+      ]
+    },
+    "korean_c971d2e6": {
+      "korean": "이미지 미리보기",
+      "english": "",
+      "context": "JSX text content in components/ImageGallery.tsx",
+      "files": [
+        "components/ImageGallery.tsx"
+      ]
+    },
+    "korean_cc5a7cf6": {
+      "korean": "일). 에이전트를 다시 준비해주세요.",
+      "english": "",
+      "context": "Template literal span in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "korean_d15515d2": {
+      "korean": "지능형 챗봇 어시스턴트로 미팅 사전 준비를 간소화해 보세요.",
+      "english": "",
+      "context": "JSX text content in components/WelcomeScreen.tsx",
+      "files": [
+        "components/WelcomeScreen.tsx"
+      ]
+    },
+    "korean_d4f71fac": {
+      "korean": "프로필",
+      "english": "",
+      "context": "String literal in components/TopNavigation.tsx",
+      "files": [
+        "components/TopNavigation.tsx"
+      ]
+    },
+    "korean_d702023b": {
+      "korean": "이라 합니다. \n\n이번에",
+      "english": "",
+      "context": "Template literal span in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "korean_de547500": {
+      "korean": "피드백 없음",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_e0bb057d": {
+      "korean": "관련 고객 사례가 생성되지 않았습니다.",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_e1a25d05": {
+      "korean": "| \n            사용 모델:",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx"
+      ]
+    },
+    "korean_e4690f13": {
+      "korean": "고객 의견",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_e8806939": {
+      "korean": "기타 문의",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "korean_edb18dd1": {
+      "korean": "개인정보 동의",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "korean_ef9bfc9c": {
+      "korean": "미팅로그리포트_",
+      "english": "",
+      "context": "Template literal head in components/MeetingLogView.tsx",
+      "files": [
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_efb36209": {
+      "korean": "기술 지원 문의",
+      "english": "",
+      "context": "String literal in components/ConsultationPurposeSelector.tsx",
+      "files": [
+        "components/ConsultationPurposeSelector.tsx"
+      ]
+    },
+    "korean_f3102cf1": {
+      "korean": "고객에게 전달할 정보:",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "korean_f36279c6": {
+      "korean": "미팅 로그가 없습니다",
+      "english": "",
+      "context": "JSX text content in components/MeetingLogView.tsx",
+      "files": [
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_f43bcd49": {
+      "korean": "초도미팅록 작성 (마크다운 형식 지원)",
+      "english": "",
+      "context": "JSX text content in components/MeetingLogView.tsx",
+      "files": [
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "korean_f6b57027": {
+      "korean": "에이전트 이름",
+      "english": "",
+      "context": "JSX attribute: label in pages/admin/CreateAgent.tsx",
+      "files": [
+        "pages/admin/CreateAgent.tsx",
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "korean_fbaf9f99": {
+      "korean": "미동의",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "loading_057c3e17": {
+      "korean": "다시 다운로드",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "loading_0a4de75d": {
+      "korean": "업로드 중...",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "loading_154127e6": {
+      "korean": "파일 업로드가 필요한 이유",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "loading_3d28a7fc": {
+      "korean": "파일을 업로드하여 상담에 필요한 자료를 제공해 주세요.",
+      "english": "",
+      "context": "JSX text content in components/FileList.tsx",
+      "files": [
+        "components/FileList.tsx",
+        "components/FileUpload.tsx"
+      ]
+    },
+    "loading_5d37a8ec": {
+      "korean": "업로드된 파일",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx",
+        "components/SessionAttachments.tsx"
+      ]
+    },
+    "loading_612ca27b": {
+      "korean": "다운로드",
+      "english": "",
+      "context": "JSX text content in components/FileList.tsx",
+      "files": [
+        "components/FileList.tsx"
+      ]
+    },
+    "loading_agent_details": {
+      "korean": "Loading agent details...",
+      "english": "",
+      "context": "JSX text content in pages/admin/EditAgent.tsx",
+      "files": [
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "loading_current_user": {
+      "korean": "Loading current user...",
+      "english": "",
+      "context": "String literal in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "loading_ec6095c4": {
+      "korean": "업로드된 파일이 없습니다",
+      "english": "",
+      "context": "JSX text content in components/FileList.tsx",
+      "files": [
+        "components/FileList.tsx",
+        "components/FileUpload.tsx"
+      ]
+    },
+    "memory_mixed_407778": {
+      "korean": "Memory 활성화",
+      "english": "",
+      "context": "String literal in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "memory_mixed_79ef3b": {
+      "korean": "Memory가 성공적으로 활성화되었습니다 (",
+      "english": "",
+      "context": "Template literal head in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "memory_mixed_ac75ee": {
+      "korean": "에이전트의 Memory 기능을 활성화하여 대화 맥락을 유지할 수 있습니다.",
+      "english": "",
+      "context": "JSX text content in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "memory_mixed_d4032b": {
+      "korean": "Memory 활성화에 실패했습니다.",
+      "english": "",
+      "context": "String literal in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "memory_storage_days": {
+      "korean": "Memory Storage Days",
+      "english": "",
+      "context": "JSX attribute: label in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx",
+        "pages/admin/CreateAgent.tsx",
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "message_copied": {
+      "korean": "Message copied",
+      "english": "",
+      "context": "JSX text content in components/ChatMessage.tsx",
+      "files": [
+        "components/ChatMessage.tsx",
+        "components/StreamingChatMessage.tsx"
+      ]
+    },
+    "mit_0_license": {
+      "korean": "MIT-0 License",
+      "english": "",
+      "context": "JSX text content in components/Layout.tsx",
+      "files": [
+        "components/Layout.tsx"
+      ]
+    },
+    "need_mixed_b69ac1": {
+      "korean": "Need (필요성)",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "no_agents": {
+      "korean": "No agents",
+      "english": "",
+      "context": "JSX text content in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx",
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "no_bedrock_agents_found": {
+      "korean": "No Bedrock agents found.",
+      "english": "",
+      "context": "JSX text content in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx",
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "no_messages_yet": {
+      "korean": "No messages yet",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "no_pre_consultation_sessions_found": {
+      "korean": "No pre-consultation sessions found.",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "no_sessions": {
+      "korean": "No sessions",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "not_helpful": {
+      "korean": "Not helpful",
+      "english": "",
+      "context": "String literal in components/ChatMessage.tsx",
+      "files": [
+        "components/ChatMessage.tsx",
+        "components/StreamingChatMessage.tsx"
+      ]
+    },
+    "not_prepared": {
+      "korean": "Not Prepared",
+      "english": "",
+      "context": "JSX text content in components/StatusBadge.tsx",
+      "files": [
+        "components/StatusBadge.tsx",
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "password": {
+      "korean": "Password",
+      "english": "",
+      "context": "JSX attribute: label in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "phone_number": {
+      "korean": "Phone Number",
+      "english": "",
+      "context": "JSX attribute: label in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "pin_mixed_56d5a8": {
+      "korean": "PIN 번호",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx",
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "pin_mixed_c7c99f": {
+      "korean": "PIN 정보는 영업 담당(",
+      "english": "",
+      "context": "Template literal head in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "pin_mixed_ec350f": {
+      "korean": "PIN 번호:",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "please_check_your_email_and_enter_the_co": {
+      "korean": "Please check your email and enter the confirmation code below.",
+      "english": "",
+      "context": "JSX text content in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "prechat_agent_mixed_73318e": {
+      "korean": "새로운 PreChat Agent 를 등록합니다 🤖",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateAgent.tsx",
+      "files": [
+        "pages/admin/CreateAgent.tsx"
+      ]
+    },
+    "prechat_mixed_2f5118": {
+      "korean": "PreChat 에이전트를 수정합니다 🤖",
+      "english": "",
+      "context": "JSX text content in pages/admin/EditAgent.tsx",
+      "files": [
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "prechat_mixed_312687": {
+      "korean": "PreChat 세션",
+      "english": "",
+      "context": "JSX text content in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "prechat_mixed_4991e7": {
+      "korean": "PreChat 에게 고민을 말씀해 보세요.",
+      "english": "",
+      "context": "JSX text content in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "prechat_mixed_4f8d6d": {
+      "korean": "PreChat 에이전트 🤖",
+      "english": "",
+      "context": "JSX text content in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "prechat_mixed_6c3c9d": {
+      "korean": "PreChat 세션 💬",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "prechat_mixed_89992d": {
+      "korean": "✨ PreChat에 오신 것을 환영합니다!",
+      "english": "",
+      "context": "JSX text content in components/Layout.tsx",
+      "files": [
+        "components/Layout.tsx"
+      ]
+    },
+    "prechat_mixed_ee3bbd": {
+      "korean": "와 관련하여 사전에 논의할 내용과 기대사항을 공유드리기 위해 PreChat 사전채팅에 참가하였습니다!",
+      "english": "",
+      "context": "Template literal span in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "prechat_mixed_f5ae5c": {
+      "korean": "PreChat 에이전트",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "prepared": {
+      "korean": "Prepared",
+      "english": "",
+      "context": "JSX text content in components/StatusBadge.tsx",
+      "files": [
+        "components/StatusBadge.tsx",
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "preparing": {
+      "korean": "Preparing",
+      "english": "",
+      "context": "JSX text content in components/StatusBadge.tsx",
+      "files": [
+        "components/StatusBadge.tsx",
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "privacy": {
+      "korean": "Privacy",
+      "english": "",
+      "context": "JSX text content in components/Layout.tsx",
+      "files": [
+        "components/Layout.tsx"
+      ]
+    },
+    "result_a4f1ffb1": {
+      "korean": "분석 결과를 불러오는 중...",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx"
+      ]
+    },
+    "result_ba11502e": {
+      "korean": "분석 결과가 없습니다",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "sales_rep": {
+      "korean": "Sales Rep",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "sales_representative_access": {
+      "korean": "Sales Representative Access",
+      "english": "",
+      "context": "JSX text content in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "sales_representative_email": {
+      "korean": "Sales Representative Email",
+      "english": "",
+      "context": "JSX attribute: label in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "save_da1f7e7f": {
+      "korean": "미팅 로그가 성공적으로 저장되었습니다.",
+      "english": "",
+      "context": "JSX text content in components/MeetingLogView.tsx",
+      "files": [
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "select_a_foundation_model": {
+      "korean": "Select a foundation model",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/admin/CreateAgent.tsx",
+      "files": [
+        "pages/admin/CreateAgent.tsx",
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "select_agent": {
+      "korean": "Select Agent",
+      "english": "",
+      "context": "JSX attribute: label in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "select_an_agent": {
+      "korean": "Select an agent",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "service_b88abd5d": {
+      "korean": "서비스 이용약관",
+      "english": "",
+      "context": "String literal in components/PrivacyTermsModal.tsx",
+      "files": [
+        "components/PrivacyTermsModal.tsx"
+      ]
+    },
+    "service_bece43ab": {
+      "korean": "개인정보 처리방침 및 서비스 이용약관",
+      "english": "",
+      "context": "JSX text content in components/PrivacyTermsModal.tsx",
+      "files": [
+        "components/PrivacyTermsModal.tsx",
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "sign_in": {
+      "korean": "Sign In",
+      "english": "",
+      "context": "String literal in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "sign_up": {
+      "korean": "Sign Up",
+      "english": "",
+      "context": "String literal in pages/auth/Login.tsx",
+      "files": [
+        "pages/auth/Login.tsx"
+      ]
+    },
+    "status": {
+      "korean": "Status",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "status_mixed_719b2f": {
+      "korean": "파일 업로드 중 오류가 발생했습니다. (Status:",
+      "english": "",
+      "context": "Template literal head in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "storage_days": {
+      "korean": "Storage Days",
+      "english": "",
+      "context": "JSX text content in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "support": {
+      "korean": "Support",
+      "english": "",
+      "context": "JSX text content in components/Layout.tsx",
+      "files": [
+        "components/Layout.tsx"
+      ]
+    },
+    "terms": {
+      "korean": "Terms",
+      "english": "",
+      "context": "JSX text content in components/Layout.tsx",
+      "files": [
+        "components/Layout.tsx"
+      ]
+    },
+    "text_06723de2ceac": {
+      "korean": "Enter customer title/position",
+      "english": "",
+      "context": "JSX attribute: placeholder in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "text_13e0647bd592": {
+      "korean": "•\n                              Stage:",
+      "english": "",
+      "context": "JSX text content in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "text_18b2be76a0b9": {
+      "korean": "✅ Next steps will be shared via email within 24 hours.",
+      "english": "",
+      "context": "Template literal span in hooks/useChat.ts",
+      "files": [
+        "hooks/useChat.ts"
+      ]
+    },
+    "text_2024_01_15_14_00_aws_mixed_9a58be": {
+      "korean": "미팅 내용을 자유롭게 작성해주세요. 마크다운 형식을 사용할 수 있습니다.\n\n예시:\n## 미팅 개요\n- 일시: 2024-01-15 14:00\n- 참석자: 홍길동 (고객), 김영희 (AWS)\n\n## 주요 논의사항\n1. 클라우드 마이그레이션 계획\n2. 예상 비용 및 일정\n3. 기술적 요구사항\n\n## 액션 아이템\n- [ ] POC 제안서 작성\n- [ ] 기술 검토 미팅 일정 조율",
+      "english": "",
+      "context": "JSX attribute: placeholder in components/MeetingLogView.tsx",
+      "files": [
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "text_2a2a324df45c": {
+      "korean": "AWSPreChat_",
+      "english": "",
+      "context": "Template literal head in utils/csvExport.ts",
+      "files": [
+        "utils/csvExport.ts"
+      ]
+    },
+    "text_2d887157ce6f": {
+      "korean": "/i18n/locales/",
+      "english": "",
+      "context": "Template literal head in i18n/TranslationManager.ts",
+      "files": [
+        "i18n/TranslationManager.ts"
+      ]
+    },
+    "text_2px_dashed": {
+      "korean": "2px dashed",
+      "english": "",
+      "context": "Template literal head in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "text_50mb_pdf_office_mixed_8cbfa2": {
+      "korean": "최대 50MB • 이미지, PDF, Office 문서, 텍스트 파일 지원",
+      "english": "",
+      "context": "JSX text content in components/FileUpload.tsx",
+      "files": [
+        "components/FileUpload.tsx"
+      ]
+    },
+    "text_5732a8080e69": {
+      "korean": "ConsultationPurposes_",
+      "english": "",
+      "context": "Template literal head in utils/sessionStorage.ts",
+      "files": [
+        "utils/sessionStorage.ts"
+      ]
+    },
+    "text_6_pin_mixed_07511a": {
+      "korean": "6자리 PIN 번호",
+      "english": "",
+      "context": "JSX attribute: label in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "text_6_pin_mixed_1d6166": {
+      "korean": "영업 담당자로부터 받은 6자리 PIN 번호를 입력해주세요.",
+      "english": "",
+      "context": "JSX text content in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "confirm_button": {
+      "korean": "확인",
+      "english": "Confirm",
+      "context": "Button text in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "consultation_purpose_edit": {
+      "korean": "상담 목적 수정",
+      "english": "Edit Consultation Purpose",
+      "context": "Button text in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "consultation_purpose_select": {
+      "korean": "상담 목적 선택",
+      "english": "Select Consultation Purpose",
+      "context": "Button text in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "pin_error_message": {
+      "korean": "PIN 번호가 올바르지 않습니다.",
+      "english": "PIN number is incorrect.",
+      "context": "Error message in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "failed_to_send_message": {
+      "korean": "죄송합니다. 메시지 전송 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      "english": "Sorry, an error occurred while sending the message. Please try again.",
+      "context": "Error message in constants/index.ts",
+      "files": [
+        "constants/index.ts"
+      ]
+    },
+    "ai_thinking_message": {
+      "korean": "어시스턴스가 응답을 받았습니다...",
+      "english": "Assistant is thinking...",
+      "context": "Loading message in constants/index.ts",
+      "files": [
+        "constants/index.ts"
+      ]
+    },
+    "consultation_complete": {
+      "korean": "✅ 상담이 완료되었습니다",
+      "english": "✅ Consultation completed",
+      "context": "Success message in constants/index.ts",
+      "files": [
+        "constants/index.ts"
+      ]
+    },
+    "consultation_complete_desc": {
+      "korean": "감사합니다. 귀하의 응답이 기록되었습니다. 담당자가 연락드릴 예정입니다.",
+      "english": "Thank you. Your responses have been recorded. A representative will contact you.",
+      "context": "Success description in constants/index.ts",
+      "files": [
+        "constants/index.ts"
+      ]
+    },
+    "chat_placeholder": {
+      "korean": "💬 비즈니스 목표, 기술적 과제 또는 AWS 요구사항에 대해 말씀해 주세요... 도움을 드리겠습니다!",
+      "english": "💬 Tell me about your business goals, technical challenges, or AWS requirements... I'm here to help!",
+      "context": "Placeholder text in constants/index.ts",
+      "files": [
+        "constants/index.ts"
+      ]
+    },
+    "greeting_intro": {
+      "korean": "와 관련하여 사전에 논의할 내용과 기대사항을 공유드리기 위해 PreChat 사전채팅에 참가하였습니다!",
+      "english": " to discuss preliminary topics and share expectations through PreChat pre-consultation!",
+      "context": "Greeting message in pages/customer/CustomerChat.tsx",
+      "files": [
+        "pages/customer/CustomerChat.tsx"
+      ]
+    },
+    "text_8c014e8cd52c": {
+      "korean": "Agent:",
+      "english": "",
+      "context": "Template literal head in pages/admin/AdminDashboard.tsx",
+      "files": [
+        "pages/admin/AdminDashboard.tsx"
+      ]
+    },
+    "text_95ebdf49c2cb": {
+      "korean": ": missing required columns",
+      "english": "",
+      "context": "Template literal span in i18n/TranslationManager.ts",
+      "files": [
+        "i18n/TranslationManager.ts"
+      ]
+    },
+    "text_aaa65816241e": {
+      "korean": "| PIN:",
+      "english": "",
+      "context": "Template literal span in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "text_cdfd006442c8": {
+      "korean": "csrf_",
+      "english": "",
+      "context": "Template literal head in services/api.ts",
+      "files": [
+        "services/api.ts",
+        "utils/sessionStorage.ts"
+      ]
+    },
+    "text_d0481e643d75": {
+      "korean": "Session created successfully! URL:",
+      "english": "",
+      "context": "Template literal head in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "text_d7d32746c65c": {
+      "korean": "🎯 **Consultation Complete!**\n\nYour AWS sales representative will contact you:\n\n👤 **",
+      "english": "",
+      "context": "Template literal head in hooks/useChat.ts",
+      "files": [
+        "hooks/useChat.ts"
+      ]
+    },
+    "text_da12aff3dfb7": {
+      "korean": "_session_url.csv",
+      "english": "",
+      "context": "Template literal span in utils/csvExport.ts",
+      "files": [
+        "utils/csvExport.ts"
+      ]
+    },
+    "text_e0f0b0564d3d": {
+      "korean": "ID:",
+      "english": "",
+      "context": "JSX text content in pages/admin/AgentsDashboard.tsx",
+      "files": [
+        "pages/admin/AgentsDashboard.tsx",
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "text_f4dcaf69eaf9": {
+      "korean": "PrivacyConsent_",
+      "english": "",
+      "context": "Template literal head in utils/sessionStorage.ts",
+      "files": [
+        "utils/sessionStorage.ts"
+      ]
+    },
+    "this_agent_is_currently_prepared_and_dep": {
+      "korean": "This agent is currently prepared and deployed. Updating it will require re-preparing the agent after changes are saved.",
+      "english": "",
+      "context": "JSX text content in pages/admin/EditAgent.tsx",
+      "files": [
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "this_work_is_licensed_under_the": {
+      "korean": "This work is licensed under the",
+      "english": "",
+      "context": "JSX text content in components/Layout.tsx",
+      "files": [
+        "components/Layout.tsx"
+      ]
+    },
+    "timeline_mixed_f7ee2d": {
+      "korean": "Timeline (일정)",
+      "english": "",
+      "context": "JSX text content in components/AIAnalysisReport.tsx",
+      "files": [
+        "components/AIAnalysisReport.tsx",
+        "components/MeetingLogView.tsx"
+      ]
+    },
+    "unknown": {
+      "korean": "Unknown",
+      "english": "",
+      "context": "String literal in pages/admin/AdminSessionDetails.tsx",
+      "files": [
+        "pages/admin/AdminSessionDetails.tsx"
+      ]
+    },
+    "updated_successfully": {
+      "korean": "\" updated successfully!",
+      "english": "",
+      "context": "Template literal span in pages/admin/EditAgent.tsx",
+      "files": [
+        "pages/admin/EditAgent.tsx"
+      ]
+    },
+    "updating": {
+      "korean": "Updating",
+      "english": "",
+      "context": "JSX text content in components/StatusBadge.tsx",
+      "files": [
+        "components/StatusBadge.tsx",
+        "pages/admin/AgentsDashboard.tsx"
+      ]
+    },
+    "url_mixed_d044c6": {
+      "korean": "채팅 URL:",
+      "english": "",
+      "context": "JSX text content in pages/admin/CreateSession.tsx",
+      "files": [
+        "pages/admin/CreateSession.tsx"
+      ]
+    },
+    "you_at": {
+      "korean": "You at",
+      "english": "",
+      "context": "Template literal head in components/ChatMessage.tsx",
+      "files": [
+        "components/ChatMessage.tsx"
+      ]
+    }
+  }
+}

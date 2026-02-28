@@ -186,17 +186,10 @@ export interface AWSService {
   implementation: string;
 }
 
-export interface CustomerCase {
-  title: string;
-  description: string;
-  relevance: string;
-}
-
 export interface AnalysisResults {
   markdownSummary: string;
   bantAnalysis: BANTAnalysis;
   awsServices: AWSService[];
-  customerCases: CustomerCase[];
   analyzedAt: string;
   modelUsed: string;
   agentName?: string;

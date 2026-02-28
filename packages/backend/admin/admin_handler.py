@@ -24,7 +24,7 @@ CAMPAIGNS_TABLE = os.environ.get('CAMPAIGNS_TABLE')
 from agent_runtime import AgentCoreClient, get_agent_config_for_session, get_agent_runtime_arn
 from models.agent_config import AgentConfiguration
 
-# AgentCore 클라이언트 (Analysis Agent 호출용)
+# AgentCore 클라이언트 (Summary Agent 호출용)
 agentcore_client = AgentCoreClient()
 
 def clean_llm_response(content):
@@ -272,7 +272,6 @@ def get_session_report(event, context):
                 'markdownSummary': analysis_data.get('markdownSummary', ''),
                 'bantAnalysis': analysis_data.get('bantAnalysis', {}),
                 'awsServices': analysis_data.get('awsServices', []),
-                'customerCases': analysis_data.get('customerCases', []),
                 'analyzedAt': analysis_data.get('analyzedAt', ''),
                 'modelUsed': analysis_data.get('modelUsed', ''),
                 'agentName': analysis_data.get('agentName', ''),
@@ -695,7 +694,7 @@ def process_analysis(event, context):
         raise e
 
 def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False, meeting_log=''):
-    """AgentCore Analysis Agent를 호출하여 대화 분석을 수행합니다."""
+    """AgentCore Summary Agent를 호출하여 대화 분석을 수행합니다."""
     logger.info(f"Starting AgentCore analysis for session {session_id}, configId={config_id}")
 
     sessions_table = dynamodb.Table(SESSIONS_TABLE)
@@ -739,7 +738,9 @@ def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False
             conversation_text = conversation_text[:50000] + "\n[대화 내용이 길어 일부 생략됨]"
 
         if include_meeting_log and meeting_log:
-            conversation_text += f"\n\n미팅 로그 (Sales Rep이 작성한 초도미팅록):\n{meeting_log}\n\n위의 미팅 로그와 사전상담 대화 내용을 모두 고려하여 분석해주세요."
+            effective_meeting_log = meeting_log
+        else:
+            effective_meeting_log = session.get('meetingLog', '')
 
         # AgentConfiguration 조회
         config = None
@@ -768,16 +769,16 @@ def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False
                 logger.info(f"Injected ARN from env var for configId={config.config_id}: {env_arn}")
 
         if not config or not config.agent_runtime_arn:
-            logger.error(f"No analysis agent ARN available for session {session_id}")
+            logger.error(f"No summary agent ARN available for session {session_id}")
             sessions_table.update_item(
                 Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
                 UpdateExpression='SET analysisStatus = :status',
                 ExpressionAttributeValues={':status': 'failed'}
             )
-            return {'success': False, 'error': 'Analysis Agent가 구성되지 않았습니다. SSM 파라미터(/prechat/{stage}/agents/analysis/runtime-arn)를 확인하세요.'}
+            return {'success': False, 'error': 'Summary Agent가 구성되지 않았습니다. SSM 파라미터(/prechat/{stage}/agents/summary/runtime-arn)를 확인하세요.'}
 
-        # AgentCore Analysis Agent 호출
-        logger.info(f"Invoking AgentCore Analysis Agent: {config.agent_runtime_arn}")
+        # AgentCore Summary Agent 호출
+        logger.info(f"Invoking AgentCore Summary Agent: {config.agent_runtime_arn}")
         locale = session.get('locale', 'ko')
         result = agentcore_client.invoke_analysis(
             agent_runtime_arn=config.agent_runtime_arn,
@@ -785,6 +786,7 @@ def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False
             conversation_history=conversation_text,
             config=config,
             locale=locale,
+            meeting_log=effective_meeting_log,
         )
 
         if 'error' in result and not result.get('result'):
@@ -830,7 +832,7 @@ def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False
 
 
 def _parse_agentcore_analysis_result(result: dict, config) -> dict:
-    """AgentCore Analysis Agent 응답을 분석 결과 형식으로 파싱합니다.
+    """AgentCore Summary Agent 응답을 분석 결과 형식으로 파싱합니다.
 
     Structured Output 기반: 에이전트가 AnalysisOutput Pydantic 모델로
     검증된 응답을 반환하므로, 최소한의 변환만 수행합니다.
@@ -856,7 +858,6 @@ def _parse_agentcore_analysis_result(result: dict, config) -> dict:
                 'markdownSummary': raw,
                 'bantAnalysis': {'budget': 'N/A', 'authority': 'N/A', 'need': 'N/A', 'timeline': 'N/A'},
                 'awsServices': [],
-                'customerCases': [],
                 'analyzedAt': timestamp,
                 'modelUsed': model_used,
                 'agentName': agent_name,
@@ -867,7 +868,6 @@ def _parse_agentcore_analysis_result(result: dict, config) -> dict:
             'markdownSummary': raw.get('markdownSummary', ''),
             'bantAnalysis': raw.get('bantAnalysis', {'budget': 'N/A', 'authority': 'N/A', 'need': 'N/A', 'timeline': 'N/A'}),
             'awsServices': raw.get('awsServices', []),
-            'customerCases': raw.get('customerCases', []),
             'analyzedAt': timestamp,
             'modelUsed': model_used,
             'agentName': agent_name,
@@ -877,7 +877,6 @@ def _parse_agentcore_analysis_result(result: dict, config) -> dict:
         'markdownSummary': str(raw),
         'bantAnalysis': {'budget': 'N/A', 'authority': 'N/A', 'need': 'N/A', 'timeline': 'N/A'},
         'awsServices': [],
-        'customerCases': [],
         'analyzedAt': timestamp,
         'modelUsed': model_used,
         'agentName': agent_name,
@@ -975,13 +974,6 @@ def _perform_conversation_analysis(session_id, model_id, include_meeting_log=Fal
       "service": "추천 AWS 서비스명",
       "reason": "해당 서비스를 추천하는 이유",
       "implementation": "구체적인 구현 방안이나 적용 방법"
-    }}
-  ],
-  "customerCases": [
-    {{
-      "title": "관련 고객 사례 제목",
-      "description": "사례에 대한 상세 설명",
-      "relevance": "현재 고객과의 관련성 및 적용 가능성"
     }}
   ]
 }}
@@ -1129,13 +1121,6 @@ def _generate_fallback_analysis(session, messages):
                     'implementation': '수동으로 대화 내용을 검토하여 적절한 서비스를 선택해주세요.'
                 }
             ],
-            'customerCases': [
-                {
-                    'title': '분석 실패',
-                    'description': 'AI 분석 실패로 인해 관련 고객 사례를 제공할 수 없습니다.',
-                    'relevance': '수동으로 유사한 고객 사례를 검토해주세요.'
-                }
-            ]
         }
         
         return fallback
@@ -1146,7 +1131,6 @@ def _generate_fallback_analysis(session, messages):
             'markdownSummary': '# 분석 실패\n\n시스템 오류로 인해 분석을 수행할 수 없습니다.',
             'bantAnalysis': {'budget': '분석 실패', 'authority': '분석 실패', 'need': '분석 실패', 'timeline': '분석 실패'},
             'awsServices': [{'service': '분석 실패', 'reason': '시스템 오류', 'implementation': '수동 검토 필요'}],
-            'customerCases': [{'title': '분석 실패', 'description': '시스템 오류', 'relevance': '수동 검토 필요'}]
         }
 
 def _call_llm_for_analysis(model_id, prompt, max_retries=3):
@@ -1244,7 +1228,7 @@ def _call_llm_for_analysis(model_id, prompt, max_retries=3):
 
 def _validate_llm_response(analysis_result):
     """Validate LLM response structure"""
-    required_fields = ['markdownSummary', 'bantAnalysis', 'awsServices', 'customerCases']
+    required_fields = ['markdownSummary', 'bantAnalysis', 'awsServices']
     for field in required_fields:
         if field not in analysis_result:
             raise ValueError(f"Missing required field: {field}")
@@ -1258,9 +1242,6 @@ def _validate_llm_response(analysis_result):
     # Validate lists
     if not isinstance(analysis_result['awsServices'], list):
         raise ValueError("awsServices must be a list")
-    
-    if not isinstance(analysis_result['customerCases'], list):
-        raise ValueError("customerCases must be a list")
 
 def _store_analysis_results(session_id, analysis_data, max_retries=3):
     """Store analysis results in DynamoDB with atomic updates and retry logic"""
@@ -1322,7 +1303,7 @@ def _validate_analysis_data(analysis_data):
     Structured Output 기반 에이전트가 이미 Pydantic 검증을 수행하므로,
     여기서는 최소한의 필수 필드 존재 여부만 확인합니다.
     """
-    required_fields = ['markdownSummary', 'bantAnalysis', 'awsServices', 'customerCases', 'analyzedAt', 'modelUsed']
+    required_fields = ['markdownSummary', 'bantAnalysis', 'awsServices', 'analyzedAt', 'modelUsed']
 
     for field in required_fields:
         if field not in analysis_data:
@@ -1346,17 +1327,6 @@ def _validate_analysis_data(analysis_data):
             # reason, implementation은 빈 문자열 허용
             service.setdefault('reason', '')
             service.setdefault('implementation', '')
-
-    # Validate customerCases is a list
-    if not isinstance(analysis_data['customerCases'], list):
-        raise ValueError("customerCases must be a list")
-
-    for case in analysis_data['customerCases']:
-        if isinstance(case, dict):
-            if 'title' not in case:
-                raise ValueError("Missing customer case field: title")
-            case.setdefault('description', '')
-            case.setdefault('relevance', '')
 
 def _get_stored_analysis(session_id):
     """Retrieve stored analysis results from DynamoDB"""

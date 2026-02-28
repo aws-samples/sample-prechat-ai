@@ -11,7 +11,7 @@ strands-agents/
 │   ├── agent.py               # Strands Agent + AgentCore 엔트리포인트
 │   ├── deploy_agent.py        # 개별 배포 스크립트
 │   └── requirements.txt
-├── analysis-agent/            # BANT 요약 에이전트
+├── summary-agent/             # BANT 요약 에이전트 (Summary Agent)
 │   ├── agent.py
 │   ├── deploy_agent.py
 │   └── requirements.txt
@@ -37,7 +37,7 @@ cd packages/strands-agents
 | SSM 파라미터 | 설명 |
 |-------------|------|
 | `/prechat/{stage}/agents/consultation/runtime-arn` | Consultation Agent ARN |
-| `/prechat/{stage}/agents/analysis/runtime-arn` | Analysis Agent ARN |
+| `/prechat/{stage}/agents/summary/runtime-arn` | Summary Agent ARN |
 | `/prechat/{stage}/agents/planning/runtime-arn` | Planning Agent ARN |
 
 ## Lambda 함수에서 에이전트 사용
@@ -49,7 +49,7 @@ SAM 템플릿의 Globals에서 SSM 파라미터를 resolve하여 환경 변수�
 Environment:
   Variables:
     CONSULTATION_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/consultation/runtime-arn:1}}'
-    ANALYSIS_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/analysis/runtime-arn:1}}'
+    SUMMARY_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/summary/runtime-arn:1}}'
     PLANNING_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/planning/runtime-arn:1}}'
 ```
 
@@ -74,7 +74,7 @@ if config and config.agent_runtime_arn:
 | 에이전트 | memory_mode | 부가 능력 |
 |---------|-------------|----------|
 | Consultation | `STM_ONLY` | KB RAG (@tool), Div Return (@tool) |
-| Analysis | `NO_MEMORY` | BANT 분석 (프롬프트) |
+| Analysis (Summary) | `NO_MEMORY` | BANT 분석 (프롬프트) |
 | Planning | `NO_MEMORY` | KB RAG (@tool) |
 
 ## 배포 순서

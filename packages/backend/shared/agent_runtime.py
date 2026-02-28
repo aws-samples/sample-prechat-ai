@@ -21,19 +21,18 @@ from models.agent_config import AgentConfiguration
 # SSM에서 resolve된 기본 에이전트 ARN (deploy-agents.sh로 등록)
 # 모듈 로드 시점에 환경 변수 읽기
 DEFAULT_CONSULTATION_AGENT_ARN = os.environ.get('CONSULTATION_AGENT_ARN', '')
-DEFAULT_ANALYSIS_AGENT_ARN = os.environ.get('ANALYSIS_AGENT_ARN', '')
+DEFAULT_SUMMARY_AGENT_ARN = os.environ.get('SUMMARY_AGENT_ARN', '')
 DEFAULT_PLANNING_AGENT_ARN = os.environ.get('PLANNING_AGENT_ARN', '')
 
 print(f"[INIT] Module loaded - DEFAULT_CONSULTATION_AGENT_ARN: '{DEFAULT_CONSULTATION_AGENT_ARN}'")
-print(f"[INIT] Module loaded - DEFAULT_ANALYSIS_AGENT_ARN: '{DEFAULT_ANALYSIS_AGENT_ARN}'")
+print(f"[INIT] Module loaded - DEFAULT_SUMMARY_AGENT_ARN: '{DEFAULT_SUMMARY_AGENT_ARN}'")
 print(f"[INIT] Module loaded - DEFAULT_PLANNING_AGENT_ARN: '{DEFAULT_PLANNING_AGENT_ARN}'")
 
 # 역할별 기본 ARN 매핑
 DEFAULT_AGENT_ARNS = {
     'prechat': DEFAULT_CONSULTATION_AGENT_ARN,
     'consultation': DEFAULT_CONSULTATION_AGENT_ARN,
-    'analysis': DEFAULT_ANALYSIS_AGENT_ARN,
-    'summary': DEFAULT_ANALYSIS_AGENT_ARN,
+    'summary': DEFAULT_SUMMARY_AGENT_ARN,
     'planning': DEFAULT_PLANNING_AGENT_ARN,
 }
 
@@ -327,10 +326,13 @@ class AgentCoreClient:
         conversation_history: str,
         config: Optional[AgentConfiguration] = None,
         locale: str = 'ko',
+        meeting_log: str = '',
     ) -> dict:
-        """Analysis Agent를 호출하여 BANT 요약을 반환합니다."""
+        """Summary Agent를 호출하여 BANT 요약을 반환합니다."""
         try:
             payload = {"conversation_history": conversation_history}
+            if meeting_log:
+                payload["meeting_log"] = meeting_log
             config_dict = _build_config_payload(config, locale)
             if config_dict:
                 payload["config"] = config_dict
@@ -342,7 +344,7 @@ class AgentCoreClient:
             )
             return result
         except Exception as e:
-            print(f"Analysis agent error: {str(e)}")
+            print(f"Summary agent error: {str(e)}")
             return {"error": str(e)}
 
     def invoke_planning(

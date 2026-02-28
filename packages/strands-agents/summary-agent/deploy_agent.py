@@ -1,5 +1,5 @@
 """
-Analysis Agent 배포 스크립트
+Summary Agent 배포 스크립트
 
 Capabilities:
   - BANT 요약만 수행 → memory_mode="NO_MEMORY"
@@ -25,7 +25,7 @@ agentcore_runtime = Runtime()
 
 response = agentcore_runtime.configure(
     entrypoint="agent.py",
-    agent_name="prechatAnalysisAgent",
+    agent_name="prechatSummaryAgent",
     requirements_file="requirements.txt",
     auto_create_execution_role=True,
     auto_create_ecr=True,
@@ -33,7 +33,7 @@ response = agentcore_runtime.configure(
     memory_mode="NO_MEMORY",
 )
 
-print("🚀 Analysis Agent 배포 시작...", file=sys.stderr)
+print("🚀 Summary Agent 배포 시작...", file=sys.stderr)
 launch_result = agentcore_runtime.launch(
     env_vars={
         "STAGE": stage,
@@ -57,7 +57,7 @@ if not arn:
     print(f"⚠️  ARN 추출 실패. Raw result: {launch_result}", file=sys.stderr)
 
 output = {
-    "agent_name": "prechatAnalysisAgent",
+    "agent_name": "prechatSummaryAgent",
     "agent_runtime_arn": arn,
     "region": region,
 }

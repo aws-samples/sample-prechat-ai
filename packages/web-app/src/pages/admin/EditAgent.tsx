@@ -20,13 +20,13 @@ import { adminApi } from '../../services/api'
 import { BEDROCK_MODELS } from '../../types'
 import { PlaceholderTooltip } from '../../components'
 import consultationPrompt from '../../assets/prechat-agent-prompt.md?raw'
-import analysisPrompt from '../../assets/analysis-agent-prompt.md?raw'
+import analysisPrompt from '../../assets/summary-agent-prompt.md?raw'
 import planningPrompt from '../../assets/planning-agent-prompt.md?raw'
 import { useI18n } from '../../i18n'
 
 const ROLE_LABELS: Record<string, string> = {
   prechat: 'Consultation Agent',
-  summary: 'Analysis Agent',
+  summary: 'Summary Agent',
   planning: 'Planning Agent'
 }
 

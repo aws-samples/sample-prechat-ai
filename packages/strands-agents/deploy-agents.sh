@@ -124,9 +124,9 @@ except:
 deploy_agent "consultation-agent" "consultation"
 
 # ============================================
-# 2. Analysis Agent (NO_MEMORY, no KB)
+# 2. Summary Agent (NO_MEMORY, no KB)
 # ============================================
-deploy_agent "analysis-agent" "analysis"
+deploy_agent "summary-agent" "summary"
 
 # ============================================
 # 3. Planning Agent (NO_MEMORY + KB)

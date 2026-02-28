@@ -18,7 +18,7 @@ import { extractModelName } from '../../constants'
 
 const ROLE_LABELS: Record<string, string> = {
   prechat: 'Consultation',
-  summary: 'Analysis',
+  summary: 'Summary',
   planning: 'Planning'
 }
 

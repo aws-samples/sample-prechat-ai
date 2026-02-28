@@ -465,28 +465,6 @@ export function generateAnalysisReportHTML(data: ExportData): string {
                 }
             </div>
             
-            <!-- Customer Cases -->
-            <div class="section">
-                <h2 class="section-title">관련 고객 사례</h2>
-                ${data.analysisResults.customerCases && data.analysisResults.customerCases.length > 0 ?
-                    `<div class="cases-list">
-                        ${data.analysisResults.customerCases.map(customerCase => `
-                            <div class="case-card">
-                                <div class="case-title">${customerCase.title}</div>
-                                <div class="case-section">
-                                    <div class="case-section-title">사례 설명</div>
-                                    <div class="case-section-content">${customerCase.description}</div>
-                                </div>
-                                <div class="case-section">
-                                    <div class="case-section-title">관련성</div>
-                                    <div class="case-section-content">${customerCase.relevance}</div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>` :
-                    '<div class="no-data">관련 고객 사례가 생성되지 않았습니다.</div>'
-                }
-            </div>
         </div>
         
         <div class="footer">
@@ -1022,28 +1000,6 @@ export function generateMeetingLogReportHTML(data: MeetingLogExportData): string
                         }
                     </div>
                     
-                    <!-- Customer Cases -->
-                    <div class="section">
-                        <h2 class="section-title">관련 고객 사례</h2>
-                        ${data.analysisResults.customerCases && data.analysisResults.customerCases.length > 0 ?
-                            `<div class="cases-list">
-                                ${data.analysisResults.customerCases.map(customerCase => `
-                                    <div class="case-card">
-                                        <div class="case-title">${customerCase.title}</div>
-                                        <div class="case-section">
-                                            <div class="case-section-title">사례 설명</div>
-                                            <div class="case-section-content">${customerCase.description}</div>
-                                        </div>
-                                        <div class="case-section">
-                                            <div class="case-section-title">관련성</div>
-                                            <div class="case-section-content">${customerCase.relevance}</div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>` :
-                            '<div class="no-data">관련 고객 사례가 생성되지 않았습니다.</div>'
-                        }
-                    </div>
                 </div>
                 
                 <!-- Right Column - Meeting Log -->

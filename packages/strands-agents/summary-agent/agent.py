@@ -1,5 +1,5 @@
 """
-PreChat Analysis Agent
+PreChat Summary Agent
 
 세션 종료 후 비동기적으로 호출되어 고객 상담 내용을 BANT 프레임워크로 요약합니다.
 Session 도메인의 AI Summary를 보강합니다.
@@ -45,21 +45,15 @@ class AWSService(BaseModel):
     implementation: str = Field(description="Brief implementation guidance or approach")
 
 
-class CustomerCase(BaseModel):
-    """유사 고객 사례"""
-    title: str = Field(description="Customer case title")
-    description: str = Field(description="Brief description of the case")
-    relevance: str = Field(description="Why this case is relevant to the customer")
 
 
 class AnalysisOutput(BaseModel):
-    """PreChat 분석 에이전트의 구조화된 출력 모델.
+    """PreChat 요약 에이전트의 구조화된 출력 모델.
 
     프론트엔드 AnalysisResults 타입과 정확히 매핑됩니다:
       - markdownSummary: executive summary (2-3 sentences)
       - bantAnalysis: BANT framework analysis
       - awsServices: recommended AWS services list
-      - customerCases: similar customer cases (can be empty)
     """
     markdownSummary: str = Field(
         description="Executive summary of the pre-consultation in 2-3 sentences"
@@ -70,10 +64,6 @@ class AnalysisOutput(BaseModel):
     awsServices: list[AWSService] = Field(
         default_factory=list,
         description="List of recommended AWS services with reasons and implementation guidance"
-    )
-    customerCases: list[CustomerCase] = Field(
-        default_factory=list,
-        description="List of similar customer cases. Empty list if no relevant cases found."
     )
 
 
@@ -90,35 +80,34 @@ Analyze pre-consultation conversation content and generate a structured summary 
 - Do not speculate - base your analysis strictly on the conversation content
 - Each BANT field should be a concise paragraph summarizing all relevant details
 - For awsServices, recommend specific AWS services relevant to the customer's needs with clear reasons
-- For customerCases, include similar cases if identifiable from context; otherwise return an empty list
 """
 
 DEFAULT_MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
-DEFAULT_AGENT_NAME = "prechatAnalysisAgent"
+DEFAULT_AGENT_NAME = "prechatSummaryAgent"
 
 
 def _get_locale_instruction(locale: str) -> str:
     """locale 코드에 따른 언어 지시를 반환합니다."""
-    if locale == 'en':
+    if locale == 'ko':
         return (
             "## Language Instruction\n"
-            "IMPORTANT: You MUST respond in English. "
-            "All analysis results, field values, and summaries must be written in English."
+            "IMPORTANT: You MUST respond in Korean (한국어). "
+            "All analysis results, field values, and summaries must be written in Korean."
         )
     return (
         "## Language Instruction\n"
-        "IMPORTANT: You MUST respond in Korean (한국어). "
-        "All analysis results, field values, and summaries must be written in Korean."
+        "IMPORTANT: You MUST respond in English. "
+        "All analysis results, field values, and summaries must be written in English."
     )
 
 
-def create_analysis_agent(
+def create_summary_agent(
     system_prompt: str | None = None,
     model_id: str | None = None,
     agent_name: str | None = None,
     locale: str = 'ko',
 ) -> Agent:
-    """Analysis Agent를 생성합니다.
+    """Summary Agent를 생성합니다.
 
     Args:
         system_prompt: 사용자 정의 시스템 프롬프트 (None이면 DEFAULT 사용)
@@ -151,6 +140,7 @@ def invoke(payload: dict) -> dict:
     payload 구조:
       {
         "conversation_history": "대화 내용 텍스트",
+        "meeting_log": "영업 담당자가 작성한 미팅 로그 (선택, 빈 문자열 가능)",
         "config": {
           "system_prompt": "...",
           "model_id": "...",
@@ -163,10 +153,11 @@ def invoke(payload: dict) -> dict:
     if not conversation_history:
         return {"error": "No conversation_history provided"}
 
+    meeting_log = payload.get("meeting_log", "")
     config = payload.get("config", {})
     locale = config.get("locale", "ko")
 
-    agent = create_analysis_agent(
+    agent = create_summary_agent(
         system_prompt=config.get("system_prompt"),
         model_id=config.get("model_id"),
         agent_name=config.get("agent_name"),
@@ -177,6 +168,14 @@ def invoke(payload: dict) -> dict:
         "Analyze the following pre-consultation conversation using the BANT framework:\n\n"
         f"{conversation_history}"
     )
+
+    if meeting_log:
+        prompt += (
+            "\n\n--- Meeting Log (written by Sales Rep) ---\n"
+            f"{meeting_log}\n"
+            "---\n\n"
+            "Consider both the pre-consultation conversation and the meeting log above in your analysis."
+        )
 
     try:
         result = agent(prompt, structured_output_model=AnalysisOutput)
@@ -199,7 +198,6 @@ def invoke(payload: dict) -> dict:
                     "timeline": "Analysis parsing failed - see markdownSummary",
                 },
                 "awsServices": [],
-                "customerCases": [],
             }
         }
 

@@ -389,12 +389,6 @@
       "reasonLabel": "추천 이유",
       "implementationLabel": "구현 방안"
     },
-    "customerCases": {
-      "sectionTitle": "관련 고객 사례",
-      "noResults": "관련 고객 사례가 생성되지 않았습니다.",
-      "descriptionLabel": "사례 설명",
-      "relevanceLabel": "관련성"
-    },
     "meetingLog": {
       "sectionTitle": "미팅 로그",
       "editButton": "수정",
@@ -423,7 +417,7 @@
       "modelUsed": "| \n                  에이전트:",
       "noAnalysisResults": "분석 결과가 없습니다",
       "noAnalysisResultsDescription": "\"재분석\" 버튼을 클릭하여 대화 내용과 미팅 로그를 함께 분석해보세요.",
-      "agentSelectLabel": "분석 에이전트 선택",
+      "agentSelectLabel": "요약 에이전트 선택",
       "agentSelectPlaceholder": "요약 에이전트를 선택하세요",
       "agentSelectEmpty": "캠페인에 연결된 요약 에이전트가 없습니다"
     },

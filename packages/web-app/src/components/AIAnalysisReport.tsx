@@ -293,7 +293,6 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
         <MarkdownSummaryContainer summary={analysisResults.markdownSummary} />
         <BANTAnalysisContainer bantAnalysis={analysisResults.bantAnalysis} />
         <AWSServicesContainer awsServices={analysisResults.awsServices} />
-        <CustomerCasesContainer customerCases={analysisResults.customerCases} />
         
         <Container>
           <Box fontSize="body-s" color="text-status-inactive" textAlign="center">
@@ -476,49 +475,4 @@ function AWSServicesContainer({ awsServices }: AWSServicesContainerProps) {
   )
 }
 
-// Customer Cases Container
-interface CustomerCasesContainerProps {
-  customerCases: Array<{
-    title: string
-    description: string
-    relevance: string
-  }>
-}
 
-function CustomerCasesContainer({ customerCases }: CustomerCasesContainerProps) {
-  const { t } = useI18n()
-  
-  if (!customerCases || customerCases.length === 0) {
-    return (
-      <Container>
-        <Header variant="h3">{t('adminSessionDetail.customerCases.sectionTitle')}</Header>
-        <Box textAlign="center" padding="l" color="text-status-inactive">
-          {t('adminSessionDetail.customerCases.noResults')}
-        </Box>
-      </Container>
-    )
-  }
-
-  return (
-    <Container>
-      <Header variant="h3">{t('adminSessionDetail.customerCases.sectionTitle')}</Header>
-      <SpaceBetween size="m">
-        {customerCases.map((customerCase, index) => (
-          <div key={index} style={{ border: '1px solid #e1e4e8', borderRadius: '8px', backgroundColor: '#fafbfc', padding: '24px' }}>
-            <SpaceBetween size="s">
-              <Box variant="h4">{customerCase.title}</Box>
-              <Box>
-                <Box variant="awsui-key-label">{t('adminSessionDetail.customerCases.descriptionLabel')}</Box>
-                <Box>{customerCase.description}</Box>
-              </Box>
-              <Box>
-                <Box variant="awsui-key-label">{t('adminSessionDetail.customerCases.relevanceLabel')}</Box>
-                <Box fontSize="body-s" color="text-status-info">{customerCase.relevance}</Box>
-              </Box>
-            </SpaceBetween>
-          </div>
-        ))}
-      </SpaceBetween>
-    </Container>
-  )
-}

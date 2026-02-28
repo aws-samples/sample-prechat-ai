@@ -389,12 +389,6 @@
       "reasonLabel": "Recommendation Reason",
       "implementationLabel": "Implementation Plan"
     },
-    "customerCases": {
-      "sectionTitle": "Related Customer Cases",
-      "noResults": "No related customer cases were generated.",
-      "descriptionLabel": "Case Description",
-      "relevanceLabel": "Relevance"
-    },
     "meetingLog": {
       "sectionTitle": "Meeting Log",
       "editButton": "Edit",
@@ -423,7 +417,7 @@
       "modelUsed": "| \n                  Agent:",
       "noAnalysisResults": "No analysis results",
       "noAnalysisResultsDescription": "Click the \"Re-analyze\" button to analyze the conversation content and meeting log together.",
-      "agentSelectLabel": "Select Analysis Agent",
+      "agentSelectLabel": "Select Summary Agent",
       "agentSelectPlaceholder": "Select a summary agent",
       "agentSelectEmpty": "No summary agent connected to campaign"
     },

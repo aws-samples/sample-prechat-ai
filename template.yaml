@@ -65,7 +65,7 @@ Globals:
         BEDROCK_KB_ID: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/bedrock-kb-id}}'
         # Strands Agent Runtime ARNs (SSM Parameter Store에서 resolve)
         CONSULTATION_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/consultation/runtime-arn}}'
-        ANALYSIS_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/analysis/runtime-arn}}'
+        SUMMARY_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/summary/runtime-arn}}'
         PLANNING_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/planning/runtime-arn}}'
     KmsKeyArn: !GetAtt DynamoDBKMSKey.Arn
   Api:
