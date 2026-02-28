@@ -1,450 +1,219 @@
-# PreChat: sample consultation AI on AWS
+# PreChat: AI-Powered Pre-Consultation System on AWS
 
-> **An AWS Sample Project** - Learn how to build a chat-based consultation system using Amazon Bedrock Agents for intelligent customer interactions and automated data collection.
+> Amazon Bedrock AgentCore + Strands SDK 기반 대화형 사전 상담 시스템
 
 [![License: MIT-0](https://img.shields.io/badge/License-MIT--0-blue.svg)](LICENSE)
 [![AWS](https://img.shields.io/badge/AWS-Serverless-orange.svg)](https://aws.amazon.com/serverless/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.18.1-green.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/)
 
-## 🎯 Overview
+Last Updated: 2026-02-28
 
-This sample project demonstrates how to build an intelligent consultation system that replaces traditional forms with an AI-powered chatbot interface. It showcases how to use Amazon Bedrock Agents to guide users through structured conversations, collect business requirements, and generate comprehensive reports - perfect for consultation services, lead qualification, or customer onboarding processes.
+## Overview
 
-### What You'll Learn
+PreChat은 전통적인 폼 기반 데이터 수집을 AI 챗봇 인터페이스로 대체하는 사전 상담 시스템입니다. 고객과의 자연스러운 대화를 통해 비즈니스 요구사항을 수집하고, BANT 분석 리포트와 미팅 플랜을 자동 생성합니다.
 
-- **🤖 Bedrock Agents Integration**: How to create and manage Amazon Bedrock Agents for conversational AI
-- **📊 Serverless Architecture**: Building scalable chat systems with AWS Lambda and DynamoDB
-- **🧠 AI-Powered Conversations**: Implementing structured dialogue flows with intelligent responses
-- **📈 Session Management**: Creating secure, PIN-protected consultation sessions
-- **☁️ Full-Stack Development**: React frontend with AWS serverless backend
+### 핵심 기능
 
-## ✨ Features
+- **대화형 상담**: Strands SDK 에이전트가 고객과 구조화된 대화를 진행
+- **BANT 분석**: 상담 완료 후 AI가 Budget/Authority/Need/Timeline 프레임워크로 자동 분석
+- **미팅 플랜 생성**: 유사 고객사례 검색(KB RAG) + AWS Documentation MCP 연동
+- **실시간 스트리밍**: WebSocket 기반 SSE 스트리밍 응답
+- **다국어 지원**: 한국어/영어 완전 지원 (i18n)
+- **이벤트 트리거**: 세션 완료 시 Slack/SNS 자동 알림
 
-### Client Interface
-- **Interactive Chatbot**: Multi-stage guided conversation flow
-- **Real-time AI Responses**: Powered by Amazon Bedrock foundation models
-- **Mobile-Responsive**: Works seamlessly across all devices
-- **Secure Sessions**: PIN-protected consultation sessions
-
-### Admin Dashboard
-- **Session Management**: Create, view, inactivate, and delete consultation sessions
-- **AI-Generated Reports**: Comprehensive session summaries and insights
-- **Conversation History**: Complete chat transcripts and client profiles
-- **Analytics**: Track consultation effectiveness and user engagement
-
-### Amazon Bedrock Agents Features
-- **Agent Creation & Management**: Learn to create and configure Bedrock Agents
-- **Multi-Model Support**: Work with Claude 3, Claude 3.5, and Amazon Nova models
-- **Custom Instructions**: Design conversation flows and agent behavior
-- **Agent Deployment**: Understand the agent preparation and deployment process
-- **Prompt Engineering**: Implement effective prompts for consultation scenarios
-
-## 📱 Website Sections After Deployment
-
-The following table shows the main sections of the deployed application with visual previews:
-
-| Section | Description | Preview |
-|---------|-------------|---------|
-| **Customer Chat Interface** | Interactive chatbot interface where customers engage in guided conversations. Features real-time AI responses, mobile-responsive design, and secure PIN-protected sessions. | ![Customer Chat](repo/images/customer_chat.png) |
-| **Admin Dashboard** | Comprehensive management interface for consultation sessions. Includes session creation, monitoring, and analytics with AI-generated reports and conversation history. | ![Admin Dashboard](repo/images/admin_dashboard.png) |
-| **Meeting Log Analysis** | AI-powered analysis and reporting system that generates comprehensive session summaries, insights, and consultation effectiveness metrics from conversation data. | ![Meeting Log Analysis](repo/images/meetlog_analysis.png) |
-
-## 🏗️ Architecture
-
-Built on AWS serverless services for scalability, security, and cost-effectiveness:
+## Architecture
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   React SPA     │    │   API Gateway    │    │  Lambda Functions│
-│  (CloudFront)   │◄──►│   (REST API)     │◄──►│    (Python)     │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                                         │
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Amazon Cognito │    │   Amazon S3      │    │   DynamoDB      │
-│ (Authentication)│    │ (Static Hosting) │    │  (Database)     │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                                         │
-                       ┌──────────────────┐    ┌─────────────────┐
-                       │ Amazon Bedrock   │    │   CloudWatch    │
-                       │ (AI/ML Models)   │    │   (Monitoring)  │
-                       └──────────────────┘    └─────────────────┘
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────────────┐
+│   React SPA     │     │   API Gateway    │     │   Lambda Functions       │
+│  (CloudFront)   │◄───►│   (REST + WS)    │◄───►│   (Python 3.13)          │
+│  Cloudscape UI  │     │                  │     │   도메인별 격리           │
+└─────────────────┘     └──────────────────┘     └──────────┬───────────────┘
+                                                            │
+┌─────────────────┐     ┌──────────────────┐     ┌──────────▼───────────────┐
+│  Cognito        │     │   DynamoDB       │     │  Bedrock AgentCore       │
+│  (Admin Auth)   │     │  (KMS 암호화)     │     │  ┌─────────────────────┐ │
+└─────────────────┘     │  Sessions Table  │     │  │ Consultation Agent  │ │
+                        │  Messages Table  │     │  │ Summary Agent       │ │
+┌─────────────────┐     │  Campaigns Table │     │  │ Planning Agent      │ │
+│  S3 + CloudFront│     └──────────────────┘     │  └─────────────────────┘ │
+│  (Static + Files)│                             │  Strands SDK + MCP       │
+└─────────────────┘                              └──────────────────────────┘
 ```
 
-### Technology Stack
-- **Frontend**: React with AWS Cloudscape Design System
-- **Backend**: AWS Lambda (Python 3.13)
-- **Database**: Amazon DynamoDB with KMS encryption (3 tables: Sessions, Messages, Campaigns)
-- **AI/ML**: Amazon Bedrock (Claude, Nova models)
-- **Authentication**: Amazon Cognito
-- **API**: Amazon API Gateway with caching
-- **Hosting**: Amazon S3 + CloudFront
-- **Infrastructure**: AWS SAM (Infrastructure as Code)
-- **Security**: VPC, KMS encryption, IAM roles
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-Ensure you have the following installed:
-
-- **Node.js**: v20.18.1+ ([Download](https://nodejs.org/))
-- **Yarn**: v1.22.22+ (`npm install -g yarn`)
-- **AWS CLI**: v2.x ([Installation Guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
-- **SAM CLI**: v1.x ([Installation Guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html))
-
-### AWS Setup
-
-1. **Configure AWS CLI**:
-   ```bash
-   aws configure
-   # Enter your AWS Access Key ID, Secret Access Key, and region (ap-northeast-2)
-   ```
-
-### Installation & Deployment
-
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd sample-prechat-ai
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   yarn install
-   ```
-
-3. **Deploy to AWS**:
-   ```bash
-   # Make scripts executable
-   chmod +x deploy-full.sh deploy-website.sh update-env-vars.sh
-   
-   # Deploy with default settings (dev environment)
-   ./deploy-full.sh
-   
-   # Or deploy to production
-   ./deploy-full.sh default prod ap-northeast-2 ap-northeast-2
-   ```
-
-4. **Access your application**:
-   After successful deployment, you'll receive URLs for:
-   - **Client Interface**: `https://[cloudfront-domain].cloudfront.net`
-   - **Admin Dashboard**: `https://[cloudfront-domain].cloudfront.net/admin`
-
-## 📖 Deployment Guide
-
-### Deployment Parameters
-
-The deployment script accepts the following parameters:
-
-```bash
-./deploy-full.sh [AWS_PROFILE] [STAGE] [REGION] [BEDROCK_REGION] [STACK_NAME]
-```
-
-| Parameter | Default | Description | Example |
-|-----------|---------|-------------|---------|
-| `AWS_PROFILE` | `default` | AWS CLI profile name | `default`, `production` |
-| `STAGE` | `dev` | Deployment environment | `dev`, `prod` |
-| `REGION` | `ap-northeast-2` | AWS region for infrastructure | `us-east-1`, `eu-west-1` |
-| `BEDROCK_REGION` | Same as REGION | Region for Bedrock models | `ap-northeast-2` |
-| `STACK_NAME` | `prechat-sample` | CloudFormation stack name | `my-company-consultation` |
-
-### Deployment Examples
-
-```bash
-# Development environment (default)
-./deploy-full.sh
-
-# Production environment with custom stack name
-./deploy-full.sh default prod ap-northeast-2 ap-northeast-2 company-consultation-prod
-
-# Different AWS profile
-./deploy-full.sh my-profile dev us-east-1 us-east-1
-```
-
-### Post-Deployment Steps
-
-1. **Verify Bedrock Model Access**:
-   - Go to AWS Console → Amazon Bedrock → Model access
-   - Request access to Anthropic Cluade and Amazon Nova models
-   - Ensure cross-inference profiles are enabled for your deployment region
-   - Wait for model access approval (may take a few minutes to hours)
-
-2. **Verify S3 bucket policies** for CloudFront OAC access
-3. **Sign up** for an admin account at `/admin`
-4. **Create your first Bedrock Agent** in the admin dashboard
-5. **Create consultation sessions** and start testing the chatbot
-
-For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
-
-## 🛠️ Development
-
-### Project Structure
+## 프로젝트 구조
 
 ```
-sample-prechat-ai/
-├── README.md                    # This file
-├── DEPLOYMENT_GUIDE.md          # Detailed deployment instructions
-├── LICENSE                      # MIT-0 license
-├── package.json                 # Root package configuration
-├── template.yaml                # AWS SAM template
-├── samconfig.toml              # SAM deployment configuration
-├── deploy-full.sh              # Full deployment script
-├── deploy-website.sh           # Website-only deployment
-├── update-env-vars.sh          # Environment variables update
+prechat/
 ├── packages/
-│   ├── backend/                # Lambda functions (Python)
-│   └── web-app/               # React frontend application
-└── aws/                       # AWS service examples and samples
+│   ├── backend/              # Python Lambda (도메인별 분리)
+│   │   ├── session/          # 세션 CRUD, PIN 인증, 메시지
+│   │   ├── campaign/         # 캠페인 CRUD, 분석
+│   │   ├── admin/            # 관리자 API, 커스터마이징
+│   │   ├── auth/             # Cognito 인증
+│   │   ├── agent/            # Agent 관리/설정
+│   │   ├── trigger/          # 이벤트 트리거 (Slack/SNS)
+│   │   ├── file/             # 파일 업로드 (S3)
+│   │   ├── stream/           # DynamoDB Streams
+│   │   ├── websocket/        # WebSocket 핸들러
+│   │   ├── meeting/          # 미팅 플랜
+│   │   ├── migration/        # 마이그레이션
+│   │   └── shared/           # Lambda Layer 공통 코드
+│   ├── web-app/              # React SPA (Vite + Cloudscape)
+│   └── strands-agents/       # Strands SDK AI 에이전트 (AgentCore)
+│       ├── consultation-agent/  # 고객 상담 에이전트
+│       ├── summary-agent/       # BANT 요약 에이전트
+│       └── planning-agent/      # 미팅 플랜 + 채팅 에이전트
+├── template.yaml             # AWS SAM IaC
+├── deploy-full.sh            # 전체 배포 (에이전트 → SAM → 프론트엔드)
+├── deploy-website.sh         # 프론트엔드만 배포
+└── package.json              # Yarn Workspaces 루트
 ```
 
-### AWS SAM Commands
+## 기술 스택
+
+| 계층 | 기술 | 비고 |
+|------|------|------|
+| Frontend | React 18 + Vite + Cloudscape | TypeScript, i18n (ko/en) |
+| Backend | Python 3.13 Lambda | 도메인별 격리, SharedLayer |
+| AI Agents | Strands SDK + Bedrock AgentCore | Docker 컨테이너 배포 |
+| MCP 연동 | AWS Documentation MCP Server | uvx 기반, Dockerfile 사전 설치 |
+| Database | DynamoDB (KMS 암호화) | TTL 자동 만료, GSI |
+| Auth | Cognito (Admin) + PIN (Customer) | JWT + 6자리 PIN |
+| Infra | SAM + CloudFront + VPC | IaC, Private Subnet |
+| Test | Vitest + fast-check | Property-based 테스트 |
+
+## Quick Start
+
+### 사전 요구사항
+
+- Node.js v20.18.1+, Yarn v1.22.22+
+- Python 3.13, uv (uvx)
+- AWS CLI v2, SAM CLI v1
+- Docker (에이전트 빌드용)
+- `bedrock-agentcore-starter-toolkit` (`pip install bedrock-agentcore-starter-toolkit`)
+
+### 배포
 
 ```bash
-# Build SAM application
+# 1. 의존성 설치
+yarn install
+
+# 2. 전체 배포 (에이전트 → SAM → 프론트엔드)
+chmod +x deploy-full.sh deploy-website.sh
+./deploy-full.sh [AWS_PROFILE] [STAGE] [REGION] [BEDROCK_REGION] [STACK_NAME] [BEDROCK_KB_ID]
+
+# 기본값: default / dev / ap-northeast-2 / (REGION) / mte-prechat
+```
+
+
+배포 순서: `deploy-agents.sh` (AgentCore) → `sam deploy` (인프라) → `deploy-website.sh` (프론트엔드)
+
+| 파라미터 | 기본값 | 설명 |
+|---------|--------|------|
+| `AWS_PROFILE` | `default` | AWS CLI 프로파일 |
+| `STAGE` | `dev` | 배포 환경 (dev/prod) |
+| `REGION` | `ap-northeast-2` | AWS 리전 |
+| `BEDROCK_REGION` | REGION과 동일 | Bedrock 모델 리전 |
+| `STACK_NAME` | `mte-prechat` | CloudFormation 스택명 |
+| `BEDROCK_KB_ID` | (없음) | Knowledge Base ID (유사사례 검색용) |
+
+### 배포 후 확인
+
+1. AWS Console → Amazon Bedrock → Model access에서 Claude/Nova 모델 접근 승인
+2. `https://[cloudfront-domain]/admin`에서 관리자 계정 생성
+3. PreChat Agent 생성 → 캠페인 생성 → 세션 생성 → 고객 채팅 테스트
+
+## 개발
+
+```bash
+# 프론트엔드 개발 서버 (포트 5173)
+yarn dev
+
+# 전체 린팅
+yarn lint
+
+# 전체 테스트 (Vitest, 단일 실행)
+yarn test
+
+# SAM 백엔드 빌드
 sam build
 
-# Deploy to AWS
-sam deploy --guided
+# 번역 키 관리
+cd packages/web-app
+yarn extract-text           # 번역 키 추출
+yarn manage-translations    # 번역 파일 관리
+yarn validate-translations  # 번역 검증
 ```
 
-## 📊 Database Schema & Migration
+### 변경 시 재배포 범위
 
-### DynamoDB Tables
+| 변경 대상 | 재배포 범위 | 명령어 |
+|-----------|------------|--------|
+| `packages/web-app/` | 프론트엔드만 | `./deploy-website.sh` |
+| 도메인 디렉토리 (`session/`, `campaign/` 등) | 해당 Lambda만 | `sam build && sam deploy` |
+| `shared/` | Lambda Layer 전체 | `sam build && sam deploy` |
+| `template.yaml` | SAM 전체 | `sam build && sam deploy` |
+| `strands-agents/` | 해당 에이전트만 | `./deploy-agents.sh` |
 
-The application uses three DynamoDB tables:
+## AI 에이전트
 
-1. **SessionsTable**: Stores consultation session data and customer information
-2. **MessagesTable**: Stores chat messages and conversation history
-3. **CampaignsTable**: Stores campaign information and metadata (newly separated)
+3개의 Strands SDK 에이전트가 Bedrock AgentCore Runtime에 Docker 컨테이너로 배포됩니다.
 
-### Campaign Data Migration
+| 에이전트 | 역할 | Memory | 도구 |
+|---------|------|--------|------|
+| Consultation Agent | 고객 사전 상담 수행 | STM (AgentCore Memory) | KB RAG, render_form, current_time, AWS Docs MCP |
+| Summary Agent | BANT 프레임워크 분석 | 없음 | (프롬프트 기반) |
+| Planning Agent | 미팅 플랜 생성 + Sales Rep 채팅 | 없음 | KB RAG, http_request, AWS Docs MCP |
 
-If you're upgrading from a previous version where campaign data was stored in the SessionsTable, you'll need to migrate the data to the new CampaignsTable.
+Consultation Agent와 Planning Agent는 AWS Documentation MCP Server가 연동되어 있어, 에이전트가 AWS 공식 문서를 실시간으로 검색하여 고객에게 정확한 정보를 제공할 수 있습니다.
 
-#### Automatic Migration
+자세한 내용은 [packages/strands-agents/README.md](packages/strands-agents/README.md)를 참조하세요.
 
-After deploying the updated stack, use the migration API endpoints:
+## 데이터 모델
 
-```bash
-# Run the migration
-curl -X POST "https://your-api-gateway-url/api/admin/migrate/campaigns" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+### DynamoDB 테이블
 
-# Verify the migration
-curl -X GET "https://your-api-gateway-url/api/admin/migrate/campaigns/verify" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+| 테이블 | PK | SK | 용도 |
+|--------|----|----|------|
+| SessionsTable | `SESSION#{sessionId}` | `METADATA` | 세션 데이터, 고객 정보 |
+| MessagesTable | `SESSION#{sessionId}` | `MESSAGE#{timestamp}#{messageId}` | 대화 메시지 |
+| CampaignsTable | `CAMPAIGN#{campaignId}` | `METADATA` | 캠페인 설정 |
+
+모든 테이블은 KMS 암호화, TTL 자동 만료(30일), GSI를 지원합니다.
+
+## 보안
+
+- VPC Private Subnet에서 Lambda 실행
+- DynamoDB KMS 암호화 (저장 시)
+- HTTPS TLS 1.2+ (전송 시)
+- Cognito JWT 인증 (관리자)
+- PIN 6자리 인증 (고객)
+- IAM 최소 권한 원칙
+- API 키/시크릿 환경 변수 관리 (하드코딩 금지)
+
+## 주요 워크플로우
+
+```
+1. 관리자: 캠페인 생성 → 세션 생성 → 고객에게 URL + PIN 전달
+2. 고객: PIN 인증 → 상담 목적 선택 → AI 챗봇과 대화 → 피드백 제출
+3. 시스템: 세션 완료 → Summary Agent (BANT 분석) → Planning Agent (미팅 플랜)
+4. 관리자: AI 리포트 확인 → 미팅 로그 작성 → Planning Agent와 채팅으로 미팅 준비
 ```
 
-#### Manual Migration Script
+## 라이선스
 
-Alternatively, you can run the migration script directly:
+[MIT-0 (MIT No Attribution)](LICENSE) — 상업적 사용 포함 모든 사용 허용, 저작자 표시 불필요.
 
-```bash
-cd packages/backend/migration_scripts
-python migrate_campaigns.py YOUR_SESSIONS_TABLE_NAME YOUR_CAMPAIGNS_TABLE_NAME
-```
+## 문서
 
-#### Migration Process
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) — 상세 배포 가이드
+- [docs/API_REFERENCE.md](docs/API_REFERENCE.md) — API 엔드포인트 레퍼런스
+- [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md) — 마이그레이션 가이드
+- [packages/strands-agents/README.md](packages/strands-agents/README.md) — AI 에이전트 상세
+- [packages/web-app/README.md](packages/web-app/README.md) — 프론트엔드 상세
 
-1. **Backup**: The migration process automatically scans for campaign records in SessionsTable
-2. **Copy**: Campaign data is copied to the new CampaignsTable with proper indexing
-3. **Verify**: The system verifies all campaigns were migrated successfully
-4. **Cleanup**: Original campaign records are removed from SessionsTable only after successful migration
+## 연락처
 
-#### Benefits of Separate Campaign Table
-
-- **Better Performance**: Dedicated indexes for campaign queries
-- **Improved Scalability**: Separate read/write capacity for campaigns
-- **Enhanced Security**: Granular access control for campaign data
-- **Cleaner Architecture**: Logical separation of concerns
-
-#### New API Endpoints
-
-After the migration, the following new endpoints are available:
-
-- `GET /api/campaigns/code/{campaignCode}` - Get campaign information by campaign code
-- `POST /api/admin/migrate/campaigns` - Run campaign data migration
-- `GET /api/admin/migrate/campaigns/verify` - Verify migration status
-- `GET /api/admin/cognito/users` - List Cognito users for campaign owner selection
-- `GET /api/admin/cognito/users/{userId}` - Get specific Cognito user details
-
-#### Enhanced Session Management
-
-Sessions now include detailed campaign information:
-- Campaign metadata in session details
-- Campaign validation during session creation (supports both campaignId and campaignCode)
-- Campaign status checking (only active campaigns allow new sessions)
-- Improved session listing with campaign context
-- Unified session creation API that handles both campaign ID and campaign code
-
-### � Cusrtomizing Privacy & Terms Documents
-
-When adapting this sample for your own business model, you'll need to customize the Privacy Policy and Terms of Service documents to comply with your business requirements and local regulations.
-
-#### 1. Locate the Privacy & Terms Component
-
-The privacy and terms content is defined in:
-```
-packages/web-app/src/components/PrivacyTermsModal.tsx
-```
-
-#### 2. Update Privacy Policy Content
-
-Replace the `PRIVACY_POLICY` constant with your organization's privacy policy:
-
-```typescript
-const PRIVACY_POLICY = `
-# Your Company Privacy Policy
-
-## Information We Collect
-- [Specify what data you collect]
-- [How you collect it]
-- [Why you collect it]
-
-## How We Use Information
-- [Describe your data usage]
-- [Third-party integrations]
-- [Data retention policies]
-
-## Your Rights
-- [User rights under GDPR/CCPA/local laws]
-- [How to request data deletion]
-- [Contact information for privacy concerns]
-
-## Contact Information
-- Email: privacy@yourcompany.com
-- Address: [Your business address]
-`
-```
-
-#### 3. Update Terms of Service
-
-Replace the `TERMS_OF_SERVICE` constant with your terms:
-
-```typescript
-const TERMS_OF_SERVICE = `
-# Terms of Service
-
-## Acceptance of Terms
-[Your terms acceptance language]
-
-## Service Description
-[Describe your consultation service]
-
-## User Responsibilities
-[What users must/cannot do]
-
-## Limitation of Liability
-[Your liability limitations]
-
-## Governing Law
-[Applicable jurisdiction and laws]
-
-## Contact Information
-- Email: legal@yourcompany.com
-- Address: [Your business address]
-`
-```
-
-#### 4. Legal Compliance Considerations
-
-**Important**: Ensure your Privacy Policy and Terms comply with:
-
-- **GDPR** (EU users): Right to be forgotten, data portability, consent mechanisms
-- **CCPA** (California users): Data disclosure, opt-out rights, non-discrimination
-- **Local Laws**: Check requirements in your jurisdiction
-- **Industry Standards**: Healthcare (HIPAA), Financial (SOX), etc.
-
-#### 5. Data Collection Alignment
-
-Update the privacy policy to reflect the actual data collected by the system:
-
-```typescript
-// Data collected by the consultation system:
-interface SessionData {
-  customerName: string;
-  customerEmail: string;
-  customerCompany: string;
-  conversationHistory: Message[];
-  sessionMetadata: {
-    ipAddress: string;
-    userAgent: string;
-    timestamp: string;
-  };
-}
-```
-
-#### 6. Consent Mechanism
-
-The system includes privacy consent checkboxes. Ensure your privacy policy explains:
-- What happens when users consent
-- How to withdraw consent
-- Data retention after consent withdrawal
-
-## 🔒 Security Features
-
-- **VPC Isolation**: Lambda functions run in private subnets
-- **KMS Encryption**: All data encrypted at rest and in transit
-- **IAM Roles**: Least-privilege access controls
-- **Cognito Authentication**: Secure admin access
-- **API Gateway**: Rate limiting and request validation
-- **CloudWatch**: Comprehensive logging and monitoring
-
-## 📊 Monitoring & Observability
-
-- **CloudWatch Logs**: Centralized logging for all components
-- **CloudWatch Metrics**: Performance and usage metrics
-- **X-Ray Tracing**: Distributed request tracing
-- **API Gateway Caching**: Improved performance and cost optimization
-- **DynamoDB Point-in-Time Recovery**: Data protection and backup
-
-## 🤝 Contributing
-
-This AWS sample project demonstrates best practices for building chat-based consultation systems using Amazon Bedrock Agents. You're encouraged to:
-
-1. **Fork the repository** and customize it for your consultation use cases
-2. **Adapt the conversation flows** to your specific business requirements
-3. **Extend the functionality** with additional AWS services
-4. **Share your improvements** and use cases with the community
-5. **Report issues** if you find bugs or have suggestions for improvements
-
-## 📄 License
-
-This project is licensed under the **MIT No Attribution License (MIT-0)**.
-
-### What this means:
-- ✅ **Commercial use allowed** - Use in commercial products and services
-- ✅ **Modification allowed** - Modify and adapt the code freely
-- ✅ **Distribution allowed** - Redistribute original or modified versions
-- ✅ **Private use allowed** - Use for personal or internal projects
-- ✅ **No attribution required** - No need to credit the original authors
-
-### Key Benefits:
-- **Maximum freedom** - No restrictions on usage
-- **No legal obligations** - No attribution or license notices required
-- **Commercial friendly** - Perfect for consultation services, SaaS, or enterprise use
-- **Risk minimization** - Minimal legal complexity
-
-For the complete license text, see the [LICENSE](LICENSE) file.
-
-## 🆘 Support & Resources
-
-### Documentation
-- [AWS SAM Documentation](https://docs.aws.amazon.com/serverless-application-model/)
-- [Amazon Bedrock Documentation](https://docs.aws.amazon.com/bedrock/)
-- [AWS Cloudscape Design System](https://cloudscape.design/)
-
-### AWS Services Used
-- [Amazon Bedrock](https://aws.amazon.com/bedrock/) - AI/ML foundation models
-- [AWS Lambda](https://aws.amazon.com/lambda/) - Serverless compute
-- [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) - NoSQL database
-- [Amazon API Gateway](https://aws.amazon.com/api-gateway/) - API management
-- [Amazon Cognito](https://aws.amazon.com/cognito/) - Authentication
-- [Amazon S3](https://aws.amazon.com/s3/) - Object storage
-- [Amazon CloudFront](https://aws.amazon.com/cloudfront/) - Content delivery
-
-### Getting Help
-For questions, support, or feedback about this project, please contact:
-
-📧 **aws-prechat@amazon.com** or jaebin@amazon.com
+📧 aws-prechat@amazon.com / jaebin@amazon.com
