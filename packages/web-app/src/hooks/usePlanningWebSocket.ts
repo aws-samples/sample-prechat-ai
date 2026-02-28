@@ -225,7 +225,7 @@ export function usePlanningWebSocket(
     if (!canConnect(wsUrl, sessionId)) return;
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    const idToken = localStorage.getItem('idToken');
+    const idToken = localStorage.getItem('accessToken');
 
     // 기존 연결 정리
     if (wsRef.current) {

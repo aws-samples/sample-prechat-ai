@@ -27,7 +27,11 @@ DIV_RETURN_MARKER = '<div class="prechat-form" data-form-type="div-return">'
 def handle_connect(event, context):
     """$connect 라우트 핸들러
 
-    queryStringParameters에서 sessionId, pin을 추출하여 세션 유효성과 PIN을 검증한 후
+    두 가지 인증 방식을 지원합니다:
+    1. PIN 인증 (고객용): sessionId + pin
+    2. Cognito 토큰 인증 (Admin용): sessionId + token
+
+    queryStringParameters에서 파라미터를 추출하여 인증 후
     연결을 수락하거나 거부합니다. 성공 시 Connection Store에 connectionId를 저장합니다.
 
     Args:
@@ -42,37 +46,61 @@ def handle_connect(event, context):
 
     session_id = query_params.get('sessionId', '')
     pin = query_params.get('pin', '')
+    token = query_params.get('token', '')
 
-    # sessionId, pin 필수 파라미터 검증
-    if not session_id or not pin:
-        print(f"WebSocket 연결 거부 - 파라미터 누락: sessionId={bool(session_id)}, pin={bool(pin)}")
+    # sessionId 필수
+    if not session_id:
+        print(f"WebSocket 연결 거부 - sessionId 누락")
+        return {'statusCode': 403}
+
+    # pin 또는 token 중 하나는 필수
+    if not pin and not token:
+        print(f"WebSocket 연결 거부 - 인증 파라미터 누락 (pin 또는 token 필요)")
         return {'statusCode': 403}
 
     try:
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
 
-        # 세션 조회
-        session_resp = sessions_table.get_item(
-            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
-        )
+        # Cognito 토큰 인증 (Admin용 - Planning Chat 등)
+        if token:
+            cognito = boto3.client('cognito-idp')
+            try:
+                cognito.get_user(AccessToken=token)
+            except Exception as e:
+                print(f"WebSocket 연결 거부 - Cognito 토큰 검증 실패: {str(e)}")
+                return {'statusCode': 403}
 
-        if 'Item' not in session_resp:
-            print(f"WebSocket 연결 거부 - 세션 미존재: {session_id}")
-            return {'statusCode': 403}
+            # 세션 존재 여부만 확인 (PIN/상태 검증 불필요)
+            session_resp = sessions_table.get_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
+            )
+            if 'Item' not in session_resp:
+                print(f"WebSocket 연결 거부 - 세션 미존재: {session_id}")
+                return {'statusCode': 403}
 
-        session = session_resp['Item']
+        # PIN 인증 (고객용)
+        else:
+            session_resp = sessions_table.get_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
+            )
 
-        # PIN 검증
-        stored_pin = session.get('pinNumber', '')
-        if pin != stored_pin:
-            print(f"WebSocket 연결 거부 - PIN 불일치: {session_id}")
-            return {'statusCode': 403}
+            if 'Item' not in session_resp:
+                print(f"WebSocket 연결 거부 - 세션 미존재: {session_id}")
+                return {'statusCode': 403}
 
-        # 세션 활성 상태 확인
-        status = session.get('status', '')
-        if status != 'active':
-            print(f"WebSocket 연결 거부 - 비활성 세션: {session_id}, status={status}")
-            return {'statusCode': 403}
+            session = session_resp['Item']
+
+            # PIN 검증
+            stored_pin = session.get('pinNumber', '')
+            if pin != stored_pin:
+                print(f"WebSocket 연결 거부 - PIN 불일치: {session_id}")
+                return {'statusCode': 403}
+
+            # 세션 활성 상태 확인
+            status = session.get('status', '')
+            if status != 'active':
+                print(f"WebSocket 연결 거부 - 비활성 세션: {session_id}, status={status}")
+                return {'statusCode': 403}
 
         # Connection Store에 connectionId 저장 (TTL: 24시간)
         now = datetime.now(timezone.utc)

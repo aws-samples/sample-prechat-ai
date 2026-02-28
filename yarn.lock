@@ -233,7 +233,7 @@
   resolved "https://registry.npmjs.org/@cloudscape-design/collection-hooks/-/collection-hooks-1.0.74.tgz"
   integrity sha512-yAcD7vjFqbwqMCamUcKRXp403u8RcmC9izyPEYiWod9elt7x0GT1ypPyo9ZRyQuFrBsv2nwubBUrChcYaWooZw==
 
-"@cloudscape-design/component-toolkit@^1.0.0-beta", "@cloudscape-design/component-toolkit@^1.0.0-beta.124":
+"@cloudscape-design/component-toolkit@1.0.0-beta.124", "@cloudscape-design/component-toolkit@^1.0.0-beta", "@cloudscape-design/component-toolkit@^1.0.0-beta.124":
   version "1.0.0-beta.124"
   resolved "https://registry.npmjs.org/@cloudscape-design/component-toolkit/-/component-toolkit-1.0.0-beta.124.tgz#9e3f5893d0dc058d6d59490c0312258e55760128"
   integrity sha512-QB6IK9yubn+5XDKXvWJKmyZRd/ZuZsfTK/EpU6usgTVqiYcdjQ4ojhTir6n9KC8Ha/IvRM7D4E8br2Nw8C2cgw==
