@@ -151,6 +151,58 @@ export function formatCaptureContent(
   return `${annotation}: ${messageContent}`;
 }
 
+// --- localStorage 헬퍼 ---
+
+const STORAGE_KEY_PREFIX = 'planningChat_';
+
+/**
+ * sessionId별 localStorage 키를 생성합니다.
+ */
+export function getStorageKey(sessionId: string): string {
+  return `${STORAGE_KEY_PREFIX}${sessionId}`;
+}
+
+/**
+ * localStorage에서 대화 이력을 로드합니다.
+ */
+export function loadMessages(sessionId: string): PlanningMessage[] {
+  try {
+    const raw = localStorage.getItem(getStorageKey(sessionId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    // 스트리밍 중이던 메시지는 완료 상태로 복원
+    return parsed.map((msg: PlanningMessage) => ({
+      ...msg,
+      isStreaming: false,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * localStorage에 대화 이력을 저장합니다.
+ * 스트리밍 중인 메시지는 저장하지 않습니다.
+ */
+export function saveMessages(
+  sessionId: string,
+  messages: PlanningMessage[]
+): void {
+  try {
+    // 완료된 메시지만 저장 (스트리밍 중인 빈 메시지 제외)
+    const completed = messages.filter(
+      (msg) => !msg.isStreaming && msg.content
+    );
+    localStorage.setItem(
+      getStorageKey(sessionId),
+      JSON.stringify(completed)
+    );
+  } catch {
+    // localStorage 용량 초과 등 무시
+  }
+}
+
 // --- React 컴포넌트 ---
 
 /**
@@ -169,12 +221,21 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
   session: _session,
 }) => {
   const { t } = useI18n();
-  const [messages, setMessages] = useState<PlanningMessage[]>([]);
+  const [messages, setMessages] = useState<PlanningMessage[]>(
+    () => loadMessages(sessionId)
+  );
   const [inputValue, setInputValue] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [captureTarget, setCaptureTarget] = useState<PlanningMessage | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 메시지 변경 시 localStorage에 저장
+  useEffect(() => {
+    if (!isStreaming) {
+      saveMessages(sessionId, messages);
+    }
+  }, [messages, isStreaming, sessionId]);
 
   // 스크롤을 최하단으로 이동
   const scrollToBottom = useCallback(() => {
