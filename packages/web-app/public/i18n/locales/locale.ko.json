@@ -1116,7 +1116,7 @@
   },
   "admin": {
     "planningChat": {
-      "tabLabel": "플래닝 챗",
+      "tabLabel": "플래닝✨",
       "title": "Planning Agent",
       "description": "어카운트 분석, 서비스 추천, 유사 고객사례 검색을 도와드립니다.",
       "suggestedQuestion1": "제안하기 좋은 서비스 알려줘",

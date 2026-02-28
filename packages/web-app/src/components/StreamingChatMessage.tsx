@@ -128,7 +128,7 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
           ) : undefined
         }
       >
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', lineHeight: 1.6 }}>
           {isStreaming ? (
             <>
               {completedLines && (
