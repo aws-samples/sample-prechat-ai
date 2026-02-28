@@ -383,8 +383,8 @@ export default function CustomerChat() {
                 </SpaceBetween>
               }
               actions={
-                <SpaceBetween direction="horizontal" size="xs">
-                  {!isComplete && (
+                !isComplete ? (
+                  <SpaceBetween direction="horizontal" size="xs">
                     <Button
                       variant="normal"
                       iconName={selectedPurposes.length > 0 ? "edit" : "add-plus"}
@@ -392,15 +392,15 @@ export default function CustomerChat() {
                     >
                       {selectedPurposes.length > 0 ? t('customer.chat.editPurposeButton') : t('customer.chat.selectPurposeButton')}
                     </Button>
-                  )}
-                  <Button
-                    variant="normal"
-                    iconName="upload"
-                    onClick={() => setShowFileUpload(true)}
-                  >
-                    {t('customer.chat.attachFileButton')}
-                  </Button>
-                </SpaceBetween>
+                    <Button
+                      variant="normal"
+                      iconName="upload"
+                      onClick={() => setShowFileUpload(true)}
+                    >
+                      {t('customer.chat.attachFileButton')}
+                    </Button>
+                  </SpaceBetween>
+                ) : undefined
               }
             >
               {t('customer.chat.title')}
@@ -597,42 +597,6 @@ export default function CustomerChat() {
             </div>
           </Box>
         )}
-
-        {isComplete && (
-          <Box margin={{ top: 'm' }}>
-            <Header variant="h3">{t('customer.actions.sectionTitle')}</Header>
-            <div
-              style={{
-                backgroundColor: 'var(--awsui-color-background-container-content)',
-                padding: '16px',
-                borderRadius: '8px',
-                border: '1px solid var(--awsui-color-border-divider-default)'
-              }}
-            >
-              <SpaceBetween size="s">
-                <Button
-                  variant="primary"
-                  iconName="contact"
-                  onClick={() => {
-                    updateSessionComplete(false)
-                  }}
-                >
-                  {t('customer.actions.resumeChat')}
-                </Button>
-                <Button
-                  variant="normal"
-                  iconName="star"
-                  onClick={() => setShowFeedbackModal(true)}
-                  disabled={feedbackSubmitted}
-                >
-                  {feedbackSubmitted
-                    ? t('customer.actions.feedbackSubmitted')
-                    : t('customer.actions.submitFeedback')}
-                </Button>
-              </SpaceBetween>
-            </div>
-          </Box>
-        )}
       </Container>
 
       <PrivacyTermsModal
@@ -652,7 +616,6 @@ export default function CustomerChat() {
       <FeedbackModal
         visible={showFeedbackModal}
         onSubmit={handleFeedbackSubmit}
-        onDismiss={() => setShowFeedbackModal(false)}
       />
     </Grid>
   )

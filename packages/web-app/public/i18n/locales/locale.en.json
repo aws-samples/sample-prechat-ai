@@ -171,12 +171,6 @@
     },
     "sessionError": {
       "header": "Session Error"
-    },
-    "actions": {
-      "sectionTitle": "Additional Actions",
-      "resumeChat": "Resume Chat",
-      "submitFeedback": "Submit Feedback",
-      "feedbackSubmitted": "Feedback Submitted"
     }
   },
   "adminSessions": {

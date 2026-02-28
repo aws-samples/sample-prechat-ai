@@ -14,13 +14,11 @@ import { useI18n } from '../i18n';
 interface FeedbackModalProps {
   visible: boolean;
   onSubmit: (rating: number, feedback: string) => void;
-  onDismiss?: () => void;
 }
 
 export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   visible,
-  onSubmit,
-  onDismiss
+  onSubmit
 }) => {
   const { t } = useI18n();
   const [rating, setRating] = useState<number>(0);
@@ -104,7 +102,6 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   return (
     <Modal
       visible={visible}
-      onDismiss={onDismiss}
       size="medium"
       header={
         <Header variant="h2">
