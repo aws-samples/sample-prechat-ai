@@ -14,11 +14,13 @@ import { useI18n } from '../i18n';
 interface FeedbackModalProps {
   visible: boolean;
   onSubmit: (rating: number, feedback: string) => void;
+  onDismiss: () => void;
 }
 
 export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   visible,
-  onSubmit
+  onSubmit,
+  onDismiss
 }) => {
   const { t } = useI18n();
   const [rating, setRating] = useState<number>(0);
@@ -119,7 +121,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           </Button>
         </Box>
       }
-      // No onDismiss prop to prevent closing with X button
+      onDismiss={onDismiss}
+      // X 버튼 및 오버레이 클릭으로 닫기 허용
     >
       <SpaceBetween size="l">
         <Box>

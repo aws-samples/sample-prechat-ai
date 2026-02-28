@@ -628,6 +628,7 @@ export default function CustomerChat() {
       <FeedbackModal
         visible={showFeedbackModal}
         onSubmit={handleFeedbackSubmit}
+        onDismiss={() => setShowFeedbackModal(false)}
       />
     </Grid>
   )
