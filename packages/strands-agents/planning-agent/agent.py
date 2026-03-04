@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 from strands import Agent
 from strands.tools.mcp import MCPClient
 from mcp import stdio_client, StdioServerParameters
-from strands_tools import retrieve, http_request
+from strands_tools import retrieve, http_request, current_time
 from strands.types.exceptions import StructuredOutputException
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 
@@ -135,7 +135,7 @@ def create_planning_agent(
         model=model_id or DEFAULT_MODEL_ID,
         system_prompt=effective_prompt,
         name=agent_name or DEFAULT_AGENT_NAME,
-        tools=[retrieve, aws_docs_mcp_client],
+        tools=[retrieve, aws_docs_mcp_client, current_time],
     )
 
 
@@ -301,7 +301,7 @@ def create_planning_chat_agent(
         model=model_id or DEFAULT_MODEL_ID,
         system_prompt=system_prompt,
         name=CHAT_AGENT_NAME,
-        tools=[retrieve, http_request, aws_docs_mcp_client],
+        tools=[retrieve, http_request, aws_docs_mcp_client, current_time],
     )
 
 
