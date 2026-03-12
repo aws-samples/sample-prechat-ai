@@ -27,6 +27,9 @@ class EventType(str, Enum):
     SESSION_INACTIVATED = 'SessionInactivated'
     CAMPAIGN_CREATED = 'CampaignCreated'
     CAMPAIGN_CLOSED = 'CampaignCompleted'
+    ASSESSMENT_STARTED = 'AssessmentStarted'
+    ASSESSMENT_COMPLETED = 'AssessmentCompleted'
+    ASSESSMENT_FAILED = 'AssessmentFailed'
 
 
 class TriggerStatus(str, Enum):

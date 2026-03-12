@@ -238,12 +238,47 @@ async def stream(payload: dict):
         locale=locale,
     )
 
+    active_tool_use_id = None
+
     try:
         async for event in agent.stream_async(prompt):
-            if hasattr(event, 'data'):
-                text = str(event.data)
-                if text:
-                    yield json.dumps({"type": "chunk", "content": text}, ensure_ascii=False)
+            # 텍스트 청크 이벤트
+            if "data" in event:
+                yield json.dumps({"type": "chunk", "content": event["data"]}, ensure_ascii=False)
+
+            # 도구 사용 이벤트
+            if "current_tool_use" in event:
+                tool_use = event["current_tool_use"]
+                tool_name = tool_use.get("name")
+                tool_use_id = tool_use.get("toolUseId")
+
+                if tool_name and tool_use_id and tool_use_id != active_tool_use_id:
+                    active_tool_use_id = tool_use_id
+                    yield json.dumps({
+                        "type": "tool",
+                        "toolName": tool_name,
+                        "toolUseId": tool_use_id,
+                        "status": "running",
+                        "input": tool_use.get("input", {}),
+                    }, ensure_ascii=False)
+
+            # 최종 결과 이벤트
+            if "result" in event:
+                result = event["result"]
+                if active_tool_use_id:
+                    yield json.dumps({
+                        "type": "tool",
+                        "toolName": "",
+                        "toolUseId": active_tool_use_id,
+                        "status": "complete",
+                    }, ensure_ascii=False)
+                    active_tool_use_id = None
+
+                yield json.dumps({
+                    "type": "result",
+                    "message": result.message if hasattr(result, "message") else str(result),
+                }, ensure_ascii=False)
+
     except Exception as e:
         logging.error(f"SHIP Agent error: {e}")
         yield json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
