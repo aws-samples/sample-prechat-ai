@@ -45,6 +45,15 @@ export interface Discussion {
   updatedAt?: string;
 }
 
+// SHIP Assessment 상태 타입
+export type AssessmentStatus =
+  | 'pending'
+  | 'legal_agreed'
+  | 'role_submitted'
+  | 'scanning'
+  | 'completed'
+  | 'failed';
+
 export interface Session {
   sessionId: string;
   status: 'active' | 'completed' | 'expired' | 'inactive';
@@ -74,6 +83,37 @@ export interface Session {
   // Campaign association fields
   campaignId?: string;
   campaignName?: string;
+  // SHIP Assessment fields
+  assessmentStatus?: AssessmentStatus;
+  assessmentRequestedAt?: string;
+  assessmentCompletedAt?: string;
+  reportS3Key?: string;
+  legalConsentTimestamp?: string;
+  legalConsentAgreed?: boolean;
+  a2tLogS3Key?: string;
+}
+
+// SHIP Assessment API 요청/응답 타입
+export interface LegalConsentRequest {
+  agreed: boolean;
+}
+
+export interface RoleArnSubmitRequest {
+  roleArn: string;
+}
+
+export interface AssessmentStatusResponse {
+  assessmentStatus: AssessmentStatus;
+  assessmentRequestedAt?: string;
+  assessmentCompletedAt?: string;
+  hasReport: boolean;
+  hasA2tLog: boolean;
+}
+
+export interface ReportDownloadUrlResponse {
+  downloadUrl: string;
+  expiresAt: string;
+  fileName: string;
 }
 
 export interface Campaign {
@@ -155,7 +195,7 @@ export interface AgentCoreAgent {
   agentArn?: string;
 }
 
-export type AgentRole = 'prechat' | 'summary' | 'planning';
+export type AgentRole = 'prechat' | 'summary' | 'planning' | 'ship';
 
 export interface AgentConfiguration {
   configId: string;
@@ -324,6 +364,7 @@ export interface WebSocketClientMessage {
   messageId: string;
   contentType?: MessageContentType;
   locale?: string;
+  agentRole?: string;
 }
 
 export const BEDROCK_MODELS: BedrockModel[] = [

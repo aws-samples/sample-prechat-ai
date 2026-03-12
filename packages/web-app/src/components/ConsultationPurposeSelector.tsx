@@ -18,7 +18,8 @@ export enum ConsultationPurposeEnum {
   TECHNICAL_SUPPORT = 'TECHNICAL_SUPPORT',
   COST_OPTIMIZATION = 'COST_OPTIMIZATION',
   PARTNER_INQUIRY = 'PARTNER_INQUIRY',
-  OTHER = 'OTHER'
+  OTHER = 'OTHER',
+  SHIP_SECURITY_ASSESSMENT = 'SHIP_SECURITY_ASSESSMENT',
 }
 
 export interface ConsultationPurpose {
@@ -64,7 +65,13 @@ export const CONSULTATION_PURPOSE_DEFS: ConsultationPurpose[] = [
     labelKey: 'customer.purposeSelector.purposeOther',
     descriptionKey: 'customer.purposeSelector.purposeOtherDesc',
     icon: 'ellipsis'
-  }
+  },
+  {
+    value: ConsultationPurposeEnum.SHIP_SECURITY_ASSESSMENT,
+    labelKey: 'customer.purposeSelector.purposeShipAssessment',
+    descriptionKey: 'customer.purposeSelector.purposeShipAssessmentDesc',
+    icon: 'security'
+  },
 ]
 
 // Static label map for formatPurposesForDisplay (used by admin pages without i18n context)
@@ -75,6 +82,7 @@ const PURPOSE_STATIC_LABELS: Record<ConsultationPurposeEnum, string> = {
   [ConsultationPurposeEnum.COST_OPTIMIZATION]: '비용 최적화 상담',
   [ConsultationPurposeEnum.PARTNER_INQUIRY]: '파트너 관련 문의',
   [ConsultationPurposeEnum.OTHER]: '기타 문의',
+  [ConsultationPurposeEnum.SHIP_SECURITY_ASSESSMENT]: 'SHIP 보안 점검',
 }
 
 // Legacy static array kept for backward compatibility
@@ -310,7 +318,8 @@ function getIconForPurpose(iconName: string): string {
     'settings': '🔧',
     'calculator': '💰',
     'contact': '🤝',
-    'ellipsis': '💬'
+    'ellipsis': '💬',
+    'security': '🔒',
   }
   return iconMap[iconName] || '💬'
 }

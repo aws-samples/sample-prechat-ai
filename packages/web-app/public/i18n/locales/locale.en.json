@@ -66,7 +66,9 @@
       "purposePartnerInquiry": "Partner Inquiry",
       "purposePartnerInquiryDesc": "Are you inquiring about AWS partner programs or collaboration with partners?",
       "purposeOther": "Other Inquiry",
-      "purposeOtherDesc": "Do you have any other inquiries not covered by the above items?"
+      "purposeOtherDesc": "Do you have any other inquiries not covered by the above items?",
+      "purposeShipAssessment": "SHIP Security Assessment",
+      "purposeShipAssessmentDesc": "Would you like to automatically scan your AWS account for security vulnerabilities and receive a security report?"
     },
     "chat": {
       "title": "Share your concerns with PreChat.",
@@ -317,6 +319,9 @@
       "consentAgreed": "Consent Completed",
       "consentNotAgreed": "Not Agreed",
       "consentTimeLabel": "Consent Time",
+      "assessmentStatusLabel": "Assessment Status",
+      "assessmentRequestedLabel": "Assessment Requested",
+      "assessmentCompletedLabel": "Assessment Completed",
       "statusActive": "Active",
       "statusCompleted": "Completed",
       "statusExpired": "Expired"
@@ -1138,5 +1143,64 @@
   "common": {
     "cancel": "Cancel",
     "confirm": "Confirm"
+  },
+  "ship": {
+    "legal": {
+      "title": "SHIP Security Assessment Legal Disclaimer",
+      "scopeTitle": "Assessment Scope",
+      "scopeContent": "This security assessment automatically inspects the basic security settings of your AWS account. It checks 13 core security items including IAM policies, network security groups, encryption settings, and logging configurations.",
+      "dataTitle": "Data Processing Policy",
+      "dataContent": "Data collected during the assessment is used solely for generating the assessment report. AssumeRole session information is deleted immediately after the assessment is complete. Reports are stored in an encrypted S3 bucket.",
+      "disclaimerTitle": "Disclaimer",
+      "disclaimerContent": "This security assessment provides reference material about the security posture of your AWS account and does not replace a comprehensive security audit. Actions taken based on assessment results are the customer's responsibility.",
+      "agreeButton": "I Agree",
+      "disagreeButton": "I Disagree",
+      "errorGeneric": "An error occurred while processing legal consent."
+    },
+    "roleArn": {
+      "label": "IAM Role ARN",
+      "description": "Enter the ARN of the IAM Role you created to allow Prowler to perform the security assessment.",
+      "required": "Please enter a Role ARN.",
+      "invalidFormat": "Invalid ARN format. (e.g., arn:aws:iam::123456789012:role/ProwlerMemberRole)",
+      "submitButton": "Start Security Assessment",
+      "submitError": "An error occurred while submitting the Role ARN."
+    },
+    "guide": {
+      "title": "SHIP Security Assessment Guide",
+      "progressLabel": "Progress",
+      "step": "Step",
+      "step1": "Legal Disclaimer",
+      "step1Desc": "Review the assessment scope and data processing policy.",
+      "step2": "AssumeRole Input",
+      "step2Desc": "Enter the IAM Role ARN for the security assessment.",
+      "step3": "Report Generation",
+      "step3Desc": "Automatically perform the security assessment and generate a report.",
+      "step4": "Report Download",
+      "step4Desc": "Download the generated security assessment report.",
+      "startLegal": "Review Legal Disclaimer",
+      "roleSetupIntro": "Please create an IAM Role in your AWS account for the security assessment. Configure the Role with the Trust Policy below, then enter the Role ARN.",
+      "scanningMessage": "Security assessment is in progress. It takes approximately 5 minutes. You can continue the conversation.",
+      "completedMessage": "Security assessment is complete. Download the report from the side panel.",
+      "failedMessage": "An error occurred during the security assessment. Please verify the Role ARN and try again.",
+      "retryButton": "Retry"
+    },
+    "report": {
+      "title": "SHIP Security Report",
+      "generating": "Generating report...",
+      "ready": "Report is ready",
+      "downloadButton": "Download Report",
+      "downloadLink": "Report download link",
+      "downloadError": "An error occurred while downloading the report.",
+      "failed": "Report generation failed",
+      "retryButton": "Retry"
+    },
+    "status": {
+      "pending": "Pending",
+      "legalAgreed": "Legal Agreed",
+      "roleSubmitted": "Role Submitted",
+      "scanning": "Scanning",
+      "completed": "Completed",
+      "failed": "Failed"
+    }
   }
 }

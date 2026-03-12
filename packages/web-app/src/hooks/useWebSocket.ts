@@ -30,7 +30,7 @@ export interface UseWebSocketOptions {
 }
 
 export interface UseWebSocketReturn {
-  sendMessage: (message: string, messageId: string, contentType?: MessageContentType) => void
+  sendMessage: (message: string, messageId: string, contentType?: MessageContentType, agentRole?: string) => void
   connectionState: ConnectionState
   isConnected: boolean
 }
@@ -182,7 +182,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
 
   // 메시지 전송
   const sendMessage = useCallback(
-    (message: string, messageId: string, contentType?: MessageContentType) => {
+    (message: string, messageId: string, contentType?: MessageContentType, agentRole?: string) => {
       const payload: WebSocketClientMessage = {
         action: 'sendMessage',
         sessionId,
@@ -190,6 +190,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
         messageId,
         ...(contentType && { contentType }),
         ...(locale && { locale }),
+        ...(agentRole && { agentRole }),
       }
 
       if (wsRef.current?.readyState === WebSocket.OPEN) {

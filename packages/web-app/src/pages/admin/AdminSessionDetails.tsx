@@ -186,6 +186,39 @@ export default function AdminSessionDetails() {
           </Box>
         </ColumnLayout>
 
+        {/* SHIP Assessment 상태 섹션 */}
+        {session.assessmentStatus && (
+          <ColumnLayout columns={3}>
+            <Box>
+              <Box variant="awsui-key-label">{t('adminSessionDetail.info.assessmentStatusLabel')}</Box>
+              <Box>
+                {session.assessmentStatus === 'completed' && <Badge color="green">{t('ship.status.completed')}</Badge>}
+                {session.assessmentStatus === 'scanning' && <Badge color="blue">{t('ship.status.scanning')}</Badge>}
+                {session.assessmentStatus === 'failed' && <Badge color="red">{t('ship.status.failed')}</Badge>}
+                {session.assessmentStatus === 'pending' && <Badge color="grey">{t('ship.status.pending')}</Badge>}
+                {session.assessmentStatus === 'legal_agreed' && <Badge color="grey">{t('ship.status.legalAgreed')}</Badge>}
+                {session.assessmentStatus === 'role_submitted' && <Badge color="blue">{t('ship.status.roleSubmitted')}</Badge>}
+              </Box>
+            </Box>
+            <Box>
+              <Box variant="awsui-key-label">{t('adminSessionDetail.info.assessmentRequestedLabel')}</Box>
+              <Box>
+                {session.assessmentRequestedAt
+                  ? new Date(session.assessmentRequestedAt).toLocaleString('ko-KR')
+                  : '-'}
+              </Box>
+            </Box>
+            <Box>
+              <Box variant="awsui-key-label">{t('adminSessionDetail.info.assessmentCompletedLabel')}</Box>
+              <Box>
+                {session.assessmentCompletedAt
+                  ? new Date(session.assessmentCompletedAt).toLocaleString('ko-KR')
+                  : '-'}
+              </Box>
+            </Box>
+          </ColumnLayout>
+        )}
+
         <Tabs
           tabs={[
             {

@@ -25,16 +25,18 @@ import { useI18n } from '../../i18n'
 const AGENT_ROLES = [
   { value: 'prechat', label: 'Consultation Agent' },
   { value: 'summary', label: 'Summary Agent' },
-  { value: 'planning', label: 'Planning Agent' }
+  { value: 'planning', label: 'Planning Agent' },
+  { value: 'ship', label: 'SHIP Security Agent' },
 ]
 
 const DEFAULT_PROMPTS: Record<string, string> = {
   prechat: consultationPrompt,
   summary: analysisPrompt,
   planning: planningPrompt,
+  ship: 'SHIP Security Assessment 전문 상담 에이전트입니다. 고객의 AWS 보안 현황을 파악하고 A2T 로그 작성에 필요한 정보를 수집합니다.',
 }
 
-const READONLY_ROLES = ['summary', 'planning']
+const READONLY_ROLES = ['summary', 'planning', 'ship']
 
 export default function CreateAgent() {
   const navigate = useNavigate()

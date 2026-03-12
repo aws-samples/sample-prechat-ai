@@ -30,3 +30,9 @@ export { FormSubmissionSummary } from './FormSubmissionSummary'
 // Planning Agent Chat
 export { PlanningChatTab } from './PlanningChatTab'
 export { CaptureDiscussionModal } from './CaptureDiscussionModal'
+
+// SHIP Assessment Components
+export { LegalDisclaimerModal } from './LegalDisclaimerModal'
+export { RoleArnInputForm } from './RoleArnInputForm'
+export { ShipAssessmentGuide } from './ShipAssessmentGuide'
+export { ShipReportPanel } from './ShipReportPanel'

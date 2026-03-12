@@ -22,9 +22,15 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
 import { useSession, useChat } from '../../hooks'
-import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload, MultilineChatInput, FeedbackModal, ConsultationPurposeSelector } from '../../components'
+import { LoadingSpinner, ChatMessage, PrivacyTermsModal, StreamingChatMessage, FileUpload, MultilineChatInput, FeedbackModal, ConsultationPurposeSelector, ShipAssessmentGuide, ShipReportPanel } from '../../components'
 import { chatApi } from '../../services/api'
 import { useI18n } from '../../i18n'
+import {
+  submitLegalConsent,
+  submitRoleArn,
+  getAssessmentStatus,
+  getReportDownloadUrl,
+} from '../../services/assessmentApi'
 import {
   storePinForSession,
   getStoredPinForSession,
@@ -62,6 +68,33 @@ export default function CustomerChat() {
   const [showPurposeSelector, setShowPurposeSelector] = useState(false)
   const [submittedFormIds, setSubmittedFormIds] = useState<Set<string>>(new Set())
 
+  // SHIP Assessment 상태 관리
+  const [assessmentStatus, setAssessmentStatus] = useState<import('../../types').AssessmentStatus>('pending')
+
+  const isShipAssessment = selectedPurposes.includes(ConsultationPurposeEnum.SHIP_SECURITY_ASSESSMENT)
+
+  const handleLegalConsent = async () => {
+    if (!sessionId || !verifiedPin) return;
+    await submitLegalConsent(sessionId, verifiedPin);
+    setAssessmentStatus('legal_agreed');
+  };
+
+  const handleRoleSubmit = async (roleArn: string) => {
+    if (!sessionId || !verifiedPin) return;
+    await submitRoleArn(sessionId, verifiedPin, roleArn);
+    setAssessmentStatus('scanning');
+  };
+
+  const handleAssessmentRetry = () => {
+    setAssessmentStatus('legal_agreed');
+  };
+
+  const handleDownloadReport = async (): Promise<string | null> => {
+    if (!sessionId || !verifiedPin) return null;
+    const resp = await getReportDownloadUrl(sessionId, verifiedPin);
+    return resp.downloadUrl;
+  };
+
   const {
     sessionData,
     messages,
@@ -75,6 +108,37 @@ export default function CustomerChat() {
   // PIN 검증 후 저장된 PIN을 useChat에 전달
   const verifiedPin = sessionId ? getStoredPinForSession(sessionId) : undefined
 
+  // SHIP Assessment 상태 초기화 및 폴링
+  useEffect(() => {
+    if (sessionData?.assessmentStatus) {
+      setAssessmentStatus(sessionData.assessmentStatus);
+    }
+  }, [sessionData?.assessmentStatus]);
+
+  useEffect(() => {
+    if (!isShipAssessment || !sessionId || !verifiedPin) return;
+    if (assessmentStatus !== 'scanning' && assessmentStatus !== 'role_submitted') return;
+
+    let delay = 5000;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      try {
+        const status = await getAssessmentStatus(sessionId, verifiedPin);
+        setAssessmentStatus(status.assessmentStatus);
+        if (status.assessmentStatus === 'scanning' || status.assessmentStatus === 'role_submitted') {
+          delay = Math.min(delay * 1.5, 30000); // exponential backoff, max 30s
+          timeoutId = setTimeout(poll, delay);
+        }
+      } catch {
+        timeoutId = setTimeout(poll, delay);
+      }
+    };
+
+    timeoutId = setTimeout(poll, delay);
+    return () => clearTimeout(timeoutId);
+  }, [isShipAssessment, sessionId, verifiedPin, assessmentStatus]);
+
   const {
     inputValue,
     setInputValue,
@@ -85,7 +149,7 @@ export default function CustomerChat() {
     clearInput,
     streamingMessage,
     connectionState,
-  } = useChat(sessionId, verifiedPin || undefined, locale)
+  } = useChat(sessionId, verifiedPin || undefined, locale, isShipAssessment ? 'ship' : undefined)
 
   // 컴포넌트 로드 시 저장된 PIN 확인
   useEffect(() => {
@@ -610,6 +674,26 @@ export default function CustomerChat() {
           </Box>
         )}
       </Container>
+
+      {/* SHIP Assessment Side Panel */}
+      <SpaceBetween size="l">
+        {isShipAssessment && (
+          <>
+            <ShipAssessmentGuide
+              sessionId={sessionId!}
+              assessmentStatus={assessmentStatus}
+              onLegalConsent={handleLegalConsent}
+              onRoleSubmit={handleRoleSubmit}
+              onRetry={handleAssessmentRetry}
+            />
+            <ShipReportPanel
+              assessmentStatus={assessmentStatus}
+              onDownloadReport={handleDownloadReport}
+              onRetry={handleAssessmentRetry}
+            />
+          </>
+        )}
+      </SpaceBetween>
 
       <PrivacyTermsModal
         visible={showPrivacyModal}

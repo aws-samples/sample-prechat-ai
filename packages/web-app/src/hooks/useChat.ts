@@ -15,7 +15,7 @@ import { MESSAGES } from '../constants'
  * - streamingMessage.status === 'complete' → 응답 완료 (messages로 이동)
  * - streamingMessage.status === 'error' → 에러 발생
  */
-export const useChat = (sessionId: string | undefined, pin?: string, locale?: string) => {
+export const useChat = (sessionId: string | undefined, pin?: string, locale?: string, agentRole?: string) => {
   const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState('')
   const [streamingMessage, setStreamingMessage] = useState<Message | null>(null)
@@ -190,9 +190,9 @@ export const useChat = (sessionId: string | undefined, pin?: string, locale?: st
       setError('')
       setStreamingMessage(createBotPlaceholder(messageId))
 
-      wsSendMessage(inputValue, messageId)
+      wsSendMessage(inputValue, messageId, undefined, agentRole)
     },
-    [inputValue, streamingMessage, sessionId, wsSendMessage, createBotPlaceholder]
+    [inputValue, streamingMessage, sessionId, wsSendMessage, createBotPlaceholder, agentRole]
   )
 
   // 프로그래밍 방식 텍스트 메시지 전송 (입력 폼 요청 등)
@@ -221,9 +221,9 @@ export const useChat = (sessionId: string | undefined, pin?: string, locale?: st
       setError('')
       setStreamingMessage(createBotPlaceholder(messageId))
 
-      wsSendMessage(text, messageId)
+      wsSendMessage(text, messageId, undefined, agentRole)
     },
-    [streamingMessage, sessionId, wsSendMessage, createBotPlaceholder]
+    [streamingMessage, sessionId, wsSendMessage, createBotPlaceholder, agentRole]
   )
 
   // 폼 제출 메시지 전송
@@ -253,9 +253,9 @@ export const useChat = (sessionId: string | undefined, pin?: string, locale?: st
       setError('')
       setStreamingMessage(createBotPlaceholder(messageId))
 
-      wsSendMessage(JSON.stringify(formData), messageId, 'form-submission')
+      wsSendMessage(JSON.stringify(formData), messageId, 'form-submission', agentRole)
     },
-    [streamingMessage, sessionId, wsSendMessage, createBotPlaceholder]
+    [streamingMessage, sessionId, wsSendMessage, createBotPlaceholder, agentRole]
   )
 
   const clearInput = useCallback(() => {

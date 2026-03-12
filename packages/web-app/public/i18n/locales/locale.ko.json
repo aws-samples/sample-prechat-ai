@@ -66,7 +66,9 @@
       "purposePartnerInquiry": "파트너 관련 문의",
       "purposePartnerInquiryDesc": "AWS 파트너 프로그램이나 파트너사와의 협업을 문의하시나요?",
       "purposeOther": "기타 문의",
-      "purposeOtherDesc": "위 항목에 해당하지 않는 기타 문의사항이 있으신가요?"
+      "purposeOtherDesc": "위 항목에 해당하지 않는 기타 문의사항이 있으신가요?",
+      "purposeShipAssessment": "SHIP 보안 점검",
+      "purposeShipAssessmentDesc": "AWS 계정의 보안 취약점을 자동으로 점검하고 보안 레포트를 받아보시겠습니까?"
     },
     "chat": {
       "title": "PreChat 에게 고민을 말씀해 보세요.",
@@ -317,6 +319,9 @@
       "consentAgreed": "동의 완료",
       "consentNotAgreed": "미동의",
       "consentTimeLabel": "동의 시간",
+      "assessmentStatusLabel": "보안 점검 상태",
+      "assessmentRequestedLabel": "점검 요청 시간",
+      "assessmentCompletedLabel": "점검 완료 시간",
       "statusActive": "Active",
       "statusCompleted": "Completed",
       "statusExpired": "Expired"
@@ -1138,5 +1143,64 @@
   "common": {
     "cancel": "취소",
     "confirm": "확인"
+  },
+  "ship": {
+    "legal": {
+      "title": "SHIP 보안 점검 법적 규약",
+      "scopeTitle": "보안 점검 범위",
+      "scopeContent": "본 보안 점검은 AWS 계정의 기본 보안 설정을 자동으로 검사합니다. IAM 정책, 네트워크 보안 그룹, 암호화 설정, 로깅 구성 등 13개 핵심 보안 항목을 점검합니다.",
+      "dataTitle": "데이터 처리 방침",
+      "dataContent": "보안 점검 과정에서 수집되는 데이터는 점검 결과 레포트 생성 목적으로만 사용되며, 점검 완료 후 AssumeRole 세션 정보는 즉시 삭제됩니다. 레포트는 암호화된 S3 버킷에 저장됩니다.",
+      "disclaimerTitle": "면책 조항",
+      "disclaimerContent": "본 보안 점검은 AWS 계정의 보안 상태에 대한 참고 자료를 제공하며, 완전한 보안 감사를 대체하지 않습니다. 점검 결과에 따른 조치는 고객의 책임 하에 수행됩니다.",
+      "agreeButton": "동의합니다",
+      "disagreeButton": "동의하지 않습니다",
+      "errorGeneric": "법적 규약 동의 처리 중 오류가 발생했습니다."
+    },
+    "roleArn": {
+      "label": "IAM Role ARN",
+      "description": "Prowler가 보안 점검을 수행할 수 있도록 생성한 IAM Role의 ARN을 입력해주세요.",
+      "required": "Role ARN을 입력해주세요.",
+      "invalidFormat": "올바른 ARN 형식이 아닙니다. (예: arn:aws:iam::123456789012:role/ProwlerMemberRole)",
+      "submitButton": "보안 점검 시작",
+      "submitError": "Role ARN 제출 중 오류가 발생했습니다."
+    },
+    "guide": {
+      "title": "SHIP 보안 점검 가이드",
+      "progressLabel": "진행률",
+      "step": "단계",
+      "step1": "법적 규약 동의",
+      "step1Desc": "보안 점검 범위 및 데이터 처리 방침을 확인합니다.",
+      "step2": "AssumeRole 정보 입력",
+      "step2Desc": "보안 점검을 위한 IAM Role ARN을 입력합니다.",
+      "step3": "레포트 생성",
+      "step3Desc": "자동으로 보안 점검을 수행하고 레포트를 생성합니다.",
+      "step4": "레포트 다운로드",
+      "step4Desc": "생성된 보안 점검 레포트를 다운로드합니다.",
+      "startLegal": "법적 규약 확인하기",
+      "roleSetupIntro": "보안 점검을 위해 고객님의 AWS 계정에 IAM Role을 생성해주세요. 아래 Trust Policy를 참고하여 Role을 구성한 후, Role ARN을 입력해주세요.",
+      "scanningMessage": "보안 점검이 진행 중입니다. 약 5분 정도 소요됩니다. 대화를 계속하실 수 있습니다.",
+      "completedMessage": "보안 점검이 완료되었습니다. 우측 패널에서 레포트를 다운로드하세요.",
+      "failedMessage": "보안 점검 중 오류가 발생했습니다. Role ARN을 확인하고 다시 시도해주세요.",
+      "retryButton": "다시 시도"
+    },
+    "report": {
+      "title": "SHIP 보안 레포트",
+      "generating": "레포트 생성 중...",
+      "ready": "레포트가 준비되었습니다",
+      "downloadButton": "레포트 다운로드",
+      "downloadLink": "레포트 다운로드 링크",
+      "downloadError": "레포트 다운로드 중 오류가 발생했습니다.",
+      "failed": "레포트 생성에 실패했습니다",
+      "retryButton": "다시 시도"
+    },
+    "status": {
+      "pending": "대기",
+      "legalAgreed": "규약 동의 완료",
+      "roleSubmitted": "Role 제출 완료",
+      "scanning": "점검 진행 중",
+      "completed": "완료",
+      "failed": "실패"
+    }
   }
 }
