@@ -120,7 +120,43 @@ def handle_session_stream(event, context):
                     'event_time': get_timestamp(),
                 }
                 trigger_manager.execute_triggers('SessionInactivated', event_data, campaign_id)
-    
+
+            # SHIP Assessment 상태 변경 이벤트 감지
+            old_assessment = old_image.get('assessmentStatus', {}).get('S', '')
+            new_assessment = new_image.get('assessmentStatus', {}).get('S', '')
+
+            if old_assessment != new_assessment and new_assessment:
+                session_id = new_image.get('sessionId', {}).get('S', '')
+                campaign_id = new_image.get('campaignId', {}).get('S', '')
+                customer_info = new_image.get('customerInfo', {}).get('M', {})
+                cloudfront_url = os.environ.get('CLOUDFRONT_URL', '')
+
+                # Assessment 상태에 따른 이벤트 타입 매핑
+                assessment_event_map = {
+                    'scanning': 'AssessmentStarted',
+                    'completed': 'AssessmentCompleted',
+                    'failed': 'AssessmentFailed',
+                }
+                assessment_event_type = assessment_event_map.get(new_assessment)
+
+                if assessment_event_type:
+                    event_data = {
+                        'event_type': assessment_event_type,
+                        'session_id': session_id,
+                        'campaign_id': campaign_id,
+                        'campaign_name': new_image.get('campaignName', {}).get('S', ''),
+                        'customer_name': customer_info.get('name', {}).get('S', ''),
+                        'customer_company': customer_info.get('company', {}).get('S', ''),
+                        'customer_email': customer_info.get('email', {}).get('S', ''),
+                        'sales_rep_email': new_image.get('salesRepEmail', {}).get('S', ''),
+                        'message_count': '',
+                        'duration_minutes': '',
+                        'admin_url': f"{cloudfront_url}/admin/sessions/{session_id}" if cloudfront_url else '',
+                        'event_time': get_timestamp(),
+                    }
+                    print(f"Assessment event: {assessment_event_type} for session {session_id}")
+                    trigger_manager.execute_triggers(assessment_event_type, event_data, campaign_id)
+
     return lambda_response(200, {'message': 'Stream processed successfully'})
 
 

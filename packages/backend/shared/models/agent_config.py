@@ -21,6 +21,7 @@ class AgentRole(str, Enum):
     PRECHAT = 'prechat'
     SUMMARY = 'summary'
     PLANNING = 'planning'
+    SHIP = 'ship'
 
 
 VALID_AGENT_ROLES = {r.value for r in AgentRole}

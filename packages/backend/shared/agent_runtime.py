@@ -23,10 +23,12 @@ from models.agent_config import AgentConfiguration
 DEFAULT_CONSULTATION_AGENT_ARN = os.environ.get('CONSULTATION_AGENT_ARN', '')
 DEFAULT_SUMMARY_AGENT_ARN = os.environ.get('SUMMARY_AGENT_ARN', '')
 DEFAULT_PLANNING_AGENT_ARN = os.environ.get('PLANNING_AGENT_ARN', '')
+DEFAULT_SHIP_AGENT_ARN = os.environ.get('SHIP_AGENT_ARN', '')
 
 print(f"[INIT] Module loaded - DEFAULT_CONSULTATION_AGENT_ARN: '{DEFAULT_CONSULTATION_AGENT_ARN}'")
 print(f"[INIT] Module loaded - DEFAULT_SUMMARY_AGENT_ARN: '{DEFAULT_SUMMARY_AGENT_ARN}'")
 print(f"[INIT] Module loaded - DEFAULT_PLANNING_AGENT_ARN: '{DEFAULT_PLANNING_AGENT_ARN}'")
+print(f"[INIT] Module loaded - DEFAULT_SHIP_AGENT_ARN: '{DEFAULT_SHIP_AGENT_ARN}'")
 
 # 역할별 기본 ARN 매핑
 DEFAULT_AGENT_ARNS = {
@@ -34,6 +36,7 @@ DEFAULT_AGENT_ARNS = {
     'consultation': DEFAULT_CONSULTATION_AGENT_ARN,
     'summary': DEFAULT_SUMMARY_AGENT_ARN,
     'planning': DEFAULT_PLANNING_AGENT_ARN,
+    'ship': DEFAULT_SHIP_AGENT_ARN,
 }
 
 dynamodb = boto3.resource('dynamodb')

@@ -413,10 +413,12 @@ def handle_send_message(event, context):
     connection_alive = True
 
     try:
-        arn, config = get_agent_config_for_session(session_id, 'prechat')
+        # 프론트엔드가 지정한 에이전트 역할로 ARN 조회 (기본: prechat)
+        agent_role = body.get('agentRole', 'prechat')
+        arn, config = get_agent_config_for_session(session_id, agent_role)
 
         if not arn:
-            print(f"[ERROR] prechat 역할의 AgentCore ARN을 찾을 수 없습니다")
+            print(f"[ERROR] '{agent_role}' 역할의 AgentCore ARN을 찾을 수 없습니다")
             _post_to_connection(apigw_management, connection_id, {
                 'type': 'error',
                 'message': '에이전트가 구성되지 않았습니다.',

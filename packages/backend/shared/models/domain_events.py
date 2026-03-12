@@ -43,3 +43,12 @@ class DomainEvent:
     def to_context(self) -> dict:
         """트리거 메시지 템플릿에서 사용할 컨텍스트를 반환합니다."""
         return {key: getattr(self, key, '') for key in UNIFIED_EVENT_KEYS}
+
+
+# === SHIP Assessment 도메인 이벤트 타입 ===
+
+ASSESSMENT_EVENT_TYPES = [
+    'AssessmentStarted',
+    'AssessmentCompleted',
+    'AssessmentFailed',
+]
