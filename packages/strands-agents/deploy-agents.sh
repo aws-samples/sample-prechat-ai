@@ -134,6 +134,11 @@ deploy_agent "summary-agent" "summary"
 deploy_agent "planning-agent" "planning"
 
 # ============================================
+# 4. SHIP Security Agent (NO_MEMORY, no KB)
+# ============================================
+deploy_agent "ship-agent" "ship"
+
+# ============================================
 # 결과 요약
 # ============================================
 echo ""

@@ -1,0 +1,249 @@
+"""
+SHIP Agent - SHIP Assessment 전용 Strands SDK 기반 AI 에이전트
+
+고객과 대화하며 A2T 로그 작성에 필요한 현황 정보를 수집하고,
+SHIP Assessment 프로세스를 안내합니다.
+
+배포: Bedrock AgentCore Runtime
+호출: bedrock-agentcore 클라이언트의 invoke_agent_runtime
+"""
+
+import os
+import json
+import logging
+from strands import Agent
+from strands.tools import tool
+from strands_tools import current_time
+from bedrock_agentcore.runtime import BedrockAgentCoreApp
+
+app = BedrockAgentCoreApp()
+logging.getLogger("strands").setLevel(logging.INFO)
+
+DEFAULT_MODEL_ID = 'apac.anthropic.claude-3-5-sonnet-20241022-v2:0'
+DEFAULT_AGENT_NAME = 'prechatShipAgent'
+
+
+@tool
+def extract_a2t_log(session_id: str, conversation_history: str) -> str:
+    """대화 내역을 기반으로 A2T(Activity-to-Trigger) 로그를 구조화하여 추출합니다.
+
+    SA가 SHIP 폼에 입력하는 실제 항목에 맞춘 구조입니다.
+    대화에서 파악된 정보를 각 필드에 채워서 반환하세요.
+
+    Args:
+        session_id: PreChat 세션 ID
+        conversation_history: JSON 형식의 대화 내역
+
+    Returns:
+        JSON 형식의 A2T 로그 — SA가 SHIP 폼에 바로 붙여넣을 수 있는 형태
+    """
+    try:
+        messages = json.loads(conversation_history) if isinstance(conversation_history, str) else conversation_history
+    except (json.JSONDecodeError, TypeError):
+        messages = []
+
+    a2t_log = {
+        'session_id': session_id,
+
+        # --- SA 폼 상단 필드 ---
+        # Description: SATv2 Assessment 수행 배경 (영어, 280자 이내, 최대 3줄 내러티브)
+        'description': '',
+
+        # Customer Contact: 대화한 고객 담당자 정보
+        'customer_contact': {
+            'name': '',
+            'company': '',
+            'email': '',
+            'title': '',
+        },
+
+        # Workshop Date: 대화가 수행된 날짜 (ISO 8601)
+        'workshop_date': '',
+
+        # --- A2T SHIP 폼 Q1~Q14 ---
+        'a2t_questions': {
+            # Q1: 과거 참여한 AWS 보안 점검/프레임워크
+            'q1_past_security_assessments': '',
+            # Q2: 위협 탐지 3rd party 사용 여부 (vs GuardDuty)
+            'q2_threat_detection_3rd_party': '',
+            # Q3: 리스크 상관분석 3rd party 사용 여부 (vs Security Hub)
+            'q3_risk_analytics_3rd_party': '',
+            # Q4: 취약점 관리 3rd party 사용 여부 (vs Inspector)
+            'q4_vulnerability_mgmt_3rd_party': '',
+            # Q5: 암호화 키 관리 3rd party 사용 여부 (vs KMS)
+            'q5_key_management_3rd_party': '',
+            # Q6: 자격증명 보호 3rd party 사용 여부 (vs Secrets Manager)
+            'q6_credential_protection_3rd_party': '',
+            # Q7: 네트워크 보호 3rd party 사용 여부 (vs Network Firewall)
+            'q7_network_protection_3rd_party': '',
+            # Q8: 애플리케이션 방화벽 3rd party 사용 여부 (vs WAF)
+            'q8_app_firewall_3rd_party': '',
+            # Q9: 권한 분석 3rd party 사용 여부 (vs IAM Access Analyzer)
+            'q9_permission_analysis_3rd_party': '',
+            # Q10: 구성 모니터링 3rd party 사용 여부 (vs Config)
+            'q10_config_monitoring_3rd_party': '',
+            # Q11: 데이터 기반 보안 대화를 시작하기 위해 사용한 Assessment
+            'q11_assessment_used': '',
+            # Q12: 고객이 집중하는 보안 유스케이스
+            'q12_security_use_case_focus': '',
+            # Q13: 파트너 또는 네이티브 서비스 도입 계획
+            'q13_adoption_plan': '',
+            # Q14: AWS 보안 서비스에 대한 피드백 (긍정, 기능 요청, 불편사항)
+            'q14_aws_security_feedback': '',
+        },
+    }
+
+    return json.dumps(a2t_log, ensure_ascii=False, indent=2)
+
+
+def _default_system_prompt() -> str:
+    """SHIP Agent 기본 시스템 프롬프트 — SA SHIP 폼 항목 준수"""
+    return """당신은 AWS SHIP(Security Health Improvement Program) 보안 점검 전문 상담 에이전트입니다.
+
+## 역할
+- 고객의 AWS 계정 보안 현황을 파악하고 SHIP Assessment 프로세스를 안내합니다.
+- SA가 SHIP A2T 폼에 입력할 정보를 대화를 통해 수집합니다.
+- 고객이 셀프서비스로 보안 점검을 수행할 수 있도록 친절하게 가이드합니다.
+
+## SHIP Assessment 프로세스 안내
+1. **법적 규약 동의**: 보안 점검 범위, 데이터 처리 방침, 면책 조항을 확인하고 동의합니다.
+2. **AssumeRole 정보 입력**: Prowler가 보안 점검을 수행할 수 있도록 IAM Role ARN을 입력합니다.
+3. **보안 스캔 실행**: Prowler가 13개 핵심 보안 항목을 자동으로 점검합니다 (약 5분 소요).
+4. **레포트 다운로드**: 점검 결과 레포트를 다운로드합니다.
+
+## A2T 로그 수집 목표
+
+대화를 통해 아래 항목들을 자연스럽게 파악하세요. SA가 SHIP 폼에 바로 입력할 수 있도록 정리합니다.
+
+### 상단 필드
+- **Description**: 고객이 SATv2 Assessment를 수행하려는 배경 (영어 내러티브, 280자 이내, 최대 3줄)
+- **Customer Contact**: 고객 담당자 이름, 회사명, 이메일, 직함
+- **Workshop Date**: 대화가 수행된 날짜
+
+### SHIP 폼 질문 (Q1~Q14) — 대화에서 자연스럽게 파악
+
+- **Q1**: 과거 참여한 AWS 보안 점검/프레임워크는? (WAFR, ESSR, SIP 등)
+- **Q2**: 위협 탐지에 3rd party 솔루션을 사용하나요? (GuardDuty 대신)
+- **Q3**: 리스크 상관분석/통합 보안 분석에 3rd party를 사용하나요? (Security Hub 대신)
+- **Q4**: 취약점 관리에 3rd party를 사용하나요? (Inspector 대신)
+- **Q5**: 암호화 키 관리에 3rd party를 사용하나요? (KMS 대신)
+- **Q6**: 자격증명 보호에 3rd party를 사용하나요? (Secrets Manager 대신)
+- **Q7**: 네트워크 보호에 3rd party를 사용하나요? (Network Firewall 대신)
+- **Q8**: 애플리케이션 방화벽에 3rd party를 사용하나요? (WAF 대신)
+- **Q9**: 권한 분석에 3rd party를 사용하나요? (IAM Access Analyzer 대신)
+- **Q10**: 구성 모니터링에 3rd party를 사용하나요? (Config 대신)
+- **Q11**: 데이터 기반 보안 대화를 시작하기 위해 어떤 Assessment를 사용했나요?
+- **Q12**: 고객이 집중하는 보안 유스케이스는 무엇인가요?
+- **Q13**: 파트너 또는 AWS 네이티브 서비스 도입 계획이 있나요?
+- **Q14**: AWS 보안 서비스에 대한 피드백이 있나요? (긍정적 피드백, 기능 요청, 불편사항)
+
+## 대화 전략 (한꺼번에 묻지 말고 자연스러운 흐름으로)
+
+### 1단계: 인사 및 목적 확인
+- 고객 이름, 회사명, 직함, 이메일을 파악합니다.
+- 보안 점검을 진행하게 된 배경/동기를 파악합니다. (→ Description 필드)
+- "안녕하세요! AWS 보안 점검에 관심을 가져주셔서 감사합니다. 어떤 계기로 보안 점검을 진행하시게 되었나요?"
+
+### 2단계: 보안 경험 탐색
+- 과거 AWS 보안 점검 참여 이력을 파악합니다. (→ Q1)
+- "혹시 이전에 AWS Well-Architected Review나 SIP 같은 보안 점검을 받아보신 적이 있으신가요?"
+
+### 3단계: 현재 보안 솔루션 현황 파악
+- 9개 보안 영역별로 AWS Native / 3rd Party / 미사용 여부를 파악합니다. (→ Q2~Q10)
+- 한 번에 9개를 다 묻지 마세요. 2~3개씩 자연스럽게 나눠서 물어보세요.
+- "현재 위협 탐지는 어떻게 하고 계신가요? GuardDuty를 사용하시나요, 아니면 다른 솔루션을 쓰시나요?"
+
+### 4단계: 스캔 결과 리뷰 및 보안 포커스
+- 스캔 결과를 확인했는지, 어떤 보안 유스케이스에 집중하는지 파악합니다. (→ Q11, Q12)
+- "보안 점검 결과를 보시고 가장 우선적으로 개선하고 싶은 영역이 있으신가요?"
+
+### 5단계: 향후 계획 및 피드백
+- 서비스 도입 계획과 AWS 보안 서비스 피드백을 수집합니다. (→ Q13, Q14)
+- "앞으로 AWS 보안 서비스나 파트너 솔루션 도입을 계획하고 계신 부분이 있나요?"
+
+### 6단계: 마무리
+- 수집된 정보를 요약하고, extract_a2t_log 도구를 호출하여 A2T 로그를 생성합니다.
+- 후속 기술 지원 연락 희망 여부를 확인합니다.
+
+## 법적 규약 고지 내용
+- 본 보안 점검은 AWS 계정의 기본 보안 설정을 자동으로 검사합니다.
+- 점검 과정에서 수집되는 데이터는 레포트 생성 목적으로만 사용됩니다.
+- AssumeRole 세션 정보는 점검 완료 후 즉시 삭제됩니다.
+- 본 점검은 완전한 보안 감사를 대체하지 않습니다.
+
+## 응답 지침
+- 친절하고 전문적인 톤으로 응답하세요.
+- 한 번에 너무 많은 질문을 하지 마세요. 한 턴에 1~2개 질문이 적절합니다.
+- 고객의 답변에 공감하고, 관련 AWS 보안 서비스를 자연스럽게 소개하세요.
+- 보안 관련 질문에는 SHIP Assessment 범위 내에서 답변하세요.
+- 스캔 진행 중에는 고객에게 진행 상태를 안내하고, 대화를 계속 이어가세요.
+- 대화가 충분히 진행되면 extract_a2t_log 도구를 사용하여 A2T 로그를 생성하세요.
+- Description 필드는 반드시 영어로, 280자 이내, 최대 3줄 내러티브로 작성하세요.
+"""
+
+
+def _get_locale_instruction(locale: str) -> str:
+    """locale에 따른 언어 지시를 반환합니다."""
+    if locale == 'en':
+        return "Please respond in English."
+    return "한국어로 응답해주세요."
+
+
+def create_ship_agent(
+    session_id: str,
+    system_prompt: str | None = None,
+    model_id: str | None = None,
+    locale: str = 'ko',
+) -> Agent:
+    """SHIP Agent를 생성합니다.
+
+    Args:
+        session_id: PreChat 세션 ID
+        system_prompt: 사용자 정의 시스템 프롬프트
+        model_id: 사용자 정의 모델 ID
+        locale: 응답 언어 코드
+
+    Returns:
+        구성된 Strands Agent 인스턴스
+    """
+    effective_prompt = system_prompt or _default_system_prompt()
+    locale_instruction = _get_locale_instruction(locale)
+    if locale_instruction:
+        effective_prompt = f"{effective_prompt}\n\n{locale_instruction}"
+
+    return Agent(
+        model=model_id or DEFAULT_MODEL_ID,
+        system_prompt=effective_prompt,
+        name=DEFAULT_AGENT_NAME,
+        tools=[current_time, extract_a2t_log],
+    )
+
+
+@app.entrypoint
+async def stream(payload: dict):
+    """스트리밍 엔트리포인트"""
+    prompt = payload.get("prompt", "")
+    if not prompt:
+        yield json.dumps({"type": "error", "message": "No prompt provided"}, ensure_ascii=False)
+        return
+
+    session_id = payload.get("session_id", "unknown")
+    config = payload.get("config", {})
+    locale = payload.get("locale", "ko")
+
+    agent = create_ship_agent(
+        session_id=session_id,
+        system_prompt=config.get("system_prompt"),
+        model_id=config.get("model_id"),
+        locale=locale,
+    )
+
+    try:
+        async for event in agent.stream_async(prompt):
+            if hasattr(event, 'data'):
+                text = str(event.data)
+                if text:
+                    yield json.dumps({"type": "chunk", "content": text}, ensure_ascii=False)
+    except Exception as e:
+        logging.error(f"SHIP Agent error: {e}")
+        yield json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
