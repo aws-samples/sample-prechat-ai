@@ -322,6 +322,10 @@
       "assessmentStatusLabel": "보안 점검 상태",
       "assessmentRequestedLabel": "점검 요청 시간",
       "assessmentCompletedLabel": "점검 완료 시간",
+      "shipReportLabel": "SHIP 보안 레포트",
+      "downloadReport": "레포트 다운로드",
+      "a2tLogLabel": "A2T 로그",
+      "downloadA2tLog": "A2T 로그 다운로드",
       "statusActive": "Active",
       "statusCompleted": "Completed",
       "statusExpired": "Expired"

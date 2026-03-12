@@ -2968,33 +2968,6 @@ Resources:
                     aws s3 cp --recursive --exclude "*" --include "*.json" --exclude "*.ocsf.json" --exclude "*.asff.json" output/ s3://$BUCKET_REPORT/assessments/$SCAN_SESSION_ID/json/
                   fi
 
-  # Assessment Handler Lambda - 고객용 Assessment API
-  AssessmentHandlerFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/assessment/
-      Handler: assessment_handler.submit_legal_consent
-      Environment:
-        Variables:
-          CODEBUILD_PROJECT_NAME: !Ref ProwlerCodeBuild
-          PROWLER_FINDINGS_BUCKET: !Ref ProwlerFindingsBucket
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-        - Statement:
-            Effect: Allow
-            Action: codebuild:StartBuild
-            Resource: !GetAtt ProwlerCodeBuild.Arn
-        - Statement:
-            Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:PutObject
-              - s3:ListBucket
-            Resource:
-              - !GetAtt ProwlerFindingsBucket.Arn
-              - !Sub '${ProwlerFindingsBucket.Arn}/*'
-
   # 고객용 API 엔드포인트
   AssessmentLegalConsentFunction:
     Type: AWS::Serverless::Function

@@ -322,6 +322,10 @@
       "assessmentStatusLabel": "Assessment Status",
       "assessmentRequestedLabel": "Assessment Requested",
       "assessmentCompletedLabel": "Assessment Completed",
+      "shipReportLabel": "SHIP Security Report",
+      "downloadReport": "Download Report",
+      "a2tLogLabel": "A2T Log",
+      "downloadA2tLog": "Download A2T Log",
       "statusActive": "Active",
       "statusCompleted": "Completed",
       "statusExpired": "Expired"

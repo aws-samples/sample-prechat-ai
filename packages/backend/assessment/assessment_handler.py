@@ -8,6 +8,7 @@ SHIP Assessment 관련 API 핸들러.
 
 import json
 import re
+import hmac
 import boto3
 import os
 from utils import (
@@ -26,6 +27,7 @@ CODEBUILD_PROJECT_NAME = os.environ.get('CODEBUILD_PROJECT_NAME')
 PROWLER_FINDINGS_BUCKET = os.environ.get('PROWLER_FINDINGS_BUCKET')
 
 ROLE_ARN_PATTERN = re.compile(r'^arn:aws:iam::\d{12}:role/.+$')
+SESSION_ID_PATTERN = re.compile(r'^[a-zA-Z0-9\-]+$')
 
 # Assessment 상태 전이 규칙
 VALID_TRANSITIONS = {
@@ -48,8 +50,15 @@ def _get_session(session_id):
     return resp.get('Item')
 
 
+def _validate_session_id(session_id):
+    """세션 ID 형식을 검증한다."""
+    if not session_id or len(session_id) > 128:
+        return False
+    return bool(SESSION_ID_PATTERN.match(session_id))
+
+
 def _verify_pin(event, session):
-    """요청의 PIN을 세션 PIN과 비교하여 인증한다."""
+    """요청의 PIN을 세션 PIN과 비교하여 인증한다. (타이밍 안전)"""
     headers = event.get('headers', {})
     headers_lower = {k.lower(): v for k, v in (headers or {}).items()}
     pin = headers_lower.get('x-pin-number', '')
@@ -58,9 +67,10 @@ def _verify_pin(event, session):
         body = parse_body(event)
         pin = body.get('pinNumber', '')
 
-    if not pin or pin != session.get('pinNumber', ''):
+    stored = session.get('pinNumber', '')
+    if not pin or not stored:
         return False
-    return True
+    return hmac.compare_digest(pin, stored)
 
 
 def _record_assessment_event(session_id, event_type, details=None, ttl=None):
@@ -108,6 +118,9 @@ def submit_legal_consent(event, context):
     """법적 규약 동의 기록 - assessmentStatus를 'legal_agreed'로 업데이트"""
     session_id = event['pathParameters']['sessionId']
 
+    if not _validate_session_id(session_id):
+        return lambda_response(400, {'error': 'Invalid session ID'})
+
     session = _get_session(session_id)
     if not session:
         return lambda_response(404, {'error': 'Session not found'})
@@ -141,6 +154,9 @@ def submit_legal_consent(event, context):
 def submit_role_arn(event, context):
     """Role ARN 제출, 형식 검증, CodeBuild StartBuild 트리거"""
     session_id = event['pathParameters']['sessionId']
+
+    if not _validate_session_id(session_id):
+        return lambda_response(400, {'error': 'Invalid session ID'})
 
     session = _get_session(session_id)
     if not session:
@@ -203,6 +219,9 @@ def get_assessment_status(event, context):
     """현재 Assessment 상태 조회"""
     session_id = event['pathParameters']['sessionId']
 
+    if not _validate_session_id(session_id):
+        return lambda_response(400, {'error': 'Invalid session ID'})
+
     session = _get_session(session_id)
     if not session:
         return lambda_response(404, {'error': 'Session not found'})
@@ -222,6 +241,9 @@ def get_assessment_status(event, context):
 def get_report_download_url(event, context):
     """SHIP Report Pre-signed URL 생성 (15분 유효)"""
     session_id = event['pathParameters']['sessionId']
+
+    if not _validate_session_id(session_id):
+        return lambda_response(400, {'error': 'Invalid session ID'})
 
     session = _get_session(session_id)
     if not session:
@@ -264,6 +286,9 @@ def get_report_download_url(event, context):
 def get_a2t_log(event, context):
     """A2T 로그 요약 조회/생성 요청"""
     session_id = event['pathParameters']['sessionId']
+
+    if not _validate_session_id(session_id):
+        return lambda_response(400, {'error': 'Invalid session ID'})
 
     session = _get_session(session_id)
     if not session:

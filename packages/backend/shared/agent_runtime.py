@@ -288,7 +288,7 @@ class AgentCoreClient:
                 # JSON이 아닌 텍스트 데이터는 chunk로 래핑
                 yield {"type": "chunk", "content": stripped}
 
-    def invoke_consultation_stream_chunks(
+    def invoke_stream_chunks(
         self,
         agent_runtime_arn: str,
         session_id: str,

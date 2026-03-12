@@ -427,7 +427,7 @@ def handle_send_message(event, context):
 
         print(f"[INFO] AgentCore 스트리밍 호출 시작: ARN={arn}, sessionId={session_id}")
 
-        for stream_event in agentcore_client.invoke_consultation_stream_chunks(
+        for stream_event in agentcore_client.invoke_stream_chunks(
             agent_runtime_arn=arn,
             session_id=session_id,
             message=agent_message,

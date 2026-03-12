@@ -10,7 +10,8 @@ import {
   Spinner,
   Tabs,
   Badge,
-  ColumnLayout
+  ColumnLayout,
+  Button,
 } from '@cloudscape-design/components'
 import AnimatedButton from '../../components/AnimatedButton'
 import MeetingLogView from '../../components/MeetingLogView'
@@ -21,6 +22,7 @@ import { Session } from '../../types'
 import { formatPurposesForDisplay } from '../../components/ConsultationPurposeSelector'
 import { PlanningChatTab } from '../../components/PlanningChatTab'
 import { useI18n } from '../../i18n'
+import { getReportDownloadUrl } from '../../services/assessmentApi'
 
 
 export default function AdminSessionDetails() {
@@ -215,6 +217,47 @@ export default function AdminSessionDetails() {
                   ? new Date(session.assessmentCompletedAt).toLocaleString('ko-KR')
                   : '-'}
               </Box>
+            </Box>
+          </ColumnLayout>
+        )}
+
+        {/* SHIP Assessment 다운로드 링크 (Req 11.1, 11.2) */}
+        {session.assessmentStatus === 'completed' && (
+          <ColumnLayout columns={2}>
+            <Box>
+              <Box variant="awsui-key-label">{t('adminSessionDetail.info.shipReportLabel')}</Box>
+              <Button
+                iconName="download"
+                variant="link"
+                onClick={async () => {
+                  if (!sessionId || !session.pinNumber) return;
+                  try {
+                    const resp = await getReportDownloadUrl(sessionId, session.pinNumber);
+                    window.open(resp.downloadUrl, '_blank');
+                  } catch (e) {
+                    console.error('Report download failed:', e);
+                  }
+                }}
+              >
+                {t('adminSessionDetail.info.downloadReport')}
+              </Button>
+            </Box>
+            <Box>
+              <Box variant="awsui-key-label">{t('adminSessionDetail.info.a2tLogLabel')}</Box>
+              {session.a2tLogS3Key ? (
+                <Button
+                  iconName="download"
+                  variant="link"
+                  onClick={async () => {
+                    // A2T 로그 다운로드는 admin API 사용
+                    console.log('A2T log download - TODO: admin API');
+                  }}
+                >
+                  {t('adminSessionDetail.info.downloadA2tLog')}
+                </Button>
+              ) : (
+                <Box color="text-status-inactive">-</Box>
+              )}
             </Box>
           </ColumnLayout>
         )}
