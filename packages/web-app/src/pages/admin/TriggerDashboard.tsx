@@ -33,6 +33,9 @@ const EVENT_TYPE_OPTIONS = [
   { label: 'Session Inactivated', value: 'SessionInactivated' },
   { label: 'Campaign Created', value: 'CampaignCreated' },
   { label: 'Campaign Completed', value: 'CampaignCompleted' },
+  { label: 'Assessment Started', value: 'AssessmentStarted' },
+  { label: 'Assessment Completed', value: 'AssessmentCompleted' },
+  { label: 'Assessment Failed', value: 'AssessmentFailed' },
 ]
 
 const TRIGGER_TYPE_OPTIONS = [
@@ -92,6 +95,42 @@ const EVENT_ACTIVE_FIELD_KEYS: Record<string, Record<string, string>> = {
     campaign_id: 'adminTriggers.fieldLabels.campaignId',
     campaign_name: 'adminTriggers.fieldLabels.campaignName',
     message_count: 'adminTriggers.fieldLabels.totalSessions',
+    admin_url: 'adminTriggers.fieldLabels.adminUrl',
+    event_time: 'adminTriggers.fieldLabels.eventTimeCompleted',
+  },
+  AssessmentStarted: {
+    event_type: 'AssessmentStarted',
+    session_id: 'adminTriggers.fieldLabels.sessionId',
+    campaign_id: 'adminTriggers.fieldLabels.campaignId',
+    campaign_name: 'adminTriggers.fieldLabels.campaignName',
+    customer_name: 'adminTriggers.fieldLabels.customerName',
+    customer_company: 'adminTriggers.fieldLabels.customerCompany',
+    customer_email: 'adminTriggers.fieldLabels.customerEmail',
+    sales_rep_email: 'adminTriggers.fieldLabels.salesRepEmail',
+    admin_url: 'adminTriggers.fieldLabels.adminUrl',
+    event_time: 'adminTriggers.fieldLabels.eventTimeCreated',
+  },
+  AssessmentCompleted: {
+    event_type: 'AssessmentCompleted',
+    session_id: 'adminTriggers.fieldLabels.sessionId',
+    campaign_id: 'adminTriggers.fieldLabels.campaignId',
+    campaign_name: 'adminTriggers.fieldLabels.campaignName',
+    customer_name: 'adminTriggers.fieldLabels.customerName',
+    customer_company: 'adminTriggers.fieldLabels.customerCompany',
+    customer_email: 'adminTriggers.fieldLabels.customerEmail',
+    sales_rep_email: 'adminTriggers.fieldLabels.salesRepEmail',
+    admin_url: 'adminTriggers.fieldLabels.adminUrl',
+    event_time: 'adminTriggers.fieldLabels.eventTimeCompleted',
+  },
+  AssessmentFailed: {
+    event_type: 'AssessmentFailed',
+    session_id: 'adminTriggers.fieldLabels.sessionId',
+    campaign_id: 'adminTriggers.fieldLabels.campaignId',
+    campaign_name: 'adminTriggers.fieldLabels.campaignName',
+    customer_name: 'adminTriggers.fieldLabels.customerName',
+    customer_company: 'adminTriggers.fieldLabels.customerCompany',
+    customer_email: 'adminTriggers.fieldLabels.customerEmail',
+    sales_rep_email: 'adminTriggers.fieldLabels.salesRepEmail',
     admin_url: 'adminTriggers.fieldLabels.adminUrl',
     event_time: 'adminTriggers.fieldLabels.eventTimeCompleted',
   },
@@ -256,6 +295,7 @@ export default function TriggerDashboard() {
     const colors: Record<string, 'blue' | 'green' | 'grey' | 'red'> = {
       SessionCreated: 'blue', SessionCompleted: 'green', SessionInactivated: 'grey',
       CampaignCreated: 'blue', CampaignCompleted: 'green',
+      AssessmentStarted: 'blue', AssessmentCompleted: 'green', AssessmentFailed: 'red',
     }
     return <Badge color={colors[eventType] || 'grey'}>{eventType}</Badge>
   }
@@ -469,6 +509,9 @@ export default function TriggerDashboard() {
                     form.eventType === 'SessionCreated' ? 'sessionCreated' :
                     form.eventType === 'SessionInactivated' ? 'sessionInactivated' :
                     form.eventType === 'CampaignCreated' ? 'campaignCreated' :
+                    form.eventType === 'AssessmentStarted' ? 'assessmentStarted' :
+                    form.eventType === 'AssessmentCompleted' ? 'assessmentCompleted' :
+                    form.eventType === 'AssessmentFailed' ? 'assessmentFailed' :
                     'campaignCompleted'
                   }`)}
                   {' '}{t('adminTriggers.modal.schemaEmptyFieldsNote')}

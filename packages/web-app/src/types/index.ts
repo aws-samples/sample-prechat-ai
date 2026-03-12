@@ -309,7 +309,7 @@ export interface CognitoUsersResponse {
 
 // Trigger Types
 export type TriggerType = 'slack' | 'sns' | 'webhook';
-export type TriggerEventType = 'SessionCreated' | 'SessionCompleted' | 'SessionInactivated' | 'CampaignCreated' | 'CampaignCompleted';
+export type TriggerEventType = 'SessionCreated' | 'SessionCompleted' | 'SessionInactivated' | 'CampaignCreated' | 'CampaignCompleted' | 'AssessmentStarted' | 'AssessmentCompleted' | 'AssessmentFailed';
 export type TriggerStatus = 'active' | 'inactive';
 
 export interface Trigger {

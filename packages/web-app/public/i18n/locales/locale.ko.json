@@ -520,7 +520,10 @@
       "sessionCreated": "새 세션이 생성되었을 때 전송됩니다.",
       "sessionInactivated": "세션이 비활성화되었을 때 전송됩니다.",
       "campaignCreated": "새 캠페인이 생성되었을 때 전송됩니다.",
-      "campaignCompleted": "캠페인이 완료되었을 때 전송됩니다."
+      "campaignCompleted": "캠페인이 완료되었을 때 전송됩니다.",
+      "assessmentStarted": "SHIP Assessment 스캔이 시작되었을 때 전송됩니다.",
+      "assessmentCompleted": "SHIP Assessment 스캔이 완료되었을 때 전송됩니다.",
+      "assessmentFailed": "SHIP Assessment 스캔이 실패했을 때 전송됩니다."
     },
     "fieldLabels": {
       "sessionId": "세션 ID",
