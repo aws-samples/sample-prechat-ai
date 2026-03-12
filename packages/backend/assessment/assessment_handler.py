@@ -25,6 +25,7 @@ s3_client = boto3.client('s3')
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
 CODEBUILD_PROJECT_NAME = os.environ.get('CODEBUILD_PROJECT_NAME')
 PROWLER_FINDINGS_BUCKET = os.environ.get('PROWLER_FINDINGS_BUCKET')
+PROWLER_CODEBUILD_ROLE_ARN = os.environ.get('PROWLER_CODEBUILD_ROLE_ARN', '')
 
 ROLE_ARN_PATTERN = re.compile(r'^arn:aws:iam::\d{12}:role/.+$')
 SESSION_ID_PATTERN = re.compile(r'^[a-zA-Z0-9\-]+$')
@@ -235,6 +236,7 @@ def get_assessment_status(event, context):
         'assessmentCompletedAt': session.get('assessmentCompletedAt', ''),
         'hasReport': bool(session.get('reportS3Key')),
         'hasA2tLog': bool(session.get('a2tLogS3Key')),
+        'codeBuildRoleArn': PROWLER_CODEBUILD_ROLE_ARN,
     })
 
 

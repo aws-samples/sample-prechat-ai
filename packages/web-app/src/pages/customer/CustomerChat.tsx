@@ -70,6 +70,7 @@ export default function CustomerChat() {
 
   // SHIP Assessment 상태 관리
   const [assessmentStatus, setAssessmentStatus] = useState<import('../../types').AssessmentStatus>('pending')
+  const [codeBuildRoleArn, setCodeBuildRoleArn] = useState('')
 
   const isShipAssessment = selectedPurposes.includes(ConsultationPurposeEnum.SHIP_SECURITY_ASSESSMENT)
 
@@ -113,6 +114,14 @@ export default function CustomerChat() {
     if (sessionData?.assessmentStatus) {
       setAssessmentStatus(sessionData.assessmentStatus);
     }
+    // 초기 로드 시 codeBuildRoleArn 조회
+    if (isShipAssessment && sessionId && verifiedPin && !codeBuildRoleArn) {
+      getAssessmentStatus(sessionId, verifiedPin)
+        .then((status) => {
+          if (status.codeBuildRoleArn) setCodeBuildRoleArn(status.codeBuildRoleArn);
+        })
+        .catch(() => {});
+    }
   }, [sessionData?.assessmentStatus]);
 
   useEffect(() => {
@@ -126,6 +135,7 @@ export default function CustomerChat() {
       try {
         const status = await getAssessmentStatus(sessionId, verifiedPin);
         setAssessmentStatus(status.assessmentStatus);
+        if (status.codeBuildRoleArn) setCodeBuildRoleArn(status.codeBuildRoleArn);
         if (status.assessmentStatus === 'scanning' || status.assessmentStatus === 'role_submitted') {
           delay = Math.min(delay * 1.5, 30000); // exponential backoff, max 30s
           timeoutId = setTimeout(poll, delay);
@@ -682,6 +692,7 @@ export default function CustomerChat() {
             <ShipAssessmentGuide
               sessionId={sessionId!}
               assessmentStatus={assessmentStatus}
+              codeBuildRoleArn={codeBuildRoleArn}
               onLegalConsent={handleLegalConsent}
               onRoleSubmit={handleRoleSubmit}
               onRetry={handleAssessmentRetry}

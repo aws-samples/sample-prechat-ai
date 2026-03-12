@@ -20,6 +20,7 @@ import { RoleArnInputForm } from './RoleArnInputForm';
 interface ShipAssessmentGuideProps {
   sessionId: string;
   assessmentStatus: AssessmentStatus;
+  codeBuildRoleArn?: string;
   onLegalConsent: () => Promise<void>;
   onRoleSubmit: (roleArn: string) => Promise<void>;
   onRetry: () => void;
@@ -40,6 +41,7 @@ const TOTAL_STEPS = 4;
 export const ShipAssessmentGuide: React.FC<ShipAssessmentGuideProps> = ({
   sessionId,
   assessmentStatus,
+  codeBuildRoleArn,
   onLegalConsent,
   onRoleSubmit,
   onRetry,
@@ -76,7 +78,7 @@ export const ShipAssessmentGuide: React.FC<ShipAssessmentGuideProps> = ({
   // Trust Policy JSON (CodeView + CopyToClipboard 공유)
   const trustPolicyJson = JSON.stringify({
     Effect: 'Allow',
-    Principal: { AWS: '<PreChat CodeBuild Role ARN>' },
+    Principal: { AWS: codeBuildRoleArn || '<CodeBuild Role ARN>' },
     Action: 'sts:AssumeRole',
     Condition: {
       StringEquals: {

@@ -108,6 +108,7 @@ export interface AssessmentStatusResponse {
   assessmentCompletedAt?: string;
   hasReport: boolean;
   hasA2tLog: boolean;
+  codeBuildRoleArn?: string;
 }
 
 export interface ReportDownloadUrlResponse {

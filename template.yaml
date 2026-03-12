@@ -3021,6 +3021,7 @@ Resources:
       Environment:
         Variables:
           PROWLER_FINDINGS_BUCKET: !Ref ProwlerFindingsBucket
+          PROWLER_CODEBUILD_ROLE_ARN: !GetAtt ProwlerCodeBuildRole.Arn
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
@@ -3064,6 +3065,7 @@ Resources:
       Environment:
         Variables:
           PROWLER_FINDINGS_BUCKET: !Ref ProwlerFindingsBucket
+          PROWLER_CODEBUILD_ROLE_ARN: !GetAtt ProwlerCodeBuildRole.Arn
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
