@@ -19,7 +19,7 @@ from bedrock_agentcore.runtime import BedrockAgentCoreApp
 app = BedrockAgentCoreApp()
 logging.getLogger("strands").setLevel(logging.INFO)
 
-DEFAULT_MODEL_ID = 'apac.anthropic.claude-3-5-sonnet-20241022-v2:0'
+DEFAULT_MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 DEFAULT_AGENT_NAME = 'prechatShipAgent'
 
 
@@ -247,3 +247,6 @@ async def stream(payload: dict):
     except Exception as e:
         logging.error(f"SHIP Agent error: {e}")
         yield json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
+
+if __name__ == '__main__':
+    app.run()
