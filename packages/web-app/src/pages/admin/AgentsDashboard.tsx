@@ -19,7 +19,8 @@ import { extractModelName } from '../../constants'
 const ROLE_LABELS: Record<string, string> = {
   prechat: 'Consultation',
   summary: 'Summary',
-  planning: 'Planning'
+  planning: 'Planning',
+  ship: 'SHIP Security',
 }
 
 export default function AgentsDashboard() {
@@ -107,7 +108,8 @@ export default function AgentsDashboard() {
                 cell: (item) => (
                   <Badge color={
                     item.agentRole === 'prechat' ? 'blue' :
-                    item.agentRole === 'summary' ? 'green' : 'grey'
+                    item.agentRole === 'summary' ? 'green' :
+                    item.agentRole === 'ship' ? 'red' : 'grey'
                   }>
                     {ROLE_LABELS[item.agentRole] || item.agentRole}
                   </Badge>
