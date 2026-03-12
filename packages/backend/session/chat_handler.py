@@ -2,7 +2,7 @@ import json
 import boto3
 import os
 from decimal import Decimal
-from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp
+from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp, validate_session_id
 
 dynamodb = boto3.resource('dynamodb')
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
@@ -13,11 +13,12 @@ def update_consultation_purposes(event, context):
     """Update consultation purposes for a session"""
     body = parse_body(event)
     session_id = event['pathParameters']['sessionId']
+
+    if not validate_session_id(session_id):
+        return lambda_response(400, {'error': 'Invalid session ID format'})
+
     consultation_purposes = body.get('consultationPurposes', '')
-    
-    if not session_id:
-        return lambda_response(400, {'error': 'Missing sessionId'})
-    
+
     if not consultation_purposes:
         return lambda_response(400, {'error': 'Missing consultationPurposes'})
     
@@ -58,12 +59,13 @@ def handle_feedback(event, context):
     """Handle customer feedback submission"""
     body = parse_body(event)
     session_id = event['pathParameters']['sessionId']
+
+    if not validate_session_id(session_id):
+        return lambda_response(400, {'error': 'Invalid session ID format'})
+
     rating = body.get('rating')
     feedback = body.get('feedback', '')
-    
-    if not session_id:
-        return lambda_response(400, {'error': 'Missing sessionId'})
-    
+
     if not rating or not isinstance(rating, (int, float)) or rating < 0.5 or rating > 5:
         return lambda_response(400, {'error': 'Invalid rating. Must be between 0.5 and 5.0'})
     

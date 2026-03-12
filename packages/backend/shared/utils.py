@@ -71,7 +71,7 @@ def verify_csrf_token(event, session_id):
             print(f"CSRF - No CSRF token stored for session: {session_id}")
             return False
         
-        if csrf_token != stored_csrf_token:
+        if not secure_compare(csrf_token, stored_csrf_token):
             print(f"CSRF - Token mismatch for session: {session_id}")
             return False
         
@@ -157,3 +157,28 @@ def build_update_expression(update_data, reserved_keywords=None):
         expression_values[f':{field}'] = value
     
     return update_expression, expression_values, expression_names
+
+
+import re
+import hmac
+
+# sessionId 포맷: UUID4 + optional md5 hash suffix
+_SESSION_ID_PATTERN = re.compile(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+    r'(-[0-9a-f]{8})?$'
+)
+
+
+def validate_session_id(session_id):
+    """sessionId 포맷 검증 (UUID4 + optional 8-char hex suffix)"""
+    if not session_id or not isinstance(session_id, str) or len(session_id) > 50:
+        return False
+    return bool(_SESSION_ID_PATTERN.match(session_id))
+
+
+def secure_compare(a, b):
+    """타이밍 공격 방지를 위한 상수 시간 문자열 비교"""
+    if not isinstance(a, str) or not isinstance(b, str):
+        return False
+    return hmac.compare_digest(a.encode('utf-8'), b.encode('utf-8'))
+

@@ -1,7 +1,7 @@
 import json
 import boto3
 import os
-from utils import lambda_response, parse_body, get_timestamp, generate_id, generate_session_id, get_ttl_timestamp, generate_csrf_token
+from utils import lambda_response, parse_body, get_timestamp, generate_id, generate_session_id, get_ttl_timestamp, generate_csrf_token, validate_session_id, secure_compare
 
 dynamodb = boto3.resource('dynamodb')
 cognito = boto3.client('cognito-idp')
@@ -108,7 +108,10 @@ def create_session(event, context):
 
 def get_session(event, context):
     session_id = event['pathParameters']['sessionId']
-    
+
+    if not validate_session_id(session_id):
+        return lambda_response(400, {'error': 'Invalid session ID format'})
+
     try:
         sessions_table = dynamodb.Table(SESSIONS_TABLE)
         session_resp = sessions_table.get_item(Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'})
@@ -204,10 +207,14 @@ def get_sales_rep_info(email):
 def verify_session_pin(event, context):
     """Verify PIN for session access and record privacy consent"""
     session_id = event['pathParameters']['sessionId']
+
+    if not validate_session_id(session_id):
+        return lambda_response(400, {'error': 'Invalid session ID format'})
+
     body = parse_body(event)
     provided_pin = body.get('pinNumber', '')
     privacy_agreed = body.get('privacyAgreed', False)
-    
+
     if not provided_pin:
         return lambda_response(400, {'error': 'PIN number is required'})
     
@@ -228,9 +235,9 @@ def verify_session_pin(event, context):
         if session_status not in ('active', 'completed'):
             return lambda_response(403, {'error': 'Session is not active'})
         
-        # Verify PIN
+        # Verify PIN (타이밍 공격 방지를 위한 상수 시간 비교)
         stored_pin = session.get('pinNumber', '')
-        if provided_pin != stored_pin:
+        if not secure_compare(provided_pin, stored_pin):
             return lambda_response(403, {'error': 'Invalid PIN number'})
         
         # Record privacy consent

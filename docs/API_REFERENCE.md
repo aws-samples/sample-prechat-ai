@@ -10,6 +10,27 @@
 
 ---
 
+## 입력 검증 및 보안 정책
+
+### sessionId 검증
+
+모든 `{sessionId}` 경로 파라미터는 요청 처리 전 포맷 검증을 수행합니다.
+
+- 허용 포맷: UUID4 (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`) + 선택적 8자리 hex suffix (`-xxxxxxxx`)
+- 최대 길이: 50자
+- 검증 실패 시: `400 Bad Request` (`{"error": "Invalid session ID format"}`)
+- 적용 범위: Session Domain 전체 (Public + Admin)
+
+### PIN 인증 보안
+
+`POST /api/sessions/{sessionId}/verify-pin` 엔드포인트의 PIN 비교는 `hmac.compare_digest`를 사용한 상수 시간(constant-time) 비교를 수행하여 타이밍 공격(Timing Attack)을 방지합니다.
+
+### CSRF 토큰 보안
+
+CSRF 토큰 비교도 동일하게 상수 시간 비교(`hmac.compare_digest`)를 적용합니다.
+
+---
+
 ## Session Domain (Public - 인증 불필요)
 
 | Method | Path | Description |

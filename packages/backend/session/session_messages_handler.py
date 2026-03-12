@@ -8,7 +8,7 @@ AgentCore Runtime (Strands Agent)을 호출하여 대화를 처리합니다.
 import json
 import boto3
 import os
-from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp
+from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp, validate_session_id
 from agent_runtime import AgentCoreClient, get_agent_config_for_session
 
 dynamodb = boto3.resource('dynamodb')
@@ -98,6 +98,9 @@ def send_message(event, context):
     session_id = event.get('pathParameters', {}).get('sessionId')
     if not session_id:
         return lambda_response(400, {'error': 'Missing sessionId path parameter'})
+
+    if not validate_session_id(session_id):
+        return lambda_response(400, {'error': 'Invalid session ID format'})
 
     body = parse_body(event)
     message = body.get('message', '')
@@ -263,6 +266,9 @@ def send_message_stream(event, context):
     session_id = event.get('pathParameters', {}).get('sessionId')
     if not session_id:
         return lambda_response(400, {'error': 'Missing sessionId path parameter'})
+
+    if not validate_session_id(session_id):
+        return lambda_response(400, {'error': 'Invalid session ID format'})
 
     body = parse_body(event)
     message = body.get('message', '')
