@@ -662,64 +662,66 @@ export default function CustomerChat() {
           )}
         </SpaceBetween>
       </Container>
-      <Container>
-        {sessionData?.salesRepInfo && (
-          <Box margin={{ top: 'm' }}>
-            <Header variant="h3">{t('customer.salesRep.sectionTitle')}</Header>
-            <div
-              style={{
-                backgroundColor: 'var(--awsui-color-background-container-content)',
-                padding: '16px',
-                borderRadius: '8px',
-                border: '1px solid var(--awsui-color-border-divider-default)'
-              }}
-            >
-              <SpaceBetween size="s">
-                <Box>
-                  <Box display="inline" fontWeight="bold">{t('customer.salesRep.nameLabel')} </Box>
-                  <Box display="inline">{sessionData.salesRepInfo.name}</Box>
-                </Box>
-                <Box>
-                  <Box display="inline" fontWeight="bold">{t('customer.salesRep.emailLabel')} </Box>
-                  <Box display="inline">{sessionData.salesRepInfo.email}</Box>
-                </Box>
-                <Box>
-                  <Box display="inline" fontWeight="bold">{t('customer.salesRep.contactLabel')} </Box>
-                  <Box display="inline">{sessionData.salesRepInfo.phone}</Box>
-                </Box>
-                <Box fontSize="body-s" color="text-status-inactive">
-                  {t('customer.salesRep.ctaMessage')}
-                </Box>
-                <Button
-                  iconName="thumbs-up"
-                  onClick={() => setShowFeedbackModal(true)}
-                >
-                  {t('customer.feedback.submitButton')}
-                </Button>
-              </SpaceBetween>
-            </div>
-          </Box>
-        )}
-      </Container>
+      <SpaceBetween size="l">
+        <Container>
+          {sessionData?.salesRepInfo && (
+            <Box margin={{ top: 'm' }}>
+              <Header variant="h3">{t('customer.salesRep.sectionTitle')}</Header>
+              <div
+                style={{
+                  backgroundColor: 'var(--awsui-color-background-container-content)',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--awsui-color-border-divider-default)'
+                }}
+              >
+                <SpaceBetween size="s">
+                  <Box>
+                    <Box display="inline" fontWeight="bold">{t('customer.salesRep.nameLabel')} </Box>
+                    <Box display="inline">{sessionData.salesRepInfo.name}</Box>
+                  </Box>
+                  <Box>
+                    <Box display="inline" fontWeight="bold">{t('customer.salesRep.emailLabel')} </Box>
+                    <Box display="inline">{sessionData.salesRepInfo.email}</Box>
+                  </Box>
+                  <Box>
+                    <Box display="inline" fontWeight="bold">{t('customer.salesRep.contactLabel')} </Box>
+                    <Box display="inline">{sessionData.salesRepInfo.phone}</Box>
+                  </Box>
+                  <Box fontSize="body-s" color="text-status-inactive">
+                    {t('customer.salesRep.ctaMessage')}
+                  </Box>
+                  <Button
+                    iconName="thumbs-up"
+                    onClick={() => setShowFeedbackModal(true)}
+                  >
+                    {t('customer.feedback.submitButton')}
+                  </Button>
+                </SpaceBetween>
+              </div>
+            </Box>
+          )}
+        </Container>
 
-      {/* SHIP Assessment — 담당자 정보와 별개 패널로 사이드바에 표시 */}
-      {isShipAssessment && (
-        <SpaceBetween size="l">
-          <ShipAssessmentGuide
-            sessionId={sessionId!}
-            assessmentStatus={assessmentStatus}
-            codeBuildRoleArn={codeBuildRoleArn}
-            onLegalConsent={handleLegalConsent}
-            onRoleSubmit={handleRoleSubmit}
-            onRetry={handleAssessmentRetry}
-          />
-          <ShipReportPanel
-            assessmentStatus={assessmentStatus}
-            onDownloadReport={handleDownloadReport}
-            onRetry={handleAssessmentRetry}
-          />
-        </SpaceBetween>
-      )}
+        {/* SHIP Assessment — 담당자 정보 아래, 별개 패널 */}
+        {isShipAssessment && (
+          <>
+            <ShipAssessmentGuide
+              sessionId={sessionId!}
+              assessmentStatus={assessmentStatus}
+              codeBuildRoleArn={codeBuildRoleArn}
+              onLegalConsent={handleLegalConsent}
+              onRoleSubmit={handleRoleSubmit}
+              onRetry={handleAssessmentRetry}
+            />
+            <ShipReportPanel
+              assessmentStatus={assessmentStatus}
+              onDownloadReport={handleDownloadReport}
+              onRetry={handleAssessmentRetry}
+            />
+          </>
+        )}
+      </SpaceBetween>
 
       <PrivacyTermsModal
         visible={showPrivacyModal}
