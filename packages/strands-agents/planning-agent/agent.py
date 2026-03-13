@@ -5,11 +5,6 @@ PreChat Planning Agent
 Bedrock Knowledge Base에서 유사 고객사례를 검색하여 제공합니다.
 Session의 Meeting Plan에서 사용할 customerReferences를 보강합니다.
 
-Structured Output:
-  - Pydantic 모델(PlanningOutput)로 응답 스키마를 정의
-  - Strands SDK의 structured_output_model + tools=[retrieve] 조합
-  - 백엔드 MeetingPlan 도메인 모델과 1:1 매핑
-
 배포: Bedrock AgentCore Runtime
 호출: 미팅 종료 시 비동기 호출
 """
@@ -21,9 +16,9 @@ from pydantic import BaseModel, Field
 from strands import Agent
 from strands.tools import tool
 from strands.tools.mcp import MCPClient
+from strands.types.exceptions import StructuredOutputException
 from mcp import stdio_client, StdioServerParameters
 from strands_tools import retrieve, http_request, current_time
-from strands.types.exceptions import StructuredOutputException
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 
 app = BedrockAgentCoreApp()
@@ -43,12 +38,71 @@ aws_docs_mcp_client = MCPClient(lambda: stdio_client(
 ))
 
 
+# ──────────────────────────────────────────────
+# 에이전트 설정
+# ──────────────────────────────────────────────
+
+DEFAULT_MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+DEFAULT_AGENT_NAME = "prechatPlanningAgent"
+
+
+# ──────────────────────────────────────────────
+# Pydantic 모델: A2T 로그 구조 (SHIP 폼 매핑)
+# ──────────────────────────────────────────────
+
+class CustomerContact(BaseModel):
+    """고객 담당자 연락처"""
+    name: str = Field(default='', description="고객 담당자 이름")
+    company: str = Field(default='', description="회사명")
+    email: str = Field(default='', description="이메일")
+    title: str = Field(default='', description="직함")
+
+
+class A2TQuestions(BaseModel):
+    """SHIP A2T 폼 질문 항목 (Q1~Q14)"""
+    q1_past_security_assessments: str = Field(default='', description="과거 참여한 AWS 보안 점검/프레임워크")
+    q2_threat_detection_3rd_party: str = Field(default='', description="위협 탐지 3rd party 솔루션 사용 여부")
+    q3_risk_analytics_3rd_party: str = Field(default='', description="리스크 상관분석 3rd party 사용 여부")
+    q4_vulnerability_mgmt_3rd_party: str = Field(default='', description="취약점 관리 3rd party 사용 여부")
+    q5_key_management_3rd_party: str = Field(default='', description="암호화 키 관리 3rd party 사용 여부")
+    q6_credential_protection_3rd_party: str = Field(default='', description="자격증명 보호 3rd party 사용 여부")
+    q7_network_protection_3rd_party: str = Field(default='', description="네트워크 보호 3rd party 사용 여부")
+    q8_app_firewall_3rd_party: str = Field(default='', description="애플리케이션 방화벽 3rd party 사용 여부")
+    q9_permission_analysis_3rd_party: str = Field(default='', description="권한 분석 3rd party 사용 여부")
+    q10_config_monitoring_3rd_party: str = Field(default='', description="구성 모니터링 3rd party 사용 여부")
+    q11_assessment_used: str = Field(default='', description="데이터 기반 보안 대화에 사용한 Assessment")
+    q12_security_use_case_focus: str = Field(default='', description="고객이 집중하는 보안 유스케이스")
+    q13_adoption_plan: str = Field(default='', description="파트너/AWS 네이티브 서비스 도입 계획")
+    q14_aws_security_feedback: str = Field(default='', description="AWS 보안 서비스 피드백")
+
+
+class A2TLog(BaseModel):
+    """SHIP A2T 로그 — SA가 SHIP 폼에 바로 붙여넣을 수 있는 구조"""
+    session_id: str = Field(description="PreChat 세션 ID")
+    description: str = Field(default='', description="SATv2 Assessment 배경 (영어, 280자 이내)")
+    customer_contact: CustomerContact = Field(default_factory=CustomerContact)
+    workshop_date: str = Field(default='', description="워크숍/대화 수행 날짜")
+    a2t_questions: A2TQuestions = Field(default_factory=A2TQuestions)
+
+
+A2T_EXTRACTION_PROMPT = """You are an A2T log extraction specialist.
+Analyze the conversation history and extract structured information for the SHIP A2T form.
+
+## Rules
+- Extract ONLY information explicitly mentioned in the conversation.
+- For fields not mentioned, leave them as empty strings.
+- The `description` field must be in English, max 280 characters, max 3 lines.
+- The `workshop_date` should be the date the conversation took place, if identifiable.
+- For Q1~Q14, summarize the customer's responses concisely.
+"""
+
+
 @tool
 def extract_a2t_log(session_id: str, conversation_history: str) -> str:
     """대화 내역을 기반으로 A2T(Activity-to-Trigger) 로그를 구조화하여 추출합니다.
 
-    SA가 SHIP 폼에 입력하는 실제 항목에 맞춘 구조입니다.
-    대화에서 파악된 정보를 각 필드에 채워서 반환하세요.
+    Strands Agent + Pydantic structured_output을 사용하여
+    대화에서 파악된 정보를 SHIP 폼 항목에 맞춰 반환합니다.
 
     Args:
         session_id: PreChat 세션 ID
@@ -57,99 +111,53 @@ def extract_a2t_log(session_id: str, conversation_history: str) -> str:
     Returns:
         JSON 형식의 A2T 로그 — SA가 SHIP 폼에 바로 붙여넣을 수 있는 형태
     """
+    extraction_agent = Agent(
+        model=DEFAULT_MODEL_ID,
+        system_prompt=A2T_EXTRACTION_PROMPT,
+        tools=[],
+    )
+
+    prompt = (
+        f"Extract the A2T log from the following conversation.\n"
+        f"Session ID: {session_id}\n\n"
+        f"Conversation History:\n{conversation_history}"
+    )
+
     try:
-        messages = json.loads(conversation_history) if isinstance(conversation_history, str) else conversation_history
-    except (json.JSONDecodeError, TypeError):
-        messages = []
-
-    a2t_log = {
-        'session_id': session_id,
-        'description': '',
-        'customer_contact': {
-            'name': '',
-            'company': '',
-            'email': '',
-            'title': '',
-        },
-        'workshop_date': '',
-        'a2t_questions': {
-            'q1_past_security_assessments': '',
-            'q2_threat_detection_3rd_party': '',
-            'q3_risk_analytics_3rd_party': '',
-            'q4_vulnerability_mgmt_3rd_party': '',
-            'q5_key_management_3rd_party': '',
-            'q6_credential_protection_3rd_party': '',
-            'q7_network_protection_3rd_party': '',
-            'q8_app_firewall_3rd_party': '',
-            'q9_permission_analysis_3rd_party': '',
-            'q10_config_monitoring_3rd_party': '',
-            'q11_assessment_used': '',
-            'q12_security_use_case_focus': '',
-            'q13_adoption_plan': '',
-            'q14_aws_security_feedback': '',
-        },
-    }
-
-    return json.dumps(a2t_log, ensure_ascii=False, indent=2)
+        result = extraction_agent(prompt, structured_output_model=A2TLog)
+        output: A2TLog = result.structured_output
+        # session_id를 명시적으로 설정 (LLM이 누락할 수 있으므로)
+        output.session_id = session_id
+        return output.model_dump_json(indent=2)
+    except StructuredOutputException as e:
+        logging.error(f"A2T 로그 structured output 파싱 실패: {e}")
+        # 폴백: 빈 템플릿 반환
+        fallback = A2TLog(session_id=session_id)
+        return fallback.model_dump_json(indent=2)
 
 
 # ──────────────────────────────────────────────
-# Pydantic 모델: 백엔드 MeetingPlan 도메인 모델과 매핑
+# 시스템 프롬프트
 # ──────────────────────────────────────────────
 
-class CustomerReference(BaseModel):
-    """유사 고객 사례 레퍼런스"""
-    summary: str = Field(description="Customer case summary")
-    source: str = Field(description="Source of the reference (e.g. KB document title, URL)")
-    relevance: str = Field(description="Why this case is relevant to the customer")
-
-
-class PlanningOutput(BaseModel):
-    """PreChat 플래닝 에이전트의 구조화된 출력 모델.
-
-    백엔드 MeetingPlan 도메인 모델과 매핑됩니다.
-    """
-    agenda: list[str] = Field(
-        description="Meeting agenda items in order"
-    )
-    topics: list[str] = Field(
-        description="Key discussion topics extracted from the consultation"
-    )
-    recommended_services: list[str] = Field(
-        description="Recommended AWS service names relevant to the customer's needs"
-    )
-    customer_references: list[CustomerReference] = Field(
-        default_factory=list,
-        description="Similar customer cases retrieved from Knowledge Base. Use the retrieve tool to search."
-    )
-    ai_suggestions: list[str] = Field(
-        description="AI-generated suggestions for meeting preparation"
-    )
-    next_steps: list[str] = Field(
-        description="Actionable next step items after the meeting"
-    )
-    preparation_notes: str = Field(
-        description="Additional preparation notes for the meeting team"
-    )
-
-
-# ──────────────────────────────────────────────
-# 에이전트 설정
-# ──────────────────────────────────────────────
-
-DEFAULT_SYSTEM_PROMPT = f"""You are an AWS PreChat Planning AI assistant.
-Analyze customer consultation content to generate a structured meeting plan and search for similar customer cases.
+DEFAULT_SYSTEM_PROMPT = f"""You are an AWS PreChat Planning AI assistant for Sales Reps.
+You help Sales Reps prepare for customer meetings by analyzing account information,
+recommending AWS services, searching for similar customer cases, and suggesting action items.
 
 ## Role
-1. Analyze the consultation summary to extract key topics
+1. Analyze customer consultation history and customer information to provide insights
 2. Use the `retrieve` tool to search Bedrock Knowledge Base for similar customer cases. Call `retrieve(text="search keywords")` with Knowledge Base ID: {_kb_id}
-3. Generate a structured meeting plan
+3. Use the `http_request` tool to search for additional information when needed
+4. Recommend relevant AWS services based on customer needs
+5. Suggest actionable items for meeting preparation
 
 ## Rules
-- You MUST use the `retrieve` tool to search for similar cases before generating the plan
-- Provide specific, actionable agenda items and next steps
-- Recommend AWS services that are directly relevant to the customer's stated needs
-- If no relevant customer cases are found via retrieve, return an empty customer_references list
+- Base your analysis on the provided customer information and conversation history
+- Use the `retrieve` tool to search for similar customer cases when relevant
+- Use the `http_request` tool for web searches when additional context is needed
+- Use the AWS Documentation MCP tools (via `aws_docs_mcp_client`) to search official AWS documentation for service details, best practices, and architecture guidance
+- Provide specific, actionable recommendations
+- Be concise and focused on sales motion support
 
 ## SHIP A2T Log
 - 사용자가 "SHIP A2T 로그 뽑아줘", "A2T 로그 추출해줘" 등 A2T 로그를 요청하면, 반드시 `extract_a2t_log` 도구를 호출하세요.
@@ -157,9 +165,6 @@ Analyze customer consultation content to generate a structured meeting plan and 
 - session_id는 현재 세션 ID, conversation_history는 대화 내역 JSON 문자열입니다.
 - 도구가 반환한 JSON 구조를 SA가 SHIP 폼에 바로 붙여넣을 수 있도록 정리하여 응답하세요.
 """
-
-DEFAULT_MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
-DEFAULT_AGENT_NAME = "prechatPlanningAgent"
 
 
 def _get_locale_instruction(locale: str) -> str:
@@ -175,115 +180,6 @@ def _get_locale_instruction(locale: str) -> str:
         "IMPORTANT: You MUST respond in Korean (한국어). "
         "All meeting plan content, suggestions, and references must be written in Korean."
     )
-
-
-def create_planning_agent(
-    system_prompt: str | None = None,
-    model_id: str | None = None,
-    agent_name: str | None = None,
-    locale: str = 'ko',
-) -> Agent:
-    """Planning Agent를 생성합니다."""
-    effective_prompt = system_prompt or DEFAULT_SYSTEM_PROMPT
-    locale_instruction = _get_locale_instruction(locale)
-    effective_prompt = f"{effective_prompt}\n\n{locale_instruction}"
-
-    return Agent(
-        model=model_id or DEFAULT_MODEL_ID,
-        system_prompt=effective_prompt,
-        name=agent_name or DEFAULT_AGENT_NAME,
-        tools=[retrieve, aws_docs_mcp_client, current_time, extract_a2t_log],
-    )
-
-
-@app.entrypoint
-def invoke(payload: dict) -> dict:
-    """AgentCore Runtime 호출 엔트리포인트
-
-    Strands Structured Output + retrieve 도구를 조합하여
-    PlanningOutput Pydantic 모델로 타입 안전한 응답을 반환합니다.
-
-    payload 구조:
-      {
-        "session_summary": "세션 요약 텍스트",
-        "config": {
-          "system_prompt": "...",
-          "model_id": "...",
-          "agent_name": "...",
-          "locale": "ko"
-        }
-      }
-    """
-    session_summary = payload.get("session_summary", "")
-    if not session_summary:
-        return {"error": "No session_summary provided"}
-
-    config = payload.get("config", {})
-    locale = config.get("locale", "ko")
-
-    agent = create_planning_agent(
-        system_prompt=config.get("system_prompt"),
-        model_id=config.get("model_id"),
-        agent_name=config.get("agent_name"),
-        locale=locale,
-    )
-
-    prompt = (
-        "Generate a meeting plan based on the following pre-consultation summary:\n\n"
-        f"{session_summary}"
-    )
-
-    try:
-        result = agent(prompt, structured_output_model=PlanningOutput)
-        output: PlanningOutput = result.structured_output
-        return {"result": output.model_dump()}
-
-    except StructuredOutputException as e:
-        logging.error(f"Structured output validation failed: {e}")
-        fallback_result = agent(prompt)
-        return {
-            "result": {
-                "agenda": [],
-                "topics": [],
-                "recommended_services": [],
-                "customer_references": [],
-                "ai_suggestions": [],
-                "next_steps": [],
-                "preparation_notes": str(fallback_result.message),
-            }
-        }
-
-
-# ──────────────────────────────────────────────
-# 스트리밍 채팅용 에이전트 및 엔트리포인트
-# ──────────────────────────────────────────────
-
-CHAT_SYSTEM_PROMPT = f"""You are an AWS PreChat Planning AI assistant for Sales Reps.
-You help Sales Reps prepare for customer meetings by analyzing account information,
-recommending AWS services, searching for similar customer cases, and suggesting action items.
-
-## Role
-1. Analyze customer consultation history and customer information to provide insights
-2. Use the `retrieve` tool to search Bedrock Knowledge Base for similar customer cases. Call `retrieve(text="search keywords")` with Knowledge Base ID: {_kb_id}
-3. Use the `http_request` tool to search for additional information when needed
-4. Recommend relevant AWS services based on customer needs
-5. Suggest actionable items for meeting preparation
-
-## Rules
-- Base your analysis on the provided customer information and conversation history
-- Use the `retrieve` tool to search for similar customer cases when relevant
-- Use the `http_request` tool for web searches when additional context is needed
-- Provide specific, actionable recommendations
-- Be concise and focused on sales motion support
-
-## SHIP A2T Log
-- 사용자가 "SHIP A2T 로그 뽑아줘", "A2T 로그 추출해줘" 등 A2T 로그를 요청하면, 반드시 `extract_a2t_log` 도구를 호출하세요.
-- `extract_a2t_log(session_id, conversation_history)` 형태로 호출합니다.
-- session_id는 현재 세션 ID, conversation_history는 대화 내역 JSON 문자열입니다.
-- 도구가 반환한 JSON 구조를 SA가 SHIP 폼에 바로 붙여넣을 수 있도록 정리하여 응답하세요.
-"""
-
-CHAT_AGENT_NAME = "prechatPlanningChatAgent"
 
 
 def _build_chat_system_prompt(
@@ -303,7 +199,7 @@ def _build_chat_system_prompt(
     Returns:
         컨텍스트가 주입된 시스템 프롬프트 문자열
     """
-    prompt = CHAT_SYSTEM_PROMPT
+    prompt = DEFAULT_SYSTEM_PROMPT
 
     # 고객 정보 컨텍스트 주입
     if customer_info:
@@ -341,8 +237,7 @@ def create_planning_chat_agent(
 ) -> Agent:
     """스트리밍 채팅용 Planning Agent를 생성합니다.
 
-    기존 create_planning_agent()는 구조화된 출력(PlanningOutput)용으로 유지하고,
-    이 함수는 Sales Rep과의 실시간 대화용 에이전트를 생성합니다.
+    Sales Rep과의 실시간 대화용 에이전트를 생성합니다.
     AgentCore Memory(STM) 미사용 — 매 호출마다 독립적 에이전트 인스턴스 생성.
 
     Args:
@@ -363,7 +258,7 @@ def create_planning_chat_agent(
     return Agent(
         model=model_id or DEFAULT_MODEL_ID,
         system_prompt=system_prompt,
-        name=CHAT_AGENT_NAME,
+        name=DEFAULT_AGENT_NAME,
         tools=[retrieve, http_request, aws_docs_mcp_client, current_time, extract_a2t_log],
     )
 
