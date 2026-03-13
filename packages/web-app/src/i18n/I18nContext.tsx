@@ -165,8 +165,8 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
       return translation;
     } catch (err) {
       console.error('Error in translation function:', err);
-      // Return key as fallback if translation function fails
-      return key;
+      // 번역 키가 화면에 노출되지 않도록 빈 문자열 반환
+      return '';
     }
   }, [locale]);
 

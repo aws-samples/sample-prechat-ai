@@ -223,8 +223,9 @@ export class TranslationManager {
       console.warn(`Missing translation key: "${key}" for locale: ${targetLocale}`);
     }
 
-    // Return provided fallback or the key itself as final fallback
-    const finalFallback = fallback || key;
+    // Return provided fallback or empty string as final fallback
+    // 번역 키가 화면에 노출되지 않도록 빈 문자열 반환
+    const finalFallback = fallback || '';
     
     // In development, make missing keys more visible
     if (isDevelopment && !fallback) {
