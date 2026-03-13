@@ -150,6 +150,12 @@ Analyze customer consultation content to generate a structured meeting plan and 
 - Provide specific, actionable agenda items and next steps
 - Recommend AWS services that are directly relevant to the customer's stated needs
 - If no relevant customer cases are found via retrieve, return an empty customer_references list
+
+## SHIP A2T Log
+- 사용자가 "SHIP A2T 로그 뽑아줘", "A2T 로그 추출해줘" 등 A2T 로그를 요청하면, 반드시 `extract_a2t_log` 도구를 호출하세요.
+- `extract_a2t_log(session_id, conversation_history)` 형태로 호출합니다.
+- session_id는 현재 세션 ID, conversation_history는 대화 내역 JSON 문자열입니다.
+- 도구가 반환한 JSON 구조를 SA가 SHIP 폼에 바로 붙여넣을 수 있도록 정리하여 응답하세요.
 """
 
 DEFAULT_MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
@@ -269,6 +275,12 @@ recommending AWS services, searching for similar customer cases, and suggesting 
 - Use the `http_request` tool for web searches when additional context is needed
 - Provide specific, actionable recommendations
 - Be concise and focused on sales motion support
+
+## SHIP A2T Log
+- 사용자가 "SHIP A2T 로그 뽑아줘", "A2T 로그 추출해줘" 등 A2T 로그를 요청하면, 반드시 `extract_a2t_log` 도구를 호출하세요.
+- `extract_a2t_log(session_id, conversation_history)` 형태로 호출합니다.
+- session_id는 현재 세션 ID, conversation_history는 대화 내역 JSON 문자열입니다.
+- 도구가 반환한 JSON 구조를 SA가 SHIP 폼에 바로 붙여넣을 수 있도록 정리하여 응답하세요.
 """
 
 CHAT_AGENT_NAME = "prechatPlanningChatAgent"
@@ -352,7 +364,7 @@ def create_planning_chat_agent(
         model=model_id or DEFAULT_MODEL_ID,
         system_prompt=system_prompt,
         name=CHAT_AGENT_NAME,
-        tools=[retrieve, http_request, aws_docs_mcp_client, current_time],
+        tools=[retrieve, http_request, aws_docs_mcp_client, current_time, extract_a2t_log],
     )
 
 
