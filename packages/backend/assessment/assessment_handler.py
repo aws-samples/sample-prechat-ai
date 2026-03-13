@@ -230,14 +230,31 @@ def get_assessment_status(event, context):
     if not _verify_pin(event, session):
         return lambda_response(403, {'error': 'Invalid PIN number'})
 
-    return lambda_response(200, {
-        'assessmentStatus': session.get('assessmentStatus', 'pending'),
+    assessment_status = session.get('assessmentStatus', 'pending')
+    response_data = {
+        'assessmentStatus': assessment_status,
         'assessmentRequestedAt': session.get('assessmentRequestedAt', ''),
         'assessmentCompletedAt': session.get('assessmentCompletedAt', ''),
         'hasReport': bool(session.get('reportS3Key')),
         'hasA2tLog': bool(session.get('a2tLogS3Key')),
         'codeBuildRoleArn': PROWLER_CODEBUILD_ROLE_ARN,
-    })
+    }
+
+    # scanning 상태일 때 CodeBuild 빌드 진행 상태 조회
+    if assessment_status == 'scanning' and session.get('codeBuildId'):
+        try:
+            build_resp = codebuild.batch_get_builds(
+                ids=[session['codeBuildId']]
+            )
+            builds = build_resp.get('builds', [])
+            if builds:
+                build = builds[0]
+                response_data['buildStatus'] = build.get('buildStatus', '')
+                response_data['buildPhase'] = build.get('currentPhase', '')
+        except Exception as e:
+            print(f"CodeBuild status query failed: {str(e)}")
+
+    return lambda_response(200, response_data)
 
 
 def get_report_download_url(event, context):

@@ -25,6 +25,7 @@ response = agentcore_runtime.configure(
     auto_create_execution_role=True,
     auto_create_ecr=True,
     region=region,
+    memory_mode="STM_ONLY",
 )
 
 print("🚀 SHIP Agent 배포 시작...", file=sys.stderr)

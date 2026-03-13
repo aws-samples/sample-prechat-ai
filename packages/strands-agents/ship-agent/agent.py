@@ -15,12 +15,68 @@ from strands import Agent
 from strands.tools import tool
 from strands_tools import current_time
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
+from bedrock_agentcore.memory.integrations.strands.config import AgentCoreMemoryConfig
+from bedrock_agentcore.memory.integrations.strands.session_manager import AgentCoreMemorySessionManager
 
 app = BedrockAgentCoreApp()
 logging.getLogger("strands").setLevel(logging.INFO)
 
 DEFAULT_MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 DEFAULT_AGENT_NAME = 'prechatShipAgent'
+
+# AgentCore Memory ID: deploy 시 env_vars로 컨테이너에 주입됨
+MEMORY_ID = os.environ.get('BEDROCK_AGENTCORE_MEMORY_ID', '')
+
+
+@tool
+def render_form(form_title: str, fields: str) -> str:
+    """고객이 정보를 기입할 수 있는 HTML Form을 생성합니다 (Div Return).
+
+    프론트엔드에서 동적으로 렌더링되는 HTML을 반환합니다.
+    고객이 Form에 정보를 기입하면 messages로 취급 & 저장됩니다.
+
+    Args:
+        form_title: 폼 제목
+        fields: JSON 형식의 필드 정의 (예: '[{"name":"company","label":"회사명","type":"text"}]')
+
+    Returns:
+        렌더링 가능한 HTML Form 문자열
+    """
+    try:
+        field_list = json.loads(fields)
+    except json.JSONDecodeError:
+        return '<div><p>폼 필드 정의가 올바르지 않습니다.</p></div>'
+
+    form_html = '<div class="prechat-form" data-form-type="div-return">'
+    form_html += f'<h3>{form_title}</h3>'
+    form_html += '<form>'
+
+    for field in field_list:
+        name = field.get('name', '')
+        label = field.get('label', name)
+        field_type = field.get('type', 'text')
+        required = field.get('required', False)
+        options = field.get('options', [])
+
+        form_html += '<div class="form-field">'
+        form_html += f'<label for="{name}">{label}</label>'
+
+        if field_type == 'textarea':
+            form_html += f'<textarea name="{name}" id="{name}" {"required" if required else ""}></textarea>'
+        elif field_type == 'select':
+            form_html += f'<select name="{name}" id="{name}" {"required" if required else ""}>'
+            for opt in options:
+                form_html += f'<option value="{opt}">{opt}</option>'
+            form_html += '</select>'
+        else:
+            form_html += f'<input type="{field_type}" name="{name}" id="{name}" {"required" if required else ""} />'
+
+        form_html += '</div>'
+
+    form_html += '<button type="submit" data-i18n="submit">Submit</button>'
+    form_html += '</form></div>'
+
+    return form_html
 
 
 @tool
@@ -179,6 +235,22 @@ def _default_system_prompt() -> str:
 - 스캔 진행 중에는 고객에게 진행 상태를 안내하고, 대화를 계속 이어가세요.
 - 대화가 충분히 진행되면 extract_a2t_log 도구를 사용하여 A2T 로그를 생성하세요.
 - Description 필드는 반드시 영어로, 280자 이내, 최대 3줄 내러티브로 작성하세요.
+- 담당자 정보를 요구할 경우 플레이스홀더로 표시하세요: {{{{sales_rep.name}}}} {{{{sales_rep.phone}}}} {{{{sales_rep.email}}}}
+
+## EOF 프로토콜
+- 대화 종료 시 반드시(MUST) "EOF" 토큰을 응답 끝에 넣어주셔야 합니다.
+- 고객이 더 이상 질문이 없다고 하거나, A2T 로그 추출이 완료되면 대화를 마무리하고 EOF를 출력하세요.
+
+## Div Return 프로토콜 (render_form)
+- 고객에게 구조화된 정보를 수집해야 할 때 `render_form` 도구를 사용하여 HTML Form을 생성하세요.
+- **중요: render_form 도구를 호출한 후, 도구가 반환한 HTML을 반드시 그대로 전달해주세요.**
+- 예: "아래 폼에 정보를 입력해주세요!\n\n<div class=..."
+- 보안 솔루션 현황(Q2~Q10)을 한꺼번에 수집할 때 Form이 유용합니다.
+
+## 사용 가능한 도구
+1. `current_time`: 현재 시간을 조회합니다.
+2. `extract_a2t_log`: 대화 내역을 기반으로 A2T 로그를 구조화하여 추출합니다.
+3. `render_form`: 고객이 구조화된 정보를 입력해야 할 때 HTML Form을 생성합니다.
 """
 
 
@@ -206,6 +278,18 @@ def create_ship_agent(
     Returns:
         구성된 Strands Agent 인스턴스
     """
+    # AgentCore Memory STM 설정 (고객은 익명이므로 actor_id = session_id)
+    session_manager = None
+    if MEMORY_ID:
+        memory_config = AgentCoreMemoryConfig(
+            memory_id=MEMORY_ID,
+            session_id=session_id,
+            actor_id=session_id,
+        )
+        session_manager = AgentCoreMemorySessionManager(
+            agentcore_memory_config=memory_config,
+        )
+
     effective_prompt = system_prompt or _default_system_prompt()
     locale_instruction = _get_locale_instruction(locale)
     if locale_instruction:
@@ -215,7 +299,8 @@ def create_ship_agent(
         model=model_id or DEFAULT_MODEL_ID,
         system_prompt=effective_prompt,
         name=DEFAULT_AGENT_NAME,
-        tools=[current_time, extract_a2t_log],
+        tools=[current_time, extract_a2t_log, render_form],
+        session_manager=session_manager,
     )
 
 

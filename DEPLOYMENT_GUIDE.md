@@ -121,6 +121,62 @@ chmod +x update-env-vars.sh
   - AWS PreChat 에 접속하고 Sign-up 및 Sign-in 을 진행합니다.
   - AWS PreChat 에서 PreChat Agent 를 생성합니다. (Amazon Bedrock Agents)
 
+## Makefile을 이용한 선택적 배포
+
+`Makefile`을 사용하면 git diff 기반으로 변경된 컴포넌트만 선택적으로 배포할 수 있습니다.
+
+### 기본 사용법
+
+```bash
+# 변경분 기반 자동 선택 배포
+make deploy PROFILE=default STAGE=dev
+
+# 배포 계획만 확인 (dry-run)
+make plan
+
+# 전체 배포 (deploy-full.sh 대체)
+make deploy-all PROFILE=prechat STAGE=prod REGION=ap-northeast-2 BEDROCK_KB_ID=ABCDEFGHIJ
+```
+
+### 컴포넌트별 배포
+
+```bash
+# SAM 백엔드만
+make deploy-backend PROFILE=prechat STAGE=prod
+
+# 프론트엔드만
+make deploy-website STAGE=prod PROFILE=prechat REGION=ap-northeast-2
+
+# 변경된 에이전트만
+make deploy-agents PROFILE=prechat STAGE=prod
+
+# 개별 에이전트 (SSM 파라미터 자동 등록 포함)
+make deploy-agent-ship PROFILE=prechat STAGE=prod
+make deploy-agent-consultation PROFILE=prechat STAGE=prod
+make deploy-agent-summary PROFILE=prechat STAGE=prod
+make deploy-agent-planning PROFILE=prechat STAGE=prod
+```
+
+### 변경 감지 규칙
+
+| 변경 대상 | 배포 범위 |
+|-----------|----------|
+| `packages/backend/shared/` | SAM 전체 (Lambda Layer 영향) |
+| `packages/backend/{도메인}/` | SAM 배포 (해당 Lambda) |
+| `template.yaml` | SAM 전체 배포 |
+| `packages/web-app/` | 프론트엔드만 |
+| `packages/strands-agents/{에이전트}/` | 해당 에이전트만 |
+
+### diff 기준 변경
+
+```bash
+# main 브랜치 대비 변경분
+make plan DIFF_BASE=main
+
+# 특정 커밋 대비
+make plan DIFF_BASE=abc1234
+```
+
 ## 리소스 정리
 
 배포된 리소스를 삭제하려면:
