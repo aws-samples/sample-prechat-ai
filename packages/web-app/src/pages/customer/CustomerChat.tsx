@@ -483,8 +483,8 @@ export default function CustomerChat() {
                 </SpaceBetween>
               }
               actions={
-                !isComplete ? (
-                  <SpaceBetween direction="horizontal" size="xs">
+                <SpaceBetween direction="horizontal" size="xs">
+                  {!isComplete && (
                     <Button
                       variant="normal"
                       iconName={selectedPurposes.length > 0 ? "edit" : "add-plus"}
@@ -492,15 +492,15 @@ export default function CustomerChat() {
                     >
                       {selectedPurposes.length > 0 ? t('customer.chat.editPurposeButton') : t('customer.chat.selectPurposeButton')}
                     </Button>
-                    <Button
-                      variant="normal"
-                      iconName="upload"
-                      onClick={() => setShowFileUpload(true)}
-                    >
-                      {t('customer.chat.attachFileButton')}
-                    </Button>
-                  </SpaceBetween>
-                ) : undefined
+                  )}
+                  <Button
+                    variant="normal"
+                    iconName="upload"
+                    onClick={() => setShowFileUpload(true)}
+                  >
+                    {t('customer.chat.attachFileButton')}
+                  </Button>
+                </SpaceBetween>
               }
             >
               {t('customer.chat.title')}
