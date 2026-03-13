@@ -485,12 +485,13 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
           {messages.length > 0 && (
             <Box float="right">
               <Button
-                variant="icon"
-                iconName="remove"
+                variant="normal"
+                iconName="refresh"
                 onClick={handleClearMessages}
                 disabled={isStreaming}
-                ariaLabel={t('admin.planningChat.clearHistory') || '대화 이력 초기화'}
-              />
+              >
+                {t('admin.planningChat.clearHistory')}
+              </Button>
             </Box>
           )}
           <MultilineChatInput
