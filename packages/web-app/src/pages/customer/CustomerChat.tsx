@@ -451,8 +451,8 @@ export default function CustomerChat() {
 
   return (
     <Grid gridDefinition={[
-      { colspan: { default: 12, m: 10, l: 9 } },
-      { colspan: { default: 0, m: 2, l: 3 } },
+      { colspan: { default: 12, m: 8, l: 8 } },
+      { colspan: { default: 12, m: 4, l: 4 } },
     ]}>
       <Container>
         <SpaceBetween size="l">
