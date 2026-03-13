@@ -136,8 +136,14 @@ def submit_legal_consent(event, context):
         return lambda_response(400, {'error': 'Legal consent must be agreed'})
 
     current_status = session.get('assessmentStatus', 'pending')
+
+    # 이미 동의 완료된 상태면 멱등적으로 성공 반환
     if current_status != 'pending':
-        return lambda_response(409, {'error': f'Cannot submit legal consent in status: {current_status}'})
+        return lambda_response(200, {
+            'message': 'Legal consent already recorded',
+            'assessmentStatus': current_status,
+            'legalConsentTimestamp': session.get('legalConsentTimestamp', ''),
+        })
 
     timestamp = get_timestamp()
     _update_assessment_status(session_id, 'legal_agreed', {
