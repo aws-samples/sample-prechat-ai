@@ -196,15 +196,38 @@ export default function CustomerChat() {
   }, [sessionId])
 
   useEffect(() => {
-    // Check for stored purposes and show selector if needed
-    if (sessionData && messages.length === 0 && selectedPurposes.length === 0 && sessionId) {
+    // 상담 목적 복원: localStorage → 서버 데이터 순으로 시도
+    if (sessionData && selectedPurposes.length === 0 && sessionId) {
+      // 1) localStorage에서 복원
       const storedPurposes = getStoredConsultationPurposesForSession(sessionId)
       if (storedPurposes) {
         const purposes = parsePurposesFromStorage(storedPurposes)
         if (purposes.length > 0) {
           setSelectedPurposes(purposes)
+          return
         }
-      } else {
+      }
+
+      // 2) 서버 세션 데이터에서 복원
+      if (sessionData.consultationPurposes) {
+        const serverPurposes = typeof sessionData.consultationPurposes === 'string'
+          ? sessionData.consultationPurposes
+          : Array.isArray(sessionData.consultationPurposes)
+            ? sessionData.consultationPurposes.join('|')
+            : ''
+        if (serverPurposes) {
+          const purposes = parsePurposesFromStorage(serverPurposes)
+          if (purposes.length > 0) {
+            setSelectedPurposes(purposes)
+            // 서버 데이터를 localStorage에도 캐싱
+            storeConsultationPurposesForSession(sessionId, serverPurposes)
+            return
+          }
+        }
+      }
+
+      // 3) 둘 다 없으면 선택 모달 표시 (대화 이력이 없을 때만)
+      if (messages.length === 0) {
         setShowPurposeSelector(true)
       }
     }

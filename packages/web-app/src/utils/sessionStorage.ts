@@ -101,26 +101,40 @@ export const getStoredPrivacyConsentForSession = (sessionId: string): boolean =>
 }
 
 /**
- * 세션 ID에 대한 상담 목적들을 세션 저장소에 저장 ("|"로 구분된 문자열)
+ * 세션 ID에 대한 상담 목적들을 localStorage에 저장 ("|"로 구분된 문자열)
+ * 탭/브라우저 종료 후에도 유지되도록 localStorage 사용
  */
 export const storeConsultationPurposesForSession = (sessionId: string, purposes: string): void => {
   try {
     const key = `ConsultationPurposes_${sessionId}`
-    sessionStorage.setItem(key, purposes)
+    localStorage.setItem(key, purposes)
+    // 기존 sessionStorage에 남아있을 수 있는 레거시 데이터 정리
+    sessionStorage.removeItem(key)
   } catch (error) {
-    console.warn('Failed to store consultation purposes in session storage:', error)
+    console.warn('Failed to store consultation purposes:', error)
   }
 }
 
 /**
  * 세션 ID에 대한 저장된 상담 목적들을 가져옴 ("|"로 구분된 문자열)
+ * localStorage 우선, 없으면 sessionStorage 폴백 (마이그레이션)
  */
 export const getStoredConsultationPurposesForSession = (sessionId: string): string | null => {
   try {
     const key = `ConsultationPurposes_${sessionId}`
-    return sessionStorage.getItem(key)
+    const fromLocal = localStorage.getItem(key)
+    if (fromLocal) return fromLocal
+
+    // sessionStorage 폴백 (기존 데이터 마이그레이션)
+    const fromSession = sessionStorage.getItem(key)
+    if (fromSession) {
+      localStorage.setItem(key, fromSession)
+      sessionStorage.removeItem(key)
+      return fromSession
+    }
+    return null
   } catch (error) {
-    console.warn('Failed to get consultation purposes from session storage:', error)
+    console.warn('Failed to get consultation purposes:', error)
     return null
   }
 }

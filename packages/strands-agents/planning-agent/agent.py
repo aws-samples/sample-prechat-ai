@@ -19,6 +19,7 @@ import json
 import logging
 from pydantic import BaseModel, Field
 from strands import Agent
+from strands.tools import tool
 from strands.tools.mcp import MCPClient
 from mcp import stdio_client, StdioServerParameters
 from strands_tools import retrieve, http_request, current_time
@@ -40,6 +41,56 @@ aws_docs_mcp_client = MCPClient(lambda: stdio_client(
         args=["awslabs.aws-documentation-mcp-server@latest"]
     )
 ))
+
+
+@tool
+def extract_a2t_log(session_id: str, conversation_history: str) -> str:
+    """대화 내역을 기반으로 A2T(Activity-to-Trigger) 로그를 구조화하여 추출합니다.
+
+    SA가 SHIP 폼에 입력하는 실제 항목에 맞춘 구조입니다.
+    대화에서 파악된 정보를 각 필드에 채워서 반환하세요.
+
+    Args:
+        session_id: PreChat 세션 ID
+        conversation_history: JSON 형식의 대화 내역
+
+    Returns:
+        JSON 형식의 A2T 로그 — SA가 SHIP 폼에 바로 붙여넣을 수 있는 형태
+    """
+    try:
+        messages = json.loads(conversation_history) if isinstance(conversation_history, str) else conversation_history
+    except (json.JSONDecodeError, TypeError):
+        messages = []
+
+    a2t_log = {
+        'session_id': session_id,
+        'description': '',
+        'customer_contact': {
+            'name': '',
+            'company': '',
+            'email': '',
+            'title': '',
+        },
+        'workshop_date': '',
+        'a2t_questions': {
+            'q1_past_security_assessments': '',
+            'q2_threat_detection_3rd_party': '',
+            'q3_risk_analytics_3rd_party': '',
+            'q4_vulnerability_mgmt_3rd_party': '',
+            'q5_key_management_3rd_party': '',
+            'q6_credential_protection_3rd_party': '',
+            'q7_network_protection_3rd_party': '',
+            'q8_app_firewall_3rd_party': '',
+            'q9_permission_analysis_3rd_party': '',
+            'q10_config_monitoring_3rd_party': '',
+            'q11_assessment_used': '',
+            'q12_security_use_case_focus': '',
+            'q13_adoption_plan': '',
+            'q14_aws_security_feedback': '',
+        },
+    }
+
+    return json.dumps(a2t_log, ensure_ascii=False, indent=2)
 
 
 # ──────────────────────────────────────────────
@@ -135,7 +186,7 @@ def create_planning_agent(
         model=model_id or DEFAULT_MODEL_ID,
         system_prompt=effective_prompt,
         name=agent_name or DEFAULT_AGENT_NAME,
-        tools=[retrieve, aws_docs_mcp_client, current_time],
+        tools=[retrieve, aws_docs_mcp_client, current_time, extract_a2t_log],
     )
 
 

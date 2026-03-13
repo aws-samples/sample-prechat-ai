@@ -79,77 +79,6 @@ def render_form(form_title: str, fields: str) -> str:
     return form_html
 
 
-@tool
-def extract_a2t_log(session_id: str, conversation_history: str) -> str:
-    """대화 내역을 기반으로 A2T(Activity-to-Trigger) 로그를 구조화하여 추출합니다.
-
-    SA가 SHIP 폼에 입력하는 실제 항목에 맞춘 구조입니다.
-    대화에서 파악된 정보를 각 필드에 채워서 반환하세요.
-
-    Args:
-        session_id: PreChat 세션 ID
-        conversation_history: JSON 형식의 대화 내역
-
-    Returns:
-        JSON 형식의 A2T 로그 — SA가 SHIP 폼에 바로 붙여넣을 수 있는 형태
-    """
-    try:
-        messages = json.loads(conversation_history) if isinstance(conversation_history, str) else conversation_history
-    except (json.JSONDecodeError, TypeError):
-        messages = []
-
-    a2t_log = {
-        'session_id': session_id,
-
-        # --- SA 폼 상단 필드 ---
-        # Description: SATv2 Assessment 수행 배경 (영어, 280자 이내, 최대 3줄 내러티브)
-        'description': '',
-
-        # Customer Contact: 대화한 고객 담당자 정보
-        'customer_contact': {
-            'name': '',
-            'company': '',
-            'email': '',
-            'title': '',
-        },
-
-        # Workshop Date: 대화가 수행된 날짜 (ISO 8601)
-        'workshop_date': '',
-
-        # --- A2T SHIP 폼 Q1~Q14 ---
-        'a2t_questions': {
-            # Q1: 과거 참여한 AWS 보안 점검/프레임워크
-            'q1_past_security_assessments': '',
-            # Q2: 위협 탐지 3rd party 사용 여부 (vs GuardDuty)
-            'q2_threat_detection_3rd_party': '',
-            # Q3: 리스크 상관분석 3rd party 사용 여부 (vs Security Hub)
-            'q3_risk_analytics_3rd_party': '',
-            # Q4: 취약점 관리 3rd party 사용 여부 (vs Inspector)
-            'q4_vulnerability_mgmt_3rd_party': '',
-            # Q5: 암호화 키 관리 3rd party 사용 여부 (vs KMS)
-            'q5_key_management_3rd_party': '',
-            # Q6: 자격증명 보호 3rd party 사용 여부 (vs Secrets Manager)
-            'q6_credential_protection_3rd_party': '',
-            # Q7: 네트워크 보호 3rd party 사용 여부 (vs Network Firewall)
-            'q7_network_protection_3rd_party': '',
-            # Q8: 애플리케이션 방화벽 3rd party 사용 여부 (vs WAF)
-            'q8_app_firewall_3rd_party': '',
-            # Q9: 권한 분석 3rd party 사용 여부 (vs IAM Access Analyzer)
-            'q9_permission_analysis_3rd_party': '',
-            # Q10: 구성 모니터링 3rd party 사용 여부 (vs Config)
-            'q10_config_monitoring_3rd_party': '',
-            # Q11: 데이터 기반 보안 대화를 시작하기 위해 사용한 Assessment
-            'q11_assessment_used': '',
-            # Q12: 고객이 집중하는 보안 유스케이스
-            'q12_security_use_case_focus': '',
-            # Q13: 파트너 또는 네이티브 서비스 도입 계획
-            'q13_adoption_plan': '',
-            # Q14: AWS 보안 서비스에 대한 피드백 (긍정, 기능 요청, 불편사항)
-            'q14_aws_security_feedback': '',
-        },
-    }
-
-    return json.dumps(a2t_log, ensure_ascii=False, indent=2)
 
 
 def _default_system_prompt() -> str:
@@ -233,7 +162,6 @@ def _default_system_prompt() -> str:
 - 고객의 답변에 공감하고, 관련 AWS 보안 서비스를 자연스럽게 소개하세요.
 - 보안 관련 질문에는 SHIP Assessment 범위 내에서 답변하세요.
 - 스캔 진행 중에는 고객에게 진행 상태를 안내하고, 대화를 계속 이어가세요.
-- 대화가 충분히 진행되면 extract_a2t_log 도구를 사용하여 A2T 로그를 생성하세요.
 - Description 필드는 반드시 영어로, 280자 이내, 최대 3줄 내러티브로 작성하세요.
 - 담당자 정보를 요구할 경우 플레이스홀더로 표시하세요: {{{{sales_rep.name}}}} {{{{sales_rep.phone}}}} {{{{sales_rep.email}}}}
 
@@ -249,8 +177,7 @@ def _default_system_prompt() -> str:
 
 ## 사용 가능한 도구
 1. `current_time`: 현재 시간을 조회합니다.
-2. `extract_a2t_log`: 대화 내역을 기반으로 A2T 로그를 구조화하여 추출합니다.
-3. `render_form`: 고객이 구조화된 정보를 입력해야 할 때 HTML Form을 생성합니다.
+2. `render_form`: 고객이 구조화된 정보를 입력해야 할 때 HTML Form을 생성합니다.
 """
 
 
@@ -299,7 +226,7 @@ def create_ship_agent(
         model=model_id or DEFAULT_MODEL_ID,
         system_prompt=effective_prompt,
         name=DEFAULT_AGENT_NAME,
-        tools=[current_time, extract_a2t_log, render_form],
+        tools=[current_time, render_form],
         session_manager=session_manager,
     )
 
