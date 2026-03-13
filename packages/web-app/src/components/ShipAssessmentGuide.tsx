@@ -148,7 +148,7 @@ Outputs:
       <Container
         header={
           <Header variant="h2">
-            {t('ship.guide.title')}
+            {t('ship.guide.title')} <Box display="inline" fontSize="body-s" color="text-status-inactive">(PC권장)</Box>
           </Header>
         }
       >
