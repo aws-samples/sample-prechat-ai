@@ -236,7 +236,6 @@ def get_assessment_status(event, context):
         'assessmentRequestedAt': session.get('assessmentRequestedAt', ''),
         'assessmentCompletedAt': session.get('assessmentCompletedAt', ''),
         'hasReport': bool(session.get('reportS3Key')),
-        'hasA2tLog': bool(session.get('a2tLogS3Key')),
         'codeBuildRoleArn': PROWLER_CODEBUILD_ROLE_ARN,
     }
 
@@ -302,42 +301,3 @@ def get_report_download_url(event, context):
         return lambda_response(500, {'error': 'Failed to generate download URL'})
 
 
-def get_a2t_log(event, context):
-    """A2T 로그 요약 조회/생성 요청"""
-    session_id = event['pathParameters']['sessionId']
-
-    if not _validate_session_id(session_id):
-        return lambda_response(400, {'error': 'Invalid session ID'})
-
-    session = _get_session(session_id)
-    if not session:
-        return lambda_response(404, {'error': 'Session not found'})
-
-    if not _verify_pin(event, session):
-        return lambda_response(403, {'error': 'Invalid PIN number'})
-
-    a2t_key = session.get('a2tLogS3Key')
-    if a2t_key:
-        # 기존 A2T 로그가 있으면 다운로드 URL 반환
-        try:
-            download_url = s3_client.generate_presigned_url(
-                'get_object',
-                Params={
-                    'Bucket': PROWLER_FINDINGS_BUCKET,
-                    'Key': a2t_key,
-                },
-                ExpiresIn=PRESIGNED_URL_EXPIRY,
-            )
-            return lambda_response(200, {
-                'status': 'available',
-                'downloadUrl': download_url,
-            })
-        except Exception as e:
-            print(f"Failed to generate A2T log URL: {str(e)}")
-            return lambda_response(500, {'error': 'Failed to generate A2T log URL'})
-
-    # A2T 로그가 없으면 생성 요청 상태 반환
-    return lambda_response(200, {
-        'status': 'not_available',
-        'message': 'A2T log not yet generated',
-    })

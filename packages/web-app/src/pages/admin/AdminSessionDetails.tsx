@@ -242,23 +242,6 @@ export default function AdminSessionDetails() {
                 {t('adminSessionDetail.info.downloadReport')}
               </Button>
             </Box>
-            <Box>
-              <Box variant="awsui-key-label">{t('adminSessionDetail.info.a2tLogLabel')}</Box>
-              {session.a2tLogS3Key ? (
-                <Button
-                  iconName="download"
-                  variant="link"
-                  onClick={async () => {
-                    // A2T 로그 다운로드는 admin API 사용
-                    console.log('A2T log download - TODO: admin API');
-                  }}
-                >
-                  {t('adminSessionDetail.info.downloadA2tLog')}
-                </Button>
-              ) : (
-                <Box color="text-status-inactive">-</Box>
-              )}
-            </Box>
           </ColumnLayout>
         )}
 

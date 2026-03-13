@@ -3123,29 +3123,6 @@ Resources:
             Path: /api/admin/sessions/{sessionId}/assessment/report-url
             Method: get
 
-  AdminA2tLogFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/assessment/
-      Handler: assessment_handler.get_a2t_log
-      Environment:
-        Variables:
-          PROWLER_FINDINGS_BUCKET: !Ref ProwlerFindingsBucket
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-        - Statement:
-            Effect: Allow
-            Action: s3:GetObject
-            Resource: !Sub '${ProwlerFindingsBucket.Arn}/*'
-      Events:
-        AdminGetA2tLog:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /api/admin/sessions/{sessionId}/assessment/a2t-log
-            Method: post
-
   # Assessment Callback Lambda - CodeBuild 이벤트 처리
   AssessmentCallbackFunction:
     Type: AWS::Serverless::Function

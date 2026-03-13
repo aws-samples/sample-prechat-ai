@@ -90,7 +90,6 @@ export interface Session {
   reportS3Key?: string;
   legalConsentTimestamp?: string;
   legalConsentAgreed?: boolean;
-  a2tLogS3Key?: string;
 }
 
 // SHIP Assessment API 요청/응답 타입
@@ -107,7 +106,6 @@ export interface AssessmentStatusResponse {
   assessmentRequestedAt?: string;
   assessmentCompletedAt?: string;
   hasReport: boolean;
-  hasA2tLog: boolean;
   codeBuildRoleArn?: string;
 }
 

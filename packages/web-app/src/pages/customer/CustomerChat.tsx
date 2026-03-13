@@ -210,19 +210,13 @@ export default function CustomerChat() {
 
       // 2) 서버 세션 데이터에서 복원
       if (sessionData.consultationPurposes) {
-        const serverPurposes = typeof sessionData.consultationPurposes === 'string'
-          ? sessionData.consultationPurposes
-          : Array.isArray(sessionData.consultationPurposes)
-            ? sessionData.consultationPurposes.join('|')
-            : ''
-        if (serverPurposes) {
-          const purposes = parsePurposesFromStorage(serverPurposes)
-          if (purposes.length > 0) {
-            setSelectedPurposes(purposes)
-            // 서버 데이터를 localStorage에도 캐싱
-            storeConsultationPurposesForSession(sessionId, serverPurposes)
-            return
-          }
+        const serverPurposes = sessionData.consultationPurposes
+        const purposes = parsePurposesFromStorage(serverPurposes)
+        if (purposes.length > 0) {
+          setSelectedPurposes(purposes)
+          // 서버 데이터를 localStorage에도 캐싱
+          storeConsultationPurposesForSession(sessionId, serverPurposes)
+          return
         }
       }
 
