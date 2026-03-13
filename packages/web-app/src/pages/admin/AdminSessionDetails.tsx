@@ -387,6 +387,49 @@ export default function AdminSessionDetails() {
               id: 'discussion',
               content: sessionId ? <DiscussionTab sessionId={sessionId} /> : null
             },
+            ...(session.assessmentStatus ? [{
+              label: t('adminSessionDetail.tabs.shipReport'),
+              id: 'ship-report',
+              content: (
+                <SpaceBetween size="l">
+                  <Box>
+                    <Box variant="awsui-key-label">{t('adminSessionDetail.info.assessmentStatusLabel')}</Box>
+                    <Box>
+                      {session.assessmentStatus === 'completed' && <Badge color="green">{t('ship.status.completed')}</Badge>}
+                      {session.assessmentStatus === 'scanning' && <Badge color="blue">{t('ship.status.scanning')}</Badge>}
+                      {session.assessmentStatus === 'failed' && <Badge color="red">{t('ship.status.failed')}</Badge>}
+                      {session.assessmentStatus === 'pending' && <Badge color="grey">{t('ship.status.pending')}</Badge>}
+                      {session.assessmentStatus === 'legal_agreed' && <Badge color="grey">{t('ship.status.legalAgreed')}</Badge>}
+                      {session.assessmentStatus === 'role_submitted' && <Badge color="blue">{t('ship.status.roleSubmitted')}</Badge>}
+                    </Box>
+                  </Box>
+                  {session.assessmentStatus === 'completed' && (
+                    <Box>
+                      <Button
+                        iconName="download"
+                        onClick={async () => {
+                          if (!sessionId || !session.pinNumber) return;
+                          try {
+                            const resp = await getReportDownloadUrl(sessionId, session.pinNumber);
+                            window.open(resp.downloadUrl, '_blank');
+                          } catch (e) {
+                            console.error('Report download failed:', e);
+                          }
+                        }}
+                      >
+                        {t('adminSessionDetail.info.downloadReport')}
+                      </Button>
+                    </Box>
+                  )}
+                  {session.assessmentStatus === 'scanning' && (
+                    <Alert type="info">{t('ship.guide.scanningMessage')}</Alert>
+                  )}
+                  {session.assessmentStatus === 'failed' && (
+                    <Alert type="error">{t('ship.guide.failedMessage')}</Alert>
+                  )}
+                </SpaceBetween>
+              ),
+            }] : []),
           ]}
         />
       </SpaceBetween>

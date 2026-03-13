@@ -333,6 +333,7 @@
     "tabs": {
       "meetingLog": "미팅 및 요약",
       "discussion": "디스커션",
+      "shipReport": "SHIP 레포트",
       "attachments": "첨부 파일",
       "conversation": "대화 이력"
     },

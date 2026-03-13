@@ -333,6 +333,7 @@
     "tabs": {
       "meetingLog": "Meeting Log",
       "discussion": "Discussion",
+      "shipReport": "SHIP Report",
       "attachments": "Attachment",
       "conversation": "Conversation"
     },
