@@ -1192,7 +1192,7 @@
       "cfnGuide": "Download the CloudFormation template below and create a stack in the AWS Console. The Role ARN is in the Outputs tab (ProwlerMemberRoleArn).",
       "downloadCfn": "Download template (.yaml)",
       "pasteArnHint": "Paste the Role ARN created above into the field below.",
-      "scanningMessage": "Security assessment is in progress. It takes approximately 5 minutes. You can continue the conversation.",
+      "scanningMessage": "Security assessment is in progress. It takes approximately 7-15 minutes.",
       "completedMessage": "Security assessment is complete. Download the report from the side panel.",
       "failedMessage": "An error occurred during the security assessment. Please verify the Role ARN and try again.",
       "retryButton": "Retry"
