@@ -61,6 +61,10 @@ export const SUGGESTED_QUESTIONS: SuggestedQuestion[] = [
     i18nKey: 'admin.planningChat.suggestedQuestion3',
     fallback: 'Action Item 체계적으로 제안해줘',
   },
+  {
+    i18nKey: 'admin.planningChat.suggestedQuestion4',
+    fallback: 'SHIP A2T 로그 뽑아줘',
+  },
 ];
 
 /**
@@ -336,6 +340,16 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
     status: msg.isStreaming ? 'streaming' : 'complete',
   });
 
+  // 대화 이력 클리어
+  const handleClearMessages = useCallback(() => {
+    setMessages([]);
+    try {
+      localStorage.removeItem(getStorageKey(sessionId));
+    } catch {
+      // 무시
+    }
+  }, [sessionId]);
+
   const showSuggestions = shouldShowSuggestions(messages);
 
   return (
@@ -467,16 +481,29 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
         </div>
 
         {/* 입력 영역 */}
-        <MultilineChatInput
-          value={inputValue}
-          onChange={setInputValue}
-          onSend={handleInputSend}
-          placeholder={
-            t('admin.planningChat.inputPlaceholder') ||
-            'Planning Agent에게 질문하세요...'
-          }
-          disabled={isStreaming || !isConnected}
-        />
+        <SpaceBetween size="xs">
+          {messages.length > 0 && (
+            <Box float="right">
+              <Button
+                variant="icon"
+                iconName="remove"
+                onClick={handleClearMessages}
+                disabled={isStreaming}
+                ariaLabel={t('admin.planningChat.clearHistory') || '대화 이력 초기화'}
+              />
+            </Box>
+          )}
+          <MultilineChatInput
+            value={inputValue}
+            onChange={setInputValue}
+            onSend={handleInputSend}
+            placeholder={
+              t('admin.planningChat.inputPlaceholder') ||
+              'Planning Agent에게 질문하세요...'
+            }
+            disabled={isStreaming || !isConnected}
+          />
+        </SpaceBetween>
 
         {/* Capture to Discussion 모달 */}
         <CaptureDiscussionModal

@@ -464,17 +464,17 @@ export default function CustomerChat() {
                   {!selectedPurposes.length && (
                     <span>{t('customer.purposeSelector.modalTitle')}</span>
                   )}
-                  {/* WebSocket 연결 상태 인디케이터 */}
-                  {connectionState === 'connected' && (
+                  {/* WebSocket 연결 상태 — Completed 세션에서는 표시하지 않음 */}
+                  {!isComplete && connectionState === 'connected' && (
                     <StatusIndicator type="success">{t('customer.chat.wsConnected')}</StatusIndicator>
                   )}
-                  {connectionState === 'connecting' && (
+                  {!isComplete && connectionState === 'connecting' && (
                     <StatusIndicator type="in-progress">{t('customer.chat.wsConnecting')}</StatusIndicator>
                   )}
-                  {connectionState === 'disconnected' && (
+                  {!isComplete && connectionState === 'disconnected' && (
                     <StatusIndicator type="warning">{t('customer.chat.wsReconnecting')}</StatusIndicator>
                   )}
-                  {connectionState === 'error' && (
+                  {!isComplete && connectionState === 'error' && (
                     <StatusIndicator type="error">{t('customer.chat.wsError')}</StatusIndicator>
                   )}
                 </SpaceBetween>
@@ -663,65 +663,65 @@ export default function CustomerChat() {
         </SpaceBetween>
       </Container>
       <Container>
-        {sessionData?.salesRepInfo && (
-          <Box margin={{ top: 'm' }}>
-            <Header variant="h3">{t('customer.salesRep.sectionTitle')}</Header>
-            <div
-              style={{
-                backgroundColor: 'var(--awsui-color-background-container-content)',
-                padding: '16px',
-                borderRadius: '8px',
-                border: '1px solid var(--awsui-color-border-divider-default)'
-              }}
-            >
-              <SpaceBetween size="s">
-                <Box>
-                  <Box display="inline" fontWeight="bold">{t('customer.salesRep.nameLabel')} </Box>
-                  <Box display="inline">{sessionData.salesRepInfo.name}</Box>
-                </Box>
-                <Box>
-                  <Box display="inline" fontWeight="bold">{t('customer.salesRep.emailLabel')} </Box>
-                  <Box display="inline">{sessionData.salesRepInfo.email}</Box>
-                </Box>
-                <Box>
-                  <Box display="inline" fontWeight="bold">{t('customer.salesRep.contactLabel')} </Box>
-                  <Box display="inline">{sessionData.salesRepInfo.phone}</Box>
-                </Box>
-                <Box fontSize="body-s" color="text-status-inactive">
-                  {t('customer.salesRep.ctaMessage')}
-                </Box>
-                <Button
-                  iconName="thumbs-up"
-                  onClick={() => setShowFeedbackModal(true)}
-                >
-                  {t('customer.feedback.submitButton')}
-                </Button>
-              </SpaceBetween>
-            </div>
-          </Box>
-        )}
-      </Container>
+        <SpaceBetween size="l">
+          {sessionData?.salesRepInfo && (
+            <Box margin={{ top: 'm' }}>
+              <Header variant="h3">{t('customer.salesRep.sectionTitle')}</Header>
+              <div
+                style={{
+                  backgroundColor: 'var(--awsui-color-background-container-content)',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--awsui-color-border-divider-default)'
+                }}
+              >
+                <SpaceBetween size="s">
+                  <Box>
+                    <Box display="inline" fontWeight="bold">{t('customer.salesRep.nameLabel')} </Box>
+                    <Box display="inline">{sessionData.salesRepInfo.name}</Box>
+                  </Box>
+                  <Box>
+                    <Box display="inline" fontWeight="bold">{t('customer.salesRep.emailLabel')} </Box>
+                    <Box display="inline">{sessionData.salesRepInfo.email}</Box>
+                  </Box>
+                  <Box>
+                    <Box display="inline" fontWeight="bold">{t('customer.salesRep.contactLabel')} </Box>
+                    <Box display="inline">{sessionData.salesRepInfo.phone}</Box>
+                  </Box>
+                  <Box fontSize="body-s" color="text-status-inactive">
+                    {t('customer.salesRep.ctaMessage')}
+                  </Box>
+                  <Button
+                    iconName="thumbs-up"
+                    onClick={() => setShowFeedbackModal(true)}
+                  >
+                    {t('customer.feedback.submitButton')}
+                  </Button>
+                </SpaceBetween>
+              </div>
+            </Box>
+          )}
 
-      {/* SHIP Assessment Side Panel */}
-      <SpaceBetween size="l">
-        {isShipAssessment && (
-          <>
-            <ShipAssessmentGuide
-              sessionId={sessionId!}
-              assessmentStatus={assessmentStatus}
-              codeBuildRoleArn={codeBuildRoleArn}
-              onLegalConsent={handleLegalConsent}
-              onRoleSubmit={handleRoleSubmit}
-              onRetry={handleAssessmentRetry}
-            />
-            <ShipReportPanel
-              assessmentStatus={assessmentStatus}
-              onDownloadReport={handleDownloadReport}
-              onRetry={handleAssessmentRetry}
-            />
-          </>
-        )}
-      </SpaceBetween>
+          {/* SHIP Assessment — 담당자 정보 옆 사이드바에 상태 무관하게 표시 */}
+          {isShipAssessment && (
+            <>
+              <ShipAssessmentGuide
+                sessionId={sessionId!}
+                assessmentStatus={assessmentStatus}
+                codeBuildRoleArn={codeBuildRoleArn}
+                onLegalConsent={handleLegalConsent}
+                onRoleSubmit={handleRoleSubmit}
+                onRetry={handleAssessmentRetry}
+              />
+              <ShipReportPanel
+                assessmentStatus={assessmentStatus}
+                onDownloadReport={handleDownloadReport}
+                onRetry={handleAssessmentRetry}
+              />
+            </>
+          )}
+        </SpaceBetween>
+      </Container>
 
       <PrivacyTermsModal
         visible={showPrivacyModal}
