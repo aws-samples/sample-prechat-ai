@@ -7,7 +7,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-20.18.1-green.svg)](https://nodejs.org/)
 [![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/)
 
-Last Updated: 2026-02-28
+Last Updated: 2026-03-13
 
 [English](README.md) | **한국어**
 
@@ -47,9 +47,10 @@ PreChat은 전통적인 폼 기반 데이터 수집을 AI 챗봇 인터페이스
 └─────────────────┘     │  Sessions Table  │     │  │ Consultation Agent  │ │
                         │  Messages Table  │     │  │ Summary Agent       │ │
 ┌─────────────────┐     │  Campaigns Table │     │  │ Planning Agent      │ │
-│  S3 + CloudFront│     └──────────────────┘     │  └─────────────────────┘ │
-│  (Static + Files)│                             │  Strands SDK + MCP       │
-└─────────────────┘                              └──────────────────────────┘
+│  S3 + CloudFront│     └──────────────────┘     │  │ SHIP Agent          │ │
+│  (Static + Files)│                             │  └─────────────────────┘ │
+└─────────────────┘                              │  Strands SDK + MCP       │
+                                                 └──────────────────────────┘
 ```
 
 ## 프로젝트 구조
@@ -63,6 +64,7 @@ prechat/
 │   │   ├── admin/            # 관리자 API, 커스터마이징
 │   │   ├── auth/             # Cognito 인증
 │   │   ├── agent/            # Agent 관리/설정
+│   │   ├── assessment/       # SHIP Assessment (동의, 스캔, 레포트)
 │   │   ├── trigger/          # 이벤트 트리거 (Slack/SNS)
 │   │   ├── file/             # 파일 업로드 (S3)
 │   │   ├── stream/           # DynamoDB Streams
@@ -74,7 +76,8 @@ prechat/
 │   └── strands-agents/       # Strands SDK AI 에이전트 (AgentCore)
 │       ├── consultation-agent/  # 고객 상담 에이전트
 │       ├── summary-agent/       # BANT 요약 에이전트
-│       └── planning-agent/      # 미팅 플랜 + Sales Rep 채팅 에이전트
+│       ├── planning-agent/      # 미팅 플랜 + Sales Rep 채팅 에이전트
+│       └── ship-agent/          # SHIP 보안 점검 에이전트
 ├── template.yaml             # AWS SAM IaC
 ├── deploy-full.sh            # 전체 배포 (에이전트 → SAM → 프론트엔드)
 ├── deploy-website.sh         # 프론트엔드만 배포
@@ -174,7 +177,8 @@ yarn validate-translations  # 번역 검증
 |---------|------|--------|------|
 | Consultation Agent | 고객 사전 상담 수행 | STM (AgentCore Memory) | retrieve (KB RAG), render_form, current_time, AWS Docs MCP |
 | Summary Agent | BANT 프레임워크 분석 | 없음 | 없음 (Structured Output) |
-| Planning Agent | 미팅 플랜 생성 + Sales Rep 채팅 | 없음 | retrieve (KB RAG), http_request, AWS Docs MCP |
+| Planning Agent | 미팅 플랜 생성 + Sales Rep 채팅 | 없음 | retrieve (KB RAG), http_request, extract_a2t_log, AWS Docs MCP |
+| SHIP Agent | SHIP 보안 점검 상담 | STM (AgentCore Memory) | current_time, render_form |
 
 Consultation Agent와 Planning Agent는 AWS Documentation MCP Server가 연동되어 있어, 에이전트가 AWS 공식 문서를 실시간으로 검색하여 고객에게 정확한 정보를 제공할 수 있습니다.
 

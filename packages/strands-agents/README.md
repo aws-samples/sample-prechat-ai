@@ -1,6 +1,6 @@
 # Strands Agents on Bedrock AgentCore
 
-Last Updated: 2026-02-28
+Last Updated: 2026-03-13
 
 PreChat 시스템의 AI 에이전트입니다. Strands SDK로 작성되어 Bedrock AgentCore Runtime에 Docker 컨테이너로 배포됩니다.
 
@@ -10,7 +10,8 @@ PreChat 시스템의 AI 에이전트입니다. Strands SDK로 작성되어 Bedro
 |---------|------|--------|-------------|------|
 | Consultation Agent | 고객 사전 상담 (8회 대화 플로우) | STM (AgentCore Memory, 30일) | `stream` (SSE) | retrieve, current_time, render_form, AWS Docs MCP |
 | Summary Agent | BANT 프레임워크 분석 | 없음 | `invoke` (동기) | 없음 (Structured Output) |
-| Planning Agent | 미팅 플랜 생성 + Sales Rep 채팅 | 없음 | `invoke` (동기) + `stream` (SSE) | retrieve, http_request, AWS Docs MCP |
+| Planning Agent | 미팅 플랜 생성 + Sales Rep 채팅 | 없음 | `stream` (SSE) | retrieve, http_request, extract_a2t_log, current_time, AWS Docs MCP |
+| SHIP Agent | SHIP 보안 점검 상담 | STM (AgentCore Memory, 30일) | `stream` (SSE) | current_time, render_form |
 
 ## 구조
 
@@ -31,11 +32,18 @@ strands-agents/
 │   ├── requirements.txt
 │   ├── .bedrock_agentcore.yaml
 │   └── .dockerignore
-└── planning-agent/
-    ├── agent.py                  # Structured Output (PlanningOutput) + 스트리밍 채팅
+├── planning-agent/
+│   ├── agent.py                  # A2T 로그 추출 (Structured Output) + 스트리밍 채팅
+│   ├── deploy_agent.py
+│   ├── Dockerfile                # uv 베이스 + MCP 서버 사전 설치
+│   ├── requirements.txt          # strands-agents, mcp, boto3 등
+│   ├── .bedrock_agentcore.yaml
+│   └── .dockerignore
+└── ship-agent/
+    ├── agent.py                  # SHIP 보안 점검 상담 + 스트리밍 채팅
     ├── deploy_agent.py
-    ├── Dockerfile                # uv 베이스 + MCP 서버 사전 설치
-    ├── requirements.txt          # strands-agents, mcp, boto3 등
+    ├── Dockerfile
+    ├── requirements.txt
     ├── .bedrock_agentcore.yaml
     └── .dockerignore
 ```
@@ -78,7 +86,7 @@ Summary Agent와 Planning Agent는 Pydantic 모델로 타입 안전한 응답을
 | 에이전트 | Pydantic 모델 | 주요 필드 |
 |---------|--------------|----------|
 | Summary | `AnalysisOutput` | markdownSummary, bantAnalysis (B/A/N/T), awsServices |
-| Planning | `PlanningOutput` | agenda, topics, recommended_services, customer_references, ai_suggestions, next_steps |
+| Planning | `A2TLog` (extract_a2t_log 도구 내부) | session_id, description, customer_contact, workshop_date, a2t_questions (Q1~Q14) |
 
 ## 배포
 
@@ -105,6 +113,7 @@ pip install bedrock-agentcore-starter-toolkit
 | `/prechat/{stage}/agents/consultation/runtime-arn` | Consultation Agent ARN |
 | `/prechat/{stage}/agents/summary/runtime-arn` | Summary Agent ARN |
 | `/prechat/{stage}/agents/planning/runtime-arn` | Planning Agent ARN |
+| `/prechat/{stage}/agents/ship/runtime-arn` | SHIP Agent ARN |
 | `/prechat/{stage}/agents/bedrock-kb-id` | Bedrock Knowledge Base ID |
 
 SAM 템플릿에서 `{{resolve:ssm:...}}`로 ARN을 resolve하여 Lambda 환경 변수에 주입합니다.
@@ -125,8 +134,8 @@ SAM 템플릿에서 `{{resolve:ssm:...}}`로 ARN을 resolve하여 Lambda 환경 
 | 변수 | 용도 | 에이전트 |
 |------|------|---------|
 | `BEDROCK_KB_ID` | Knowledge Base ID (RAG 검색) | Consultation, Planning |
-| `BEDROCK_AGENTCORE_MEMORY_ID` | AgentCore Memory ID (STM) | Consultation |
-| `BEDROCK_AGENTCORE_MEMORY_NAME` | Memory 이름 | Consultation |
+| `BEDROCK_AGENTCORE_MEMORY_ID` | AgentCore Memory ID (STM) | Consultation, SHIP |
+| `BEDROCK_AGENTCORE_MEMORY_NAME` | Memory 이름 | Consultation, SHIP |
 
 ## Payload 구조
 
@@ -173,6 +182,20 @@ SAM 템플릿에서 `{{resolve:ssm:...}}`로 ARN을 resolve하여 Lambda 환경 
   "customer_info": { "name": "...", "company": "..." },
   "conversation_history": "고객-AI 대화 이력",
   "config": { "locale": "ko" }
+}
+```
+
+### SHIP Agent (stream)
+
+```json
+{
+  "prompt": "고객 메시지",
+  "session_id": "PreChat 세션 ID",
+  "config": {
+    "system_prompt": "커스텀 프롬프트 (선택)",
+    "model_id": "모델 ID (선택)",
+    "locale": "ko"
+  }
 }
 ```
 

@@ -7,7 +7,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-20.18.1-green.svg)](https://nodejs.org/)
 [![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/)
 
-Last Updated: 2026-02-28
+Last Updated: 2026-03-13
 
 **English** | [한국어](README.ko.md)
 
@@ -47,9 +47,10 @@ PreChat replaces traditional form-based data collection with an AI chatbot inter
 └─────────────────┘     │  Sessions Table  │     │  │ Consultation Agent  │ │
                         │  Messages Table  │     │  │ Summary Agent       │ │
 ┌─────────────────┐     │  Campaigns Table │     │  │ Planning Agent      │ │
-│  S3 + CloudFront│     └──────────────────┘     │  └─────────────────────┘ │
-│  (Static + Files)│                             │  Strands SDK + MCP       │
-└─────────────────┘                              └──────────────────────────┘
+│  S3 + CloudFront│     └──────────────────┘     │  │ SHIP Agent          │ │
+│  (Static + Files)│                             │  └─────────────────────┘ │
+└─────────────────┘                              │  Strands SDK + MCP       │
+                                                 └──────────────────────────┘
 ```
 
 ## Project Structure
@@ -63,6 +64,7 @@ prechat/
 │   │   ├── admin/            # Admin API, customization
 │   │   ├── auth/             # Cognito authentication
 │   │   ├── agent/            # Agent management/config
+│   │   ├── assessment/       # SHIP Assessment (consent, scan, report)
 │   │   ├── trigger/          # Event triggers (Slack/SNS)
 │   │   ├── file/             # File upload (S3)
 │   │   ├── stream/           # DynamoDB Streams
@@ -74,7 +76,8 @@ prechat/
 │   └── strands-agents/       # Strands SDK AI Agents (AgentCore)
 │       ├── consultation-agent/  # Customer consultation agent
 │       ├── summary-agent/       # BANT summary agent
-│       └── planning-agent/      # Meeting plan + Sales Rep chat agent
+│       ├── planning-agent/      # Meeting plan + Sales Rep chat agent
+│       └── ship-agent/          # SHIP Security Assessment agent
 ├── template.yaml             # AWS SAM IaC
 ├── deploy-full.sh            # Full deploy (agents → SAM → frontend)
 ├── deploy-website.sh         # Frontend-only deploy
@@ -174,7 +177,8 @@ Three Strands SDK agents are deployed as Docker containers on Bedrock AgentCore 
 |-------|------|--------|-------|
 | Consultation Agent | Customer pre-consultation | STM (AgentCore Memory) | retrieve (KB RAG), render_form, current_time, AWS Docs MCP |
 | Summary Agent | BANT framework analysis | None | None (Structured Output) |
-| Planning Agent | Meeting plan + Sales Rep chat | None | retrieve (KB RAG), http_request, AWS Docs MCP |
+| Planning Agent | Meeting plan + Sales Rep chat | None | retrieve (KB RAG), http_request, extract_a2t_log, AWS Docs MCP |
+| SHIP Agent | SHIP Security Assessment consultation | STM (AgentCore Memory) | current_time, render_form |
 
 Consultation Agent and Planning Agent integrate with AWS Documentation MCP Server, enabling real-time search of official AWS documentation to provide accurate information to customers.
 

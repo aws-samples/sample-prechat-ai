@@ -34,6 +34,7 @@ yarn --version
    - **Claude 3 Haiku** (apac.anthropic.claude-3-haiku-20240307-v1:0)
    - **Claude 3 Sonnet** (apac.anthropic.claude-3-sonnet-20240229-v1:0)
    - **Claude 3.5 Sonnet** (apac.anthropic.claude-3-5-sonnet-20241022-v2:0)
+   - **Claude Sonnet 4.5** (global.anthropic.claude-sonnet-4-5-20250929-v1:0)
    - **Amazon Nova Micro** (apac.amazon.nova-micro-v1:0)
    - **Amazon Nova Lite** (apac.amazon.nova-lite-v1:0)
    - **Amazon Nova Pro** (apac.amazon.nova-pro-v1:0)
