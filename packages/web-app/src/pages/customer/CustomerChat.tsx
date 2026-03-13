@@ -109,12 +109,15 @@ export default function CustomerChat() {
   // PIN 검증 후 저장된 PIN을 useChat에 전달
   const verifiedPin = sessionId ? getStoredPinForSession(sessionId) : undefined
 
-  // SHIP Assessment 상태 초기화 및 폴링
+  // SHIP Assessment 상태 초기화 및 codeBuildRoleArn 조회
   useEffect(() => {
     if (sessionData?.assessmentStatus) {
       setAssessmentStatus(sessionData.assessmentStatus);
     }
-    // 초기 로드 시 codeBuildRoleArn 조회
+  }, [sessionData?.assessmentStatus]);
+
+  // isShipAssessment가 확정된 후 codeBuildRoleArn 조회
+  useEffect(() => {
     if (isShipAssessment && sessionId && verifiedPin && !codeBuildRoleArn) {
       getAssessmentStatus(sessionId, verifiedPin)
         .then((status) => {
@@ -122,7 +125,7 @@ export default function CustomerChat() {
         })
         .catch(() => {});
     }
-  }, [sessionData?.assessmentStatus]);
+  }, [isShipAssessment, sessionId, verifiedPin]);
 
   useEffect(() => {
     if (!isShipAssessment || !sessionId || !verifiedPin) return;

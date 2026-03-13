@@ -65,8 +65,13 @@ export const ShipReportPanel: React.FC<ShipReportPanelProps> = ({
         )}
 
         {(assessmentStatus === 'legal_agreed' ||
-          assessmentStatus === 'role_submitted' ||
-          assessmentStatus === 'scanning') && (
+          assessmentStatus === 'role_submitted') && (
+          <StatusIndicator type="pending">
+            {t('ship.report.waiting')}
+          </StatusIndicator>
+        )}
+
+        {assessmentStatus === 'scanning' && (
           <StatusIndicator type="in-progress">
             {t('ship.report.generating')}
           </StatusIndicator>

@@ -1134,6 +1134,8 @@
       "suggestedQuestion1": "Suggest good services to recommend",
       "suggestedQuestion2": "Find similar customer cases",
       "suggestedQuestion3": "Suggest Action Items systematically",
+      "suggestedQuestion4": "Extract SHIP A2T log",
+      "clearHistory": "Clear chat history",
       "inputPlaceholder": "Ask the Planning Agent...",
       "captureToDiscussion": "Capture to Discussion",
       "captureModalTitle": "Capture to Discussion",
@@ -1198,6 +1200,7 @@
     "report": {
       "title": "SHIP Security Report",
       "generating": "Generating report...",
+      "waiting": "Waiting for request...",
       "ready": "Report is ready",
       "downloadButton": "Download Report",
       "downloadLink": "Report download link",

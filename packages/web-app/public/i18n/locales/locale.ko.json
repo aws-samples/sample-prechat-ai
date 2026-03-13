@@ -1134,6 +1134,8 @@
       "suggestedQuestion1": "제안하기 좋은 서비스 알려줘",
       "suggestedQuestion2": "유사 고객사례 찾아줘",
       "suggestedQuestion3": "Action Item 체계적으로 제안해줘",
+      "suggestedQuestion4": "SHIP A2T 로그 뽑아줘",
+      "clearHistory": "대화 이력 초기화",
       "inputPlaceholder": "Planning Agent에게 질문하세요...",
       "captureToDiscussion": "Discussion에 캡처",
       "captureModalTitle": "Discussion에 캡처",
@@ -1198,6 +1200,7 @@
     "report": {
       "title": "SHIP 보안 레포트",
       "generating": "레포트 생성 중...",
+      "waiting": "요청 대기 중...",
       "ready": "레포트가 준비되었습니다",
       "downloadButton": "레포트 다운로드",
       "downloadLink": "레포트 다운로드 링크",
