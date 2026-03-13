@@ -9,9 +9,11 @@ import {
   Button,
   Alert,
   CopyToClipboard,
+  Tabs,
 } from '@cloudscape-design/components';
 import CodeView from '@cloudscape-design/code-view/code-view';
-import jsonHighlight from '@cloudscape-design/code-view/highlight/json';
+import bashHighlight from '@cloudscape-design/code-view/highlight/sh';
+import yamlHighlight from '@cloudscape-design/code-view/highlight/yaml';
 import { useI18n } from '../i18n';
 import type { AssessmentStatus } from '../types';
 import { LegalDisclaimerModal } from './LegalDisclaimerModal';
@@ -75,17 +77,64 @@ export const ShipAssessmentGuide: React.FC<ShipAssessmentGuideProps> = ({
     }
   };
 
-  // Trust Policy JSON (CodeView + CopyToClipboard 공유)
-  const trustPolicyJson = JSON.stringify({
-    Effect: 'Allow',
-    Principal: { AWS: codeBuildRoleArn || '<CodeBuild Role ARN>' },
-    Action: 'sts:AssumeRole',
-    Condition: {
-      StringEquals: {
-        'sts:ExternalId': sessionId,
-      },
-    },
-  }, null, 2);
+  const principalArn = codeBuildRoleArn || '<PRECHAT_CODEBUILD_ROLE_ARN>';
+
+  // Option 1: CloudShell CLI 명령어
+  const cliCommand = `# 1. ProwlerMemberRole 생성
+aws iam create-role \\
+  --role-name ProwlerMemberRole \\
+  --assume-role-policy-document '{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": { "AWS": "${principalArn}" },
+    "Action": "sts:AssumeRole",
+    "Condition": {
+      "StringEquals": { "sts:ExternalId": "${sessionId}" }
+    }
+  }]
+}'
+
+# 2. 보안 점검 권한 연결
+aws iam attach-role-policy \\
+  --role-name ProwlerMemberRole \\
+  --policy-arn arn:aws:iam::aws:policy/SecurityAudit
+
+aws iam attach-role-policy \\
+  --role-name ProwlerMemberRole \\
+  --policy-arn arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
+
+# 3. 출력된 Role ARN을 아래 입력란에 붙여넣으세요
+aws iam get-role --role-name ProwlerMemberRole \\
+  --query 'Role.Arn' --output text`;
+
+  // Option 2: CloudFormation YAML 템플릿
+  const cfnTemplate = `AWSTemplateFormatVersion: '2010-09-09'
+Description: SHIP Assessment - ProwlerMemberRole for PreChat
+
+Resources:
+  ProwlerMemberRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ProwlerMemberRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: '${principalArn}'
+            Action: 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                'sts:ExternalId': '${sessionId}'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/SecurityAudit
+        - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
+
+Outputs:
+  ProwlerMemberRoleArn:
+    Description: Role ARN to paste in PreChat
+    Value: !GetAtt ProwlerMemberRole.Arn`;
 
   const steps = [
     { label: t('ship.guide.step1'), description: t('ship.guide.step1Desc') },
@@ -152,23 +201,80 @@ export const ShipAssessmentGuide: React.FC<ShipAssessmentGuideProps> = ({
                   {t('ship.guide.roleSetupIntro')}
                 </Box>
               </Alert>
-              <CodeView
-                content={trustPolicyJson}
-                highlight={jsonHighlight}
-                lineNumbers
-                actions={
-                  <CopyToClipboard
-                    copyButtonAriaLabel="Copy Trust Policy"
-                    copySuccessText="Copied!"
-                    copyErrorText="Copy failed"
-                    textToCopy={trustPolicyJson}
-                    variant="icon"
-                  />
-                }
+              <Tabs
+                tabs={[
+                  {
+                    label: 'CloudShell CLI',
+                    id: 'cli',
+                    content: (
+                      <SpaceBetween size="s">
+                        <Box variant="p" fontSize="body-s">
+                          {t('ship.guide.cliGuide')}
+                        </Box>
+                        <CodeView
+                          content={cliCommand}
+                          highlight={bashHighlight}
+                          lineNumbers
+                          actions={
+                            <CopyToClipboard
+                              copyButtonAriaLabel="Copy CLI command"
+                              copySuccessText="Copied!"
+                              copyErrorText="Copy failed"
+                              textToCopy={cliCommand}
+                              variant="icon"
+                            />
+                          }
+                        />
+                      </SpaceBetween>
+                    ),
+                  },
+                  {
+                    label: 'CloudFormation',
+                    id: 'cfn',
+                    content: (
+                      <SpaceBetween size="s">
+                        <Box variant="p" fontSize="body-s">
+                          {t('ship.guide.cfnGuide')}
+                        </Box>
+                        <CodeView
+                          content={cfnTemplate}
+                          highlight={yamlHighlight}
+                          lineNumbers
+                          actions={
+                            <CopyToClipboard
+                              copyButtonAriaLabel="Copy CFN template"
+                              copySuccessText="Copied!"
+                              copyErrorText="Copy failed"
+                              textToCopy={cfnTemplate}
+                              variant="icon"
+                            />
+                          }
+                        />
+                        <Button
+                          iconName="download"
+                          onClick={() => {
+                            const blob = new Blob([cfnTemplate], { type: 'text/yaml' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'prowler-member-role.yaml';
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                        >
+                          {t('ship.guide.downloadCfn')}
+                        </Button>
+                      </SpaceBetween>
+                    ),
+                  },
+                ]}
               />
               <Box variant="p" fontSize="body-s" color="text-status-inactive">
                 ExternalId: <strong>{sessionId}</strong>
               </Box>
+              <Alert type="warning">
+                {t('ship.guide.pasteArnHint')}
+              </Alert>
               <RoleArnInputForm
                 onSubmit={handleRoleSubmit}
                 loading={roleLoading}
