@@ -53,17 +53,6 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
     }
   }, [isStreaming])
 
-  // Cursor blinking effect
-  useEffect(() => {
-    if (!showCursor) return
-
-    const interval = setInterval(() => {
-      setShowCursor(prev => !prev)
-    }, 500)
-
-    return () => clearInterval(interval)
-  }, [showCursor])
-
   const handleActionClick = (actionId: string) => {
     switch (actionId) {
       case 'copy':
@@ -148,11 +137,10 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
           ) : (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{replaceSalesRepPlaceholders(message.content, salesRepInfo)}</ReactMarkdown>
           )}
-          {isStreaming && (
+          {isStreaming && showCursor && (
             <span 
               style={{ 
-                opacity: showCursor ? 1 : 0,
-                transition: 'opacity 0.1s',
+                opacity: 0.6,
                 marginLeft: '2px',
                 fontWeight: 'bold'
               }}
