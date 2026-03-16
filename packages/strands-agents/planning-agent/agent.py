@@ -319,38 +319,18 @@ async def stream(payload: dict):
 
     # 현재 진행 중인 도구 사용을 추적 (중복 이벤트 방지)
     active_tool_use_id = None
-    # 의미론적 말풍선(semantic bubble) 버퍼: \n\n 경계에서 boundary 이벤트 발행
-    text_buffer = ""
 
     try:
         async for event in agent.stream_async(prompt):
             # 텍스트 청크 이벤트: 모델이 생성하는 텍스트 조각
             if "data" in event:
-                text_buffer += event["data"]
-
-                # 문단 경계(\n\n) 감지 시 버퍼를 flush하고 boundary 이벤트 발행
-                while "\n\n" in text_buffer:
-                    paragraph, text_buffer = text_buffer.split("\n\n", 1)
-                    if paragraph.strip():
-                        yield json.dumps(
-                            {"type": "chunk", "content": paragraph},
-                            ensure_ascii=False,
-                        )
-                        yield json.dumps(
-                            {"type": "boundary"},
-                            ensure_ascii=False,
-                        )
+                yield json.dumps(
+                    {"type": "chunk", "content": event["data"]},
+                    ensure_ascii=False,
+                )
 
             # 도구 사용 이벤트: 에이전트가 도구를 호출할 때
             if "current_tool_use" in event:
-                # 도구 호출 전 버퍼 잔여분 flush
-                if text_buffer.strip():
-                    yield json.dumps(
-                        {"type": "chunk", "content": text_buffer},
-                        ensure_ascii=False,
-                    )
-                    text_buffer = ""
-
                 tool_use = event["current_tool_use"]
                 tool_name = tool_use.get("name")
                 tool_use_id = tool_use.get("toolUseId")
@@ -368,14 +348,6 @@ async def stream(payload: dict):
 
             # 최종 결과 이벤트: 에이전트 실행 완료
             if "result" in event:
-                # 버퍼 잔여분 flush
-                if text_buffer.strip():
-                    yield json.dumps(
-                        {"type": "chunk", "content": text_buffer},
-                        ensure_ascii=False,
-                    )
-                    text_buffer = ""
-
                 result = event["result"]
                 # 이전 도구 사용이 있었다면 완료 이벤트 발행
                 if active_tool_use_id:

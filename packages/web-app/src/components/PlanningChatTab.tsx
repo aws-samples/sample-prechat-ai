@@ -255,18 +255,6 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
     setMessages((prev) => updateStreamingMessage(prev, chunk));
   }, []);
 
-  // 의미론적 말풍선 경계: 현재 스트리밍 메시지를 확정하고 새 assistant 메시지 시작
-  const handleBoundary = useCallback(() => {
-    setMessages((prev) => {
-      if (prev.length === 0) return prev;
-      const last = prev[prev.length - 1];
-      if (last.sender !== 'assistant' || !last.content.trim()) return prev;
-      // 현재 메시지를 확정하고 새 스트리밍 메시지 추가
-      const completed = [...prev.slice(0, -1), { ...last, isStreaming: false }];
-      return [...completed, createAssistantMessage()];
-    });
-  }, []);
-
   const handleTool = useCallback(
     (tool: ToolEvent) => {
       setMessages((prev) => {
@@ -292,15 +280,7 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
   );
 
   const handleComplete = useCallback(() => {
-    setMessages((prev) => {
-      const completed = completeStreamingMessage(prev);
-      // boundary 후 빈 assistant 메시지가 남아있으면 제거
-      const last = completed[completed.length - 1];
-      if (last && last.sender === 'assistant' && !last.content.trim()) {
-        return completed.slice(0, -1);
-      }
-      return completed;
-    });
+    setMessages((prev) => completeStreamingMessage(prev));
     setIsStreaming(false);
   }, []);
 
@@ -315,7 +295,6 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
     wsUrl: WS_URL,
     locale: 'ko',
     onChunk: handleChunk,
-    onBoundary: handleBoundary,
     onTool: handleTool,
     onComplete: handleComplete,
     onError: handleError,
