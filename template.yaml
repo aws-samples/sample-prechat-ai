@@ -3085,8 +3085,12 @@ Resources:
             TableName: !Ref SessionsTable
         - Statement:
             Effect: Allow
-            Action: s3:GetObject
-            Resource: !Sub '${ProwlerFindingsBucket.Arn}/*'
+            Action:
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+              - !Sub '${ProwlerFindingsBucket.Arn}/*'
+              - !GetAtt ProwlerFindingsBucket.Arn
       Events:
         GetReportUrl:
           Type: Api
@@ -3134,8 +3138,12 @@ Resources:
             TableName: !Ref SessionsTable
         - Statement:
             Effect: Allow
-            Action: s3:GetObject
-            Resource: !Sub '${ProwlerFindingsBucket.Arn}/*'
+            Action:
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+              - !Sub '${ProwlerFindingsBucket.Arn}/*'
+              - !GetAtt ProwlerFindingsBucket.Arn
       Events:
         AdminGetReportUrl:
           Type: Api
