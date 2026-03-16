@@ -269,8 +269,7 @@ def get_report_download_url(event, context):
 
     쿼리 파라미터 reportType으로 다운로드 대상을 선택한다.
     - html (기본값): Prowler HTML 레포트
-    - csv: Prowler CSV 레포트
-    - dashboard: 대시보드 HTML (SATv2 대시보드)
+    - csv: Athena 집계 CSV 레포트
     """
     session_id = event['pathParameters']['sessionId']
 
@@ -291,19 +290,18 @@ def get_report_download_url(event, context):
     REPORT_KEY_MAP = {
         'html': 'reportHtmlKey',
         'csv': 'reportCsvKey',
-        'dashboard': 'dashboardS3Key',
     }
 
     if report_type not in REPORT_KEY_MAP:
         return lambda_response(400, {
-            'error': f'Invalid reportType: {report_type}. Must be one of: html, csv, dashboard',
+            'error': f'Invalid reportType: {report_type}. Must be one of: html, csv',
         })
 
     key_field = REPORT_KEY_MAP[report_type]
     report_key = session.get(key_field)
 
     # 하위 호환: reportHtmlKey가 없으면 기존 reportS3Key 사용
-    if not report_key and report_type in ('html', 'dashboard'):
+    if not report_key and report_type == 'html':
         report_key = session.get('reportS3Key')
 
     if not report_key:
