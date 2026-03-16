@@ -14,16 +14,12 @@ import type { AssessmentStatus, ReportType } from '../types';
 
 interface ShipReportPanelProps {
   assessmentStatus: AssessmentStatus;
-  hasHtmlReport?: boolean;
-  hasCsvReport?: boolean;
   onDownloadReport: (reportType: ReportType) => Promise<string | null>;
   onRetry: () => void;
 }
 
 export const ShipReportPanel: React.FC<ShipReportPanelProps> = ({
   assessmentStatus,
-  hasHtmlReport = true,
-  hasCsvReport = false,
   onDownloadReport,
   onRetry,
 }) => {
@@ -87,30 +83,26 @@ export const ShipReportPanel: React.FC<ShipReportPanelProps> = ({
               {t('ship.report.ready')}
             </StatusIndicator>
             <ColumnLayout columns={3}>
-              {hasHtmlReport && (
-                <Box>
-                  <Button
-                    iconName="download"
-                    onClick={() => handleDownload('html')}
-                    loading={downloadingType === 'html'}
-                    fullWidth
-                  >
-                    Prowler HTML
-                  </Button>
-                </Box>
-              )}
-              {hasCsvReport && (
-                <Box>
-                  <Button
-                    iconName="download"
-                    onClick={() => handleDownload('csv')}
-                    loading={downloadingType === 'csv'}
-                    fullWidth
-                  >
-                    Athena CSV
-                  </Button>
-                </Box>
-              )}
+              <Box>
+                <Button
+                  iconName="download"
+                  onClick={() => handleDownload('html')}
+                  loading={downloadingType === 'html'}
+                  fullWidth
+                >
+                  Prowler HTML
+                </Button>
+              </Box>
+              <Box>
+                <Button
+                  iconName="download"
+                  onClick={() => handleDownload('csv')}
+                  loading={downloadingType === 'csv'}
+                  fullWidth
+                >
+                  Athena CSV
+                </Button>
+              </Box>
               <Box>
                 <Button
                   iconName="external"
