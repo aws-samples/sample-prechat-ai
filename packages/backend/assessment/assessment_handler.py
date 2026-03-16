@@ -291,7 +291,7 @@ def get_report_download_url(event, context):
     REPORT_KEY_MAP = {
         'html': 'reportHtmlKey',
         'csv': 'reportCsvKey',
-        'dashboard': 'reportHtmlKey',  # 대시보드도 HTML 형식
+        'dashboard': 'dashboardS3Key',
     }
 
     if report_type not in REPORT_KEY_MAP:

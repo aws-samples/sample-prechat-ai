@@ -2890,6 +2890,9 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     Properties:
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
       VersioningConfiguration:
         Status: Enabled
       PublicAccessBlockConfiguration:
@@ -3164,6 +3167,447 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
       SourceArn: !GetAtt AssessmentCodeBuildEventRule.Arn
+
+  # === SATv2 Reporting Pipeline (Athena + HTML Dashboard) ===
+
+  GlueDatabaseSATv2Findings:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: !Sub '${AWS::StackName}_satv2_findings'
+        Description: !Sub 'SATv2 assessment results in ${ProwlerFindingsBucket}'
+
+  GlueTableProwlerResults:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref GlueDatabaseSATv2Findings
+      TableInput:
+        Name: prowler
+        Description: Prowler scan results from SATv2 assessments
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          skip.header.line.count: '1'
+          classification: csv
+        StorageDescriptor:
+          Columns:
+            - { Name: auth_method, Type: string }
+            - { Name: timestamp, Type: string }
+            - { Name: account_uid, Type: string }
+            - { Name: account_name, Type: string }
+            - { Name: account_email, Type: string }
+            - { Name: account_organization_uid, Type: string }
+            - { Name: account_organization_name, Type: string }
+            - { Name: account_tags, Type: string }
+            - { Name: finding_uid, Type: string }
+            - { Name: provider, Type: string }
+            - { Name: check_id, Type: string }
+            - { Name: check_title, Type: string }
+            - { Name: check_type, Type: string }
+            - { Name: status, Type: string }
+            - { Name: status_extended, Type: string }
+            - { Name: muted, Type: boolean }
+            - { Name: service_name, Type: string }
+            - { Name: subservice_name, Type: string }
+            - { Name: severity, Type: string }
+            - { Name: resource_type, Type: string }
+            - { Name: resource_uid, Type: string }
+            - { Name: resource_name, Type: string }
+            - { Name: resource_details, Type: string }
+            - { Name: resource_tags, Type: string }
+            - { Name: partition, Type: string }
+            - { Name: region, Type: string }
+            - { Name: description, Type: string }
+            - { Name: risk, Type: string }
+            - { Name: related_url, Type: string }
+            - { Name: remediation_recommendation_text, Type: string }
+            - { Name: remediation_recommendation_url, Type: string }
+            - { Name: remediation_code_nativeiac, Type: string }
+            - { Name: remediation_code_terraform, Type: string }
+            - { Name: remediation_code_cli, Type: string }
+            - { Name: remediation_code_other, Type: string }
+            - { Name: compliance, Type: string }
+            - { Name: categories, Type: string }
+            - { Name: depends_on, Type: string }
+            - { Name: related_to, Type: string }
+            - { Name: notes, Type: string }
+            - { Name: prowler_version, Type: string }
+          Location: !Sub 's3://${ProwlerFindingsBucket}/assessments/'
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          StoredAsSubDirectories: true
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.OpenCSVSerde
+            Parameters:
+              escapeChar: "\\"
+              quoteChar: "\""
+              separatorChar: ";"
+
+  SATv2ReportingWorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Name: !Sub '${AWS::StackName}-satv2-reporting'
+      RecursiveDeleteOption: true
+      State: ENABLED
+      WorkGroupConfiguration:
+        PublishCloudWatchMetricsEnabled: false
+        RequesterPaysEnabled: false
+        ResultConfiguration:
+          OutputLocation: !Sub 's3://${ProwlerFindingsBucket}/athena_results'
+        EnforceWorkGroupConfiguration: false
+
+  AthenaStartQueryLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: AthenaAndS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: athena:StartQueryExecution
+                Resource: !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AWS::StackName}-satv2-reporting'
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:PutObject
+                  - s3:AbortMultipartUpload
+                  - s3:ListMultipartUploadParts
+                  - s3:ListBucketMultipartUploads
+                Resource:
+                  - !GetAtt ProwlerFindingsBucket.Arn
+                  - !Sub '${ProwlerFindingsBucket.Arn}/*'
+              - Effect: Allow
+                Action:
+                  - glue:GetTable
+                  - glue:GetDatabase
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDatabaseSATv2Findings}'
+                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDatabaseSATv2Findings}/prowler'
+
+  LakeFormationPermissionsLambda:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !GetAtt AthenaStartQueryLambdaRole.Arn
+      Permissions:
+        - SELECT
+      Resource:
+        TableResource:
+          DatabaseName: !Ref GlueDatabaseSATv2Findings
+          Name: !Ref GlueTableProwlerResults
+
+  AthenaStartQueryLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.13
+      Handler: index.lambda_handler
+      Timeout: 120
+      MemorySize: 128
+      Role: !GetAtt AthenaStartQueryLambdaRole.Arn
+      Environment:
+        Variables:
+          ATHENA_WORKGROUP: !Ref SATv2ReportingWorkGroup
+          BUCKET_REPORT: !Ref ProwlerFindingsBucket
+          GLUE_DATABASE: !Ref GlueDatabaseSATv2Findings
+      InlineCode: |
+        import os
+        import boto3
+
+        WORKGROUP = os.environ['ATHENA_WORKGROUP']
+        BUCKET = os.environ['BUCKET_REPORT']
+        DATABASE = os.environ['GLUE_DATABASE']
+
+        def lambda_handler(event, context):
+            """CodeBuild SUCCEEDED 이벤트를 받아 Athena 쿼리를 실행한다.
+
+            세션별 CSV를 Athena로 집계하여 reports/ 경로에 결과를 저장한다.
+            """
+            detail = event.get('detail', {})
+            env_vars = (
+                detail.get('additional-information', {})
+                .get('environment', {})
+                .get('environment-variables', [])
+            )
+            session_id = ''
+            for var in env_vars:
+                if var.get('name') == 'SCAN_SESSION_ID':
+                    session_id = var.get('value', '')
+                    break
+
+            athena = boto3.client('athena')
+            query = f'SELECT * FROM "{DATABASE}"."prowler"'
+            output_location = f's3://{BUCKET}/assessments/{session_id}/reports/' if session_id else f's3://{BUCKET}/reports/'
+
+            try:
+                response = athena.start_query_execution(
+                    QueryString=query,
+                    WorkGroup=WORKGROUP,
+                    ResultConfiguration={'OutputLocation': output_location},
+                )
+                print(f"Athena query started: {response['QueryExecutionId']} for session {session_id}")
+            except Exception as e:
+                print(f"Failed to start Athena query: {e}")
+
+  AthenaStartQueryEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: default
+      EventPattern:
+        source:
+          - aws.codebuild
+        detail-type:
+          - CodeBuild Build State Change
+        detail:
+          build-status:
+            - SUCCEEDED
+          project-name:
+            - !Ref ProwlerCodeBuild
+      State: ENABLED
+      Targets:
+        - Id: AthenaStartQueryTarget
+          Arn: !GetAtt AthenaStartQueryLambda.Arn
+
+  AthenaStartQueryEventPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AthenaStartQueryLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt AthenaStartQueryEventRule.Arn
+
+  ReportingCodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: '/service-role/'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ReportingCodeBuildPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*'
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:PutObject
+                Resource:
+                  - !GetAtt ProwlerFindingsBucket.Arn
+                  - !Sub '${ProwlerFindingsBucket.Arn}/*'
+
+  ReportingCodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${AWS::StackName}-ReportingCodeBuild'
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0'
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: ATHENA_SUMMARY_CSV
+            Value: ''
+          - Name: BUCKET_REPORT
+            Value: !Ref ProwlerFindingsBucket
+      ServiceRole: !GetAtt ReportingCodeBuildRole.Arn
+      TimeoutInMinutes: 60
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              runtime-versions:
+                python: 3.11
+              commands:
+                - git clone https://github.com/awslabs/aws-security-assessment-solution.git
+                - cd aws-security-assessment-solution/reporting
+                - pip3 install -r requirements.txt
+            build:
+              commands:
+                - cd aws-security-assessment-solution/reporting
+                - echo "Using Athena summary CSV $ATHENA_SUMMARY_CSV"
+                - aws s3 cp $ATHENA_SUMMARY_CSV .
+                - python report.py
+            post_build:
+              commands:
+                - cd aws-security-assessment-solution/reporting
+                - SESSION_PATH=$(echo $ATHENA_SUMMARY_CSV | sed 's|s3://[^/]*/||' | sed 's|/reports/.*||')
+                - echo "Uploading dashboard to s3://$BUCKET_REPORT/$SESSION_PATH/reports/"
+                - aws s3 cp SHIP_v3_Updated.pptx s3://$BUCKET_REPORT/$SESSION_PATH/reports/ || true
+                - aws s3 cp satv2-dashboard.html s3://$BUCKET_REPORT/$SESSION_PATH/reports/ || true
+                - echo "Reporting complete"
+
+  ReportingStartLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: StartReportingBuild
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: codebuild:StartBuild
+                Resource: !GetAtt ReportingCodeBuild.Arn
+
+  ReportingStartLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.13
+      Handler: index.lambda_handler
+      Timeout: 120
+      MemorySize: 128
+      Role: !GetAtt ReportingStartLambdaRole.Arn
+      Environment:
+        Variables:
+          REPORTING_PROJECT_NAME: !Ref ReportingCodeBuild
+      InlineCode: |
+        import os
+        import boto3
+
+        PROJECT_NAME = os.environ['REPORTING_PROJECT_NAME']
+
+        def lambda_handler(event, context):
+            """S3에 Athena 결과 CSV가 업로드되면 Reporting CodeBuild를 시작한다."""
+            detail = event.get('detail', {})
+            bucket = detail.get('bucket', {}).get('name', '')
+            key = detail.get('object', {}).get('key', '')
+            full_path = f's3://{bucket}/{key}'
+
+            print(f"Athena result CSV uploaded: {full_path}")
+
+            cb = boto3.client('codebuild')
+            try:
+                response = cb.start_build(
+                    projectName=PROJECT_NAME,
+                    environmentVariablesOverride=[
+                        {'name': 'ATHENA_SUMMARY_CSV', 'value': full_path, 'type': 'PLAINTEXT'},
+                    ],
+                )
+                print(f"Reporting build started: {response['build']['id']}")
+            except Exception as e:
+                print(f"Failed to start reporting build: {e}")
+
+  ReportingS3EventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: default
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - Object Created
+        detail:
+          bucket:
+            name:
+              - !Ref ProwlerFindingsBucket
+          object:
+            key:
+              - wildcard: 'assessments/*/reports/*.csv'
+      State: ENABLED
+      Targets:
+        - Id: ReportingStartTarget
+          Arn: !GetAtt ReportingStartLambda.Arn
+
+  ReportingS3EventPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ReportingStartLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ReportingS3EventRule.Arn
+
+  # Reporting CodeBuild 완료 콜백 — 대시보드 S3 키를 세션에 저장
+  ReportingCallbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/assessment/
+      Handler: assessment_callback.handle_reporting_codebuild_event
+      Runtime: python3.13
+      Timeout: 30
+      MemorySize: 128
+      Environment:
+        Variables:
+          SESSIONS_TABLE: !Ref SessionsTable
+          PROWLER_FINDINGS_BUCKET: !Ref ProwlerFindingsBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:GetObject
+              Resource:
+                - !GetAtt ProwlerFindingsBucket.Arn
+                - !Sub '${ProwlerFindingsBucket.Arn}/*'
+      Layers:
+        - !Ref SharedLayer
+
+  ReportingCodeBuildEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: default
+      EventPattern:
+        source:
+          - aws.codebuild
+        detail-type:
+          - CodeBuild Build State Change
+        detail:
+          build-status:
+            - SUCCEEDED
+          project-name:
+            - !Ref ReportingCodeBuild
+      State: ENABLED
+      Targets:
+        - Id: ReportingCallbackTarget
+          Arn: !GetAtt ReportingCallbackFunction.Arn
+
+  ReportingCodeBuildEventPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ReportingCallbackFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ReportingCodeBuildEventRule.Arn
 
 Outputs:
   ApiUrl:
