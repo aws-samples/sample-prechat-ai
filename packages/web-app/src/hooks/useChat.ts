@@ -29,31 +29,65 @@ export const useChat = (sessionId: string | undefined, pin?: string, locale?: st
   const lastToolNameRef = useRef<string>('')
   // 의미론적 말풍선: boundary 이벤트마다 증가하는 카운터
   const bubbleCounterRef = useRef(0)
+  // Throttled rendering: chunk를 큐에 쌓고 일정 간격으로 한 글자씩 표시
+  const charQueueRef = useRef<string[]>([])
+  const renderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const CHAR_RENDER_INTERVAL_MS = 18 // 글자당 렌더링 간격
 
-  // 스트리밍 청크 수신 콜백
-  const handleChunk = useCallback((chunk: string) => {
-    streamingContentRef.current += chunk
-
-    // Div Return 마커 감지
-    const content = streamingContentRef.current
-    if (content.includes('<div') || content.includes('<!--div-return-->')) {
-      streamingContentTypeRef.current = 'div-return'
-    }
-
-    setStreamingMessage((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        content: streamingContentRef.current,
-        contentType: streamingContentTypeRef.current,
-        status: 'streaming',
-        toolInfo: undefined,
+  // 큐에서 글자를 꺼내 화면에 표시하는 interval 시작
+  const startRenderLoop = useCallback(() => {
+    if (renderTimerRef.current) return
+    renderTimerRef.current = setInterval(() => {
+      const queue = charQueueRef.current
+      if (queue.length === 0) {
+        if (renderTimerRef.current) {
+          clearInterval(renderTimerRef.current)
+          renderTimerRef.current = null
+        }
+        return
       }
-    })
+      // 한 번에 1~3글자씩 꺼내서 자연스러운 속도 유지
+      const batchSize = Math.min(queue.length, 2)
+      const chars = queue.splice(0, batchSize).join('')
+      streamingContentRef.current += chars
+
+      // Div Return 마커 감지
+      const content = streamingContentRef.current
+      if (content.includes('<div') || content.includes('<!--div-return-->')) {
+        streamingContentTypeRef.current = 'div-return'
+      }
+
+      setStreamingMessage((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          content: streamingContentRef.current,
+          contentType: streamingContentTypeRef.current,
+          status: 'streaming',
+          toolInfo: undefined,
+        }
+      })
+    }, CHAR_RENDER_INTERVAL_MS)
   }, [])
+
+  // 스트리밍 청크 수신 콜백: 큐에 글자 단위로 추가
+  const handleChunk = useCallback((chunk: string) => {
+    charQueueRef.current.push(...chunk.split(''))
+    startRenderLoop()
+  }, [startRenderLoop])
 
   // 의미론적 말풍선 경계 수신 콜백: 현재 스트리밍 콘텐츠를 확정된 말풍선으로 분리
   const handleBoundary = useCallback(() => {
+    // 큐 잔여분을 즉시 flush
+    if (charQueueRef.current.length > 0) {
+      streamingContentRef.current += charQueueRef.current.join('')
+      charQueueRef.current = []
+    }
+    if (renderTimerRef.current) {
+      clearInterval(renderTimerRef.current)
+      renderTimerRef.current = null
+    }
+
     const currentContent = streamingContentRef.current.trim()
     if (!currentContent || !currentMessageIdRef.current) return
 
@@ -120,6 +154,16 @@ export const useChat = (sessionId: string | undefined, pin?: string, locale?: st
     isComplete: boolean
     messageId: string
   }) => {
+    // 큐 잔여분을 즉시 flush
+    if (charQueueRef.current.length > 0) {
+      streamingContentRef.current += charQueueRef.current.join('')
+      charQueueRef.current = []
+    }
+    if (renderTimerRef.current) {
+      clearInterval(renderTimerRef.current)
+      renderTimerRef.current = null
+    }
+
     const finalContent = streamingContentRef.current.replace('EOF', '').trim()
     const finalContentType = metadata.contentType || streamingContentTypeRef.current
 

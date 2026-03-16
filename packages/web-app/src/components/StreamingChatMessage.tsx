@@ -146,8 +146,8 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
           )}
           {isStreaming && showCursor && (
             <span 
+              className="streaming-cursor"
               style={{ 
-                opacity: 0.6,
                 marginLeft: '2px',
                 fontWeight: 'bold'
               }}
