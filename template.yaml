@@ -3579,8 +3579,6 @@ Resources:
               Resource:
                 - !GetAtt ProwlerFindingsBucket.Arn
                 - !Sub '${ProwlerFindingsBucket.Arn}/*'
-      Layers:
-        - !Ref SharedLayer
 
   ReportingCodeBuildEventRule:
     Type: AWS::Events::Rule
