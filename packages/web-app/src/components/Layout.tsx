@@ -109,6 +109,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           href: '/admin/customizing',
         }
       ]
+    },
+    {
+      type: 'divider',
+    },
+    {
+      type: 'link',
+      text: 'SATv2 Dashboard',
+      href: '/satv2-dashboard.html',
+      external: true,
     }
   ];
 
