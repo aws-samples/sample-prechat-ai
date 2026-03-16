@@ -12,6 +12,7 @@ export interface UsePlanningWebSocketOptions {
   wsUrl: string;
   locale?: string;
   onChunk: (chunk: string) => void;
+  onBoundary?: () => void;
   onTool?: (tool: {
     toolName: string;
     toolUseId: string;
@@ -105,6 +106,7 @@ export function dispatchServerMessage(
   rawData: string,
   callbacks: {
     onChunk: (chunk: string) => void;
+    onBoundary?: () => void;
     onTool?: (tool: {
       toolName: string;
       toolUseId: string;
@@ -122,6 +124,9 @@ export function dispatchServerMessage(
     switch (data.type) {
       case 'chunk':
         callbacks.onChunk(data.content);
+        break;
+      case 'boundary':
+        callbacks.onBoundary?.();
         break;
       case 'tool':
         callbacks.onTool?.({
@@ -161,6 +166,7 @@ export function usePlanningWebSocket(
     wsUrl,
     locale,
     onChunk,
+    onBoundary,
     onTool,
     onComplete,
     onError,
@@ -182,11 +188,13 @@ export function usePlanningWebSocket(
 
   // 콜백 ref (최신 콜백 참조 보장)
   const onChunkRef = useRef(onChunk);
+  const onBoundaryRef = useRef(onBoundary);
   const onToolRef = useRef(onTool);
   const onCompleteRef = useRef(onComplete);
   const onErrorRef = useRef(onError);
 
   onChunkRef.current = onChunk;
+  onBoundaryRef.current = onBoundary;
   onToolRef.current = onTool;
   onCompleteRef.current = onComplete;
   onErrorRef.current = onError;
@@ -206,6 +214,7 @@ export function usePlanningWebSocket(
     (event: MessageEvent) => {
       const success = dispatchServerMessage(event.data, {
         onChunk: onChunkRef.current,
+        onBoundary: onBoundaryRef.current,
         onTool: onToolRef.current,
         onComplete: onCompleteRef.current,
         onError: onErrorRef.current,
