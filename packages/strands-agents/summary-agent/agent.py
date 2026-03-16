@@ -77,7 +77,7 @@ Analyze pre-consultation conversation content and generate a structured summary 
 ## Rules
 - If the customer provided company information, analyze the industry context
 - For items not explicitly mentioned in the conversation, write "No information provided"
-- Do not speculate - base your analysis strictly on the conversation content
+- Base your analysis strictly on what was explicitly stated in the conversation
 - Each BANT field should be a concise paragraph summarizing all relevant details
 - For awsServices, recommend specific AWS services relevant to the customer's needs with clear reasons
 """
