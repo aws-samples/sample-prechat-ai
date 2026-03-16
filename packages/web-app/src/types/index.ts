@@ -111,7 +111,7 @@ export interface AssessmentStatusResponse {
   codeBuildRoleArn?: string;
 }
 
-export type ReportType = 'html' | 'csv';
+export type ReportType = 'html' | 'csv' | 'dashboard';
 
 export interface ReportDownloadUrlResponse {
   downloadUrl: string;
