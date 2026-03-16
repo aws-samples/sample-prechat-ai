@@ -1208,7 +1208,8 @@
       "downloadError": "레포트 다운로드 중 오류가 발생했습니다.",
       "failed": "레포트 생성에 실패했습니다",
       "retryButton": "다시 시도",
-      "dashboard": "대시보드"
+      "dashboard": "대시보드",
+      "dashboardGuide": "CSV를 다운로드한 후, 대시보드를 열어 CSV 파일을 업로드하면 시각화된 보안 점검 결과를 확인할 수 있습니다."
     },
     "status": {
       "pending": "대기",

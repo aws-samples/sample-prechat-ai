@@ -1208,7 +1208,8 @@
       "downloadError": "An error occurred while downloading the report.",
       "failed": "Report generation failed",
       "retryButton": "Retry",
-      "dashboard": "Dashboard"
+      "dashboard": "Dashboard",
+      "dashboardGuide": "Download the CSV first, then open the Dashboard and upload the CSV file to view visualized security assessment results."
     },
     "status": {
       "pending": "Pending",

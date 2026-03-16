@@ -107,23 +107,23 @@ export const ShipReportPanel: React.FC<ShipReportPanelProps> = ({
                     loading={downloadingType === 'csv'}
                     fullWidth
                   >
-                    Prowler CSV
+                    Athena CSV
                   </Button>
                 </Box>
               )}
-              {hasHtmlReport && (
-                <Box>
-                  <Button
-                    iconName="external"
-                    onClick={() => handleDownload('dashboard')}
-                    loading={downloadingType === 'dashboard'}
-                    fullWidth
-                  >
-                    {t('ship.report.dashboard')}
-                  </Button>
-                </Box>
-              )}
+              <Box>
+                <Button
+                  iconName="external"
+                  onClick={() => window.open('/satv2-dashboard.html', '_blank')}
+                  fullWidth
+                >
+                  {t('ship.report.dashboard')}
+                </Button>
+              </Box>
             </ColumnLayout>
+            <Alert type="info">
+              {t('ship.report.dashboardGuide')}
+            </Alert>
           </SpaceBetween>
         )}
 
