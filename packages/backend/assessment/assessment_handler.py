@@ -243,7 +243,7 @@ def get_assessment_status(event, context):
         'assessmentCompletedAt': session.get('assessmentCompletedAt', ''),
         'hasReport': bool(session.get('reportHtmlKey') or session.get('reportS3Key')),
         'hasHtmlReport': bool(session.get('reportHtmlKey') or session.get('reportS3Key')),
-        'hasCsvReport': bool(session.get('reportCsvKey')),
+        'hasCsvReport': assessment_status == 'completed',
         'codeBuildRoleArn': PROWLER_CODEBUILD_ROLE_ARN,
     }
 
