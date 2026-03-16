@@ -241,7 +241,9 @@ def get_assessment_status(event, context):
         'assessmentStatus': assessment_status,
         'assessmentRequestedAt': session.get('assessmentRequestedAt', ''),
         'assessmentCompletedAt': session.get('assessmentCompletedAt', ''),
-        'hasReport': bool(session.get('reportS3Key')),
+        'hasReport': bool(session.get('reportHtmlKey') or session.get('reportS3Key')),
+        'hasHtmlReport': bool(session.get('reportHtmlKey') or session.get('reportS3Key')),
+        'hasCsvReport': bool(session.get('reportCsvKey')),
         'codeBuildRoleArn': PROWLER_CODEBUILD_ROLE_ARN,
     }
 
@@ -263,7 +265,13 @@ def get_assessment_status(event, context):
 
 
 def get_report_download_url(event, context):
-    """SHIP Report Pre-signed URL 생성 (15분 유효)"""
+    """SHIP Report Pre-signed URL 생성 (15분 유효)
+
+    쿼리 파라미터 reportType으로 다운로드 대상을 선택한다.
+    - html (기본값): Prowler HTML 레포트
+    - csv: Prowler CSV 레포트
+    - dashboard: 대시보드 HTML (SATv2 대시보드)
+    """
     session_id = event['pathParameters']['sessionId']
 
     if not _validate_session_id(session_id):
@@ -276,11 +284,34 @@ def get_report_download_url(event, context):
     if not _verify_pin(event, session):
         return lambda_response(403, {'error': 'Invalid PIN number'})
 
-    report_key = session.get('reportS3Key')
+    # reportType 쿼리 파라미터 (기본: html)
+    query_params = event.get('queryStringParameters') or {}
+    report_type = query_params.get('reportType', 'html')
+
+    REPORT_KEY_MAP = {
+        'html': 'reportHtmlKey',
+        'csv': 'reportCsvKey',
+        'dashboard': 'reportHtmlKey',  # 대시보드도 HTML 형식
+    }
+
+    if report_type not in REPORT_KEY_MAP:
+        return lambda_response(400, {
+            'error': f'Invalid reportType: {report_type}. Must be one of: html, csv, dashboard',
+        })
+
+    key_field = REPORT_KEY_MAP[report_type]
+    report_key = session.get(key_field)
+
+    # 하위 호환: reportHtmlKey가 없으면 기존 reportS3Key 사용
+    if not report_key and report_type in ('html', 'dashboard'):
+        report_key = session.get('reportS3Key')
+
     if not report_key:
-        return lambda_response(404, {'error': 'Report not found'})
+        return lambda_response(404, {'error': f'Report not found for type: {report_type}'})
 
     try:
+        from datetime import datetime, timezone, timedelta
+
         download_url = s3_client.generate_presigned_url(
             'get_object',
             Params={
@@ -290,7 +321,6 @@ def get_report_download_url(event, context):
             ExpiresIn=PRESIGNED_URL_EXPIRY,
         )
 
-        from datetime import datetime, timezone, timedelta
         expires_at = (
             datetime.now(timezone.utc) + timedelta(seconds=PRESIGNED_URL_EXPIRY)
         ).isoformat()
@@ -301,9 +331,10 @@ def get_report_download_url(event, context):
             'downloadUrl': download_url,
             'expiresAt': expires_at,
             'fileName': file_name,
+            'reportType': report_type,
         })
     except Exception as e:
-        print(f"Failed to generate pre-signed URL: {str(e)}")
+        print(f"Failed to generate pre-signed URL for {report_type}: {str(e)}")
         return lambda_response(500, {'error': 'Failed to generate download URL'})
 
 

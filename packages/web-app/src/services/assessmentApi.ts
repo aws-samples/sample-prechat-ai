@@ -4,6 +4,7 @@ import type {
   RoleArnSubmitRequest,
   AssessmentStatusResponse,
   ReportDownloadUrlResponse,
+  ReportType,
 } from '../types';
 import { API_BASE_URL } from '../config/api';
 
@@ -89,15 +90,20 @@ export const getAssessmentStatus = async (
 
 /**
  * 레포트 다운로드 Pre-signed URL 조회
+ * @param reportType - 'html' | 'csv' | 'dashboard' (기본: 'html')
  */
 export const getReportDownloadUrl = async (
   sessionId: string,
-  pin: string
+  pin: string,
+  reportType: ReportType = 'html'
 ): Promise<ReportDownloadUrlResponse> => {
   try {
     const response = await assessmentApi.get(
       `/sessions/${sessionId}/assessment/report-url`,
-      { headers: { 'x-pin-number': pin } }
+      {
+        headers: { 'x-pin-number': pin },
+        params: { reportType },
+      }
     );
     return response.data;
   } catch (error) {

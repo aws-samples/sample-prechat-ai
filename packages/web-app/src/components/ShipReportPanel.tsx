@@ -5,42 +5,46 @@ import {
   SpaceBetween,
   StatusIndicator,
   Button,
-  Link,
   Alert,
   Box,
+  ColumnLayout,
 } from '@cloudscape-design/components';
 import { useI18n } from '../i18n';
-import type { AssessmentStatus } from '../types';
+import type { AssessmentStatus, ReportType } from '../types';
 
 interface ShipReportPanelProps {
   assessmentStatus: AssessmentStatus;
-  onDownloadReport: () => Promise<string | null>;
+  hasHtmlReport?: boolean;
+  hasCsvReport?: boolean;
+  onDownloadReport: (reportType: ReportType) => Promise<string | null>;
   onRetry: () => void;
 }
 
 export const ShipReportPanel: React.FC<ShipReportPanelProps> = ({
   assessmentStatus,
+  hasHtmlReport = true,
+  hasCsvReport = false,
   onDownloadReport,
   onRetry,
 }) => {
   const { t } = useI18n();
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [downloading, setDownloading] = useState(false);
+  const [downloadingType, setDownloadingType] = useState<ReportType | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
 
-  const handleDownload = async () => {
-    setDownloading(true);
+  const handleDownload = async (reportType: ReportType) => {
+    setDownloadingType(reportType);
     setError(null);
     try {
-      const url = await onDownloadReport();
+      const url = await onDownloadReport(reportType);
       if (url) {
-        setDownloadUrl(url);
         window.open(url, '_blank');
       }
     } catch (e: any) {
       setError(e.message || t('ship.report.downloadError'));
     } finally {
-      setDownloading(false);
+      setDownloadingType(null);
     }
   };
 
@@ -82,21 +86,44 @@ export const ShipReportPanel: React.FC<ShipReportPanelProps> = ({
             <StatusIndicator type="success">
               {t('ship.report.ready')}
             </StatusIndicator>
-            <Box>
-              {downloadUrl ? (
-                <Link href={downloadUrl} external>
-                  {t('ship.report.downloadLink')}
-                </Link>
-              ) : (
-                <Button
-                  iconName="download"
-                  onClick={handleDownload}
-                  loading={downloading}
-                >
-                  {t('ship.report.downloadButton')}
-                </Button>
+            <ColumnLayout columns={3}>
+              {hasHtmlReport && (
+                <Box>
+                  <Button
+                    iconName="download"
+                    onClick={() => handleDownload('html')}
+                    loading={downloadingType === 'html'}
+                    fullWidth
+                  >
+                    Prowler HTML
+                  </Button>
+                </Box>
               )}
-            </Box>
+              {hasCsvReport && (
+                <Box>
+                  <Button
+                    iconName="download"
+                    onClick={() => handleDownload('csv')}
+                    loading={downloadingType === 'csv'}
+                    fullWidth
+                  >
+                    Prowler CSV
+                  </Button>
+                </Box>
+              )}
+              {hasHtmlReport && (
+                <Box>
+                  <Button
+                    iconName="external"
+                    onClick={() => handleDownload('dashboard')}
+                    loading={downloadingType === 'dashboard'}
+                    fullWidth
+                  >
+                    {t('ship.report.dashboard')}
+                  </Button>
+                </Box>
+              )}
+            </ColumnLayout>
           </SpaceBetween>
         )}
 

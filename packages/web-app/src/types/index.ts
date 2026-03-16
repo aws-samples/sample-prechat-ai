@@ -106,13 +106,18 @@ export interface AssessmentStatusResponse {
   assessmentRequestedAt?: string;
   assessmentCompletedAt?: string;
   hasReport: boolean;
+  hasHtmlReport?: boolean;
+  hasCsvReport?: boolean;
   codeBuildRoleArn?: string;
 }
+
+export type ReportType = 'html' | 'csv' | 'dashboard';
 
 export interface ReportDownloadUrlResponse {
   downloadUrl: string;
   expiresAt: string;
   fileName: string;
+  reportType: ReportType;
 }
 
 export interface Campaign {

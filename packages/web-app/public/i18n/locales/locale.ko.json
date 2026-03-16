@@ -1207,7 +1207,8 @@
       "downloadLink": "레포트 다운로드 링크",
       "downloadError": "레포트 다운로드 중 오류가 발생했습니다.",
       "failed": "레포트 생성에 실패했습니다",
-      "retryButton": "다시 시도"
+      "retryButton": "다시 시도",
+      "dashboard": "대시보드"
     },
     "status": {
       "pending": "대기",

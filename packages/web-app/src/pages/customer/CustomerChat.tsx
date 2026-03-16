@@ -71,6 +71,8 @@ export default function CustomerChat() {
   // SHIP Assessment 상태 관리
   const [assessmentStatus, setAssessmentStatus] = useState<import('../../types').AssessmentStatus>('pending')
   const [codeBuildRoleArn, setCodeBuildRoleArn] = useState('')
+  const [hasHtmlReport, setHasHtmlReport] = useState(false)
+  const [hasCsvReport, setHasCsvReport] = useState(false)
 
   const isShipAssessment = selectedPurposes.includes(ConsultationPurposeEnum.SHIP_SECURITY_ASSESSMENT)
 
@@ -90,9 +92,11 @@ export default function CustomerChat() {
     setAssessmentStatus('legal_agreed');
   };
 
-  const handleDownloadReport = async (): Promise<string | null> => {
+  const handleDownloadReport = async (
+    reportType: import('../../types').ReportType = 'html'
+  ): Promise<string | null> => {
     if (!sessionId || !verifiedPin) return null;
-    const resp = await getReportDownloadUrl(sessionId, verifiedPin);
+    const resp = await getReportDownloadUrl(sessionId, verifiedPin, reportType);
     return resp.downloadUrl;
   };
 
@@ -139,6 +143,8 @@ export default function CustomerChat() {
         const status = await getAssessmentStatus(sessionId, verifiedPin);
         setAssessmentStatus(status.assessmentStatus);
         if (status.codeBuildRoleArn) setCodeBuildRoleArn(status.codeBuildRoleArn);
+        if (status.hasHtmlReport) setHasHtmlReport(true);
+        if (status.hasCsvReport) setHasCsvReport(true);
         if (status.assessmentStatus === 'scanning' || status.assessmentStatus === 'role_submitted') {
           delay = Math.min(delay * 1.5, 30000); // exponential backoff, max 30s
           timeoutId = setTimeout(poll, delay);
@@ -719,6 +725,8 @@ export default function CustomerChat() {
             />
             <ShipReportPanel
               assessmentStatus={assessmentStatus}
+              hasHtmlReport={hasHtmlReport}
+              hasCsvReport={hasCsvReport}
               onDownloadReport={handleDownloadReport}
               onRetry={handleAssessmentRetry}
             />

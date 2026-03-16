@@ -223,19 +223,55 @@ export default function AdminSessionDetails() {
 
         {/* SHIP Assessment 다운로드 링크 (Req 11.1, 11.2) */}
         {session.assessmentStatus === 'completed' && (
-          <ColumnLayout columns={2}>
+          <ColumnLayout columns={3}>
             <Box>
-              <Box variant="awsui-key-label">{t('adminSessionDetail.info.shipReportLabel')}</Box>
+              <Box variant="awsui-key-label">Prowler HTML</Box>
               <Button
                 iconName="download"
                 variant="link"
                 onClick={async () => {
                   if (!sessionId || !session.pinNumber) return;
                   try {
-                    const resp = await getReportDownloadUrl(sessionId, session.pinNumber);
+                    const resp = await getReportDownloadUrl(sessionId, session.pinNumber, 'html');
                     window.open(resp.downloadUrl, '_blank');
                   } catch (e) {
                     console.error('Report download failed:', e);
+                  }
+                }}
+              >
+                {t('adminSessionDetail.info.downloadReport')}
+              </Button>
+            </Box>
+            <Box>
+              <Box variant="awsui-key-label">Prowler CSV</Box>
+              <Button
+                iconName="download"
+                variant="link"
+                onClick={async () => {
+                  if (!sessionId || !session.pinNumber) return;
+                  try {
+                    const resp = await getReportDownloadUrl(sessionId, session.pinNumber, 'csv');
+                    window.open(resp.downloadUrl, '_blank');
+                  } catch (e) {
+                    console.error('CSV download failed:', e);
+                  }
+                }}
+              >
+                {t('adminSessionDetail.info.downloadReport')}
+              </Button>
+            </Box>
+            <Box>
+              <Box variant="awsui-key-label">{t('ship.report.dashboard')}</Box>
+              <Button
+                iconName="external"
+                variant="link"
+                onClick={async () => {
+                  if (!sessionId || !session.pinNumber) return;
+                  try {
+                    const resp = await getReportDownloadUrl(sessionId, session.pinNumber, 'dashboard');
+                    window.open(resp.downloadUrl, '_blank');
+                  } catch (e) {
+                    console.error('Dashboard download failed:', e);
                   }
                 }}
               >
@@ -404,22 +440,56 @@ export default function AdminSessionDetails() {
                     </Box>
                   </Box>
                   {session.assessmentStatus === 'completed' && (
-                    <Box>
-                      <Button
-                        iconName="download"
-                        onClick={async () => {
-                          if (!sessionId || !session.pinNumber) return;
-                          try {
-                            const resp = await getReportDownloadUrl(sessionId, session.pinNumber);
-                            window.open(resp.downloadUrl, '_blank');
-                          } catch (e) {
-                            console.error('Report download failed:', e);
-                          }
-                        }}
-                      >
-                        {t('adminSessionDetail.info.downloadReport')}
-                      </Button>
-                    </Box>
+                    <ColumnLayout columns={3}>
+                      <Box>
+                        <Button
+                          iconName="download"
+                          onClick={async () => {
+                            if (!sessionId || !session.pinNumber) return;
+                            try {
+                              const resp = await getReportDownloadUrl(sessionId, session.pinNumber, 'html');
+                              window.open(resp.downloadUrl, '_blank');
+                            } catch (e) {
+                              console.error('Report download failed:', e);
+                            }
+                          }}
+                        >
+                          Prowler HTML
+                        </Button>
+                      </Box>
+                      <Box>
+                        <Button
+                          iconName="download"
+                          onClick={async () => {
+                            if (!sessionId || !session.pinNumber) return;
+                            try {
+                              const resp = await getReportDownloadUrl(sessionId, session.pinNumber, 'csv');
+                              window.open(resp.downloadUrl, '_blank');
+                            } catch (e) {
+                              console.error('CSV download failed:', e);
+                            }
+                          }}
+                        >
+                          Prowler CSV
+                        </Button>
+                      </Box>
+                      <Box>
+                        <Button
+                          iconName="external"
+                          onClick={async () => {
+                            if (!sessionId || !session.pinNumber) return;
+                            try {
+                              const resp = await getReportDownloadUrl(sessionId, session.pinNumber, 'dashboard');
+                              window.open(resp.downloadUrl, '_blank');
+                            } catch (e) {
+                              console.error('Dashboard download failed:', e);
+                            }
+                          }}
+                        >
+                          {t('ship.report.dashboard')}
+                        </Button>
+                      </Box>
+                    </ColumnLayout>
                   )}
                   {session.assessmentStatus === 'scanning' && (
                     <Alert type="info">{t('ship.guide.scanningMessage')}</Alert>

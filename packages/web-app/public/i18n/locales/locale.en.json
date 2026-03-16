@@ -1207,7 +1207,8 @@
       "downloadLink": "Report download link",
       "downloadError": "An error occurred while downloading the report.",
       "failed": "Report generation failed",
-      "retryButton": "Retry"
+      "retryButton": "Retry",
+      "dashboard": "Dashboard"
     },
     "status": {
       "pending": "Pending",
