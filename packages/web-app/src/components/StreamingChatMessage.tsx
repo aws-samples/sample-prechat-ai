@@ -19,37 +19,6 @@ interface StreamingChatMessageProps {
   onCapture?: () => void
 }
 
-// 타이핑 애니메이션 훅: 글자를 점진적으로 표시
-function useTypewriter(text: string, enabled: boolean, speed = 12): { displayed: string; isTyping: boolean } {
-  const [displayed, setDisplayed] = useState(enabled ? '' : text)
-  const [isTyping, setIsTyping] = useState(enabled)
-  const indexRef = useRef(0)
-
-  useEffect(() => {
-    if (!enabled) {
-      setDisplayed(text)
-      setIsTyping(false)
-      return
-    }
-    indexRef.current = 0
-    setDisplayed('')
-    setIsTyping(true)
-    const interval = setInterval(() => {
-      indexRef.current += 1
-      if (indexRef.current >= text.length) {
-        setDisplayed(text)
-        setIsTyping(false)
-        clearInterval(interval)
-      } else {
-        setDisplayed(text.slice(0, indexRef.current))
-      }
-    }, speed)
-    return () => clearInterval(interval)
-  }, [text, enabled, speed])
-
-  return { displayed, isTyping }
-}
-
 export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({ 
   message, 
   isStreaming = false,
@@ -69,11 +38,6 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
     hasAnimatedRef.current = true
   }, [])
 
-  // 타이핑 애니메이션: animate 플래그가 있고 스트리밍이 아닌 완료 메시지에만 적용
-  const shouldAnimate = !isStreaming && !!message.animate
-  const processedContent = replaceSalesRepPlaceholders(message.content, salesRepInfo)
-  const { displayed: typedContent, isTyping } = useTypewriter(processedContent, shouldAnimate)
-
   // 스트리밍 중: 완성된 줄은 마크다운, 진행 중인 줄은 plain text
   const { completedLines, currentLine } = useMemo(() => {
     if (!isStreaming) return { completedLines: '', currentLine: '' }
@@ -89,12 +53,12 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
   }, [message.content, isStreaming])
 
   useEffect(() => {
-    if (isStreaming || isTyping) {
+    if (isStreaming) {
       setShowCursor(true)
     } else {
       setShowCursor(false)
     }
-  }, [isStreaming, isTyping])
+  }, [isStreaming])
 
   const handleActionClick = (actionId: string) => {
     switch (actionId) {
@@ -178,9 +142,9 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
               disabled={formSubmitted}
             />
           ) : (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{typedContent}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{replaceSalesRepPlaceholders(message.content, salesRepInfo)}</ReactMarkdown>
           )}
-          {(isStreaming || isTyping) && showCursor && (
+          {isStreaming && showCursor && (
             <span 
               style={{ 
                 opacity: 0.6,

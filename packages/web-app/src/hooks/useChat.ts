@@ -66,7 +66,6 @@ export const useChat = (sessionId: string | undefined, pin?: string, locale?: st
       timestamp: new Date().toISOString(),
       stage: 'conversation',
       status: 'complete',
-      animate: true,
     }
     bubbleCounterRef.current += 1
 
