@@ -287,25 +287,36 @@ def get_report_download_url(event, context):
     query_params = event.get('queryStringParameters') or {}
     report_type = query_params.get('reportType', 'html')
 
-    REPORT_KEY_MAP = {
-        'html': 'reportHtmlKey',
-        'csv': 'reportCsvKey',
-    }
-
-    if report_type not in REPORT_KEY_MAP:
+    if report_type not in ('html', 'csv'):
         return lambda_response(400, {
             'error': f'Invalid reportType: {report_type}. Must be one of: html, csv',
         })
 
-    key_field = REPORT_KEY_MAP[report_type]
-    report_key = session.get(key_field)
-
-    # 하위 호환: reportHtmlKey가 없으면 기존 reportS3Key 사용
-    if not report_key and report_type == 'html':
-        report_key = session.get('reportS3Key')
-
-    if not report_key:
-        return lambda_response(404, {'error': f'Report not found for type: {report_type}'})
+    # reportType에 따라 S3 키 결정
+    if report_type == 'csv':
+        # Athena 집계 CSV — 결정론적 경로
+        report_key = f'assessments/{session_id}/reports/'
+        # reports/ 하위에서 .csv 파일 탐색
+        try:
+            resp = s3_client.list_objects_v2(
+                Bucket=PROWLER_FINDINGS_BUCKET,
+                Prefix=report_key,
+                MaxKeys=10,
+            )
+            csv_keys = [
+                obj['Key'] for obj in resp.get('Contents', [])
+                if obj['Key'].endswith('.csv')
+            ]
+            report_key = csv_keys[0] if csv_keys else f'assessments/{session_id}/reports/results.csv'
+        except Exception:
+            report_key = f'assessments/{session_id}/reports/results.csv'
+    else:
+        # html — DynamoDB에서 키 조회
+        report_key = session.get('reportHtmlKey')
+        if not report_key:
+            report_key = session.get('reportS3Key')
+        if not report_key:
+            return lambda_response(404, {'error': f'Report not found for type: {report_type}'})
 
     try:
         from datetime import datetime, timezone, timedelta
