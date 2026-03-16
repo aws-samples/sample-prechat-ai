@@ -8,7 +8,9 @@ ENV UV_SYSTEM_PYTHON=1 \
     PYTHONUNBUFFERED=1 \
     DOCKER_CONTAINER=1 \
     AWS_REGION=ap-northeast-2 \
-    AWS_DEFAULT_REGION=ap-northeast-2
+    AWS_DEFAULT_REGION=ap-northeast-2 \
+    BEDROCK_AGENTCORE_MEMORY_ID=prechatShipAgent_mem-sk4yuhF8ZL \
+    BEDROCK_AGENTCORE_MEMORY_NAME=prechatShipAgent_mem
 
 
 
