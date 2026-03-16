@@ -1,4 +1,5 @@
 // nosemgrep
+import { useEffect, useRef } from 'react'
 import { ButtonGroup, StatusIndicator } from '@cloudscape-design/components'
 import Avatar from '@cloudscape-design/chat-components/avatar'
 import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
@@ -20,6 +21,15 @@ interface ChatMessageProps {
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = false, salesRepInfo, onFormSubmit, onRequestForm }) => {
   const { t } = useI18n()
+  // 애니메이션을 한 번만 실행하기 위한 ref
+  const hasAnimatedRef = useRef(false)
+  const animationClass = hasAnimatedRef.current
+    ? ''
+    : isCustomer ? 'slide-in-right' : 'slide-in-left'
+
+  useEffect(() => {
+    hasAnimatedRef.current = true
+  }, [])
   const handleActionClick = (actionId: string) => {
     switch (actionId) {
       case 'copy':
@@ -55,7 +65,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
 
   if (isCustomer) {
     return (
-      <div className="slide-in-right" style={{ maxWidth: '70vw', marginLeft: 'auto' }}>
+      <div className={animationClass || undefined} style={{ maxWidth: '70vw', marginLeft: 'auto' }}>
         <ChatBubble
           type="outgoing"
           ariaLabel={`You at ${new Date(message.timestamp).toLocaleTimeString()}`}
@@ -84,7 +94,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
   }
 
   return (
-    <div className="slide-in-left" style={{ maxWidth: '70vw' }}>
+    <div className={animationClass || undefined} style={{ maxWidth: '70vw' }}>
       <ChatBubble
         type="incoming"
         ariaLabel={`Assistant at ${new Date(message.timestamp).toLocaleTimeString()}`}

@@ -1,5 +1,5 @@
 // nosemgrep
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { ButtonGroup, StatusIndicator } from '@cloudscape-design/components'
 import Avatar from '@cloudscape-design/chat-components/avatar'
 import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
@@ -30,6 +30,13 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
   const { t } = useI18n()
   const [showCursor, setShowCursor] = useState(isStreaming)
   const [formSubmitted, setFormSubmitted] = useState(false)
+  // 애니메이션을 한 번만 실행하기 위한 ref
+  const hasAnimatedRef = useRef(false)
+  const animationClass = hasAnimatedRef.current ? '' : 'slide-in-left'
+
+  useEffect(() => {
+    hasAnimatedRef.current = true
+  }, [])
 
   // 스트리밍 중: 완성된 줄은 마크다운, 진행 중인 줄은 plain text
   const { completedLines, currentLine } = useMemo(() => {
@@ -70,7 +77,7 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
   }
 
   return (
-    <div className="slide-in-left" style={{ maxWidth: '70vw' }}>
+    <div className={animationClass || undefined} style={{ maxWidth: '70vw' }}>
       <ChatBubble
         type="incoming"
         ariaLabel={`Assistant at ${new Date(message.timestamp).toLocaleTimeString()}`}
