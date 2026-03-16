@@ -1,5 +1,5 @@
 // nosemgrep
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ButtonGroup, StatusIndicator } from '@cloudscape-design/components'
 import Avatar from '@cloudscape-design/chat-components/avatar'
 import ChatBubble from '@cloudscape-design/chat-components/chat-bubble'
@@ -10,6 +10,33 @@ import { replaceSalesRepPlaceholders } from '../utils/placeholderReplacer'
 import { DivReturnRenderer } from './DivReturnRenderer'
 import { FormSubmissionSummary } from './FormSubmissionSummary'
 import { useI18n } from '../i18n'
+
+// 타이핑 애니메이션 훅: 글자를 점진적으로 표시
+function useTypewriter(text: string, enabled: boolean, speed = 12): string {
+  const [displayed, setDisplayed] = useState(enabled ? '' : text)
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    if (!enabled) {
+      setDisplayed(text)
+      return
+    }
+    indexRef.current = 0
+    setDisplayed('')
+    const interval = setInterval(() => {
+      indexRef.current += 1
+      if (indexRef.current >= text.length) {
+        setDisplayed(text)
+        clearInterval(interval)
+      } else {
+        setDisplayed(text.slice(0, indexRef.current))
+      }
+    }, speed)
+    return () => clearInterval(interval)
+  }, [text, enabled, speed])
+
+  return displayed
+}
 
 interface ChatMessageProps {
   message: Message
@@ -30,6 +57,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
   useEffect(() => {
     hasAnimatedRef.current = true
   }, [])
+
+  // 타이핑 애니메이션: animate 플래그가 있는 봇 메시지에만 적용
+  const processedContent = replaceSalesRepPlaceholders(message.content, salesRepInfo)
+  const typedContent = useTypewriter(processedContent, !!message.animate)
   const handleActionClick = (actionId: string) => {
     switch (actionId) {
       case 'copy':
@@ -59,7 +90,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
         return <FormSubmissionSummary content={message.content} />;
       case 'text':
       default:
-        return <ReactMarkdown remarkPlugins={[remarkGfm]}>{replaceSalesRepPlaceholders(message.content, salesRepInfo)}</ReactMarkdown>;
+        return <ReactMarkdown remarkPlugins={[remarkGfm]}>{typedContent}</ReactMarkdown>;
     }
   };
 

@@ -26,6 +26,8 @@ export interface Message {
     toolName: string;
     status: 'running' | 'complete';
   };
+  // boundary로 확정된 메시지에 타이핑 애니메이션 적용
+  animate?: boolean;
 }
 
 export interface CustomerFeedback {
