@@ -221,37 +221,34 @@ body {
   filter: brightness(0) invert(1) !important;
 }
 
-/* Markdown List Fix - Chat bubble content */
-.awsui_content_cdujn_4xote_76 ul,
-.awsui_content_cdujn_4xote_76 ol,
-.awsui_content_cdujn_4xote_76 li,
-[class*="awsui_content"] ul,
-[class*="awsui_content"] ol,
-[class*="awsui_content"] li {
+/* Markdown List Fix - Chat bubble content only */
+.chat-bubble-content ul,
+.chat-bubble-content ol,
+.chat-bubble-content li {
   margin-left: 20px !important;
   padding-left: 8px !important;
 }
 
-/* Markdown Headers in chat bubbles */
-[class*="awsui_content"] h1,
-[class*="awsui_content"] h2,
-[class*="awsui_content"] h3,
-[class*="awsui_content"] h4 {
+/* Markdown Headers in chat bubbles only */
+.chat-bubble-content h1,
+.chat-bubble-content h2,
+.chat-bubble-content h3,
+.chat-bubble-content h4 {
   margin-top: 12px !important;
   margin-bottom: 8px !important;
   line-height: 1.3 !important;
 }
 
-[class*="awsui_content"] h2 {
+.chat-bubble-content h2 {
   font-size: 1.15em !important;
 }
 
-[class*="awsui_content"] h3 {
+.chat-bubble-content h3 {
   font-size: 1.05em !important;
 }
 
-/* Markdown Code blocks in chat bubbles */
-[class*="awsui_content"] pre {
+/* Markdown Code blocks in chat bubbles only */
+.chat-bubble-content pre {
   background-color: #f4f4f4 !important;
   border-radius: 6px !important;
   padding: 10px 12px !important;
@@ -259,18 +256,18 @@ body {
   margin: 8px 0 !important;
 }
 
-[class*="awsui_content"] code {
+.chat-bubble-content code {
   font-size: 0.9em !important;
 }
 
-[class*="awsui_content"] p code {
+.chat-bubble-content p code {
   background-color: #f0f0f0 !important;
   padding: 2px 5px !important;
   border-radius: 3px !important;
 }
 
-/* Markdown bold */
-[class*="awsui_content"] strong {
+/* Markdown bold in chat bubbles only */
+.chat-bubble-content strong {
   font-weight: 600 !important;
 }
 

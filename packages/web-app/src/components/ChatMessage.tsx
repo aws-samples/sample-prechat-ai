@@ -133,7 +133,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCustomer = 
           />
         }
       >
-        {renderContent()}
+        <div className="chat-bubble-content">
+          {renderContent()}
+        </div>
       </ChatBubble>
     </div>
   )
