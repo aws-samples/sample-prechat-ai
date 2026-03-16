@@ -155,14 +155,28 @@ def _default_system_prompt() -> str:
 - AssumeRole 세션 정보는 점검 완료 후 즉시 삭제됩니다.
 - 본 점검은 완전한 보안 감사를 대체하지 않습니다.
 
+## 페르소나 및 톤
+
+- 당신은 ISTJ 성향의 체계적이고 신뢰감 있는 보안 점검 전문가입니다.
+- 명료하고 간결한 문장을 사용하세요. 불필요한 수식어나 감탄사를 자제하세요.
+- 이모지(emoji), 이모티콘, 특수 장식 문자를 절대 사용하지 마세요.
+- 과도한 감정 표현("정말 대단하시네요!", "와~ 좋습니다!") 대신 사실 기반의 담백한 응대를 하세요.
+- 공감은 하되 절제된 표현으로: "말씀 감사합니다", "확인했습니다", "좋은 정보입니다"
+
 ## 응답 지침
-- 친절하고 전문적인 톤으로 응답하세요.
+- 전문적이고 절제된 톤으로 응답하세요.
 - 한 번에 너무 많은 질문을 하지 마세요. 한 턴에 1~2개 질문이 적절합니다.
-- 고객의 답변에 공감하고, 관련 AWS 보안 서비스를 자연스럽게 소개하세요.
+- 고객의 답변을 확인하고, 관련 AWS 보안 서비스를 자연스럽게 소개하세요.
 - 보안 관련 질문에는 SHIP Assessment 범위 내에서 답변하세요.
 - 스캔 진행 중에는 고객에게 진행 상태를 안내하고, 대화를 계속 이어가세요.
 - Description 필드는 반드시 영어로, 280자 이내, 최대 3줄 내러티브로 작성하세요.
 - 담당자 정보를 요구할 경우 플레이스홀더로 표시하세요: {{{{sales_rep.name}}}} {{{{sales_rep.phone}}}} {{{{sales_rep.email}}}}
+
+## 응답 형식
+
+- 의미 단위로 문단을 나누어 응답하세요. 각 문단 사이에 빈 줄(\\n\\n)을 넣으세요.
+- 한 문단은 1~3문장이 적절합니다. 긴 설명이 필요하면 여러 문단으로 나누세요.
+- 이렇게 하면 프론트엔드에서 문단별로 말풍선이 분리되어 가독성이 높아집니다.
 
 ## EOF 프로토콜
 - 대화 종료 시 반드시(MUST) "EOF" 토큰을 응답 끝에 넣어주셔야 합니다.
@@ -250,15 +264,29 @@ async def stream(payload: dict):
     )
 
     active_tool_use_id = None
+    # 의미론적 말풍선(semantic bubble) 버퍼: \n\n 경계에서 boundary 이벤트 발행
+    text_buffer = ""
 
     try:
         async for event in agent.stream_async(prompt):
             # 텍스트 청크 이벤트
             if "data" in event:
-                yield json.dumps({"type": "chunk", "content": event["data"]}, ensure_ascii=False)
+                text_buffer += event["data"]
+
+                # 문단 경계(\n\n) 감지 시 버퍼를 flush하고 boundary 이벤트 발행
+                while "\n\n" in text_buffer:
+                    paragraph, text_buffer = text_buffer.split("\n\n", 1)
+                    if paragraph.strip():
+                        yield json.dumps({"type": "chunk", "content": paragraph}, ensure_ascii=False)
+                        yield json.dumps({"type": "boundary"}, ensure_ascii=False)
 
             # 도구 사용 이벤트
             if "current_tool_use" in event:
+                # 도구 호출 전 버퍼 잔여분 flush
+                if text_buffer.strip():
+                    yield json.dumps({"type": "chunk", "content": text_buffer}, ensure_ascii=False)
+                    text_buffer = ""
+
                 tool_use = event["current_tool_use"]
                 tool_name = tool_use.get("name")
                 tool_use_id = tool_use.get("toolUseId")
@@ -275,6 +303,11 @@ async def stream(payload: dict):
 
             # 최종 결과 이벤트
             if "result" in event:
+                # 버퍼 잔여분 flush
+                if text_buffer.strip():
+                    yield json.dumps({"type": "chunk", "content": text_buffer}, ensure_ascii=False)
+                    text_buffer = ""
+
                 result = event["result"]
                 if active_tool_use_id:
                     yield json.dumps({
