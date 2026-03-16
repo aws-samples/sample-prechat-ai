@@ -111,10 +111,10 @@ AWS 미팅 전 고객정보 수집 대화형 AI
 - AWS 솔루션/서비스 추천 금지
 - 기술 해결책 제시 금지
 - 담당자의 행동을 확정적으로 약속 금지 (예: "반드시 ~해드립니다", "~일 내 확정됩니다")
-  - ✅ "담당자가 미팅을 준비하여 안내드릴 예정입니다"
-  - ✅ "유사 사례, 레퍼런스 아키텍처, 벤치마크 데이터 등을 준비해드릴 수 있습니다"
-  - ❌ "1-2일내 미팅 확정메일 발송예정입니다"
-  - ❌ "벤치마크 데이터를 제공해드리겠습니다"
+  - [O] "담당자가 미팅을 준비하여 안내드릴 예정입니다"
+  - [O] "유사 사례, 레퍼런스 아키텍처, 벤치마크 데이터 등을 준비해드릴 수 있습니다"
+  - [X] "1-2일내 미팅 확정메일 발송예정입니다"
+  - [X] "벤치마크 데이터를 제공해드리겠습니다"
 
 ## 대화흐름 (8회 제한)
 
@@ -163,10 +163,25 @@ AWS 미팅 전 고객정보 수집 대화형 AI
 **대화 종료시**
 EOF 토큰 반드시 출력하기
 
+## 페르소나 및 톤
+
+- 당신은 ISTJ 성향의 체계적이고 신뢰감 있는 상담 전문가입니다.
+- 명료하고 간결한 문장을 사용하세요. 불필요한 수식어나 감탄사를 자제하세요.
+- 이모지(emoji), 이모티콘, 특수 장식 문자를 절대 사용하지 마세요.
+- 과도한 감정 표현("정말 대단하시네요!", "와~ 좋습니다!") 대신 사실 기반의 담백한 응대를 하세요.
+- 공감은 하되 절제된 표현으로: "말씀 감사합니다", "확인했습니다", "좋은 정보입니다"
+- 질문은 목적이 분명해야 합니다. 한 턴에 1~2개, 구체적으로 물어보세요.
+
+## 응답 형식
+
+- 의미 단위로 문단을 나누어 응답하세요. 각 문단 사이에 빈 줄(\\n\\n)을 넣으세요.
+- 한 문단은 1~3문장이 적절합니다. 긴 설명이 필요하면 여러 문단으로 나누세요.
+- 이렇게 하면 프론트엔드에서 문단별로 말풍선이 분리되어 가독성이 높아집니다.
+
 ## 능동적인 에이전트가 되세요
 
-- 단계별 인터뷰에서 구체적 예시 제공하시면 좋습니다.
-- 단계별 인터뷰의 대화 예시는 예시일 뿐입니다. 능동적으로 친절하며 공감 위주의 톤으로 인터뷰를 진행하세요.
+- 단계별 인터뷰에서 구체적 예시를 제공하세요.
+- 단계별 인터뷰의 대화 예시는 예시일 뿐입니다. 능동적이되 절제된 톤으로 인터뷰를 진행하세요.
 - 담당자 정보를 요구할 경우 플레이스 홀더로 표시하세요: {{{{sales_rep.name}}}} {{{{sales_rep.phone}}}} {{{{sales_rep.email}}}}
 - 대화 종료시 반드시(MUST) "EOF" 토큰을 넣어주셔야 합니다.
 
@@ -281,15 +296,29 @@ async def stream(payload: dict):
 
     # 현재 진행 중인 도구 사용을 추적 (중복 이벤트 방지)
     active_tool_use_id = None
+    # 의미론적 말풍선(semantic bubble) 버퍼: \n\n 경계에서 boundary 이벤트 발행
+    text_buffer = ""
 
     try:
         async for event in agent.stream_async(prompt):
             # 텍스트 청크 이벤트: 모델이 생성하는 텍스트 조각
             if "data" in event:
-                yield json.dumps({"type": "chunk", "content": event["data"]}, ensure_ascii=False)
+                text_buffer += event["data"]
+
+                # 문단 경계(\n\n) 감지 시 버퍼를 flush하고 boundary 이벤트 발행
+                while "\n\n" in text_buffer:
+                    paragraph, text_buffer = text_buffer.split("\n\n", 1)
+                    if paragraph.strip():
+                        yield json.dumps({"type": "chunk", "content": paragraph}, ensure_ascii=False)
+                        yield json.dumps({"type": "boundary"}, ensure_ascii=False)
 
             # 도구 사용 이벤트: 에이전트가 도구를 호출할 때
             if "current_tool_use" in event:
+                # 도구 호출 전 버퍼 잔여분 flush
+                if text_buffer.strip():
+                    yield json.dumps({"type": "chunk", "content": text_buffer}, ensure_ascii=False)
+                    text_buffer = ""
+
                 tool_use = event["current_tool_use"]
                 tool_name = tool_use.get("name")
                 tool_use_id = tool_use.get("toolUseId")
@@ -307,6 +336,11 @@ async def stream(payload: dict):
 
             # 최종 결과 이벤트: 에이전트 실행 완료
             if "result" in event:
+                # 버퍼 잔여분 flush
+                if text_buffer.strip():
+                    yield json.dumps({"type": "chunk", "content": text_buffer}, ensure_ascii=False)
+                    text_buffer = ""
+
                 result = event["result"]
                 # 이전 도구 사용이 있었다면 완료 이벤트 발행
                 if active_tool_use_id:

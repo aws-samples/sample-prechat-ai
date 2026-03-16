@@ -151,6 +151,18 @@ recommending AWS services, searching for similar customer cases, and suggesting 
 4. Recommend relevant AWS services based on customer needs
 5. Suggest actionable items for meeting preparation
 
+## Persona & Tone
+- You are an ISTJ-type systematic and reliable meeting preparation specialist.
+- Use clear, concise sentences. Avoid unnecessary modifiers or exclamations.
+- NEVER use emoji, emoticons, or decorative special characters.
+- Instead of excessive emotional expressions, use fact-based, measured responses.
+- Empathize with restraint: "Noted", "Understood", "That's useful context"
+
+## Response Format
+- Separate your response into semantic paragraphs. Insert a blank line (\\n\\n) between each paragraph.
+- Each paragraph should be 1~3 sentences. Split longer explanations into multiple paragraphs.
+- This enables the frontend to render each paragraph as a separate chat bubble for better readability.
+
 ## Rules
 - Base your analysis on the provided customer information and conversation history
 - Use the `retrieve` tool to search for similar customer cases when relevant
@@ -308,18 +320,38 @@ async def stream(payload: dict):
 
     # 현재 진행 중인 도구 사용을 추적 (중복 이벤트 방지)
     active_tool_use_id = None
+    # 의미론적 말풍선(semantic bubble) 버퍼: \n\n 경계에서 boundary 이벤트 발행
+    text_buffer = ""
 
     try:
         async for event in agent.stream_async(prompt):
             # 텍스트 청크 이벤트: 모델이 생성하는 텍스트 조각
             if "data" in event:
-                yield json.dumps(
-                    {"type": "chunk", "content": event["data"]},
-                    ensure_ascii=False,
-                )
+                text_buffer += event["data"]
+
+                # 문단 경계(\n\n) 감지 시 버퍼를 flush하고 boundary 이벤트 발행
+                while "\n\n" in text_buffer:
+                    paragraph, text_buffer = text_buffer.split("\n\n", 1)
+                    if paragraph.strip():
+                        yield json.dumps(
+                            {"type": "chunk", "content": paragraph},
+                            ensure_ascii=False,
+                        )
+                        yield json.dumps(
+                            {"type": "boundary"},
+                            ensure_ascii=False,
+                        )
 
             # 도구 사용 이벤트: 에이전트가 도구를 호출할 때
             if "current_tool_use" in event:
+                # 도구 호출 전 버퍼 잔여분 flush
+                if text_buffer.strip():
+                    yield json.dumps(
+                        {"type": "chunk", "content": text_buffer},
+                        ensure_ascii=False,
+                    )
+                    text_buffer = ""
+
                 tool_use = event["current_tool_use"]
                 tool_name = tool_use.get("name")
                 tool_use_id = tool_use.get("toolUseId")
@@ -337,6 +369,14 @@ async def stream(payload: dict):
 
             # 최종 결과 이벤트: 에이전트 실행 완료
             if "result" in event:
+                # 버퍼 잔여분 flush
+                if text_buffer.strip():
+                    yield json.dumps(
+                        {"type": "chunk", "content": text_buffer},
+                        ensure_ascii=False,
+                    )
+                    text_buffer = ""
+
                 result = event["result"]
                 # 이전 도구 사용이 있었다면 완료 이벤트 발행
                 if active_tool_use_id:
