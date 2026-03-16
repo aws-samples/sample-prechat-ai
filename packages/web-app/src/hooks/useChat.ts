@@ -27,6 +27,8 @@ export const useChat = (sessionId: string | undefined, pin?: string, locale?: st
   const onCompleteRef = useRef<((complete: boolean) => void) | null>(null)
   const streamingContentTypeRef = useRef<MessageContentType>('text')
   const lastToolNameRef = useRef<string>('')
+  // 의미론적 말풍선: boundary 이벤트마다 증가하는 카운터
+  const bubbleCounterRef = useRef(0)
 
   // 스트리밍 청크 수신 콜백
   const handleChunk = useCallback((chunk: string) => {
@@ -47,6 +49,34 @@ export const useChat = (sessionId: string | undefined, pin?: string, locale?: st
         status: 'streaming',
         toolInfo: undefined,
       }
+    })
+  }, [])
+
+  // 의미론적 말풍선 경계 수신 콜백: 현재 스트리밍 콘텐츠를 확정된 말풍선으로 분리
+  const handleBoundary = useCallback(() => {
+    const currentContent = streamingContentRef.current.trim()
+    if (!currentContent || !currentMessageIdRef.current) return
+
+    // 현재 콘텐츠를 완성된 말풍선으로 확정
+    const bubbleMessage: Message = {
+      id: `${currentMessageIdRef.current}-b${bubbleCounterRef.current}`,
+      content: currentContent,
+      contentType: streamingContentTypeRef.current,
+      sender: 'bot',
+      timestamp: new Date().toISOString(),
+      stage: 'conversation',
+      status: 'complete',
+    }
+    bubbleCounterRef.current += 1
+
+    onMessageAddRef.current?.(bubbleMessage)
+
+    // 스트리밍 버퍼 초기화 후 새 말풍선 시작
+    streamingContentRef.current = ''
+    streamingContentTypeRef.current = 'text'
+    setStreamingMessage((prev) => {
+      if (!prev) return prev
+      return { ...prev, content: '', contentType: 'text', status: 'streaming' }
     })
   }, [])
 
@@ -93,26 +123,30 @@ export const useChat = (sessionId: string | undefined, pin?: string, locale?: st
     const finalContent = streamingContentRef.current.replace('EOF', '').trim()
     const finalContentType = metadata.contentType || streamingContentTypeRef.current
 
-    const botMessage: Message = {
-      id: metadata.messageId || (currentMessageIdRef.current
-        ? (parseInt(currentMessageIdRef.current) + 1).toString()
-        : Date.now().toString()),
-      content: finalContent,
-      contentType: finalContentType,
-      sender: 'bot',
-      timestamp: new Date().toISOString(),
-      stage: 'conversation',
-      status: 'complete',
+    // boundary로 이미 분리된 후 잔여 콘텐츠가 있는 경우에만 최종 메시지 추가
+    if (finalContent) {
+      const botMessage: Message = {
+        id: metadata.messageId || (currentMessageIdRef.current
+          ? (parseInt(currentMessageIdRef.current) + 1).toString()
+          : Date.now().toString()),
+        content: finalContent,
+        contentType: finalContentType,
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        stage: 'conversation',
+        status: 'complete',
+      }
+      onMessageAddRef.current?.(botMessage)
     }
 
     setStreamingMessage(null)
-    onMessageAddRef.current?.(botMessage)
     onCompleteRef.current?.(metadata.isComplete)
 
     // ref 초기화
     streamingContentRef.current = ''
     currentMessageIdRef.current = null
     streamingContentTypeRef.current = 'text'
+    bubbleCounterRef.current = 0
   }, [])
 
   // 에러 수신 콜백
@@ -143,6 +177,7 @@ export const useChat = (sessionId: string | undefined, pin?: string, locale?: st
     wsUrl: WS_URL,
     locale,
     onChunk: handleChunk,
+    onBoundary: handleBoundary,
     onTool: handleTool,
     onComplete: handleComplete,
     onError: handleError,
@@ -153,6 +188,7 @@ export const useChat = (sessionId: string | undefined, pin?: string, locale?: st
     const botMessageId = (parseInt(messageId) + 1).toString()
     streamingContentRef.current = ''
     streamingContentTypeRef.current = 'text'
+    bubbleCounterRef.current = 0
     return {
       id: botMessageId,
       content: '',

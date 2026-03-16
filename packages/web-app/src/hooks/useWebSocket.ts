@@ -14,6 +14,7 @@ export interface UseWebSocketOptions {
   wsUrl: string
   locale?: string
   onChunk: (chunk: string) => void
+  onBoundary?: () => void
   onTool?: (tool: {
     toolName: string
     toolUseId: string
@@ -43,7 +44,7 @@ export interface UseWebSocketReturn {
  * - 연결 끊김 시 메시지 큐잉 및 재연결 후 재전송
  */
 export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
-  const { sessionId, pin, wsUrl, locale, onChunk, onTool, onComplete, onError } = options
+  const { sessionId, pin, wsUrl, locale, onChunk, onBoundary, onTool, onComplete, onError } = options
 
   const [connectionState, setConnectionState] = useState<ConnectionState>('disconnected')
 
@@ -57,11 +58,13 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
 
   // 콜백 ref (최신 콜백 참조 보장)
   const onChunkRef = useRef(onChunk)
+  const onBoundaryRef = useRef(onBoundary)
   const onToolRef = useRef(onTool)
   const onCompleteRef = useRef(onComplete)
   const onErrorRef = useRef(onError)
 
   onChunkRef.current = onChunk
+  onBoundaryRef.current = onBoundary
   onToolRef.current = onTool
   onCompleteRef.current = onComplete
   onErrorRef.current = onError
@@ -84,6 +87,9 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
       switch (data.type) {
         case 'chunk':
           onChunkRef.current(data.content)
+          break
+        case 'boundary':
+          onBoundaryRef.current?.()
           break
         case 'tool':
           onToolRef.current?.({

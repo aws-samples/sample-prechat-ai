@@ -446,6 +446,13 @@ def handle_send_message(event, context):
                         apigw_management, connection_id, stream_event
                     )
 
+            elif event_type == 'boundary':
+                # 의미론적 말풍선 경계 이벤트 클라이언트 전달
+                if connection_alive:
+                    connection_alive = _post_to_connection(
+                        apigw_management, connection_id, {'type': 'boundary'}
+                    )
+
             elif event_type == 'tool':
                 # 도구 사용 이벤트 클라이언트 전달
                 if connection_alive:
@@ -719,6 +726,13 @@ def handle_send_planning_message(event, context):
                 if connection_alive:
                     connection_alive = _post_to_connection(
                         apigw_management, connection_id, stream_event
+                    )
+
+            elif event_type == 'boundary':
+                # 의미론적 말풍선 경계 이벤트 클라이언트 전달
+                if connection_alive:
+                    connection_alive = _post_to_connection(
+                        apigw_management, connection_id, {'type': 'boundary'}
                     )
 
             elif event_type == 'tool':

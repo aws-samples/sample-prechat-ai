@@ -356,6 +356,7 @@ export interface TriggerListResponse {
 // 서버 → 클라이언트 메시지 유니온 타입
 export type WebSocketServerMessage =
   | { type: 'chunk'; content: string }
+  | { type: 'boundary' }
   | { type: 'tool'; toolName: string; toolUseId: string; status: 'running' | 'complete'; input?: Record<string, unknown>; output?: string }
   | { type: 'done'; contentType: MessageContentType; isComplete: boolean; messageId: string }
   | { type: 'error'; message: string };
