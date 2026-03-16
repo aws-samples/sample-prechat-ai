@@ -3270,6 +3270,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
       Policies:
         - PolicyName: AthenaAndS3Access
           PolicyDocument:
@@ -3298,6 +3299,9 @@ Resources:
                   - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
                   - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDatabaseSATv2Findings}'
                   - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDatabaseSATv2Findings}/prowler'
+              - Effect: Allow
+                Action: sqs:SendMessage
+                Resource: !GetAtt LambdaDeadLetterQueue.Arn
 
   LakeFormationPermissionsLambda:
     Type: AWS::LakeFormation::Permissions
@@ -3478,6 +3482,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
       Policies:
         - PolicyName: StartReportingBuild
           PolicyDocument:
@@ -3486,6 +3491,9 @@ Resources:
               - Effect: Allow
                 Action: codebuild:StartBuild
                 Resource: !GetAtt ReportingCodeBuild.Arn
+              - Effect: Allow
+                Action: sqs:SendMessage
+                Resource: !GetAtt LambdaDeadLetterQueue.Arn
 
   ReportingStartLambda:
     Type: AWS::Serverless::Function
