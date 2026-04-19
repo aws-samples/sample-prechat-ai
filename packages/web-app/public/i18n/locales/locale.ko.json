@@ -1286,7 +1286,7 @@
     },
     "tabs": {
       "overview": "개요",
-      "access": "접근 자산"
+      "access": "접근 정보"
     },
     "overview": {
       "campaignCode": "캠페인 코드",
@@ -1309,7 +1309,16 @@
       "copyError": "복사 실패",
       "qrLabel": "QR 코드",
       "qrUnavailable": "QR 코드 생성 라이브러리가 설치되지 않았습니다",
-      "qrDownload": "QR 다운로드"
+      "qrDownload": "QR 다운로드",
+      "pinLabel": "캠페인 PIN",
+      "pinHiddenNote": "PIN은 해시로 저장되어 표시할 수 없습니다. \"PIN 재설정\"으로 새로 설정하세요.",
+      "resetPinButton": "PIN 재설정",
+      "newPinPlaceholder": "새 6자리 PIN 입력",
+      "savePinButton": "PIN 저장",
+      "cancelButton": "취소",
+      "pinSaved": "PIN이 업데이트되었습니다",
+      "pinSaveFailed": "PIN 업데이트 실패",
+      "pinFormatError": "PIN은 6자리 숫자여야 합니다"
     }
   }
 }

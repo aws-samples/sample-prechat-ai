@@ -245,11 +245,7 @@ export default function CampaignDashboard() {
                   onItemClick={({ detail }) => {
                     switch (detail.id) {
                       case 'view':
-                        if ((item.campaignType ?? 'outbound') === 'inbound') {
-                          navigate(`/admin/inbound-campaigns/${item.campaignId}`)
-                        } else {
-                          navigate(`/admin/campaigns/${item.campaignId}`)
-                        }
+                        navigate(`/admin/campaigns/${item.campaignId}`)
                         break
                       case 'edit':
                         navigate(`/admin/campaigns/${item.campaignId}/edit`)

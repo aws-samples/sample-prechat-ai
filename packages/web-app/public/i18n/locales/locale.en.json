@@ -1286,7 +1286,7 @@
     },
     "tabs": {
       "overview": "Overview",
-      "access": "Access Assets"
+      "access": "Access Info"
     },
     "overview": {
       "campaignCode": "Campaign Code",
@@ -1309,7 +1309,16 @@
       "copyError": "Copy failed",
       "qrLabel": "QR Code",
       "qrUnavailable": "QR code library is not installed",
-      "qrDownload": "Download QR"
+      "qrDownload": "Download QR",
+      "pinLabel": "Campaign PIN",
+      "pinHiddenNote": "PIN is hashed and cannot be displayed. Use \"Reset PIN\" to set a new one.",
+      "resetPinButton": "Reset PIN",
+      "newPinPlaceholder": "Enter new 6-digit PIN",
+      "savePinButton": "Save PIN",
+      "cancelButton": "Cancel",
+      "pinSaved": "PIN updated successfully",
+      "pinSaveFailed": "Failed to update PIN",
+      "pinFormatError": "PIN must be exactly 6 digits"
     }
   }
 }

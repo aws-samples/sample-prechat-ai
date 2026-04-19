@@ -16,7 +16,6 @@ import CampaignDashboard from './pages/admin/CampaignDashboard'
 import CreateCampaign from './pages/admin/CreateCampaign'
 import EditCampaign from './pages/admin/EditCampaign'
 import CampaignDetails from './pages/admin/CampaignDetails'
-import InboundCampaignDetails from './pages/admin/InboundCampaignDetails'
 import TriggerDashboard from './pages/admin/TriggerDashboard'
 import CustomizationPanel from './pages/admin/CustomizationPanel'
 import InboundEntry from './pages/customer/InboundEntry'
@@ -72,11 +71,6 @@ function App() {
         <Route path="/admin/campaigns/:campaignId/edit" element={
           <ProtectedRoute>
             <EditCampaign />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/inbound-campaigns/:campaignId" element={
-          <ProtectedRoute>
-            <InboundCampaignDetails />
           </ProtectedRoute>
         } />
 

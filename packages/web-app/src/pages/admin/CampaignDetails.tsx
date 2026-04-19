@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Container,
@@ -12,8 +12,12 @@ import {
   ColumnLayout,
   Button,
   ButtonDropdown,
-  Modal
+  Modal,
+  CopyToClipboard,
+  Input,
+  FormField
 } from '@cloudscape-design/components'
+import QRCode from 'qrcode'
 import { useI18n } from '../../i18n'
 import { campaignApi } from '../../services/api'
 import {
@@ -39,12 +43,72 @@ export default function CampaignDetails() {
   const [error, setError] = useState('')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [activeTabId, setActiveTabId] = useState('analytics')
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
+  const [showPinInput, setShowPinInput] = useState(false)
+  const [newPin, setNewPin] = useState('')
+  const [pinError, setPinError] = useState('')
+  const [pinSaving, setPinSaving] = useState(false)
+  const [pinMessage, setPinMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const isInbound = campaign?.campaignType === 'inbound'
+  const inboundUrl = isInbound && campaign
+    ? `${window.location.origin}/inbound/${campaign.campaignCode}`
+    : ''
 
   useEffect(() => {
     if (campaignId) {
       loadCampaignData()
     }
   }, [campaignId])
+
+  // 인바운드 캠페인 QR 코드 렌더링
+  // activeTabId를 의존성에 포함하여 'access' 탭 활성화 시 canvas DOM mount 후 실행
+  useEffect(() => {
+    if (!isInbound || activeTabId !== 'access' || !inboundUrl) return
+    // canvas가 DOM에 mount될 때까지 대기
+    const timer = setTimeout(() => {
+      if (qrCanvasRef.current) {
+        QRCode.toCanvas(qrCanvasRef.current, inboundUrl, {
+          width: 200,
+          margin: 2,
+          color: { dark: '#000000', light: '#ffffff' },
+        }).catch(err => console.error('QR render failed:', err))
+      }
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [isInbound, activeTabId, inboundUrl])
+
+  const downloadQR = () => {
+    const canvas = qrCanvasRef.current
+    if (!canvas || !campaign) return
+    const safeName = (campaign.campaignCode || 'campaign').replace(/[^A-Za-z0-9_-]/g, '_')
+    const link = document.createElement('a')
+    link.download = `qr-${safeName}.png`
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  }
+
+  const handleSavePin = async () => {
+    if (!/^\d{6}$/.test(newPin)) {
+      setPinError(t('inboundDetails.access.pinFormatError'))
+      return
+    }
+    if (!campaignId) return
+    setPinError('')
+    setPinSaving(true)
+    setPinMessage(null)
+    try {
+      await campaignApi.updateCampaign(campaignId, { campaignPin: newPin })
+      setPinMessage({ type: 'success', text: t('inboundDetails.access.pinSaved') })
+      setShowPinInput(false)
+      setNewPin('')
+    } catch (err: any) {
+      setPinMessage({ type: 'error', text: err.message || t('inboundDetails.access.pinSaveFailed') })
+    } finally {
+      setPinSaving(false)
+    }
+  }
 
   const loadCampaignData = async () => {
     if (!campaignId) return
@@ -172,7 +236,10 @@ export default function CampaignDetails() {
             </SpaceBetween>
           }
         >
-          {t('adminCampaignDetail.header.title')}
+          <SpaceBetween direction="horizontal" size="s">
+            {t('adminCampaignDetail.header.title')}
+            {isInbound && <Badge color="blue">{t('inboundDetails.header.inboundBadge')}</Badge>}
+          </SpaceBetween>
         </Header>
 
         {/* Campaign Overview */}
@@ -208,6 +275,8 @@ export default function CampaignDetails() {
         </ColumnLayout>
 
         <Tabs
+          activeTabId={activeTabId}
+          onChange={({ detail }) => setActiveTabId(detail.activeTabId)}
           tabs={[
             {
               label: t('adminCampaignDetail.tabs.analyticsLabel'),
@@ -245,7 +314,95 @@ export default function CampaignDetails() {
                     </Button>
                 </Box>
               )
-            }
+            },
+            ...(isInbound ? [{
+              label: t('inboundDetails.tabs.access'),
+              id: 'access',
+              content: (
+                <SpaceBetween size="l">
+                  <Box variant="h3">{t('inboundDetails.access.title')}</Box>
+                  <Box color="text-body-secondary">{t('inboundDetails.access.description')}</Box>
+                  <SpaceBetween size="m">
+                    <Box variant="awsui-key-label">{t('inboundDetails.access.urlLabel')}</Box>
+                    <CopyToClipboard
+                      copyButtonText={t('inboundDetails.access.copyButton')}
+                      copySuccessText={t('inboundDetails.access.copySuccess')}
+                      copyErrorText={t('inboundDetails.access.copyError')}
+                      textToCopy={inboundUrl}
+                    />
+                    <Box fontSize="body-s" color="text-status-info">{inboundUrl}</Box>
+                  </SpaceBetween>
+                  <SpaceBetween size="m">
+                    <Box variant="awsui-key-label">{t('inboundDetails.access.pinLabel')}</Box>
+                    {pinMessage && (
+                      <Alert
+                        type={pinMessage.type}
+                        dismissible
+                        onDismiss={() => setPinMessage(null)}
+                      >
+                        {pinMessage.text}
+                      </Alert>
+                    )}
+                    {!showPinInput ? (
+                      <SpaceBetween size="xs">
+                        <Box color="text-body-secondary">
+                          {t('inboundDetails.access.pinHiddenNote')}
+                        </Box>
+                        <Button
+                          onClick={() => {
+                            setShowPinInput(true)
+                            setPinError('')
+                            setPinMessage(null)
+                          }}
+                          iconName="key"
+                        >
+                          {t('inboundDetails.access.resetPinButton')}
+                        </Button>
+                      </SpaceBetween>
+                    ) : (
+                      <FormField errorText={pinError}>
+                        <SpaceBetween direction="horizontal" size="xs">
+                          <Input
+                            value={newPin}
+                            onChange={({ detail }) => {
+                              setNewPin(detail.value)
+                              if (pinError) setPinError('')
+                            }}
+                            placeholder={t('inboundDetails.access.newPinPlaceholder')}
+                            type="number"
+                            invalid={!!pinError}
+                          />
+                          <Button
+                            variant="primary"
+                            onClick={handleSavePin}
+                            loading={pinSaving}
+                          >
+                            {t('inboundDetails.access.savePinButton')}
+                          </Button>
+                          <Button
+                            variant="link"
+                            onClick={() => {
+                              setShowPinInput(false)
+                              setNewPin('')
+                              setPinError('')
+                            }}
+                          >
+                            {t('inboundDetails.access.cancelButton')}
+                          </Button>
+                        </SpaceBetween>
+                      </FormField>
+                    )}
+                  </SpaceBetween>
+                  <SpaceBetween size="m">
+                    <Box variant="awsui-key-label">{t('inboundDetails.access.qrLabel')}</Box>
+                    <canvas ref={qrCanvasRef} />
+                    <Button onClick={downloadQR} iconName="download">
+                      {t('inboundDetails.access.qrDownload')}
+                    </Button>
+                  </SpaceBetween>
+                </SpaceBetween>
+              )
+            }] : [])
           ]}
         />
 
