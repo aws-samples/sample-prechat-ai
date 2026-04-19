@@ -9,6 +9,11 @@ Parameters:
       - dev
       - prod
     Description: Deployment stage
+  PinHashSecret:
+    Type: String
+    Default: ''
+    NoEcho: true
+    Description: Secret used for HMAC-based inbound campaign PIN hashing. Leave empty to use default fallback (not recommended for prod).
   BedrockRegion:
     Type: String
     Default: ap-northeast-2
@@ -62,6 +67,7 @@ Globals:
         SUMMARY_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/summary/runtime-arn}}'
         PLANNING_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/planning/runtime-arn}}'
         SHIP_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/ship/runtime-arn}}'
+        PIN_HASH_SECRET: !Ref PinHashSecret
     KmsKeyArn: !GetAtt DynamoDBKMSKey.Arn
   Api:
     EndpointConfiguration: REGIONAL

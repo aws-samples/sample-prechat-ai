@@ -81,7 +81,9 @@ export default function InboundEntry() {
       errors.customerEmail = t('inbound.pii.emailInvalid');
     }
     if (!formData.customerCompany.trim()) errors.customerCompany = t('inbound.pii.companyRequired');
-    if (!formData.customerPhone.trim() || !/^\+?[\d\s\-().]{7,15}$/.test(formData.customerPhone)) {
+    // E.164 기반 검증: 포맷 문자(공백/-/() /+) 제거 후 숫자만 7~15자리
+    const phoneDigits = formData.customerPhone.replace(/\D/g, '');
+    if (!formData.customerPhone.trim() || phoneDigits.length < 7 || phoneDigits.length > 15) {
       errors.customerPhone = t('inbound.pii.phoneInvalid');
     }
     setFormErrors(errors);

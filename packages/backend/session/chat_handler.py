@@ -2,7 +2,7 @@ import json
 import boto3
 import os
 from decimal import Decimal
-from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp, validate_session_id
+from utils import lambda_response, parse_body, get_timestamp, generate_id, get_ttl_timestamp, validate_session_id, verify_csrf_token
 
 dynamodb = boto3.resource('dynamodb')
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
@@ -16,6 +16,10 @@ def update_consultation_purposes(event, context):
 
     if not validate_session_id(session_id):
         return lambda_response(400, {'error': 'Invalid session ID format'})
+
+    # CSRF 검증
+    if not verify_csrf_token(event, session_id):
+        return lambda_response(403, {'error': 'Invalid CSRF token'})
 
     consultation_purposes = body.get('consultationPurposes', '')
 
@@ -62,6 +66,10 @@ def handle_feedback(event, context):
 
     if not validate_session_id(session_id):
         return lambda_response(400, {'error': 'Invalid session ID format'})
+
+    # CSRF 검증
+    if not verify_csrf_token(event, session_id):
+        return lambda_response(403, {'error': 'Invalid CSRF token'})
 
     rating = body.get('rating')
     feedback = body.get('feedback', '')

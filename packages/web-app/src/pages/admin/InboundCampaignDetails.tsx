@@ -71,8 +71,10 @@ export default function InboundCampaignDetails() {
   const downloadQR = () => {
     const canvas = qrCanvasRef.current;
     if (!canvas || !campaign) return;
+    // 파일명 인젝션 방어: 영숫자/대시/언더스코어만 허용
+    const safeName = (campaign.campaignCode || 'campaign').replace(/[^A-Za-z0-9_-]/g, '_');
     const link = document.createElement('a');
-    link.download = `qr-${campaign.campaignCode}.png`;
+    link.download = `qr-${safeName}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   };

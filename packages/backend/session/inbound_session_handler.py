@@ -12,7 +12,7 @@ from botocore.exceptions import ClientError
 from utils import (
     lambda_response, parse_body, get_timestamp,
     generate_session_id, get_ttl_timestamp, generate_csrf_token,
-    secure_compare,
+    secure_compare, hash_campaign_pin,
 )
 
 logger = logging.getLogger()
@@ -149,11 +149,20 @@ def _create_inbound_session_inner(
         if campaign.get('status') != 'active':
             return lambda_response(403, {'error': 'Campaign is not active'})
 
-        campaign_pin = campaign.get('campaignPin', '')
-        if not campaign_pin or not secure_compare(pin_input, campaign_pin):
-            return lambda_response(401, {'error': 'Invalid PIN'})
-
         campaign_id = campaign['campaignId']
+
+        # PIN 검증: 해시 우선, 평문 fallback (마이그레이션 호환)
+        stored_hash = campaign.get('campaignPinHash', '')
+        if stored_hash:
+            input_hash = hash_campaign_pin(pin_input, campaign_id)
+            if not secure_compare(input_hash, stored_hash):
+                return lambda_response(401, {'error': 'Invalid PIN'})
+        else:
+            # 레거시: 해시가 아직 없는 캠페인은 평문 비교
+            legacy_pin = campaign.get('campaignPin', '')
+            if not legacy_pin or not secure_compare(pin_input, legacy_pin):
+                return lambda_response(401, {'error': 'Invalid PIN'})
+
         phone_normalized = _normalize_phone(customer_phone)
 
         existing = _find_existing_session(campaign_id, phone_normalized)

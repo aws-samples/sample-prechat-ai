@@ -86,13 +86,19 @@ const handleApiError = (error: unknown, context: string): never => {
 export const chatApi = {
   sendMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse> => {
     const { sessionId, ...rest } = request as ChatMessageRequest & { sessionId: string }
-    const response = await api.post(`/sessions/${sessionId}/messages`, rest)
+    const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
+    const response = await api.post(`/sessions/${sessionId}/messages`, rest, {
+      headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
+    })
     return response.data
   },
 
   sendStreamMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse & { chunks: string[] }> => {
     const { sessionId, ...rest } = request as ChatMessageRequest & { sessionId: string }
-    const response = await api.post(`/sessions/${sessionId}/messages/stream`, rest)
+    const csrfToken = localStorage.getItem(`csrf_${sessionId}`)
+    const response = await api.post(`/sessions/${sessionId}/messages/stream`, rest, {
+      headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
+    })
     return response.data
   },
 
@@ -758,13 +764,19 @@ export const customizationApi = {
 
 
 // 인바운드 캠페인 고객 플로우 API (인증 불필요)
+// 공용 axios와 분리하여 관리자 JWT가 공개 엔드포인트로 누설되지 않도록 함
+const publicApi = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+})
+
 export const inboundApi = {
   /**
    * 인바운드 캠페인 공개 정보 조회 (PIN 미포함)
    */
   getCampaignInfo: async (campaignCode: string) => {
     try {
-      const response = await api.get(`/inbound/${campaignCode}`)
+      const response = await publicApi.get(`/inbound/${campaignCode}`)
       return response.data
     } catch (error) {
       return handleApiError(error, 'Get Inbound Campaign Info')
@@ -780,7 +792,7 @@ export const inboundApi = {
     data: import('../types').CreateInboundSessionRequest
   ) => {
     try {
-      const response = await api.post(`/inbound/${campaignCode}/sessions`, data)
+      const response = await publicApi.post(`/inbound/${campaignCode}/sessions`, data)
       return response.data
     } catch (error) {
       return handleApiError(error, 'Create Inbound Session')
