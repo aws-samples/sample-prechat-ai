@@ -286,7 +286,12 @@ export interface CreateCampaignRequest {
   endDate: string;
   ownerId: string;
   campaignType?: 'outbound' | 'inbound';
-  campaignPin?: string; // 인바운드 캠페인 전용 (6자리 숫자)
+  campaignPin?: string;
+  agentConfigurations?: {
+    prechat: string;
+    summary: string;
+    planning: string;
+  };
 }
 
 export interface UpdateCampaignRequest {
@@ -299,7 +304,12 @@ export interface UpdateCampaignRequest {
   ownerEmail?: string;
   ownerName?: string;
   status?: 'active' | 'completed' | 'paused' | 'cancelled';
-  campaignPin?: string; // 인바운드 캠페인 PIN 변경 시
+  campaignPin?: string;
+  agentConfigurations?: {
+    prechat: string;
+    summary: string;
+    planning: string;
+  };
 }
 
 export interface CampaignListResponse {

@@ -245,7 +245,8 @@ def get_campaign(event, context):
             'createdAt': campaign['createdAt'],
             'updatedAt': campaign.get('updatedAt', campaign['createdAt']),
             'sessionCount': convert_decimal_to_int(campaign.get('sessionCount', 0)),
-            'completedSessionCount': convert_decimal_to_int(campaign.get('completedSessionCount', 0))
+            'completedSessionCount': convert_decimal_to_int(campaign.get('completedSessionCount', 0)),
+            'agentConfigurations': campaign.get('agentConfigurations', {'prechat': '', 'summary': '', 'planning': ''})
         }
         
         return lambda_response(200, campaign_data)
@@ -271,7 +272,7 @@ def update_campaign(event, context):
         body = parse_body(event)
         
         # Validate that at least one field is provided for update
-        updatable_fields = ['campaignName', 'campaignCode', 'description', 'startDate', 'endDate', 'ownerId', 'status', 'campaignPin']
+        updatable_fields = ['campaignName', 'campaignCode', 'description', 'startDate', 'endDate', 'ownerId', 'status', 'campaignPin', 'agentConfigurations']
         update_data = {k: v for k, v in body.items() if k in updatable_fields and v is not None}
 
         # 인바운드 캠페인 PIN 변경 시: 검증 후 해시로 변환하여 저장 (평문 저장 금지)

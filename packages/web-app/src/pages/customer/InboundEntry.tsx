@@ -15,6 +15,7 @@ import {
 } from '@cloudscape-design/components';
 import { useI18n } from '../../i18n';
 import { inboundApi } from '../../services/api';
+import { storePinForSession, storePrivacyConsentForSession } from '../../utils/sessionStorage';
 import type { InboundCampaignInfo, CreateInboundSessionRequest } from '../../types';
 
 type Step = 'loading' | 'pin' | 'pii' | 'error';
@@ -106,6 +107,9 @@ export default function InboundEntry() {
       if (result.csrfToken) {
         localStorage.setItem(`csrf_${result.sessionId}`, result.csrfToken);
       }
+      // PIN과 개인정보 동의를 sessionStorage에 저장 → CustomerChat WSS 연결에 사용
+      storePinForSession(result.sessionId, pin);
+      storePrivacyConsentForSession(result.sessionId);
       navigate(`/customer/${result.sessionId}`);
     } catch (err: any) {
       handleSubmitError(err);

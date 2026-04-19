@@ -173,6 +173,9 @@
     },
     "sessionError": {
       "header": "Session Error"
+    },
+    "inboundConsent": {
+      "modalTitle": "Please agree to the privacy policy to start your consultation."
     }
   },
   "adminSessions": {
@@ -681,7 +684,12 @@
       "campaignTypeInboundDesc": "Customers self-register using the campaign URL and PIN",
       "campaignPinLabel": "Campaign PIN",
       "campaignPinDescription": "6-digit numeric PIN customers enter when creating a session",
-      "campaignPinPlaceholder": "e.g., 123456"
+      "campaignPinPlaceholder": "e.g., 123456",
+      "agentLabel": "Consultation Agent",
+      "agentDescription": "Select the AI agent for customer consultations",
+      "agentPlaceholder": "Select agent...",
+      "agentLoadingText": "Loading agents...",
+      "agentEmpty": "No agents available"
     },
     "validation": {
       "campaignNameRequired": "Campaign name is required",
@@ -1024,7 +1032,12 @@
       "statusCancelled": "Cancelled",
       "campaignPinLabel": "Campaign PIN",
       "campaignPinDescription": "6-digit numeric PIN for inbound campaign access",
-      "campaignPinPlaceholder": "e.g., 123456"
+      "campaignPinPlaceholder": "e.g., 123456",
+      "agentLabel": "Consultation Agent",
+      "agentDescription": "Select the AI agent for customer consultations",
+      "agentPlaceholder": "Select agent...",
+      "agentLoadingText": "Loading agents...",
+      "agentEmpty": "No agents available"
     },
     "validation": {
       "campaignNameRequired": "Campaign name is required",

@@ -16,7 +16,7 @@ import {
 } from '@cloudscape-design/components'
 import { useI18n } from '../../i18n'
 import { campaignApi, adminApi } from '../../services/api'
-import type { Campaign, UpdateCampaignRequest, CognitoUser } from '../../types'
+import type { Campaign, UpdateCampaignRequest, CognitoUser, AgentConfiguration } from '../../types'
 
 export default function EditCampaign() {
   const navigate = useNavigate()
@@ -36,6 +36,8 @@ export default function EditCampaign() {
   const [success, setSuccess] = useState('')
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [cognitoUsers, setCognitoUsers] = useState<CognitoUser[]>([])
+  const [agentConfigs, setAgentConfigs] = useState<AgentConfiguration[]>([])
+  const [loadingAgents, setLoadingAgents] = useState(true)
   const [formData, setFormData] = useState({
     campaignName: '',
     campaignCode: '',
@@ -47,6 +49,7 @@ export default function EditCampaign() {
     ownerName: '',
     status: 'active' as Campaign['status'],
     campaignPin: '',
+    prechatAgentConfigId: '',
   })
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
@@ -54,8 +57,24 @@ export default function EditCampaign() {
     if (campaignId) {
       loadCampaign()
       loadCognitoUsers()
+      loadAgentConfigs()
     }
   }, [campaignId])
+
+  const loadAgentConfigs = async () => {
+    try {
+      setLoadingAgents(true)
+      const response = await adminApi.listAgentConfigs()
+      const configs = (response.configs || []).filter(
+        (c: AgentConfiguration) => c.agentRole === 'prechat' && c.status === 'active'
+      )
+      setAgentConfigs(configs)
+    } catch (err) {
+      console.error('Failed to load agent configs:', err)
+    } finally {
+      setLoadingAgents(false)
+    }
+  }
 
   const loadCampaign = async () => {
     if (!campaignId) return
@@ -75,6 +94,7 @@ export default function EditCampaign() {
         ownerName: campaignData.ownerName,
         status: campaignData.status,
         campaignPin: '',
+        prechatAgentConfigId: (campaignData as any).agentConfigurations?.prechat || '',
       })
     } catch (err: any) {
       console.error('Failed to load campaign:', err)
@@ -170,6 +190,13 @@ export default function EditCampaign() {
         ...(campaign?.campaignType === 'inbound' && formData.campaignPin
           ? { campaignPin: formData.campaignPin }
           : {}),
+        ...(formData.prechatAgentConfigId && {
+          agentConfigurations: {
+            prechat: formData.prechatAgentConfigId,
+            summary: '',
+            planning: '',
+          }
+        }),
       }
 
       const result = await campaignApi.updateCampaign(campaignId, updateData)
@@ -427,6 +454,35 @@ export default function EditCampaign() {
                 />
               </FormField>
             )}
+
+            <FormField
+              label={t('adminCampaignEdit.form.agentLabel')}
+              description={t('adminCampaignEdit.form.agentDescription')}
+              stretch
+            >
+              <Select
+                selectedOption={
+                  formData.prechatAgentConfigId
+                    ? {
+                        label: agentConfigs.find(c => c.configId === formData.prechatAgentConfigId)?.agentName || '',
+                        value: formData.prechatAgentConfigId,
+                      }
+                    : null
+                }
+                onChange={({ detail }) =>
+                  updateFormData('prechatAgentConfigId', detail.selectedOption?.value || '')
+                }
+                options={agentConfigs.map(config => ({
+                  label: config.agentName || `Agent (${config.configId.slice(0, 8)})`,
+                  value: config.configId,
+                  description: config.modelId,
+                }))}
+                placeholder={t('adminCampaignEdit.form.agentPlaceholder')}
+                loadingText={loadingAgents ? t('adminCampaignEdit.form.agentLoadingText') : undefined}
+                disabled={loadingAgents}
+                empty={agentConfigs.length === 0 ? t('adminCampaignEdit.form.agentEmpty') : undefined}
+              />
+            </FormField>
           </SpaceBetween>
         </Form>
       </SpaceBetween>

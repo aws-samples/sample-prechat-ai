@@ -173,6 +173,9 @@
     },
     "sessionError": {
       "header": "세션 오류"
+    },
+    "inboundConsent": {
+      "modalTitle": "상담을 시작하기 위해 개인정보 처리방침에 동의해 주세요."
     }
   },
   "adminSessions": {
@@ -681,7 +684,12 @@
       "campaignTypeInboundDesc": "고객이 캠페인 URL과 PIN으로 직접 세션을 생성합니다",
       "campaignPinLabel": "캠페인 PIN",
       "campaignPinDescription": "고객이 세션 생성 시 입력할 6자리 숫자 PIN",
-      "campaignPinPlaceholder": "예: 123456"
+      "campaignPinPlaceholder": "예: 123456",
+      "agentLabel": "상담 에이전트",
+      "agentDescription": "고객 상담에 사용할 AI 에이전트를 선택하세요",
+      "agentPlaceholder": "에이전트 선택...",
+      "agentLoadingText": "에이전트 로딩 중...",
+      "agentEmpty": "사용 가능한 에이전트 없음"
     },
     "validation": {
       "campaignNameRequired": "캠페인명은 필수입니다",
@@ -1024,7 +1032,12 @@
       "statusCancelled": "취소",
       "campaignPinLabel": "캠페인 PIN",
       "campaignPinDescription": "인바운드 캠페인 접근용 6자리 숫자 PIN",
-      "campaignPinPlaceholder": "예: 123456"
+      "campaignPinPlaceholder": "예: 123456",
+      "agentLabel": "상담 에이전트",
+      "agentDescription": "고객 상담에 사용할 AI 에이전트를 선택하세요",
+      "agentPlaceholder": "에이전트 선택...",
+      "agentLoadingText": "에이전트 로딩 중...",
+      "agentEmpty": "사용 가능한 에이전트 없음"
     },
     "validation": {
       "campaignNameRequired": "캠페인명은 필수입니다",

@@ -10,7 +10,7 @@ import json
 import boto3
 import os
 from datetime import datetime, timezone, timedelta
-from utils import get_timestamp, generate_id, get_ttl_timestamp
+from utils import get_timestamp, generate_id, get_ttl_timestamp, secure_compare, hash_campaign_pin
 from agent_runtime import AgentCoreClient, get_agent_config_for_session
 
 dynamodb = boto3.resource('dynamodb')
@@ -22,6 +22,35 @@ agentcore_client = AgentCoreClient()
 
 # Div Return Protocol: contentType 감지 마커
 DIV_RETURN_MARKER = '<div class="prechat-form" data-form-type="div-return">'
+
+CAMPAIGNS_TABLE = os.environ.get('CAMPAIGNS_TABLE')
+
+
+def _verify_inbound_pin(pin_input: str, campaign_id: str) -> bool:
+    """인바운드 캠페인 PIN 검증 (해시 우선, 평문 fallback)."""
+    if not campaign_id or not pin_input:
+        return False
+    try:
+        campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
+        resp = campaigns_table.get_item(
+            Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'},
+            ProjectionExpression='campaignPinHash, campaignPin',
+        )
+        item = resp.get('Item')
+        if not item:
+            return False
+
+        stored_hash = item.get('campaignPinHash', '')
+        if stored_hash:
+            input_hash = hash_campaign_pin(pin_input, campaign_id)
+            return secure_compare(input_hash, stored_hash)
+
+        # 레거시 평문 fallback
+        legacy_pin = item.get('campaignPin', '')
+        return bool(legacy_pin) and secure_compare(pin_input, legacy_pin)
+    except Exception as e:
+        print(f"[ERROR] _verify_inbound_pin: {e}")
+        return False
 
 
 def handle_connect(event, context):
@@ -70,7 +99,6 @@ def handle_connect(event, context):
                 print(f"WebSocket 연결 거부 - Cognito 토큰 검증 실패: {str(e)}")
                 return {'statusCode': 403}
 
-            # 세션 존재 여부만 확인 (PIN/상태 검증 불필요)
             session_resp = sessions_table.get_item(
                 Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
             )
@@ -78,25 +106,31 @@ def handle_connect(event, context):
                 print(f"WebSocket 연결 거부 - 세션 미존재: {session_id}")
                 return {'statusCode': 403}
 
-        # PIN 인증 (고객용)
+        # PIN 인증 (고객용 — outbound/inbound 공통)
         else:
             session_resp = sessions_table.get_item(
                 Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'}
             )
-
             if 'Item' not in session_resp:
                 print(f"WebSocket 연결 거부 - 세션 미존재: {session_id}")
                 return {'statusCode': 403}
 
             session = session_resp['Item']
+            campaign_type = session.get('campaignType', 'outbound')
 
-            # PIN 검증
-            stored_pin = session.get('pinNumber', '')
-            if pin != stored_pin:
-                print(f"WebSocket 연결 거부 - PIN 불일치: {session_id}")
-                return {'statusCode': 403}
+            if campaign_type == 'inbound':
+                # 인바운드: 캠페인 PIN 해시와 비교
+                campaign_id = session.get('campaignId', '')
+                if not _verify_inbound_pin(pin, campaign_id):
+                    print(f"WebSocket 연결 거부 - 인바운드 PIN 불일치: {session_id}")
+                    return {'statusCode': 403}
+            else:
+                # 아웃바운드: 세션 PIN과 비교
+                stored_pin = session.get('pinNumber', '')
+                if pin != stored_pin:
+                    print(f"WebSocket 연결 거부 - 아웃바운드 PIN 불일치: {session_id}")
+                    return {'statusCode': 403}
 
-            # 세션 활성 상태 확인
             status = session.get('status', '')
             if status != 'active':
                 print(f"WebSocket 연결 거부 - 비활성 세션: {session_id}, status={status}")

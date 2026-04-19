@@ -508,18 +508,64 @@ def get_agent_config_for_session(
 ) -> tuple[str, Optional[AgentConfiguration]]:
     """Session에 연결된 ARN과 사용자 정의 config를 반환합니다.
 
+    우선순위:
+      1. 캠페인 타입이 'inbound' → 캠페인의 agentConfigurations[role] 강제 사용
+      2. 세션의 agentId가 유효한 값이면 해당 config 사용 (아웃바운드 관리자 override)
+      3. 세션 agentId가 비어있으면 → 캠페인의 agentConfigurations[role] 사용
+      4. 캠페인 설정도 없으면 → role별 첫 번째 AgentConfig (하위 호환)
+
     Returns:
         (agent_runtime_arn, config): ARN은 환경 변수에서, config는 DynamoDB에서 조회
     """
     print(f"[DEBUG] get_agent_config_for_session: session={session_id}, role={agent_role}")
-    
+
     # 1. ARN은 환경 변수에서 가져오기 (고정)
     arn = get_agent_runtime_arn(agent_role)
-    
-    # 2. 사용자 정의 config는 DynamoDB에서 조회 (선택적)
-    config = get_agent_config_by_role(agent_role)
-    
+
+    # 2. 세션/캠페인 정보 조회하여 우선순위에 따라 config 결정
+    config = _resolve_agent_config(session_id, agent_role)
+
     return (arn, config)
+
+
+def _resolve_agent_config(
+    session_id: str,
+    agent_role: str,
+) -> Optional[AgentConfiguration]:
+    """세션 → 캠페인 우선순위로 AgentConfiguration을 해석합니다."""
+    if not SESSIONS_TABLE:
+        print(f"[WARN] SESSIONS_TABLE not set")
+        return get_agent_config_by_role(agent_role)
+
+    try:
+        session_agent_id, campaign_id = _get_session_routing_info(session_id)
+        campaign = _get_campaign_for_routing(campaign_id) if campaign_id else None
+        campaign_type = campaign.get('campaignType', 'outbound') if campaign else 'outbound'
+        campaign_agent_id = (
+            campaign.get('agentConfigurations', {}).get(agent_role, '')
+            if campaign else ''
+        )
+
+        # 인바운드: 캠페인 설정이 세션 설정을 이김 (관리자 실수 방지)
+        if campaign_type == 'inbound' and campaign_agent_id:
+            print(f"[INFO] Inbound campaign: using campaign agent config {campaign_agent_id}")
+            return _get_config_by_id(campaign_agent_id)
+
+        # 아웃바운드: 세션 agentId 우선, 없으면 캠페인 설정
+        if session_agent_id:
+            print(f"[INFO] Using session-level agent config {session_agent_id}")
+            config = _get_config_by_id(session_agent_id)
+            if config:
+                return config
+        if campaign_agent_id:
+            print(f"[INFO] Using campaign-level agent config {campaign_agent_id}")
+            return _get_config_by_id(campaign_agent_id)
+
+    except Exception as e:
+        print(f"[ERROR] Failed to resolve agent config: {str(e)}")
+
+    # Fallback: role별 첫 번째 config
+    return get_agent_config_by_role(agent_role)
 
 
 def get_agent_config_by_role(
@@ -577,4 +623,57 @@ def get_agent_config_for_campaign(
 def _fallback_config(agent_role: str) -> Optional[AgentConfiguration]:
     """Deprecated: get_agent_config_for_session()이 직접 처리합니다."""
     print(f"[WARN] _fallback_config is deprecated and should not be called")
+    return None
+
+
+
+def _get_session_routing_info(session_id: str) -> tuple[str, str]:
+    """세션의 agentId와 campaignId를 조회."""
+    if not SESSIONS_TABLE:
+        return ('', '')
+    try:
+        table = dynamodb.Table(SESSIONS_TABLE)
+        resp = table.get_item(
+            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+            ProjectionExpression='agentId, campaignId',
+        )
+        item = resp.get('Item', {})
+        return (item.get('agentId', '') or '', item.get('campaignId', '') or '')
+    except Exception as e:
+        print(f"[WARN] Failed to fetch session routing info for {session_id}: {e}")
+        return ('', '')
+
+
+def _get_campaign_for_routing(campaign_id: str) -> Optional[dict]:
+    """캠페인의 campaignType과 agentConfigurations 조회."""
+    import os
+    campaigns_table = os.environ.get('CAMPAIGNS_TABLE')
+    if not campaigns_table or not campaign_id:
+        return None
+    try:
+        table = dynamodb.Table(campaigns_table)
+        resp = table.get_item(
+            Key={'PK': f'CAMPAIGN#{campaign_id}', 'SK': 'METADATA'},
+            ProjectionExpression='campaignType, agentConfigurations',
+        )
+        return resp.get('Item')
+    except Exception as e:
+        print(f"[WARN] Failed to fetch campaign {campaign_id} for routing: {e}")
+        return None
+
+
+def _get_config_by_id(config_id: str) -> Optional[AgentConfiguration]:
+    """configId로 AgentConfiguration 직접 조회."""
+    if not SESSIONS_TABLE or not config_id:
+        return None
+    try:
+        table = dynamodb.Table(SESSIONS_TABLE)
+        resp = table.get_item(
+            Key={'PK': f'AGENTCONFIG#{config_id}', 'SK': 'METADATA'},
+        )
+        item = resp.get('Item')
+        if item:
+            return AgentConfiguration.from_dynamodb_item(item)
+    except Exception as e:
+        print(f"[WARN] Failed to fetch config {config_id}: {e}")
     return None

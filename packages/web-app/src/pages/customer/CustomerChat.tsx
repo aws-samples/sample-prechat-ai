@@ -443,7 +443,7 @@ export default function CustomerChat() {
       <Modal
         onDismiss={() => { }}
         visible={true}
-        header={t('customer.pin.modalTitle')}
+        header={t('customer.inboundConsent.modalTitle')}
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">

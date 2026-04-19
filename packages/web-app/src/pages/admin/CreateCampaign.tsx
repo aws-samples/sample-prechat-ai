@@ -17,7 +17,7 @@ import {
 import { useI18n } from '../../i18n'
 import { authService } from '../../services/auth'
 import { campaignApi, adminApi } from '../../services/api'
-import type { CreateCampaignRequest, CognitoUser } from '../../types'
+import type { CreateCampaignRequest, CognitoUser, AgentConfiguration } from '../../types'
 
 export default function CreateCampaign() {
   const navigate = useNavigate()
@@ -29,6 +29,8 @@ export default function CreateCampaign() {
   const [success, setSuccess] = useState('')
   const [currentUserEmail, setCurrentUserEmail] = useState('')
   const [cognitoUsers, setCognitoUsers] = useState<CognitoUser[]>([])
+  const [agentConfigs, setAgentConfigs] = useState<AgentConfiguration[]>([])
+  const [loadingAgents, setLoadingAgents] = useState(true)
   const [formData, setFormData] = useState({
     campaignName: '',
     campaignCode: '',
@@ -40,13 +42,33 @@ export default function CreateCampaign() {
     ownerName: '',
     campaignType: 'outbound' as 'outbound' | 'inbound',
     campaignPin: '',
+    prechatAgentConfigId: '',
   })
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     loadCurrentUser()
     loadCognitoUsers()
+    loadAgentConfigs()
   }, [])
+
+  const loadAgentConfigs = async () => {
+    try {
+      setLoadingAgents(true)
+      const response = await adminApi.listAgentConfigs()
+      const configs = (response.configs || []).filter(
+        (c: AgentConfiguration) => c.agentRole === 'prechat' && c.status === 'active'
+      )
+      setAgentConfigs(configs)
+      if (configs.length === 1) {
+        setFormData(prev => ({ ...prev, prechatAgentConfigId: configs[0].configId }))
+      }
+    } catch (err) {
+      console.error('Failed to load agent configs:', err)
+    } finally {
+      setLoadingAgents(false)
+    }
+  }
 
   const loadCurrentUser = async () => {
     try {
@@ -169,6 +191,13 @@ export default function CreateCampaign() {
         ownerId: formData.ownerId,
         campaignType: formData.campaignType,
         ...(formData.campaignType === 'inbound' && { campaignPin: formData.campaignPin }),
+        ...(formData.prechatAgentConfigId && {
+          agentConfigurations: {
+            prechat: formData.prechatAgentConfigId,
+            summary: '',
+            planning: '',
+          }
+        }),
       }
 
       const result = await campaignApi.createCampaign(campaignData)
@@ -415,6 +444,35 @@ export default function CreateCampaign() {
                 />
               </FormField>
             )}
+
+            <FormField
+              label={t('adminCampaignCreate.form.agentLabel')}
+              description={t('adminCampaignCreate.form.agentDescription')}
+              stretch
+            >
+              <Select
+                selectedOption={
+                  formData.prechatAgentConfigId
+                    ? {
+                        label: agentConfigs.find(c => c.configId === formData.prechatAgentConfigId)?.agentName || '',
+                        value: formData.prechatAgentConfigId,
+                      }
+                    : null
+                }
+                onChange={({ detail }) =>
+                  updateFormData('prechatAgentConfigId', detail.selectedOption?.value || '')
+                }
+                options={agentConfigs.map(config => ({
+                  label: config.agentName || `Agent (${config.configId.slice(0, 8)})`,
+                  value: config.configId,
+                  description: config.modelId,
+                }))}
+                placeholder={t('adminCampaignCreate.form.agentPlaceholder')}
+                loadingText={loadingAgents ? t('adminCampaignCreate.form.agentLoadingText') : undefined}
+                disabled={loadingAgents}
+                empty={agentConfigs.length === 0 ? t('adminCampaignCreate.form.agentEmpty') : undefined}
+              />
+            </FormField>
           </SpaceBetween>
         </Form>
       </SpaceBetween>
