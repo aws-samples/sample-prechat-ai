@@ -53,6 +53,7 @@ export default function CustomerChat() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const { t, locale } = useI18n()
   const [showPinModal, setShowPinModal] = useState(true)
+  const [showInboundConsentModal, setShowInboundConsentModal] = useState(false)
   const [pinInput, setPinInput] = useState('')
   const [pinError, setPinError] = useState('')
   const [pinLoading, setPinLoading] = useState(false)
@@ -106,7 +107,10 @@ export default function CustomerChat() {
     isComplete,
     addMessage,
     updateSessionComplete,
-  } = useSession(sessionId, !showPinModal && !isCheckingStoredPin) // Only load session after PIN verification
+  } = useSession(
+    sessionId,
+    !isCheckingStoredPin && !showPinModal && !showInboundConsentModal
+  )
 
   // PIN 검증 후 저장된 PIN을 useChat에 전달
   const verifiedPin = sessionId ? getStoredPinForSession(sessionId) : undefined
@@ -172,6 +176,27 @@ export default function CustomerChat() {
       if (!sessionId) {
         setIsCheckingStoredPin(false)
         return
+      }
+
+      // 인바운드 세션인지 먼저 확인 (campaignType 조회)
+      try {
+        const session = await chatApi.getSession(sessionId)
+        if (session.campaignType === 'inbound') {
+          // 인바운드는 PIN 인증 불필요 — 개인정보 동의만 요구
+          const storedConsent = getStoredPrivacyConsentForSession(sessionId)
+          if (storedConsent) {
+            setShowPinModal(false)
+            setShowInboundConsentModal(false)
+          } else {
+            setShowPinModal(false)
+            setShowInboundConsentModal(true)
+          }
+          setIsCheckingStoredPin(false)
+          return
+        }
+      } catch (error) {
+        console.warn('Failed to preload session for campaignType detection:', error)
+        // 실패 시 기존 아웃바운드 플로우로 진행
       }
 
       const storedPin = getStoredPinForSession(sessionId)
@@ -389,6 +414,55 @@ export default function CustomerChat() {
             />
           </FormField>
 
+          <FormField>
+            <Checkbox
+              checked={privacyAgreed}
+              onChange={({ detail }) => setPrivacyAgreed(detail.checked)}
+            >
+              <Box>
+                <Link
+                  href="#"
+                  onFollow={(e) => {
+                    e.preventDefault()
+                    setShowPrivacyModal(true)
+                  }}
+                >
+                  {t('customer.pin.privacyAgreement')}
+                </Link>
+                {t('customer.pin.privacyAgreementSuffix')}
+              </Box>
+            </Checkbox>
+          </FormField>
+        </SpaceBetween>
+      </Modal>
+    )
+  }
+
+  if (showInboundConsentModal) {
+    return (
+      <Modal
+        onDismiss={() => { }}
+        visible={true}
+        header={t('customer.pin.modalTitle')}
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                variant="primary"
+                onClick={() => {
+                  if (!sessionId) return
+                  storePrivacyConsentForSession(sessionId)
+                  setShowInboundConsentModal(false)
+                }}
+                disabled={!privacyAgreed}
+              >
+                {t('customer.pin.confirmButton')}
+              </Button>
+            </SpaceBetween>
+          </Box>
+        }
+      >
+        <SpaceBetween size="m">
           <FormField>
             <Checkbox
               checked={privacyAgreed}

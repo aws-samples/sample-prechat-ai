@@ -159,6 +159,7 @@ def get_session(event, context):
             'csrfToken': session.get('csrfToken', ''),
             'conversationHistory': conversation_history,
             'assessmentStatus': session.get('assessmentStatus', ''),
+            'campaignType': session.get('campaignType', 'outbound'),
         })
     except Exception as e:
         return lambda_response(500, {'error': 'Failed to get session'})

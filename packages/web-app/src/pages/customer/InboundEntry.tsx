@@ -231,10 +231,20 @@ export default function InboundEntry() {
             >
               <Input
                 value={pin}
-                onChange={({ detail }) => { setPin(detail.value); if (pinError) setPinError(''); }}
+                onChange={({ detail }) => {
+                  // 숫자만 허용하고 최대 6자리까지만
+                  const numericValue = detail.value.replace(/\D/g, '').slice(0, 6);
+                  setPin(numericValue);
+                  if (pinError) setPinError('');
+                }}
                 placeholder={t('inbound.pin.placeholder')}
-                type="number"
+                inputMode="numeric"
                 invalid={!!pinError}
+                onKeyDown={(e) => {
+                  if ((e as any).key === 'Enter' && pin.length === 6) {
+                    handlePinSubmit();
+                  }
+                }}
               />
             </FormField>
           </Form>

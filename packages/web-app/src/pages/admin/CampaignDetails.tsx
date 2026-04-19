@@ -15,7 +15,8 @@ import {
   Modal,
   CopyToClipboard,
   Input,
-  FormField
+  FormField,
+  Grid
 } from '@cloudscape-design/components'
 import QRCode from 'qrcode'
 import { useI18n } from '../../i18n'
@@ -320,31 +321,59 @@ export default function CampaignDetails() {
               id: 'access',
               content: (
                 <SpaceBetween size="l">
-                  <Box variant="h3">{t('inboundDetails.access.title')}</Box>
-                  <Box color="text-body-secondary">{t('inboundDetails.access.description')}</Box>
-                  <SpaceBetween size="m">
-                    <Box variant="awsui-key-label">{t('inboundDetails.access.urlLabel')}</Box>
-                    <CopyToClipboard
-                      copyButtonText={t('inboundDetails.access.copyButton')}
-                      copySuccessText={t('inboundDetails.access.copySuccess')}
-                      copyErrorText={t('inboundDetails.access.copyError')}
-                      textToCopy={inboundUrl}
-                    />
-                    <Box fontSize="body-s" color="text-status-info">{inboundUrl}</Box>
-                  </SpaceBetween>
-                  <SpaceBetween size="m">
-                    <Box variant="awsui-key-label">{t('inboundDetails.access.pinLabel')}</Box>
-                    {pinMessage && (
-                      <Alert
-                        type={pinMessage.type}
-                        dismissible
-                        onDismiss={() => setPinMessage(null)}
-                      >
-                        {pinMessage.text}
-                      </Alert>
-                    )}
+                  <Alert type="info">
+                    {t('inboundDetails.access.description')}
+                  </Alert>
+
+                  {pinMessage && (
+                    <Alert
+                      type={pinMessage.type}
+                      dismissible
+                      onDismiss={() => setPinMessage(null)}
+                    >
+                      {pinMessage.text}
+                    </Alert>
+                  )}
+
+                  <Grid
+                    gridDefinition={[
+                      { colspan: { default: 12, xs: 8 } },
+                      { colspan: { default: 12, xs: 4 } },
+                    ]}
+                  >
+                    <Container
+                      header={<Header variant="h3">{t('inboundDetails.access.urlLabel')}</Header>}
+                    >
+                      <SpaceBetween size="s">
+                        <Box fontSize="body-m" fontWeight="bold" color="text-status-info">
+                          {inboundUrl}
+                        </Box>
+                        <CopyToClipboard
+                          copyButtonText={t('inboundDetails.access.copyButton')}
+                          copySuccessText={t('inboundDetails.access.copySuccess')}
+                          copyErrorText={t('inboundDetails.access.copyError')}
+                          textToCopy={inboundUrl}
+                        />
+                      </SpaceBetween>
+                    </Container>
+
+                    <Container
+                      header={<Header variant="h3">{t('inboundDetails.access.qrLabel')}</Header>}
+                    >
+                      <SpaceBetween size="s" alignItems="center">
+                        <canvas ref={qrCanvasRef} />
+                        <Button onClick={downloadQR} iconName="download">
+                          {t('inboundDetails.access.qrDownload')}
+                        </Button>
+                      </SpaceBetween>
+                    </Container>
+                  </Grid>
+
+                  <Container
+                    header={<Header variant="h3">{t('inboundDetails.access.pinLabel')}</Header>}
+                  >
                     {!showPinInput ? (
-                      <SpaceBetween size="xs">
+                      <SpaceBetween size="s">
                         <Box color="text-body-secondary">
                           {t('inboundDetails.access.pinHiddenNote')}
                         </Box>
@@ -365,12 +394,18 @@ export default function CampaignDetails() {
                           <Input
                             value={newPin}
                             onChange={({ detail }) => {
-                              setNewPin(detail.value)
+                              const numericValue = detail.value.replace(/\D/g, '').slice(0, 6)
+                              setNewPin(numericValue)
                               if (pinError) setPinError('')
                             }}
                             placeholder={t('inboundDetails.access.newPinPlaceholder')}
-                            type="number"
+                            inputMode="numeric"
                             invalid={!!pinError}
+                            onKeyDown={(e) => {
+                              if ((e as any).key === 'Enter' && newPin.length === 6) {
+                                handleSavePin()
+                              }
+                            }}
                           />
                           <Button
                             variant="primary"
@@ -392,14 +427,7 @@ export default function CampaignDetails() {
                         </SpaceBetween>
                       </FormField>
                     )}
-                  </SpaceBetween>
-                  <SpaceBetween size="m">
-                    <Box variant="awsui-key-label">{t('inboundDetails.access.qrLabel')}</Box>
-                    <canvas ref={qrCanvasRef} />
-                    <Button onClick={downloadQR} iconName="download">
-                      {t('inboundDetails.access.qrDownload')}
-                    </Button>
-                  </SpaceBetween>
+                  </Container>
                 </SpaceBetween>
               )
             }] : [])

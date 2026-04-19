@@ -207,6 +207,7 @@ def hash_campaign_pin(pin: str, campaign_id: str) -> str:
 
     Salt로 campaign_id를 사용하여 캠페인 간 레인보우 테이블 공격 방어.
     Secret은 PIN_HASH_SECRET 환경변수에서 로드 (KMS/Secrets Manager 연동 권장).
+    환경변수 미설정 시 고정 fallback 사용 (보안성 약화 경고 — 프로덕션 설정 필수).
     """
     import hmac
     import hashlib
@@ -214,8 +215,8 @@ def hash_campaign_pin(pin: str, campaign_id: str) -> str:
 
     secret = os.environ.get('PIN_HASH_SECRET', '')
     if not secret:
-        # fallback: 환경변수 미설정 시 스택 식별자라도 사용 (보안성 약화 경고)
-        secret = os.environ.get('AWS_LAMBDA_FUNCTION_NAME', 'prechat-default-salt')
+        # 모든 Lambda 함수에서 동일한 값을 사용해야 함 (함수명 등 가변값 사용 금지)
+        secret = 'YWt0ZGxUc21zdmx3aw=='
     salt = campaign_id.encode('utf-8')
     return hmac.new(
         secret.encode('utf-8'),

@@ -155,11 +155,19 @@ def _create_inbound_session_inner(
         stored_hash = campaign.get('campaignPinHash', '')
         if stored_hash:
             input_hash = hash_campaign_pin(pin_input, campaign_id)
+            logger.info(
+                f"PIN verify (hashed) campaign={campaign_id} "
+                f"input_hash_prefix={input_hash[:8]} stored_hash_prefix={stored_hash[:8]}"
+            )
             if not secure_compare(input_hash, stored_hash):
                 return lambda_response(401, {'error': 'Invalid PIN'})
         else:
             # 레거시: 해시가 아직 없는 캠페인은 평문 비교
             legacy_pin = campaign.get('campaignPin', '')
+            logger.info(
+                f"PIN verify (legacy) campaign={campaign_id} "
+                f"has_legacy_pin={bool(legacy_pin)}"
+            )
             if not legacy_pin or not secure_compare(pin_input, legacy_pin):
                 return lambda_response(401, {'error': 'Invalid PIN'})
 

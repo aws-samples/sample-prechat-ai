@@ -85,6 +85,7 @@ export interface Session {
   // Campaign association fields
   campaignId?: string;
   campaignName?: string;
+  campaignType?: 'outbound' | 'inbound';
   // SHIP Assessment fields
   assessmentStatus?: AssessmentStatus;
   assessmentRequestedAt?: string;
