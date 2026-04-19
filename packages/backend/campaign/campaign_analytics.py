@@ -90,12 +90,16 @@ def calculate_campaign_analytics(campaign_id, sessions):
         average_duration = total_duration / duration_count if duration_count > 0 else 0
         
         # Analyze consultation purposes
+        # 다중 목적은 프론트엔드에서 '|'로 연결되어 저장됨 (예: "NEW_ADOPTION|MIGRATION")
+        # '|', ',', ';' 세 가지 구분자 모두를 분절하여 각 목적을 독립 카운트로 집계한다
+        # (하나의 세션이 N개의 목적을 가지면 각 목적에 +1씩, 중복 허용)
         purposes_counter = Counter()
         for session in sessions:
             purposes = session.get('consultationPurposes', '')
             if purposes:
-                # Split by common delimiters and clean up
-                purpose_list = [p.strip() for p in purposes.replace(',', ';').split(';') if p.strip()]
+                # Normalize all delimiters ('|', ',', ';') to a single one, then split and trim
+                normalized = purposes.replace('|', ';').replace(',', ';')
+                purpose_list = [p.strip() for p in normalized.split(';') if p.strip()]
                 purposes_counter.update(purpose_list)
         
         top_purposes = [

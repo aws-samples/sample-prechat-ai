@@ -31,12 +31,13 @@ export function calculateCampaignMetrics(sessions: Session[]): Omit<CampaignAnal
     : 0
   
   // Analyze consultation purposes
+  // 다중 목적은 ConsultationPurposeSelector에서 '|'로 연결되어 저장됨 (예: "NEW_ADOPTION|MIGRATION")
+  // '|', ',', ';' 세 가지 구분자 모두를 분절하여 각 목적을 독립 카운트로 집계한다
   const purposesMap = new Map<string, number>()
   sessions.forEach(session => {
     if (session.consultationPurposes) {
-      // Split by common delimiters and clean up
       const purposes = session.consultationPurposes
-        .split(/[,;]/)
+        .split(/[|,;]/)
         .map(p => p.trim())
         .filter(p => p.length > 0)
       

@@ -7,6 +7,7 @@ import {
 } from '@cloudscape-design/components'
 import type { CampaignAnalytics } from '../types'
 import { useI18n } from '../i18n'
+import { formatPurposesForDisplay } from './ConsultationPurposeSelector'
 
 interface CampaignPurposesChartProps {
   analytics: CampaignAnalytics
@@ -32,11 +33,16 @@ export function CampaignPurposesChart({ analytics, loading = false }: CampaignPu
   }
 
   // Transform data for PieChart
-  const chartData = analytics.topConsultationPurposes.map((item) => ({
-    title: item.purpose,
-    value: item.count,
-    color: stringToColor(item.purpose)
-  }))
+  // purpose 값이 enum 키(예: "NEW_ADOPTION")로 집계되므로, 차트에는 사람이 읽을 수 있는 라벨로 변환해 표시한다
+  // formatPurposesForDisplay는 단일 키에 대해서도 라벨 매핑을 수행한다 (매핑 실패 시 원문 반환)
+  const chartData = analytics.topConsultationPurposes.map((item) => {
+    const displayTitle = formatPurposesForDisplay(item.purpose) || item.purpose
+    return {
+      title: displayTitle,
+      value: item.count,
+      color: stringToColor(item.purpose),
+    }
+  })
 
   return (
     <Container>
