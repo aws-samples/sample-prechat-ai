@@ -153,9 +153,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return '/admin';
   };
 
-  const customWelcomeTitle = getLocalizedValue(customizingSet.welcome.title);
-  const customWelcomeSubtitle = getLocalizedValue(customizingSet.welcome.subtitle);
-  const welcomeLogoUrl = customizingSet.welcome.logoUrl;
+  const customWelcomeTitle = customizingSet
+    ? getLocalizedValue(customizingSet.welcome.title)
+    : null;
+  const customWelcomeSubtitle = customizingSet
+    ? getLocalizedValue(customizingSet.welcome.subtitle)
+    : null;
+  const welcomeLogoUrl = customizingSet?.welcome.logoUrl ?? null;
 
   const contentWithHeader = (
     <div className="app-container">

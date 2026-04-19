@@ -7,7 +7,10 @@ export const WelcomeScreen: React.FC = () => {
   const { t } = useI18n();
   const { customizingSet, getLocalizedValue } = useCustomizationContext();
 
-  const subtitle = getLocalizedValue(customizingSet.welcome.subtitle) || t('welcome.header.streamlineSubtitle');
+  const subtitle =
+    (customizingSet
+      ? getLocalizedValue(customizingSet.welcome.subtitle)
+      : null) || t('welcome.header.streamlineSubtitle');
 
   return (
     <p className="welcome-subtitle" style={{ margin: 0 }}>

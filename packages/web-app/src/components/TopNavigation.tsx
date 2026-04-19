@@ -12,11 +12,13 @@ export const AppTopNavigation: React.FC = () => {
   const navigate = useNavigate();
   const { customizingSet, getLocalizedValue } = useCustomizationContext();
 
-  // 헤더 커스터마이제이션 값
-  const logoUrl = customizingSet.header.logoUrl;
-  const logoLink = customizingSet.header.logoLink;
-  const label = getLocalizedValue(customizingSet.header.label);
-  const labelLink = customizingSet.header.labelLink;
+  // 헤더 커스터마이제이션 값 (customizingSet이 null이면 기본값 사용)
+  const logoUrl = customizingSet?.header.logoUrl ?? null;
+  const logoLink = customizingSet?.header.logoLink ?? null;
+  const label = customizingSet
+    ? getLocalizedValue(customizingSet.header.label)
+    : null;
+  const labelLink = customizingSet?.header.labelLink ?? null;
 
   const handleLanguageClick = (event: any) => {
     if (event.detail && event.detail.id) {

@@ -1,5 +1,12 @@
 // UI Customization Context — S3에서 Customizing Set을 로드하고 앱 전체에 제공
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from 'react';
 import { useI18n } from '../i18n';
 import {
   CustomizingSet,
@@ -7,14 +14,20 @@ import {
   LocalizedString,
   resolveLocalized,
 } from '../types/customization';
+import { deriveHasCustomization } from '../utils/renderGating';
+
+type LoadStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
 interface CustomizationContextValue {
-  customizingSet: CustomizingSet;
-  isLoading: boolean;
+  customizingSet: CustomizingSet | null;
+  loadStatus: LoadStatus;
+  hasCustomization: boolean;
   getLocalizedValue: (value: LocalizedString) => string | null;
 }
 
-const CustomizationContext = createContext<CustomizationContextValue | undefined>(undefined);
+const CustomizationContext = createContext<
+  CustomizationContextValue | undefined
+>(undefined);
 
 // S3에서 customizing-set.json을 직접 fetch하는 URL
 const getCustomizingSetUrl = () => {
@@ -22,16 +35,22 @@ const getCustomizingSetUrl = () => {
   return `${origin}/customization/customizing-set.json`;
 };
 
-export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const { locale } = useI18n();
-  const [customizingSet, setCustomizingSet] = useState<CustomizingSet>(DEFAULT_CUSTOMIZING_SET);
-  const [isLoading, setIsLoading] = useState(true);
+  const [customizingSet, setCustomizingSet] = useState<CustomizingSet | null>(
+    null
+  );
+  const [loadStatus, setLoadStatus] = useState<LoadStatus>('idle');
+  const [hasCustomization, setHasCustomization] = useState<boolean>(false);
 
   useEffect(() => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     const fetchCustomizingSet = async () => {
+      setLoadStatus('loading');
       try {
         const url = getCustomizingSetUrl();
         const response = await fetch(url, {
@@ -41,20 +60,30 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
         if (response.ok) {
           const data = await response.json();
           // 깊은 병합: 각 섹션별로 기본값과 병합하여 누락 필드 방지
-          setCustomizingSet({
+          const merged: CustomizingSet = {
             header: { ...DEFAULT_CUSTOMIZING_SET.header, ...data.header },
             welcome: { ...DEFAULT_CUSTOMIZING_SET.welcome, ...data.welcome },
-            background: { ...DEFAULT_CUSTOMIZING_SET.background, ...data.background },
+            background: {
+              ...DEFAULT_CUSTOMIZING_SET.background,
+              ...data.background,
+            },
             legal: { ...DEFAULT_CUSTOMIZING_SET.legal, ...data.legal },
             meta: { ...DEFAULT_CUSTOMIZING_SET.meta, ...data.meta },
-          });
+          };
+          setCustomizingSet(merged);
+          setHasCustomization(deriveHasCustomization(merged));
+          setLoadStatus('loaded');
+        } else {
+          // 404 등 non-ok 응답: 기본 UI 폴백 (커스터마이제이션 없음)
+          setHasCustomization(false);
+          setLoadStatus('loaded');
         }
       } catch {
-        // fetch 실패 시 기본값 유지 (콘솔 경고)
+        // fetch 실패/타임아웃/abort 시 error 상태로 전이
         console.warn('Customizing Set fetch failed, using defaults');
+        setLoadStatus('error');
       } finally {
         clearTimeout(timeoutId);
-        setIsLoading(false);
       }
     };
 
@@ -65,16 +94,18 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
     };
   }, []);
 
-  // 배경 그라디언트 CSS 변수 적용
+  // 배경 그라디언트 CSS 변수 적용 — loadStatus === 'loaded' && hasCustomization일 때만 적용
   useEffect(() => {
-    const { startColor, endColor } = customizingSet.background;
-    if (startColor || endColor) {
-      const start = startColor || '#ffeef8';
-      const end = endColor || '#e8f4fd';
-      document.documentElement.style.setProperty(
-        '--gradient-bg',
-        `linear-gradient(135deg, ${start} 0%, ${end} 100%)`
-      );
+    if (loadStatus === 'loaded' && hasCustomization && customizingSet) {
+      const { startColor, endColor } = customizingSet.background;
+      if (startColor || endColor) {
+        const start = startColor || '#ffeef8';
+        const end = endColor || '#e8f4fd';
+        document.documentElement.style.setProperty(
+          '--gradient-bg',
+          `linear-gradient(135deg, ${start} 0%, ${end} 100%)`
+        );
+      }
     }
     return () => {
       document.documentElement.style.setProperty(
@@ -82,7 +113,7 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
         'linear-gradient(135deg, #ffeef8 0%, #e8f4fd 100%)'
       );
     };
-  }, [customizingSet.background.startColor, customizingSet.background.endColor]);
+  }, [loadStatus, hasCustomization, customizingSet]);
 
   const getLocalizedValue = useCallback(
     (value: LocalizedString): string | null => resolveLocalized(value, locale),
@@ -90,7 +121,9 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
   );
 
   return (
-    <CustomizationContext.Provider value={{ customizingSet, isLoading, getLocalizedValue }}>
+    <CustomizationContext.Provider
+      value={{ customizingSet, loadStatus, hasCustomization, getLocalizedValue }}
+    >
       {children}
     </CustomizationContext.Provider>
   );
@@ -99,7 +132,9 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
 export const useCustomizationContext = () => {
   const ctx = useContext(CustomizationContext);
   if (!ctx) {
-    throw new Error('useCustomizationContext must be used within CustomizationProvider');
+    throw new Error(
+      'useCustomizationContext must be used within CustomizationProvider'
+    );
   }
   return ctx;
 };

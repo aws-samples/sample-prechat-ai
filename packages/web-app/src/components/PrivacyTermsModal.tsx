@@ -36,8 +36,12 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
   useEffect(() => {
     if (!visible) return;
 
-    const privacyUrl = getLocalizedValue(customizingSet.legal.privacyTermUrl);
-    const serviceUrl = getLocalizedValue(customizingSet.legal.serviceTermUrl);
+    const privacyUrl = customizingSet
+      ? getLocalizedValue(customizingSet.legal.privacyTermUrl)
+      : null;
+    const serviceUrl = customizingSet
+      ? getLocalizedValue(customizingSet.legal.serviceTermUrl)
+      : null;
 
     if (privacyUrl) {
       fetch(privacyUrl, { cache: 'no-store' })
@@ -56,9 +60,9 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
     } else {
       setServiceContent(null);
     }
-  }, [visible, customizingSet.legal, getLocalizedValue]);
+  }, [visible, customizingSet?.legal, getLocalizedValue]);
 
-  const supportChannel = customizingSet.legal.supportChannel;
+  const supportChannel = customizingSet?.legal.supportChannel ?? null;
 
   return (
     <Modal

@@ -36,3 +36,6 @@ export { LegalDisclaimerModal } from './LegalDisclaimerModal'
 export { RoleArnInputForm } from './RoleArnInputForm'
 export { ShipAssessmentGuide } from './ShipAssessmentGuide'
 export { ShipReportPanel } from './ShipReportPanel'
+
+// Customization Gate
+export { CustomizationGate } from './CustomizationGate'

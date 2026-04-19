@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { AppTopNavigation } from './components/TopNavigation'
+import { CustomizationGate } from './components/CustomizationGate'
 import { WelcomeScreen } from './components/WelcomeScreen'
 import { TranslationTest } from './components/TranslationTest'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -27,6 +28,7 @@ function App() {
   return (
     <I18nProvider>
       <CustomizationProvider>
+      <CustomizationGate>
       <AppTopNavigation />
       <Layout>
         <Routes>
@@ -97,6 +99,7 @@ function App() {
         } />
         </Routes>
       </Layout>
+      </CustomizationGate>
       </CustomizationProvider>
     </I18nProvider>
   )
