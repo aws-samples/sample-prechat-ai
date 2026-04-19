@@ -45,7 +45,8 @@ export default function EditCampaign() {
     ownerId: '',
     ownerEmail: '',
     ownerName: '',
-    status: 'active' as Campaign['status']
+    status: 'active' as Campaign['status'],
+    campaignPin: '',
   })
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
@@ -72,7 +73,8 @@ export default function EditCampaign() {
         ownerId: campaignData.ownerId,
         ownerEmail: campaignData.ownerEmail,
         ownerName: campaignData.ownerName,
-        status: campaignData.status
+        status: campaignData.status,
+        campaignPin: '',
       })
     } catch (err: any) {
       console.error('Failed to load campaign:', err)
@@ -136,6 +138,13 @@ export default function EditCampaign() {
       }
     }
 
+    // 인바운드 캠페인 PIN 검증 (입력된 경우에만)
+    if (campaign?.campaignType === 'inbound' && formData.campaignPin) {
+      if (!/^\d{6}$/.test(formData.campaignPin)) {
+        errors.campaignPin = t('adminCampaignEdit.validation.campaignPinFormat')
+      }
+    }
+
     setValidationErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -157,7 +166,10 @@ export default function EditCampaign() {
         startDate: formData.startDate,
         endDate: formData.endDate,
         ownerId: formData.ownerId,
-        status: formData.status
+        status: formData.status,
+        ...(campaign?.campaignType === 'inbound' && formData.campaignPin
+          ? { campaignPin: formData.campaignPin }
+          : {}),
       }
 
       const result = await campaignApi.updateCampaign(campaignId, updateData)
@@ -398,6 +410,23 @@ export default function EditCampaign() {
                 placeholder={t('adminCampaignEdit.form.statusPlaceholder')}
               />
             </FormField>
+
+            {campaign?.campaignType === 'inbound' && (
+              <FormField
+                label={t('adminCampaignEdit.form.campaignPinLabel')}
+                description={t('adminCampaignEdit.form.campaignPinDescription')}
+                errorText={validationErrors.campaignPin}
+                stretch
+              >
+                <Input
+                  value={formData.campaignPin}
+                  onChange={({ detail }) => updateFormData('campaignPin', detail.value)}
+                  placeholder={t('adminCampaignEdit.form.campaignPinPlaceholder')}
+                  type="number"
+                  invalid={!!validationErrors.campaignPin}
+                />
+              </FormField>
+            )}
           </SpaceBetween>
         </Form>
       </SpaceBetween>

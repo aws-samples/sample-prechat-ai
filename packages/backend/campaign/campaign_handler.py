@@ -254,8 +254,15 @@ def update_campaign(event, context):
         body = parse_body(event)
         
         # Validate that at least one field is provided for update
-        updatable_fields = ['campaignName', 'campaignCode', 'description', 'startDate', 'endDate', 'ownerId', 'status']
+        updatable_fields = ['campaignName', 'campaignCode', 'description', 'startDate', 'endDate', 'ownerId', 'status', 'campaignPin']
         update_data = {k: v for k, v in body.items() if k in updatable_fields and v is not None}
+
+        # 인바운드 캠페인 PIN 변경 시 검증
+        if 'campaignPin' in update_data:
+            pin = str(update_data['campaignPin']).strip()
+            if not pin.isdigit() or len(pin) != 6:
+                return lambda_response(400, {'error': 'campaignPin must be exactly 6 digits'})
+            update_data['campaignPin'] = pin
         
         if not update_data:
             return lambda_response(400, {'error': 'No valid fields provided for update'})

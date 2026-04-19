@@ -755,3 +755,35 @@ export const customizationApi = {
     }
   },
 }
+
+
+// 인바운드 캠페인 고객 플로우 API (인증 불필요)
+export const inboundApi = {
+  /**
+   * 인바운드 캠페인 공개 정보 조회 (PIN 미포함)
+   */
+  getCampaignInfo: async (campaignCode: string) => {
+    try {
+      const response = await api.get(`/inbound/${campaignCode}`)
+      return response.data
+    } catch (error) {
+      return handleApiError(error, 'Get Inbound Campaign Info')
+    }
+  },
+
+  /**
+   * 인바운드 세션 생성 (고객 자가 등록)
+   * 동일 전화번호로 기존 세션이 있으면 기존 세션 반환 (isExisting: true)
+   */
+  createSession: async (
+    campaignCode: string,
+    data: import('../types').CreateInboundSessionRequest
+  ) => {
+    try {
+      const response = await api.post(`/inbound/${campaignCode}/sessions`, data)
+      return response.data
+    } catch (error) {
+      return handleApiError(error, 'Create Inbound Session')
+    }
+  },
+}

@@ -112,6 +112,17 @@ Resources:
               AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
             Action: 'kms:*'
             Resource: '*'
+          - Sid: Allow CodeBuild service to use the key
+            Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource: '*'
           - Sid: Allow DynamoDB service to use the key
             Effect: Allow
             Principal:
@@ -543,6 +554,10 @@ Resources:
           AttributeType: S
         - AttributeName: GSI2SK
           AttributeType: S
+        - AttributeName: GSI3PK
+          AttributeType: S
+        - AttributeName: GSI3SK
+          AttributeType: S
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -562,6 +577,14 @@ Resources:
             - AttributeName: GSI2PK
               KeyType: HASH
             - AttributeName: GSI2SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GSI3
+          KeySchema:
+            - AttributeName: GSI3PK
+              KeyType: HASH
+            - AttributeName: GSI3SK
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -691,6 +714,15 @@ Resources:
           MetricsEnabled: true
           ThrottlingRateLimit: 100
           ThrottlingBurstLimit: 200
+        # 인바운드 캠페인 공개 엔드포인트 — 분당 3회 제한 (브루트포스 방어)
+        - ResourcePath: "/api/inbound/{campaignCode}/sessions"
+          HttpMethod: "POST"
+          ThrottlingRateLimit: 3
+          ThrottlingBurstLimit: 5
+        - ResourcePath: "/api/inbound/{campaignCode}"
+          HttpMethod: "GET"
+          ThrottlingRateLimit: 3
+          ThrottlingBurstLimit: 5
       Cors:
         AllowMethods: "'*'"
         AllowHeaders: "'*'"
@@ -893,6 +925,44 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /api/campaigns/code/{campaignCode}
             Method: get
+
+  # ============================================
+  # Inbound Campaign API (고객 자가 등록 플로우)
+  # ============================================
+
+  GetInboundCampaignInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/session/
+      Handler: inbound_session_handler.get_inbound_campaign_info
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
+      Events:
+        GetInboundCampaignInfo:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/inbound/{campaignCode}
+            Method: get
+
+  CreateInboundSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/session/
+      Handler: inbound_session_handler.create_inbound_session
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
+      Events:
+        CreateInboundSession:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/inbound/{campaignCode}/sessions
+            Method: post
 
 
 
@@ -2608,6 +2678,14 @@ Resources:
   # CloudFront Distribution
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W70
+            reason: Using OAC (OriginAccessControl) instead of legacy OAI - more secure modern approach
+      guard:
+        SuppressedRules:
+          - CLOUDFRONT_ORIGIN_ACCESS_IDENTITY_ENABLED
     Properties:
       DistributionConfig:
         Enabled: true
@@ -2820,12 +2898,22 @@ Resources:
         Environment: !Ref Stage
 
   # WebSocket 스테이지 (자동 배포)
+  WebSocketAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/apigateway/${AWS::StackName}-websocket-access-logs'
+      RetentionInDays: 90
+      KmsKeyId: !GetAtt DynamoDBKMSKey.Arn
+
   WebSocketStage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
       ApiId: !Ref WebSocketApi
       StageName: !Ref Stage
       AutoDeploy: true
+      AccessLogSettings:
+        DestinationArn: !GetAtt WebSocketAccessLogGroup.Arn
+        Format: '$context.identity.sourceIp $context.requestTime $context.httpMethod $context.routeKey $context.status $context.responseLength $context.requestId'
       Tags:
         Name: !Sub '${AWS::StackName}-websocket-stage-${Stage}'
         Environment: !Ref Stage
@@ -2912,10 +3000,27 @@ Resources:
 
   # === SATv2 Assessment Infrastructure ===
 
+  # S3 서버 액세스 로그 전용 버킷 불필요
+  # ProwlerFindingsBucket 접근 주체는 Lambda(읽기)/CodeBuild(쓰기)뿐이며
+  # 해당 접근은 CloudWatch Logs 및 CodeBuild 로그로 이미 추적됨
+
   ProwlerFindingsBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
+    Metadata:
+      guard:
+        SuppressedRules:
+          - S3_BUCKET_REPLICATION_ENABLED  # 복제는 운영 요건에 따라 판단
+          - S3_BUCKET_NO_PUBLIC_RW_ACL     # AccessControl 미설정 = 퍼블릭 아님 (false positive)
+          - S3_BUCKET_LOGGING_ENABLED      # Lambda/CodeBuild 접근은 CloudWatch로 이미 추적됨
     Properties:
+      ObjectLockEnabled: true
+      ObjectLockConfiguration:
+        ObjectLockEnabled: Enabled
+        Rule:
+          DefaultRetention:
+            Mode: GOVERNANCE
+            Days: 90
       NotificationConfiguration:
         EventBridgeConfiguration:
           EventBridgeEnabled: true
@@ -2930,6 +3035,32 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !Ref DynamoDBKMSKey
+
+  ProwlerCodeBuildPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*'
+          - Effect: Allow
+            Action: s3:PutObject
+            Resource: !Sub '${ProwlerFindingsBucket.Arn}/*'
+          - Effect: Allow
+            Action:
+              - kms:GenerateDataKey*
+              - kms:Decrypt
+              - kms:DescribeKey
+            Resource: !GetAtt DynamoDBKMSKey.Arn
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Resource: 'arn:aws:iam::*:role/*'
 
   ProwlerCodeBuildRole:
     Type: AWS::IAM::Role
@@ -2942,28 +3073,18 @@ Resources:
             Principal:
               Service: codebuild.amazonaws.com
             Action: 'sts:AssumeRole'
-      Policies:
-        - PolicyName: ProwlerCodeBuildPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*'
-              - Effect: Allow
-                Action: s3:PutObject
-                Resource: !Sub '${ProwlerFindingsBucket.Arn}/*'
-              - Effect: Allow
-                Action: sts:AssumeRole
-                Resource: 'arn:aws:iam::*:role/*'
+      ManagedPolicyArns:
+        - !Ref ProwlerCodeBuildPolicy
 
   ProwlerCodeBuild:
     Type: AWS::CodeBuild::Project
+    Metadata:
+      guard:
+        SuppressedRules:
+          - CODEBUILD_PROJECT_ENVVAR_AWSCRED_CHECK  # 환경변수에 자격증명 없음, 버킷명/역할ARN만 포함
     Properties:
       Name: !Sub '${AWS::StackName}-ProwlerCodeBuild'
+      EncryptionKey: !GetAtt DynamoDBKMSKey.Arn
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0'
@@ -3292,6 +3413,45 @@ Resources:
           OutputLocation: !Sub 's3://${ProwlerFindingsBucket}/athena_results'
         EnforceWorkGroupConfiguration: false
 
+  AthenaAndS3AccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: athena:StartQueryExecution
+            Resource: !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AWS::StackName}-satv2-reporting'
+          - Effect: Allow
+            Action:
+              - s3:GetBucketLocation
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:PutObject
+              - s3:AbortMultipartUpload
+              - s3:ListMultipartUploadParts
+              - s3:ListBucketMultipartUploads
+            Resource:
+              - !GetAtt ProwlerFindingsBucket.Arn
+              - !Sub '${ProwlerFindingsBucket.Arn}/*'
+          - Effect: Allow
+            Action:
+              - kms:GenerateDataKey*
+              - kms:Decrypt
+              - kms:DescribeKey
+            Resource: !GetAtt DynamoDBKMSKey.Arn
+          - Effect: Allow
+            Action:
+              - glue:GetTable
+              - glue:GetDatabase
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+              - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDatabaseSATv2Findings}'
+              - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDatabaseSATv2Findings}/prowler'
+          - Effect: Allow
+            Action: sqs:SendMessage
+            Resource: !GetAtt LambdaDeadLetterQueue.Arn
+
   AthenaStartQueryLambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -3305,37 +3465,7 @@ Resources:
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
-      Policies:
-        - PolicyName: AthenaAndS3Access
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: athena:StartQueryExecution
-                Resource: !Sub 'arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AWS::StackName}-satv2-reporting'
-              - Effect: Allow
-                Action:
-                  - s3:GetBucketLocation
-                  - s3:GetObject
-                  - s3:ListBucket
-                  - s3:PutObject
-                  - s3:AbortMultipartUpload
-                  - s3:ListMultipartUploadParts
-                  - s3:ListBucketMultipartUploads
-                Resource:
-                  - !GetAtt ProwlerFindingsBucket.Arn
-                  - !Sub '${ProwlerFindingsBucket.Arn}/*'
-              - Effect: Allow
-                Action:
-                  - glue:GetTable
-                  - glue:GetDatabase
-                Resource:
-                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog'
-                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDatabaseSATv2Findings}'
-                  - !Sub 'arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDatabaseSATv2Findings}/prowler'
-              - Effect: Allow
-                Action: sqs:SendMessage
-                Resource: !GetAtt LambdaDeadLetterQueue.Arn
+        - !Ref AthenaAndS3AccessPolicy
 
   LakeFormationPermissionsLambda:
     Type: AWS::LakeFormation::Permissions

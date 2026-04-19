@@ -126,6 +126,7 @@ export interface Campaign {
   campaignId: string;
   campaignName: string;
   campaignCode: string;
+  campaignType: 'outbound' | 'inbound';
   description: string;
   startDate: string;
   endDate: string;
@@ -137,6 +138,35 @@ export interface Campaign {
   updatedAt: string;
   sessionCount: number;
   completedSessionCount: number;
+}
+
+// 인바운드 캠페인 공개 정보 (PIN 미포함)
+export interface InboundCampaignInfo {
+  campaignId: string;
+  campaignName: string;
+  campaignCode: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+}
+
+// 인바운드 세션 생성 요청
+export interface CreateInboundSessionRequest {
+  customerName: string;
+  customerEmail: string;
+  customerCompany: string;
+  customerPhone: string;
+  pinNumber: string;
+}
+
+// 인바운드 세션 생성 응답
+export interface CreateInboundSessionResponse {
+  sessionId: string;
+  sessionUrl: string;
+  csrfToken: string;
+  isExisting: boolean;
+  campaignId: string;
+  campaignName: string;
 }
 
 export interface CampaignAnalytics {
@@ -254,6 +284,8 @@ export interface CreateCampaignRequest {
   startDate: string;
   endDate: string;
   ownerId: string;
+  campaignType?: 'outbound' | 'inbound';
+  campaignPin?: string; // 인바운드 캠페인 전용 (6자리 숫자)
 }
 
 export interface UpdateCampaignRequest {
@@ -266,6 +298,7 @@ export interface UpdateCampaignRequest {
   ownerEmail?: string;
   ownerName?: string;
   status?: 'active' | 'completed' | 'paused' | 'cancelled';
+  campaignPin?: string; // 인바운드 캠페인 PIN 변경 시
 }
 
 export interface CampaignListResponse {

@@ -11,7 +11,8 @@ import {
   Alert,
   Select,
   Textarea,
-  DatePicker
+  DatePicker,
+  Tiles,
 } from '@cloudscape-design/components'
 import { useI18n } from '../../i18n'
 import { authService } from '../../services/auth'
@@ -36,7 +37,9 @@ export default function CreateCampaign() {
     endDate: '',
     ownerId: '',
     ownerEmail: '',
-    ownerName: ''
+    ownerName: '',
+    campaignType: 'outbound' as 'outbound' | 'inbound',
+    campaignPin: '',
   })
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
@@ -134,6 +137,15 @@ export default function CreateCampaign() {
       }
     }
 
+    // 인바운드 캠페인 PIN 검증
+    if (formData.campaignType === 'inbound') {
+      if (!formData.campaignPin.trim()) {
+        errors.campaignPin = t('adminCampaignCreate.validation.campaignPinRequired')
+      } else if (!/^\d{6}$/.test(formData.campaignPin)) {
+        errors.campaignPin = t('adminCampaignCreate.validation.campaignPinFormat')
+      }
+    }
+
     setValidationErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -154,7 +166,9 @@ export default function CreateCampaign() {
         description: formData.description.trim(),
         startDate: formData.startDate,
         endDate: formData.endDate,
-        ownerId: formData.ownerId
+        ownerId: formData.ownerId,
+        campaignType: formData.campaignType,
+        ...(formData.campaignType === 'inbound' && { campaignPin: formData.campaignPin }),
       }
 
       const result = await campaignApi.createCampaign(campaignData)
@@ -355,6 +369,52 @@ export default function CreateCampaign() {
                 empty={cognitoUsers.length === 0 ? t('adminCampaignCreate.form.ownerEmpty') : undefined}
               />
             </FormField>
+
+            <FormField
+              label={t('adminCampaignCreate.form.campaignTypeLabel')}
+              description={t('adminCampaignCreate.form.campaignTypeDescription')}
+              stretch
+            >
+              <Tiles
+                value={formData.campaignType}
+                onChange={({ detail }) =>
+                  setFormData(prev => ({
+                    ...prev,
+                    campaignType: detail.value as 'outbound' | 'inbound',
+                    campaignPin: '',
+                  }))
+                }
+                items={[
+                  {
+                    value: 'outbound',
+                    label: t('adminCampaignCreate.form.campaignTypeOutbound'),
+                    description: t('adminCampaignCreate.form.campaignTypeOutboundDesc'),
+                  },
+                  {
+                    value: 'inbound',
+                    label: t('adminCampaignCreate.form.campaignTypeInbound'),
+                    description: t('adminCampaignCreate.form.campaignTypeInboundDesc'),
+                  },
+                ]}
+              />
+            </FormField>
+
+            {formData.campaignType === 'inbound' && (
+              <FormField
+                label={t('adminCampaignCreate.form.campaignPinLabel')}
+                description={t('adminCampaignCreate.form.campaignPinDescription')}
+                errorText={validationErrors.campaignPin}
+                stretch
+              >
+                <Input
+                  value={formData.campaignPin}
+                  onChange={({ detail }) => updateFormData('campaignPin', detail.value)}
+                  placeholder={t('adminCampaignCreate.form.campaignPinPlaceholder')}
+                  type="number"
+                  invalid={!!validationErrors.campaignPin}
+                />
+              </FormField>
+            )}
           </SpaceBetween>
         </Form>
       </SpaceBetween>

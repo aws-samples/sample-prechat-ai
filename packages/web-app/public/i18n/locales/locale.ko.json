@@ -630,6 +630,10 @@
       "pageSize10": "캠페인 10개",
       "pageSize20": "캠페인 20개",
       "pageSize50": "캠페인 50개"
+    },
+    "tabs": {
+      "outbound": "아웃바운드 캠페인",
+      "inbound": "인바운드 캠페인"
     }
   },
   "adminCampaignCreate": {
@@ -668,7 +672,16 @@
       "ownerPlaceholder": "캠페인 담당자 선택...",
       "ownerLoadingText": "사용자 로딩 중...",
       "ownerEmpty": "사용 가능한 사용자 없음",
-      "ownerInvalidError": "유효하지 않은 담당자입니다"
+      "ownerInvalidError": "유효하지 않은 담당자입니다",
+      "campaignTypeLabel": "캠페인 유형",
+      "campaignTypeDescription": "세션 생성 방식을 선택하세요",
+      "campaignTypeOutbound": "아웃바운드",
+      "campaignTypeOutboundDesc": "담당자가 세션을 생성하고 고객에게 URL을 전달합니다",
+      "campaignTypeInbound": "인바운드",
+      "campaignTypeInboundDesc": "고객이 캠페인 URL과 PIN으로 직접 세션을 생성합니다",
+      "campaignPinLabel": "캠페인 PIN",
+      "campaignPinDescription": "고객이 세션 생성 시 입력할 6자리 숫자 PIN",
+      "campaignPinPlaceholder": "예: 123456"
     },
     "validation": {
       "campaignNameRequired": "캠페인명은 필수입니다",
@@ -677,7 +690,9 @@
       "startDateRequired": "시작일은 필수입니다",
       "endDateRequired": "종료일은 필수입니다",
       "ownerRequired": "캠페인 담당자는 필수입니다",
-      "invalidDateRange": "종료일은 시작일보다 늦어야 합니다"
+      "invalidDateRange": "종료일은 시작일보다 늦어야 합니다",
+      "campaignPinRequired": "PIN은 필수입니다",
+      "campaignPinFormat": "PIN은 6자리 숫자여야 합니다"
     }
   },
   "adminCampaignDetail": {
@@ -1006,7 +1021,10 @@
       "statusActive": "활성",
       "statusCompleted": "완료",
       "statusPaused": "일시정지",
-      "statusCancelled": "취소"
+      "statusCancelled": "취소",
+      "campaignPinLabel": "캠페인 PIN",
+      "campaignPinDescription": "인바운드 캠페인 접근용 6자리 숫자 PIN",
+      "campaignPinPlaceholder": "예: 123456"
     },
     "validation": {
       "campaignNameRequired": "캠페인명은 필수입니다",
@@ -1015,7 +1033,8 @@
       "startDateRequired": "시작일은 필수입니다",
       "endDateRequired": "종료일은 필수입니다",
       "ownerRequired": "캠페인 담당자는 필수입니다",
-      "invalidDateRange": "종료일은 시작일보다 늦어야 합니다"
+      "invalidDateRange": "종료일은 시작일보다 늦어야 합니다",
+      "campaignPinFormat": "PIN은 6자리 숫자여야 합니다"
     }
   },
   "adminCustomizing": {
@@ -1218,6 +1237,79 @@
       "scanning": "점검 진행 중",
       "completed": "완료",
       "failed": "실패"
+    }
+  },
+  "inbound": {
+    "error": {
+      "title": "오류",
+      "noCampaignCode": "캠페인 코드가 없습니다",
+      "campaignNotFound": "캠페인을 찾을 수 없습니다",
+      "campaignInactive": "현재 활성화된 캠페인이 아닙니다",
+      "loadFailed": "캠페인 정보를 불러오지 못했습니다",
+      "invalidPin": "PIN이 올바르지 않습니다",
+      "createFailed": "세션 생성에 실패했습니다. 다시 시도해 주세요"
+    },
+    "pin": {
+      "label": "캠페인 PIN",
+      "description": "담당자로부터 받은 6자리 PIN을 입력하세요",
+      "placeholder": "6자리 PIN 입력",
+      "submitButton": "확인",
+      "invalidFormat": "PIN은 6자리 숫자여야 합니다"
+    },
+    "pii": {
+      "nameLabel": "이름",
+      "namePlaceholder": "홍길동",
+      "nameRequired": "이름은 필수입니다",
+      "emailLabel": "이메일",
+      "emailPlaceholder": "example@company.com",
+      "emailInvalid": "올바른 이메일 주소를 입력하세요",
+      "companyLabel": "회사명",
+      "companyPlaceholder": "회사명 입력",
+      "companyRequired": "회사명은 필수입니다",
+      "phoneLabel": "전화번호",
+      "phonePlaceholder": "+82-10-1234-5678",
+      "phoneDescription": "본인 확인 및 중복 세션 방지에 사용됩니다",
+      "phoneInvalid": "올바른 전화번호를 입력하세요",
+      "submitButton": "상담 시작",
+      "backButton": "이전"
+    }
+  },
+  "inboundDetails": {
+    "error": {
+      "loadFailed": "캠페인 정보를 불러오지 못했습니다",
+      "notFound": "캠페인을 찾을 수 없습니다"
+    },
+    "header": {
+      "backButton": "목록으로",
+      "editButton": "수정",
+      "inboundBadge": "인바운드"
+    },
+    "tabs": {
+      "overview": "개요",
+      "access": "접근 자산"
+    },
+    "overview": {
+      "campaignCode": "캠페인 코드",
+      "owner": "담당자",
+      "period": "기간",
+      "sessions": "세션",
+      "totalSessions": "총 {count}개"
+    },
+    "analytics": {
+      "total": "전체 세션",
+      "completed": "완료 세션",
+      "completionRate": "완료율"
+    },
+    "access": {
+      "title": "고객 접근 자산",
+      "description": "아래 URL과 QR 코드를 고객에게 공유하세요. PIN은 별도로 전달하세요.",
+      "urlLabel": "캠페인 URL",
+      "copyButton": "복사",
+      "copySuccess": "복사되었습니다",
+      "copyError": "복사 실패",
+      "qrLabel": "QR 코드",
+      "qrUnavailable": "QR 코드 생성 라이브러리가 설치되지 않았습니다",
+      "qrDownload": "QR 다운로드"
     }
   }
 }

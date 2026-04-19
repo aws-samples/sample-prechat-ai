@@ -12,7 +12,8 @@ import {
   TextFilter,
   Pagination,
   CollectionPreferences,
-  Alert
+  Alert,
+  Tabs,
 } from '@cloudscape-design/components'
 import { useI18n } from '../../i18n'
 import { campaignApi } from '../../services/api'
@@ -32,6 +33,7 @@ export default function CampaignDashboard() {
   const [pageSize, setPageSize] = useState(10)
   const [sortingColumn, setSortingColumn] = useState<any>({})
   const [sortingDescending, setSortingDescending] = useState(false)
+  const [activeTabId, setActiveTabId] = useState('outbound')
 
   useEffect(() => {
     loadCampaigns()
@@ -77,13 +79,16 @@ export default function CampaignDashboard() {
     return <Badge color={config.type}>{config.text}</Badge>
   }
 
-  // Filter campaigns based on search text
-  const filteredCampaigns = campaigns.filter(campaign =>
-    campaign.campaignName.toLowerCase().includes(filteringText.toLowerCase()) ||
-    campaign.campaignCode.toLowerCase().includes(filteringText.toLowerCase()) ||
-    campaign.ownerName.toLowerCase().includes(filteringText.toLowerCase()) ||
-    campaign.description.toLowerCase().includes(filteringText.toLowerCase())
-  )
+  // Filter campaigns based on search text and active tab type
+  const filteredCampaigns = campaigns.filter(campaign => {
+    const matchesType = (campaign.campaignType ?? 'outbound') === activeTabId
+    const matchesText =
+      campaign.campaignName.toLowerCase().includes(filteringText.toLowerCase()) ||
+      campaign.campaignCode.toLowerCase().includes(filteringText.toLowerCase()) ||
+      campaign.ownerName.toLowerCase().includes(filteringText.toLowerCase()) ||
+      campaign.description.toLowerCase().includes(filteringText.toLowerCase())
+    return matchesType && matchesText
+  })
 
   // Sort campaigns
   const sortedCampaigns = [...filteredCampaigns].sort((a, b) => {
@@ -144,6 +149,19 @@ export default function CampaignDashboard() {
         </Header>
 
         {error && <Alert type="error" dismissible onDismiss={() => setError('')}>{error}</Alert>}
+
+        <Tabs
+          activeTabId={activeTabId}
+          onChange={({ detail }) => {
+            setActiveTabId(detail.activeTabId)
+            setCurrentPageIndex(1)
+            setFilteringText('')
+          }}
+          tabs={[
+            { id: 'outbound', label: t('adminCampaigns.tabs.outbound'), content: null },
+            { id: 'inbound', label: t('adminCampaigns.tabs.inbound'), content: null },
+          ]}
+        />
 
         <Table
           columnDefinitions={[
@@ -227,7 +245,11 @@ export default function CampaignDashboard() {
                   onItemClick={({ detail }) => {
                     switch (detail.id) {
                       case 'view':
-                        navigate(`/admin/campaigns/${item.campaignId}`)
+                        if ((item.campaignType ?? 'outbound') === 'inbound') {
+                          navigate(`/admin/inbound-campaigns/${item.campaignId}`)
+                        } else {
+                          navigate(`/admin/campaigns/${item.campaignId}`)
+                        }
                         break
                       case 'edit':
                         navigate(`/admin/campaigns/${item.campaignId}/edit`)

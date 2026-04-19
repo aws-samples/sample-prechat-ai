@@ -16,8 +16,10 @@ import CampaignDashboard from './pages/admin/CampaignDashboard'
 import CreateCampaign from './pages/admin/CreateCampaign'
 import EditCampaign from './pages/admin/EditCampaign'
 import CampaignDetails from './pages/admin/CampaignDetails'
+import InboundCampaignDetails from './pages/admin/InboundCampaignDetails'
 import TriggerDashboard from './pages/admin/TriggerDashboard'
 import CustomizationPanel from './pages/admin/CustomizationPanel'
+import InboundEntry from './pages/customer/InboundEntry'
 
 import Login from './pages/auth/Login'
 import { I18nProvider } from './i18n/I18nContext'
@@ -35,6 +37,7 @@ function App() {
         <Route path="/" element={<WelcomeScreen />} />
         <Route path="/test-translations" element={<TranslationTest />} />
         <Route path="/customer/:sessionId" element={<CustomerChat />} />
+        <Route path="/inbound/:campaignCode" element={<InboundEntry />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={
           <ProtectedRoute>
@@ -69,6 +72,11 @@ function App() {
         <Route path="/admin/campaigns/:campaignId/edit" element={
           <ProtectedRoute>
             <EditCampaign />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/inbound-campaigns/:campaignId" element={
+          <ProtectedRoute>
+            <InboundCampaignDetails />
           </ProtectedRoute>
         } />
 

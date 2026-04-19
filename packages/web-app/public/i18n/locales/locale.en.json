@@ -630,6 +630,10 @@
       "pageSize10": "10 campaigns",
       "pageSize20": "20 campaigns",
       "pageSize50": "50 campaigns"
+    },
+    "tabs": {
+      "outbound": "Outbound Campaigns",
+      "inbound": "Inbound Campaigns"
     }
   },
   "adminCampaignCreate": {
@@ -668,7 +672,16 @@
       "ownerPlaceholder": "Select campaign owner...",
       "ownerLoadingText": "Loading users...",
       "ownerEmpty": "No users available",
-      "ownerInvalidError": "Invalid owner selected"
+      "ownerInvalidError": "Invalid owner selected",
+      "campaignTypeLabel": "Campaign Type",
+      "campaignTypeDescription": "Select how sessions are created",
+      "campaignTypeOutbound": "Outbound",
+      "campaignTypeOutboundDesc": "Sales rep creates sessions and shares URLs with customers",
+      "campaignTypeInbound": "Inbound",
+      "campaignTypeInboundDesc": "Customers self-register using the campaign URL and PIN",
+      "campaignPinLabel": "Campaign PIN",
+      "campaignPinDescription": "6-digit numeric PIN customers enter when creating a session",
+      "campaignPinPlaceholder": "e.g., 123456"
     },
     "validation": {
       "campaignNameRequired": "Campaign name is required",
@@ -677,7 +690,9 @@
       "startDateRequired": "Start date is required",
       "endDateRequired": "End date is required",
       "ownerRequired": "Campaign owner is required",
-      "invalidDateRange": "End date must be after start date"
+      "invalidDateRange": "End date must be after start date",
+      "campaignPinRequired": "PIN is required",
+      "campaignPinFormat": "PIN must be exactly 6 digits"
     }
   },
   "adminCampaignDetail": {
@@ -1006,7 +1021,10 @@
       "statusActive": "Active",
       "statusCompleted": "Completed",
       "statusPaused": "Paused",
-      "statusCancelled": "Cancelled"
+      "statusCancelled": "Cancelled",
+      "campaignPinLabel": "Campaign PIN",
+      "campaignPinDescription": "6-digit numeric PIN for inbound campaign access",
+      "campaignPinPlaceholder": "e.g., 123456"
     },
     "validation": {
       "campaignNameRequired": "Campaign name is required",
@@ -1015,7 +1033,8 @@
       "startDateRequired": "Start date is required",
       "endDateRequired": "End date is required",
       "ownerRequired": "Campaign owner is required",
-      "invalidDateRange": "End date must be after start date"
+      "invalidDateRange": "End date must be after start date",
+      "campaignPinFormat": "PIN must be exactly 6 digits"
     }
   },
   "adminCustomizing": {
@@ -1218,6 +1237,79 @@
       "scanning": "Scanning",
       "completed": "Completed",
       "failed": "Failed"
+    }
+  },
+  "inbound": {
+    "error": {
+      "title": "Error",
+      "noCampaignCode": "No campaign code provided",
+      "campaignNotFound": "Campaign not found",
+      "campaignInactive": "This campaign is not currently active",
+      "loadFailed": "Failed to load campaign information",
+      "invalidPin": "Invalid PIN. Please try again",
+      "createFailed": "Failed to create session. Please try again"
+    },
+    "pin": {
+      "label": "Campaign PIN",
+      "description": "Enter the 6-digit PIN provided by your contact",
+      "placeholder": "Enter 6-digit PIN",
+      "submitButton": "Continue",
+      "invalidFormat": "PIN must be exactly 6 digits"
+    },
+    "pii": {
+      "nameLabel": "Full Name",
+      "namePlaceholder": "John Doe",
+      "nameRequired": "Name is required",
+      "emailLabel": "Email",
+      "emailPlaceholder": "example@company.com",
+      "emailInvalid": "Please enter a valid email address",
+      "companyLabel": "Company",
+      "companyPlaceholder": "Enter company name",
+      "companyRequired": "Company name is required",
+      "phoneLabel": "Phone Number",
+      "phonePlaceholder": "+1-555-123-4567",
+      "phoneDescription": "Used for identity verification",
+      "phoneInvalid": "Please enter a valid phone number",
+      "submitButton": "Start Consultation",
+      "backButton": "Back"
+    }
+  },
+  "inboundDetails": {
+    "error": {
+      "loadFailed": "Failed to load campaign",
+      "notFound": "Campaign not found"
+    },
+    "header": {
+      "backButton": "Back to List",
+      "editButton": "Edit",
+      "inboundBadge": "Inbound"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "access": "Access Assets"
+    },
+    "overview": {
+      "campaignCode": "Campaign Code",
+      "owner": "Owner",
+      "period": "Period",
+      "sessions": "Sessions",
+      "totalSessions": "{count} total"
+    },
+    "analytics": {
+      "total": "Total Sessions",
+      "completed": "Completed",
+      "completionRate": "Completion Rate"
+    },
+    "access": {
+      "title": "Customer Access Assets",
+      "description": "Share the URL and QR code with customers. Provide the PIN separately.",
+      "urlLabel": "Campaign URL",
+      "copyButton": "Copy",
+      "copySuccess": "Copied!",
+      "copyError": "Copy failed",
+      "qrLabel": "QR Code",
+      "qrUnavailable": "QR code library is not installed",
+      "qrDownload": "Download QR"
     }
   }
 }
