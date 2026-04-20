@@ -14,8 +14,6 @@ import {
   ButtonDropdown,
   Modal,
   CopyToClipboard,
-  Input,
-  FormField,
   Grid
 } from '@cloudscape-design/components'
 import QRCode from 'qrcode'
@@ -46,11 +44,6 @@ export default function CampaignDetails() {
   const [deleting, setDeleting] = useState(false)
   const [activeTabId, setActiveTabId] = useState('analytics')
   const qrCanvasRef = useRef<HTMLCanvasElement>(null)
-  const [showPinInput, setShowPinInput] = useState(false)
-  const [newPin, setNewPin] = useState('')
-  const [pinError, setPinError] = useState('')
-  const [pinSaving, setPinSaving] = useState(false)
-  const [pinMessage, setPinMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const isInbound = campaign?.campaignType === 'inbound'
   const inboundUrl = isInbound && campaign
@@ -88,27 +81,6 @@ export default function CampaignDetails() {
     link.download = `qr-${safeName}.png`
     link.href = canvas.toDataURL('image/png')
     link.click()
-  }
-
-  const handleSavePin = async () => {
-    if (!/^\d{6}$/.test(newPin)) {
-      setPinError(t('inboundDetails.access.pinFormatError'))
-      return
-    }
-    if (!campaignId) return
-    setPinError('')
-    setPinSaving(true)
-    setPinMessage(null)
-    try {
-      await campaignApi.updateCampaign(campaignId, { campaignPin: newPin })
-      setPinMessage({ type: 'success', text: t('inboundDetails.access.pinSaved') })
-      setShowPinInput(false)
-      setNewPin('')
-    } catch (err: any) {
-      setPinMessage({ type: 'error', text: err.message || t('inboundDetails.access.pinSaveFailed') })
-    } finally {
-      setPinSaving(false)
-    }
   }
 
   const loadCampaignData = async () => {
@@ -325,16 +297,6 @@ export default function CampaignDetails() {
                     {t('inboundDetails.access.description')}
                   </Alert>
 
-                  {pinMessage && (
-                    <Alert
-                      type={pinMessage.type}
-                      dismissible
-                      onDismiss={() => setPinMessage(null)}
-                    >
-                      {pinMessage.text}
-                    </Alert>
-                  )}
-
                   <Grid
                     gridDefinition={[
                       { colspan: { default: 12, xs: 8 } },
@@ -369,65 +331,6 @@ export default function CampaignDetails() {
                     </Container>
                   </Grid>
 
-                  <Container
-                    header={<Header variant="h3">{t('inboundDetails.access.pinLabel')}</Header>}
-                  >
-                    {!showPinInput ? (
-                      <SpaceBetween size="s">
-                        <Box color="text-body-secondary">
-                          {t('inboundDetails.access.pinHiddenNote')}
-                        </Box>
-                        <Button
-                          onClick={() => {
-                            setShowPinInput(true)
-                            setPinError('')
-                            setPinMessage(null)
-                          }}
-                          iconName="key"
-                        >
-                          {t('inboundDetails.access.resetPinButton')}
-                        </Button>
-                      </SpaceBetween>
-                    ) : (
-                      <FormField errorText={pinError}>
-                        <SpaceBetween direction="horizontal" size="xs">
-                          <Input
-                            value={newPin}
-                            onChange={({ detail }) => {
-                              const numericValue = detail.value.replace(/\D/g, '').slice(0, 6)
-                              setNewPin(numericValue)
-                              if (pinError) setPinError('')
-                            }}
-                            placeholder={t('inboundDetails.access.newPinPlaceholder')}
-                            inputMode="numeric"
-                            invalid={!!pinError}
-                            onKeyDown={(e) => {
-                              if ((e as any).key === 'Enter' && newPin.length === 6) {
-                                handleSavePin()
-                              }
-                            }}
-                          />
-                          <Button
-                            variant="primary"
-                            onClick={handleSavePin}
-                            loading={pinSaving}
-                          >
-                            {t('inboundDetails.access.savePinButton')}
-                          </Button>
-                          <Button
-                            variant="link"
-                            onClick={() => {
-                              setShowPinInput(false)
-                              setNewPin('')
-                              setPinError('')
-                            }}
-                          >
-                            {t('inboundDetails.access.cancelButton')}
-                          </Button>
-                        </SpaceBetween>
-                      </FormField>
-                    )}
-                  </Container>
                 </SpaceBetween>
               )
             }] : [])

@@ -48,7 +48,6 @@ export default function EditCampaign() {
     ownerEmail: '',
     ownerName: '',
     status: 'active' as Campaign['status'],
-    campaignPin: '',
     prechatAgentConfigId: '',
   })
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
@@ -93,7 +92,6 @@ export default function EditCampaign() {
         ownerEmail: campaignData.ownerEmail,
         ownerName: campaignData.ownerName,
         status: campaignData.status,
-        campaignPin: '',
         prechatAgentConfigId: (campaignData as any).agentConfigurations?.prechat || '',
       })
     } catch (err: any) {
@@ -158,13 +156,6 @@ export default function EditCampaign() {
       }
     }
 
-    // 인바운드 캠페인 PIN 검증 (입력된 경우에만)
-    if (campaign?.campaignType === 'inbound' && formData.campaignPin) {
-      if (!/^\d{6}$/.test(formData.campaignPin)) {
-        errors.campaignPin = t('adminCampaignEdit.validation.campaignPinFormat')
-      }
-    }
-
     setValidationErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -187,9 +178,6 @@ export default function EditCampaign() {
         endDate: formData.endDate,
         ownerId: formData.ownerId,
         status: formData.status,
-        ...(campaign?.campaignType === 'inbound' && formData.campaignPin
-          ? { campaignPin: formData.campaignPin }
-          : {}),
         ...(formData.prechatAgentConfigId && {
           agentConfigurations: {
             prechat: formData.prechatAgentConfigId,
@@ -437,23 +425,6 @@ export default function EditCampaign() {
                 placeholder={t('adminCampaignEdit.form.statusPlaceholder')}
               />
             </FormField>
-
-            {campaign?.campaignType === 'inbound' && (
-              <FormField
-                label={t('adminCampaignEdit.form.campaignPinLabel')}
-                description={t('adminCampaignEdit.form.campaignPinDescription')}
-                errorText={validationErrors.campaignPin}
-                stretch
-              >
-                <Input
-                  value={formData.campaignPin}
-                  onChange={({ detail }) => updateFormData('campaignPin', detail.value)}
-                  placeholder={t('adminCampaignEdit.form.campaignPinPlaceholder')}
-                  type="number"
-                  invalid={!!validationErrors.campaignPin}
-                />
-              </FormField>
-            )}
 
             <FormField
               label={t('adminCampaignEdit.form.agentLabel')}
