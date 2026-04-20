@@ -225,6 +225,8 @@ def _create_new_inbound_session(
         'agentId': campaign.get('agentConfigurations', {}).get('prechat', ''),
         'csrfToken': csrf_token,
         'createdAt': timestamp,
+        'privacyConsentAgreed': True,
+        'privacyConsentTimestamp': timestamp,
         'ttl': get_ttl_timestamp(30),
         'campaignId': campaign_id,
         'campaignName': campaign.get('campaignName', ''),
