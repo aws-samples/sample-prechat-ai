@@ -157,7 +157,6 @@ export interface CreateInboundSessionRequest {
   customerEmail: string;
   customerCompany: string;
   customerPhone: string;
-  pinNumber: string;
 }
 
 // 인바운드 세션 생성 응답

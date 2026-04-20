@@ -12,7 +12,6 @@ from botocore.exceptions import ClientError
 from utils import (
     lambda_response, parse_body, get_timestamp,
     generate_session_id, get_ttl_timestamp, generate_csrf_token,
-    secure_compare, hash_campaign_pin,
 )
 
 logger = logging.getLogger()
@@ -113,9 +112,8 @@ def create_inbound_session(event, context):
     customer_email = (body.get('customerEmail') or '').strip()
     customer_company = (body.get('customerCompany') or '').strip()
     customer_phone = (body.get('customerPhone') or '').strip()
-    pin_input = (body.get('pinNumber') or '').strip()
 
-    if not all([customer_name, customer_email, customer_company, customer_phone, pin_input]):
+    if not all([customer_name, customer_email, customer_company, customer_phone]):
         return lambda_response(400, {'error': 'Missing required fields'})
 
     # 입력값 길이 제한 (DoS 방어)
@@ -133,13 +131,13 @@ def create_inbound_session(event, context):
 
     return _create_inbound_session_inner(
         campaign_code, customer_name, customer_email,
-        customer_company, customer_phone, pin_input,
+        customer_company, customer_phone,
     )
 
 
 def _create_inbound_session_inner(
     campaign_code, customer_name, customer_email,
-    customer_company, customer_phone, pin_input,
+    customer_company, customer_phone,
 ):
     """인바운드 세션 생성 내부 로직 - 복잡도 분리."""
     try:
@@ -150,26 +148,6 @@ def _create_inbound_session_inner(
             return lambda_response(403, {'error': 'Campaign is not active'})
 
         campaign_id = campaign['campaignId']
-
-        # PIN 검증: 해시 우선, 평문 fallback (마이그레이션 호환)
-        stored_hash = campaign.get('campaignPinHash', '')
-        if stored_hash:
-            input_hash = hash_campaign_pin(pin_input, campaign_id)
-            logger.info(
-                f"PIN verify (hashed) campaign={campaign_id} "
-                f"input_hash_prefix={input_hash[:8]} stored_hash_prefix={stored_hash[:8]}"
-            )
-            if not secure_compare(input_hash, stored_hash):
-                return lambda_response(401, {'error': 'Invalid PIN'})
-        else:
-            # 레거시: 해시가 아직 없는 캠페인은 평문 비교
-            legacy_pin = campaign.get('campaignPin', '')
-            logger.info(
-                f"PIN verify (legacy) campaign={campaign_id} "
-                f"has_legacy_pin={bool(legacy_pin)}"
-            )
-            if not legacy_pin or not secure_compare(pin_input, legacy_pin):
-                return lambda_response(401, {'error': 'Invalid PIN'})
 
         phone_normalized = _normalize_phone(customer_phone)
 

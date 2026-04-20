@@ -15,10 +15,10 @@ import {
 } from '@cloudscape-design/components';
 import { useI18n } from '../../i18n';
 import { inboundApi } from '../../services/api';
-import { storePinForSession, storePrivacyConsentForSession } from '../../utils/sessionStorage';
+import { storePrivacyConsentForSession } from '../../utils/sessionStorage';
 import type { InboundCampaignInfo, CreateInboundSessionRequest } from '../../types';
 
-type Step = 'loading' | 'pin' | 'pii' | 'error';
+type Step = 'loading' | 'pii' | 'error';
 
 export default function InboundEntry() {
   const { campaignCode } = useParams<{ campaignCode: string }>();
@@ -29,8 +29,6 @@ export default function InboundEntry() {
   const [campaign, setCampaign] = useState<InboundCampaignInfo | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [pin, setPin] = useState('');
-  const [pinError, setPinError] = useState('');
   const [formData, setFormData] = useState({
     customerName: '',
     customerEmail: '',
@@ -52,7 +50,7 @@ export default function InboundEntry() {
     try {
       const info = await inboundApi.getCampaignInfo(campaignCode!);
       setCampaign(info);
-      setStep('pin');
+      setStep('pii');
     } catch (err: any) {
       const status = err?.statusCode;
       if (status === 404) {
@@ -64,15 +62,6 @@ export default function InboundEntry() {
       }
       setStep('error');
     }
-  };
-
-  const handlePinSubmit = () => {
-    if (!pin || !/^\d{6}$/.test(pin)) {
-      setPinError(t('inbound.pin.invalidFormat'));
-      return;
-    }
-    setPinError('');
-    setStep('pii');
   };
 
   const validatePii = (): boolean => {
@@ -101,14 +90,12 @@ export default function InboundEntry() {
         customerEmail: formData.customerEmail.trim(),
         customerCompany: formData.customerCompany.trim(),
         customerPhone: formData.customerPhone.trim(),
-        pinNumber: pin,
       };
       const result = await inboundApi.createSession(campaignCode!, req);
       if (result.csrfToken) {
         localStorage.setItem(`csrf_${result.sessionId}`, result.csrfToken);
       }
-      // PIN과 개인정보 동의를 sessionStorage에 저장 → CustomerChat WSS 연결에 사용
-      storePinForSession(result.sessionId, pin);
+      // 개인정보 동의를 sessionStorage에 저장
       storePrivacyConsentForSession(result.sessionId);
       navigate(`/customer/${result.sessionId}`);
     } catch (err: any) {
@@ -120,11 +107,7 @@ export default function InboundEntry() {
 
   const handleSubmitError = (err: any) => {
     const status = err?.statusCode;
-    if (status === 401) {
-      setErrorMsg(t('inbound.error.invalidPin'));
-      setStep('pin');
-      setPin('');
-    } else if (status === 403) {
+    if (status === 403) {
       setErrorMsg(t('inbound.error.campaignInactive'));
     } else {
       setErrorMsg(t('inbound.error.createFailed'));
@@ -183,9 +166,6 @@ export default function InboundEntry() {
     <Form
       actions={
         <SpaceBetween direction="horizontal" size="xs">
-          <Button variant="link" onClick={() => setStep('pin')}>
-            {t('inbound.pii.backButton')}
-          </Button>
           <Button variant="primary" onClick={handlePiiSubmit} loading={submitting}>
             {t('inbound.pii.submitButton')}
           </Button>
@@ -223,35 +203,6 @@ export default function InboundEntry() {
         </Header>
         {errorMsg && (
           <Alert type="error" dismissible onDismiss={() => setErrorMsg('')}>{errorMsg}</Alert>
-        )}
-        {step === 'pin' && (
-          <Form
-            actions={<Button variant="primary" onClick={handlePinSubmit}>{t('inbound.pin.submitButton')}</Button>}
-          >
-            <FormField
-              label={t('inbound.pin.label')}
-              description={t('inbound.pin.description')}
-              errorText={pinError}
-            >
-              <Input
-                value={pin}
-                onChange={({ detail }) => {
-                  // 숫자만 허용하고 최대 6자리까지만
-                  const numericValue = detail.value.replace(/\D/g, '').slice(0, 6);
-                  setPin(numericValue);
-                  if (pinError) setPinError('');
-                }}
-                placeholder={t('inbound.pin.placeholder')}
-                inputMode="numeric"
-                invalid={!!pinError}
-                onKeyDown={(e) => {
-                  if ((e as any).key === 'Enter' && pin.length === 6) {
-                    handlePinSubmit();
-                  }
-                }}
-              />
-            </FormField>
-          </Form>
         )}
         {step === 'pii' && renderPiiForm()}
       </SpaceBetween>

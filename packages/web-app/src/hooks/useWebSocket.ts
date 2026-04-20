@@ -118,7 +118,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
 
   // WebSocket 연결 수립
   const connect = useCallback(() => {
-    if (!wsUrl || !sessionId || !pin) return
+    if (!wsUrl || !sessionId) return
     if (wsRef.current?.readyState === WebSocket.OPEN) return
 
     // 기존 연결 정리
@@ -131,7 +131,10 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     setConnectionState('connecting')
     isIntentionalCloseRef.current = false
 
-    const url = `${wsUrl}?sessionId=${encodeURIComponent(sessionId)}&pin=${encodeURIComponent(pin)}`
+    let url = `${wsUrl}?sessionId=${encodeURIComponent(sessionId)}`
+    if (pin) {
+      url += `&pin=${encodeURIComponent(pin)}`
+    }
     const ws = new WebSocket(url)
 
     ws.onopen = () => {
