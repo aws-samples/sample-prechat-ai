@@ -88,12 +88,12 @@ export function CampaignReportExport({ campaign, analytics, sessions = [] }: Cam
       return [
         session.sessionId,
         session.status,
-        session.customerInfo?.name || '',
-        session.customerInfo?.email || '',
-        session.customerInfo?.company || '',
-        '', // title not available in SessionSummary
+        session.customerName || session.customerInfo?.name || '',
+        session.customerEmail || session.customerInfo?.email || '',
+        session.customerCompany || session.customerInfo?.company || '',
+        session.customerTitle || '',
         session.consultationPurposes || '',
-        '', // salesRepEmail not available in SessionSummary
+        session.salesRepEmail || '',
         session.createdAt ? new Date(session.createdAt).toLocaleString() : '',
         session.completedAt ? new Date(session.completedAt).toLocaleString() : '',
         duration
@@ -210,7 +210,9 @@ export function CampaignReportExport({ campaign, analytics, sessions = [] }: Cam
   }
 
   const downloadFile = (content: string, filename: string, mimeType: string) => {
-    const blob = new Blob([content], { type: mimeType })
+    // UTF-8 BOM 추가 (Excel 한글 호환)
+    const bom = mimeType === 'text/csv' ? '\uFEFF' : ''
+    const blob = new Blob([bom + content], { type: mimeType })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

@@ -327,6 +327,12 @@ export interface SessionSummary {
   createdAt: string;
   completedAt?: string;
   consultationPurposes?: string;
+  // 백엔드 flat 필드 (campaign sessions API)
+  customerName?: string;
+  customerEmail?: string;
+  customerCompany?: string;
+  customerTitle?: string;
+  salesRepEmail?: string;
 }
 
 export interface CampaignSessionsResponse {
