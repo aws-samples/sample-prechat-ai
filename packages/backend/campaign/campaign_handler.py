@@ -5,7 +5,7 @@ import logging
 import os
 from decimal import Decimal
 from botocore.exceptions import ClientError
-from utils import lambda_response, parse_body, get_timestamp, generate_id, convert_decimal_to_int, serialize_dynamodb_item, build_update_expression, hash_campaign_pin
+from utils import lambda_response, parse_body, get_timestamp, generate_id, convert_decimal_to_int, serialize_dynamodb_item, build_update_expression
 
 # Configure logging
 logger = logging.getLogger()
@@ -39,14 +39,6 @@ def create_campaign(event, context):
         end_date = body['endDate']
         owner_id = body['ownerId']
         campaign_type = body.get('campaignType', 'outbound')
-        campaign_pin = body.get('campaignPin', '')
-
-        # 인바운드 캠페인은 PIN 필수 + 6자리 숫자 검증
-        if campaign_type == 'inbound':
-            pin_clean = str(campaign_pin).strip()
-            if not pin_clean.isdigit() or len(pin_clean) != 6:
-                return lambda_response(400, {'error': 'Inbound campaign requires a 6-digit PIN'})
-            campaign_pin = pin_clean
         
         # Validate date range
         if start_date >= end_date:
@@ -90,10 +82,6 @@ def create_campaign(event, context):
             'GSI1SK': f'CAMPAIGN#{timestamp}'
         }
 
-        # 인바운드 캠페인: PIN을 salted HMAC으로 해시 저장 (평문 저장 금지)
-        if campaign_type == 'inbound' and campaign_pin:
-            campaign_record['campaignPinHash'] = hash_campaign_pin(campaign_pin, campaign_id)
-        
         campaigns_table = dynamodb.Table(CAMPAIGNS_TABLE)
         
         # Check if campaign code already exists using the CampaignCodeIndex
@@ -272,16 +260,8 @@ def update_campaign(event, context):
         body = parse_body(event)
         
         # Validate that at least one field is provided for update
-        updatable_fields = ['campaignName', 'campaignCode', 'description', 'startDate', 'endDate', 'ownerId', 'status', 'campaignPin', 'agentConfigurations']
+        updatable_fields = ['campaignName', 'campaignCode', 'description', 'startDate', 'endDate', 'ownerId', 'status', 'agentConfigurations']
         update_data = {k: v for k, v in body.items() if k in updatable_fields and v is not None}
-
-        # 인바운드 캠페인 PIN 변경 시: 검증 후 해시로 변환하여 저장 (평문 저장 금지)
-        if 'campaignPin' in update_data:
-            pin = str(update_data['campaignPin']).strip()
-            if not pin.isdigit() or len(pin) != 6:
-                return lambda_response(400, {'error': 'campaignPin must be exactly 6 digits'})
-            update_data['campaignPinHash'] = hash_campaign_pin(pin, campaign_id)
-            del update_data['campaignPin']
         
         if not update_data:
             return lambda_response(400, {'error': 'No valid fields provided for update'})
