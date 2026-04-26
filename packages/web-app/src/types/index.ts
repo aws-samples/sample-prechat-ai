@@ -231,19 +231,32 @@ export interface AgentCoreAgent {
   agentArn?: string;
 }
 
-export type AgentRole = 'prechat' | 'summary' | 'planning' | 'ship';
+export type AgentRole = 'consultation' | 'summary';
+
+export interface ToolConfig {
+  tool_name: string;
+  tool_attributes?: Record<string, string>;
+}
 
 export interface AgentConfiguration {
   configId: string;
   agentRole: AgentRole;
-  agentRuntimeArn: string;
-  modelId: string;
-  systemPrompt: string;
   agentName: string;
-  status: 'active' | 'inactive';
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
+  systemPrompt: string;
+  tools: ToolConfig[];
+  modelId: string;
+  i18n: string;
+}
+
+export interface KnowledgeBase {
+  knowledgeBaseId: string;
+  name: string;
+  status: string;
+}
+
+export interface CampaignAgentConfigurations {
+  consultation: string; // configId
+  summary: string; // configId
 }
 
 
@@ -286,11 +299,7 @@ export interface CreateCampaignRequest {
   ownerId: string;
   campaignType?: 'outbound' | 'inbound';
   campaignPin?: string;
-  agentConfigurations?: {
-    prechat: string;
-    summary: string;
-    planning: string;
-  };
+  agentConfigurations?: CampaignAgentConfigurations;
 }
 
 export interface UpdateCampaignRequest {
@@ -304,11 +313,7 @@ export interface UpdateCampaignRequest {
   ownerName?: string;
   status?: 'active' | 'completed' | 'paused' | 'cancelled';
   campaignPin?: string;
-  agentConfigurations?: {
-    prechat: string;
-    summary: string;
-    planning: string;
-  };
+  agentConfigurations?: CampaignAgentConfigurations;
 }
 
 export interface CampaignListResponse {

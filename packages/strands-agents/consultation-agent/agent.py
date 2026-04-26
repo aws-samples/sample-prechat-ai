@@ -29,6 +29,7 @@ from strands_tools import retrieve, current_time
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from bedrock_agentcore.memory.integrations.strands.config import AgentCoreMemoryConfig
 from bedrock_agentcore.memory.integrations.strands.session_manager import AgentCoreMemorySessionManager
+from config_parser import parse_config
 
 app = BedrockAgentCoreApp()
 logging.getLogger("strands").setLevel(logging.INFO)
@@ -210,50 +211,99 @@ def _get_locale_instruction(locale: str) -> str:
     return ""
 
 
-def create_consultation_agent(
-    session_id: str,
-    system_prompt: str | None = None,
-    model_id: str | None = None,
-    agent_name: str | None = None,
-    locale: str = 'ko',
-) -> Agent:
-    """PreChat User의 구성을 주입하여 Consultation Agent를 생성합니다.
+def _build_session_manager(session_id: str):
+    """AgentCore Memory STM 세션 매니저를 생성합니다.
 
     Args:
         session_id: PreChat 세션 ID (STM 메모리 및 actor 식별에 사용)
-        system_prompt: 사용자 정의 시스템 프롬프트 (None이면 DEFAULT 사용)
-        model_id: 사용자 정의 모델 ID (None이면 DEFAULT 사용)
-        agent_name: 사용자 정의 에이전트 이름 (None이면 DEFAULT 사용)
-        locale: 응답 언어 코드 ('ko' 또는 'en')
+
+    Returns:
+        AgentCoreMemorySessionManager 또는 None
+    """
+    if not MEMORY_ID:
+        return None
+    memory_config = AgentCoreMemoryConfig(
+        memory_id=MEMORY_ID,
+        session_id=session_id,
+        actor_id=session_id,
+    )
+    return AgentCoreMemorySessionManager(
+        agentcore_memory_config=memory_config,
+    )
+
+
+def create_consultation_agent(
+    session_id: str,
+    config: dict | None = None,
+) -> Agent:
+    """PreChat User의 구성을 주입하여 Consultation Agent를 생성합니다.
+
+    config에 tools가 있으면 Config Parser로 도구를 해석하고,
+    없으면 기존 기본 도구 세트로 폴백합니다.
+
+    Args:
+        session_id: PreChat 세션 ID (STM 메모리 및 actor 식별에 사용)
+        config: AgentConfig payload dict (None이면 기본값 사용)
+            - system_prompt (str): 시스템 프롬프트
+            - model_id (str): Bedrock 모델 ID
+            - agent_name (str): 에이전트 이름
+            - locale (str): 언어 코드 ('ko' 또는 'en')
+            - tools (str|list): 도구 구성 JSON 문자열 또는 리스트
 
     Returns:
         구성된 Strands Agent 인스턴스
     """
-    # AgentCore Memory STM 설정 (고객은 익명이므로 actor_id = session_id)
-    session_manager = None
-    if MEMORY_ID:
-        memory_config = AgentCoreMemoryConfig(
-            memory_id=MEMORY_ID,
-            session_id=session_id,
-            actor_id=session_id,
+    session_manager = _build_session_manager(session_id)
+
+    # config에 tools가 있으면 Config Parser로 도구 해석
+    if config and config.get('tools'):
+        parsed = parse_config(config)
+        effective_prompt = (
+            parsed['system_prompt']
+            or _default_system_prompt()
         )
-        session_manager = AgentCoreMemorySessionManager(
-            agentcore_memory_config=memory_config,
+        locale = parsed.get('locale', 'ko')
+        locale_instruction = _get_locale_instruction(locale)
+        if locale_instruction:
+            effective_prompt = (
+                f"{effective_prompt}\n\n{locale_instruction}"
+            )
+        return Agent(
+            model=parsed['model_id'] or DEFAULT_MODEL_ID,
+            system_prompt=effective_prompt,
+            name=parsed['agent_name'] or DEFAULT_AGENT_NAME,
+            tools=parsed['tools'],
+            session_manager=session_manager,
         )
 
-    # 시스템 프롬프트에 KB ID 주입
-    effective_prompt = system_prompt or _default_system_prompt()
-
-    # locale에 따른 언어 지시 추가
+    # 폴백: 기존 기본 도구 세트
+    effective_prompt = (
+        config.get('system_prompt')
+        if config
+        else None
+    ) or _default_system_prompt()
+    locale = (
+        config.get('locale', 'ko') if config else 'ko'
+    )
     locale_instruction = _get_locale_instruction(locale)
     if locale_instruction:
-        effective_prompt = f"{effective_prompt}\n\n{locale_instruction}"
-
+        effective_prompt = (
+            f"{effective_prompt}\n\n{locale_instruction}"
+        )
     return Agent(
-        model=model_id or DEFAULT_MODEL_ID,
+        model=(
+            config.get('model_id') if config
+            else None
+        ) or DEFAULT_MODEL_ID,
         system_prompt=effective_prompt,
-        name=agent_name or DEFAULT_AGENT_NAME,
-        tools=[retrieve, current_time, render_form, aws_docs_mcp_client],
+        name=(
+            config.get('agent_name') if config
+            else None
+        ) or DEFAULT_AGENT_NAME,
+        tools=[
+            retrieve, current_time,
+            render_form, aws_docs_mcp_client,
+        ],
         session_manager=session_manager,
     )
 
@@ -275,7 +325,11 @@ async def stream(payload: dict):
       {
         "prompt": "고객 메시지",
         "session_id": "PreChat 세션 ID",
-        "config": { "system_prompt": "...", "model_id": "...", "agent_name": "..." }
+        "config": {
+          "system_prompt": "...", "model_id": "...",
+          "agent_name": "...", "locale": "ko",
+          "tools": "[{\"tool_name\": \"retrieve\", ...}]"
+        }
       }
     """
     prompt = payload.get("prompt", "")
@@ -288,10 +342,7 @@ async def stream(payload: dict):
 
     agent = create_consultation_agent(
         session_id=session_id,
-        system_prompt=config.get("system_prompt"),
-        model_id=config.get("model_id"),
-        agent_name=config.get("agent_name"),
-        locale=config.get("locale", "ko"),
+        config=config,
     )
 
     # 현재 진행 중인 도구 사용을 추적 (중복 이벤트 방지)

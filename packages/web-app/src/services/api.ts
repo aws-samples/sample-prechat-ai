@@ -13,7 +13,11 @@ import type {
   Trigger,
   CreateTriggerRequest,
   UpdateTriggerRequest,
-  TriggerListResponse
+  TriggerListResponse,
+  AgentConfiguration,
+  AgentRole,
+  ToolConfig,
+  KnowledgeBase,
 } from '../types'
 import { API_BASE_URL } from '../config/api'
 import type { CustomizingSet } from '../types/customization'
@@ -239,40 +243,73 @@ export const adminApi = {
   },
 
   // Agent Configuration API
-  listAgentConfigs: async (campaignId?: string) => {
-    const params = campaignId ? { campaignId } : {}
-    const response = await api.get('/admin/agent-configs', { params })
+  listAgentConfigs: async (
+    params?: string | {
+      campaignId?: string;
+      agentRole?: AgentRole;
+    }
+  ): Promise<{ configs: AgentConfiguration[]; count: number }> => {
+    // 하위 호환: 문자열이면 campaignId로 처리
+    const queryParams =
+      typeof params === 'string'
+        ? { campaignId: params }
+        : params || {}
+    const response = await api.get('/admin/agent-configs', {
+      params: queryParams,
+    })
     return response.data
   },
 
   createAgentConfig: async (data: {
-    agentRole: string
-    agentRuntimeArn?: string
-    modelId: string
-    systemPrompt: string
-    agentName: string
-  }) => {
+    agentRole: AgentRole;
+    agentName: string;
+    systemPrompt?: string;
+    tools?: ToolConfig[];
+    modelId: string;
+    i18n?: string;
+  }): Promise<AgentConfiguration> => {
     const response = await api.post('/admin/agent-configs', data)
     return response.data
   },
 
-  getAgentConfig: async (configId: string) => {
-    const response = await api.get(`/admin/agent-configs/${configId}`)
+  getAgentConfig: async (
+    configId: string
+  ): Promise<AgentConfiguration> => {
+    const response = await api.get(
+      `/admin/agent-configs/${configId}`
+    )
     return response.data
   },
 
-  updateAgentConfig: async (configId: string, data: {
-    modelId?: string
-    systemPrompt?: string
-    agentName?: string
-    status?: string
-  }) => {
-    const response = await api.put(`/admin/agent-configs/${configId}`, data)
+  updateAgentConfig: async (
+    configId: string,
+    data: {
+      agentName?: string;
+      systemPrompt?: string;
+      tools?: ToolConfig[];
+      modelId?: string;
+      i18n?: string;
+    }
+  ): Promise<AgentConfiguration> => {
+    const response = await api.put(
+      `/admin/agent-configs/${configId}`,
+      data
+    )
     return response.data
   },
 
   deleteAgentConfig: async (configId: string) => {
-    const response = await api.delete(`/admin/agent-configs/${configId}`)
+    const response = await api.delete(
+      `/admin/agent-configs/${configId}`
+    )
+    return response.data
+  },
+
+  // Knowledge Base API
+  fetchKnowledgeBases: async (): Promise<{
+    knowledgeBases: KnowledgeBase[];
+  }> => {
+    const response = await api.get('/admin/knowledge-bases')
     return response.data
   },
 

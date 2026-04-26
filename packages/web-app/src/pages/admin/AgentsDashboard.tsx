@@ -1,6 +1,6 @@
 // nosemgrep
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Header,
@@ -9,49 +9,78 @@ import {
   SpaceBetween,
   Badge,
   Box,
-  ButtonDropdown
-} from '@cloudscape-design/components'
-import { adminApi } from '../../services/api'
-import type { AgentConfiguration } from '../../types'
-import { useI18n } from '../../i18n'
-import { extractModelName } from '../../constants'
+  ButtonDropdown,
+  Select,
+} from '@cloudscape-design/components';
+import type { SelectProps } from '@cloudscape-design/components';
+import { adminApi } from '../../services/api';
+import type { AgentConfiguration, AgentRole } from '../../types';
+import { useI18n } from '../../i18n';
+import { extractModelName } from '../../constants';
 
-const ROLE_LABELS: Record<string, string> = {
-  prechat: 'Consultation',
-  summary: 'Summary',
-  planning: 'Planning',
-  ship: 'SHIP Security',
-}
+// 레거시 역할을 Consultation으로 매핑
+const LEGACY_ROLES = ['prechat', 'planning', 'ship'];
+
+const getDisplayRole = (role: string): string => {
+  if (role === 'summary') return 'Summary';
+  // consultation 또는 레거시 역할 모두 Consultation
+  return 'Consultation';
+};
+
+const getRoleBadgeColor = (
+  role: string
+): 'blue' | 'green' => {
+  if (role === 'summary') return 'green';
+  return 'blue';
+};
+
+// 역할 필터 옵션
+const ROLE_FILTER_OPTIONS: SelectProps.Option[] = [
+  { label: 'All Roles', value: 'all' },
+  { label: 'Consultation', value: 'consultation' },
+  { label: 'Summary', value: 'summary' },
+];
 
 export default function AgentsDashboard() {
-  const navigate = useNavigate()
-  const { t } = useI18n()
-  const [configs, setConfigs] = useState<AgentConfiguration[]>([])
-  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate();
+  const { t } = useI18n();
+  const [configs, setConfigs] = useState<AgentConfiguration[]>(
+    []
+  );
+  const [loading, setLoading] = useState(true);
+  const [roleFilter, setRoleFilter] =
+    useState<SelectProps.Option>(ROLE_FILTER_OPTIONS[0]);
 
   useEffect(() => {
-    loadConfigs()
-  }, [])
+    loadConfigs();
+  }, [roleFilter]);
 
   const loadConfigs = async () => {
+    setLoading(true);
     try {
-      const response = await adminApi.listAgentConfigs()
-      setConfigs(response.configs || [])
+      const filterValue = roleFilter.value;
+      const params =
+        filterValue && filterValue !== 'all'
+          ? { agentRole: filterValue as AgentRole }
+          : undefined;
+      const response =
+        await adminApi.listAgentConfigs(params);
+      setConfigs(response.configs || []);
     } catch (err) {
-      console.error('Failed to load agent configs:', err)
+      console.error('Failed to load agent configs:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleDelete = async (configId: string) => {
     try {
-      await adminApi.deleteAgentConfig(configId)
-      loadConfigs()
+      await adminApi.deleteAgentConfig(configId);
+      loadConfigs();
     } catch (err) {
-      console.error('Failed to delete agent config:', err)
+      console.error('Failed to delete agent config:', err);
     }
-  }
+  };
 
   return (
     <Container>
@@ -77,7 +106,9 @@ export default function AgentsDashboard() {
               </Button>
               <Button
                 variant="primary"
-                onClick={() => navigate('/admin/agents/create')}
+                onClick={() =>
+                  navigate('/admin/agents/create')
+                }
               >
                 {t('adminAgents.header.createAgentButton')}
               </Button>
@@ -87,94 +118,173 @@ export default function AgentsDashboard() {
           {t('adminAgents.header.title')}
         </Header>
 
+        <Box>
+          <Select
+            selectedOption={roleFilter}
+            onChange={({ detail }) =>
+              setRoleFilter(detail.selectedOption)
+            }
+            options={ROLE_FILTER_OPTIONS}
+            placeholder="Filter by role"
+          />
+        </Box>
+
         <div style={{ minHeight: '50vh' }}>
           <Table
+            onRowClick={({ detail }) =>
+              navigate(
+                `/admin/agents/${detail.item.configId}/edit`
+              )
+            }
             columnDefinitions={[
               {
                 id: 'name',
-                header: t('adminAgents.table.agentNameHeader'),
+                header: t(
+                  'adminAgents.table.agentNameHeader'
+                ),
                 cell: (item) => (
                   <Box>
-                    <Box fontWeight="bold">{item.agentName || `${ROLE_LABELS[item.agentRole] || item.agentRole} Agent`}</Box>
-                    <Box fontSize="body-s" color="text-status-inactive">
+                    <Box fontWeight="bold">
+                      {item.agentName ||
+                        `${getDisplayRole(item.agentRole)} Agent`}
+                    </Box>
+                    <Box
+                      fontSize="body-s"
+                      color="text-status-inactive"
+                    >
                       ID: {item.configId}
                     </Box>
                   </Box>
-                )
+                ),
               },
               {
                 id: 'role',
-                header: t('adminAgents.table.agentRoleHeader'),
+                header: t(
+                  'adminAgents.table.agentRoleHeader'
+                ),
                 cell: (item) => (
-                  <Badge color={
-                    item.agentRole === 'prechat' ? 'blue' :
-                    item.agentRole === 'summary' ? 'green' :
-                    item.agentRole === 'ship' ? 'red' : 'grey'
-                  }>
-                    {ROLE_LABELS[item.agentRole] || item.agentRole}
+                  <Badge
+                    color={getRoleBadgeColor(
+                      item.agentRole
+                    )}
+                  >
+                    {getDisplayRole(item.agentRole)}
                   </Badge>
-                )
+                ),
               },
               {
                 id: 'model',
-                header: t('adminAgents.table.foundationModelHeader'),
-                cell: (item) => extractModelName(item.modelId)
+                header: t(
+                  'adminAgents.table.foundationModelHeader'
+                ),
+                cell: (item) =>
+                  extractModelName(item.modelId),
               },
               {
-                id: 'status',
-                header: t('adminAgents.table.statusHeader'),
-                cell: (item) => (
-                  <Badge color={item.status === 'active' ? 'green' : 'grey'}>
-                    {item.status}
-                  </Badge>
-                )
+                id: 'tools',
+                header: 'Tools',
+                cell: (item) => {
+                  const role = item.agentRole;
+                  const isConsultation =
+                    role === 'consultation' ||
+                    LEGACY_ROLES.includes(role);
+                  if (
+                    !isConsultation ||
+                    !item.tools ||
+                    item.tools.length === 0
+                  ) {
+                    return <Box color="text-status-inactive">—</Box>;
+                  }
+                  return (
+                    <SpaceBetween
+                      direction="horizontal"
+                      size="xxs"
+                    >
+                      {item.tools.map((tool) => (
+                        <Badge
+                          key={tool.tool_name}
+                          color="blue"
+                        >
+                          {tool.tool_name}
+                        </Badge>
+                      ))}
+                    </SpaceBetween>
+                  );
+                },
               },
               {
                 id: 'actions',
-                header: t('adminAgents.table.actionsHeader'),
+                header: t(
+                  'adminAgents.table.actionsHeader'
+                ),
                 cell: (item) => (
                   <ButtonDropdown
                     expandToViewport
                     items={[
                       {
-                        text: t('adminAgents.table.editAgentItem'),
+                        text: t(
+                          'adminAgents.table.editAgentItem'
+                        ),
                         id: 'edit',
-                        iconName: 'edit' as const
+                        iconName: 'edit' as const,
                       },
                       {
-                        text: t('adminAgents.table.removeAgentItem'),
+                        text: t(
+                          'adminAgents.table.removeAgentItem'
+                        ),
                         id: 'delete',
-                        iconName: 'remove' as const
-                      }
+                        iconName: 'remove' as const,
+                      },
                     ]}
                     onItemClick={({ detail }) => {
                       switch (detail.id) {
                         case 'edit':
-                          navigate(`/admin/agents/${item.configId}/edit`)
-                          break
+                          navigate(
+                            `/admin/agents/${item.configId}/edit`
+                          );
+                          break;
                         case 'delete':
-                          handleDelete(item.configId)
-                          break
+                          handleDelete(item.configId);
+                          break;
                       }
                     }}
                   >
                     {t('adminAgents.table.actionsButton')}
                   </ButtonDropdown>
-                )
-              }
+                ),
+              },
             ]}
             items={configs}
             loading={loading}
             empty={
-              <Box textAlign="center" color="inherit">
-                <Box variant="strong" textAlign="center" color="inherit">
+              <Box
+                textAlign="center"
+                color="inherit"
+              >
+                <Box
+                  variant="strong"
+                  textAlign="center"
+                  color="inherit"
+                >
                   {t('adminAgents.empty.noAgentsTitle')}
                 </Box>
-                <Box variant="p" padding={{ bottom: 's' }} color="inherit">
-                  {t('adminAgents.empty.noAgentsDescription')}
+                <Box
+                  variant="p"
+                  padding={{ bottom: 's' }}
+                  color="inherit"
+                >
+                  {t(
+                    'adminAgents.empty.noAgentsDescription'
+                  )}
                 </Box>
-                <Button onClick={() => navigate('/admin/agents/create')}>
-                  {t('adminAgents.empty.createAgentButton')}
+                <Button
+                  onClick={() =>
+                    navigate('/admin/agents/create')
+                  }
+                >
+                  {t(
+                    'adminAgents.empty.createAgentButton'
+                  )}
                 </Button>
               </Box>
             }
@@ -182,5 +292,5 @@ export default function AgentsDashboard() {
         </div>
       </SpaceBetween>
     </Container>
-  )
+  );
 }

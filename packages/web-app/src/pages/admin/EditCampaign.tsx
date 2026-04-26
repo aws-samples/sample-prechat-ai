@@ -36,7 +36,8 @@ export default function EditCampaign() {
   const [success, setSuccess] = useState('')
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [cognitoUsers, setCognitoUsers] = useState<CognitoUser[]>([])
-  const [agentConfigs, setAgentConfigs] = useState<AgentConfiguration[]>([])
+  const [consultationConfigs, setConsultationConfigs] = useState<AgentConfiguration[]>([])
+  const [summaryConfigs, setSummaryConfigs] = useState<AgentConfiguration[]>([])
   const [loadingAgents, setLoadingAgents] = useState(true)
   const [formData, setFormData] = useState({
     campaignName: '',
@@ -48,7 +49,8 @@ export default function EditCampaign() {
     ownerEmail: '',
     ownerName: '',
     status: 'active' as Campaign['status'],
-    prechatAgentConfigId: '',
+    consultationAgentConfigId: '',
+    summaryAgentConfigId: '',
   })
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
@@ -63,11 +65,12 @@ export default function EditCampaign() {
   const loadAgentConfigs = async () => {
     try {
       setLoadingAgents(true)
-      const response = await adminApi.listAgentConfigs()
-      const configs = (response.configs || []).filter(
-        (c: AgentConfiguration) => c.agentRole === 'prechat' && c.status === 'active'
-      )
-      setAgentConfigs(configs)
+      const [consultationRes, summaryRes] = await Promise.all([
+        adminApi.listAgentConfigs({ agentRole: 'consultation' }),
+        adminApi.listAgentConfigs({ agentRole: 'summary' }),
+      ])
+      setConsultationConfigs(consultationRes.configs || [])
+      setSummaryConfigs(summaryRes.configs || [])
     } catch (err) {
       console.error('Failed to load agent configs:', err)
     } finally {
@@ -82,6 +85,7 @@ export default function EditCampaign() {
       setLoadingCampaign(true)
       const campaignData = await campaignApi.getCampaign(campaignId)
       setCampaign(campaignData)
+      const agentConfs = (campaignData as any).agentConfigurations
       setFormData({
         campaignName: campaignData.campaignName,
         campaignCode: campaignData.campaignCode,
@@ -92,7 +96,8 @@ export default function EditCampaign() {
         ownerEmail: campaignData.ownerEmail,
         ownerName: campaignData.ownerName,
         status: campaignData.status,
-        prechatAgentConfigId: (campaignData as any).agentConfigurations?.prechat || '',
+        consultationAgentConfigId: agentConfs?.consultation || agentConfs?.prechat || '',
+        summaryAgentConfigId: agentConfs?.summary || '',
       })
     } catch (err: any) {
       console.error('Failed to load campaign:', err)
@@ -178,11 +183,10 @@ export default function EditCampaign() {
         endDate: formData.endDate,
         ownerId: formData.ownerId,
         status: formData.status,
-        ...(formData.prechatAgentConfigId && {
+        ...((formData.consultationAgentConfigId || formData.summaryAgentConfigId) && {
           agentConfigurations: {
-            prechat: formData.prechatAgentConfigId,
-            summary: '',
-            planning: '',
+            consultation: formData.consultationAgentConfigId,
+            summary: formData.summaryAgentConfigId,
           }
         }),
       }
@@ -427,31 +431,60 @@ export default function EditCampaign() {
             </FormField>
 
             <FormField
-              label={t('adminCampaignEdit.form.agentLabel')}
-              description={t('adminCampaignEdit.form.agentDescription')}
+              label={t('adminCampaignEdit.form.consultationAgentLabel') || 'Consultation Agent'}
+              description={t('adminCampaignEdit.form.consultationAgentDescription') || '상담 에이전트를 선택하세요'}
               stretch
             >
               <Select
                 selectedOption={
-                  formData.prechatAgentConfigId
+                  formData.consultationAgentConfigId
                     ? {
-                        label: agentConfigs.find(c => c.configId === formData.prechatAgentConfigId)?.agentName || '',
-                        value: formData.prechatAgentConfigId,
+                        label: consultationConfigs.find(c => c.configId === formData.consultationAgentConfigId)?.agentName || '',
+                        value: formData.consultationAgentConfigId,
                       }
                     : null
                 }
                 onChange={({ detail }) =>
-                  updateFormData('prechatAgentConfigId', detail.selectedOption?.value || '')
+                  updateFormData('consultationAgentConfigId', detail.selectedOption?.value || '')
                 }
-                options={agentConfigs.map(config => ({
+                options={consultationConfigs.map(config => ({
                   label: config.agentName || `Agent (${config.configId.slice(0, 8)})`,
                   value: config.configId,
                   description: config.modelId,
                 }))}
-                placeholder={t('adminCampaignEdit.form.agentPlaceholder')}
+                placeholder={t('adminCampaignEdit.form.consultationAgentPlaceholder') || 'Consultation Agent 선택'}
                 loadingText={loadingAgents ? t('adminCampaignEdit.form.agentLoadingText') : undefined}
                 disabled={loadingAgents}
-                empty={agentConfigs.length === 0 ? t('adminCampaignEdit.form.agentEmpty') : undefined}
+                empty={consultationConfigs.length === 0 ? (t('adminCampaignEdit.form.agentEmpty') || '사용 가능한 에이전트가 없습니다') : undefined}
+              />
+            </FormField>
+
+            <FormField
+              label={t('adminCampaignEdit.form.summaryAgentLabel') || 'Summary Agent'}
+              description={t('adminCampaignEdit.form.summaryAgentDescription') || '요약 에이전트를 선택하세요'}
+              stretch
+            >
+              <Select
+                selectedOption={
+                  formData.summaryAgentConfigId
+                    ? {
+                        label: summaryConfigs.find(c => c.configId === formData.summaryAgentConfigId)?.agentName || '',
+                        value: formData.summaryAgentConfigId,
+                      }
+                    : null
+                }
+                onChange={({ detail }) =>
+                  updateFormData('summaryAgentConfigId', detail.selectedOption?.value || '')
+                }
+                options={summaryConfigs.map(config => ({
+                  label: config.agentName || `Agent (${config.configId.slice(0, 8)})`,
+                  value: config.configId,
+                  description: config.modelId,
+                }))}
+                placeholder={t('adminCampaignEdit.form.summaryAgentPlaceholder') || 'Summary Agent 선택'}
+                loadingText={loadingAgents ? t('adminCampaignEdit.form.agentLoadingText') : undefined}
+                disabled={loadingAgents}
+                empty={summaryConfigs.length === 0 ? (t('adminCampaignEdit.form.agentEmpty') || '사용 가능한 에이전트가 없습니다') : undefined}
               />
             </FormField>
           </SpaceBetween>

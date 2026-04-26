@@ -31,12 +31,14 @@ print(f"[INIT] Module loaded - DEFAULT_PLANNING_AGENT_ARN: '{DEFAULT_PLANNING_AG
 print(f"[INIT] Module loaded - DEFAULT_SHIP_AGENT_ARN: '{DEFAULT_SHIP_AGENT_ARN}'")
 
 # 역할별 기본 ARN 매핑
+# 레거시 역할(prechat, planning, ship)은 모두 consultation ARN으로 매핑 (하위 호환성)
 DEFAULT_AGENT_ARNS = {
-    'prechat': DEFAULT_CONSULTATION_AGENT_ARN,
     'consultation': DEFAULT_CONSULTATION_AGENT_ARN,
     'summary': DEFAULT_SUMMARY_AGENT_ARN,
-    'planning': DEFAULT_PLANNING_AGENT_ARN,
-    'ship': DEFAULT_SHIP_AGENT_ARN,
+    # 레거시 역할 → consultation ARN (기존 세션 하위 호환성, Requirements 15.1, 15.4)
+    'prechat': DEFAULT_CONSULTATION_AGENT_ARN,
+    'planning': DEFAULT_CONSULTATION_AGENT_ARN,
+    'ship': DEFAULT_CONSULTATION_AGENT_ARN,
 }
 
 dynamodb = boto3.resource('dynamodb')
@@ -49,6 +51,9 @@ def _build_config_payload(config: Optional[AgentConfiguration], locale: str = 'k
 
     이 dict는 AgentCore payload의 "config" 키로 전달되어,
     에이전트 컨테이너의 invoke 엔트리포인트에서 Agent 객체 초기화에 사용됩니다.
+
+    locale 우선순위: config.i18n > 파라미터 locale
+    tools: '[]'이 아닌 경우에만 포함 (JSON 문자열 그대로 전달)
     """
     if not config:
         return {'locale': locale} if locale else {}
@@ -59,8 +64,9 @@ def _build_config_payload(config: Optional[AgentConfiguration], locale: str = 'k
         result['model_id'] = config.model_id
     if config.agent_name:
         result['agent_name'] = config.agent_name
-    if locale:
-        result['locale'] = locale
+    if config.tools and config.tools != '[]':
+        result['tools'] = config.tools
+    result['locale'] = config.i18n or locale
     return result
 
 

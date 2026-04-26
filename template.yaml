@@ -1438,6 +1438,28 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  # Knowledge Base List API
+  KBListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/agent/
+      Handler: kb_list_handler.list_knowledge_bases
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock-agent:ListKnowledgeBases
+            Resource: '*'
+      Events:
+        ListKnowledgeBases:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/knowledge-bases
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   GenerateMeetingPlanFunction:
     Type: AWS::Serverless::Function
     Properties:
