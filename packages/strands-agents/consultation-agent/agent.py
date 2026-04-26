@@ -22,14 +22,12 @@ import os
 import json
 import logging
 from strands import Agent
-from strands.tools import tool
-from strands.tools.mcp import MCPClient
-from mcp import stdio_client, StdioServerParameters
 from strands_tools import retrieve, current_time
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from bedrock_agentcore.memory.integrations.strands.config import AgentCoreMemoryConfig
 from bedrock_agentcore.memory.integrations.strands.session_manager import AgentCoreMemorySessionManager
 from config_parser import parse_config
+from tool_registry import render_form, aws_docs_mcp_client
 
 app = BedrockAgentCoreApp()
 logging.getLogger("strands").setLevel(logging.INFO)
@@ -39,65 +37,6 @@ MEMORY_ID = os.environ.get('BEDROCK_AGENTCORE_MEMORY_ID', '')
 
 # Bedrock KB ID: deploy 시 env_vars로 컨테이너에 주입됨
 kb_id = os.environ.get('BEDROCK_KB_ID', '')
-
-# AWS Documentation MCP 클라이언트 (Dockerfile에서 사전 설치됨)
-aws_docs_mcp_client = MCPClient(lambda: stdio_client(
-    StdioServerParameters(
-        command="uvx",
-        args=["awslabs.aws-documentation-mcp-server@latest"]
-    )
-))
-
-
-@tool
-def render_form(form_title: str, fields: str) -> str:
-    """고객이 정보를 기입할 수 있는 HTML Form을 생성합니다 (Div Return).
-
-    프론트엔드에서 동적으로 렌더링되는 HTML을 반환합니다.
-    고객이 Form에 정보를 기입하면 messages로 취급 & 저장됩니다.
-
-    Args:
-        form_title: 폼 제목
-        fields: JSON 형식의 필드 정의 (예: '[{"name":"company","label":"회사명","type":"text"}]')
-
-    Returns:
-        렌더링 가능한 HTML Form 문자열
-    """
-    try:
-        field_list = json.loads(fields)
-    except json.JSONDecodeError:
-        return '<div><p>폼 필드 정의가 올바르지 않습니다.</p></div>'
-
-    form_html = f'<div class="prechat-form" data-form-type="div-return">'
-    form_html += f'<h3>{form_title}</h3>'
-    form_html += '<form>'
-
-    for field in field_list:
-        name = field.get('name', '')
-        label = field.get('label', name)
-        field_type = field.get('type', 'text')
-        required = field.get('required', False)
-        options = field.get('options', [])
-
-        form_html += f'<div class="form-field">'
-        form_html += f'<label for="{name}">{label}</label>'
-
-        if field_type == 'textarea':
-            form_html += f'<textarea name="{name}" id="{name}" {"required" if required else ""}></textarea>'
-        elif field_type == 'select':
-            form_html += f'<select name="{name}" id="{name}" {"required" if required else ""}>'
-            for opt in options:
-                form_html += f'<option value="{opt}">{opt}</option>'
-            form_html += '</select>'
-        else:
-            form_html += f'<input type="{field_type}" name="{name}" id="{name}" {"required" if required else ""} />'
-
-        form_html += '</div>'
-
-    form_html += '<button type="submit" data-i18n="submit">Submit</button>'
-    form_html += '</form></div>'
-
-    return form_html
 
 
 # 기본 시스템 프롬프트 (PreChat User가 오버라이드 가능)

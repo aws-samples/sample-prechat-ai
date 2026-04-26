@@ -50,7 +50,9 @@ TOOL_INSTRUCTIONS: dict[str, str] = {
         '`http_request`: 외부 HTTP API를 호출합니다.'
     ),
     'extract_a2t_log': (
-        '`extract_a2t_log`: A2T 로그를 추출합니다.'
+        '`extract_a2t_log`: SHIP A2T 로그를 대화 내역에서 구조화 추출합니다. '
+        '`extract_a2t_log(conversation_history="<대화 이력 JSON 또는 텍스트>")` '
+        '형태로 호출하세요.'
     ),
     'current_time': (
         '`current_time`: 현재 시간을 조회합니다.'
