@@ -44,7 +44,7 @@ export default function AIAnalysisReport({ sessionId, session }: AIAnalysisRepor
       const campaignId = (session as any)?.campaignId || ''
       const response = await adminApi.listAgentConfigs(campaignId || undefined)
       const summaryConfigs = (response.configs || []).filter(
-        (c: AgentConfiguration) => c.agentRole === 'summary' && c.status === 'active'
+        (c: AgentConfiguration) => c.agentRole === 'summary'
       )
       setAgentConfigs(summaryConfigs)
       if (summaryConfigs.length > 0 && !selectedConfig) {
