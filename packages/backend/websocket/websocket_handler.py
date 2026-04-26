@@ -413,8 +413,8 @@ def handle_send_message(event, context):
     connection_alive = True
 
     try:
-        # 프론트엔드가 지정한 에이전트 역할로 ARN 조회 (기본: prechat)
-        agent_role = body.get('agentRole', 'prechat')
+        # 프론트엔드가 지정한 에이전트 역할로 ARN 조회 (기본: consultation)
+        agent_role = body.get('agentRole', 'consultation')
         arn, config = get_agent_config_for_session(session_id, agent_role)
 
         if not arn:
