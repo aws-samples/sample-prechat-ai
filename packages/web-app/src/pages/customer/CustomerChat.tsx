@@ -168,7 +168,7 @@ export default function CustomerChat() {
     clearInput,
     streamingMessage,
     connectionState,
-  } = useChat(sessionId, verifiedPin || undefined, locale, isShipAssessment ? 'ship' : undefined)
+  } = useChat(sessionId, verifiedPin || undefined, locale)
 
   // 컴포넌트 로드 시 저장된 PIN 확인
   useEffect(() => {

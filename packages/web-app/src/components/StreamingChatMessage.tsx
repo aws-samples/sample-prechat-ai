@@ -16,7 +16,6 @@ interface StreamingChatMessageProps {
   salesRepInfo?: SalesRepInfo
   onFormSubmit?: (formData: Record<string, string>) => void
   onRequestForm?: () => void
-  onCapture?: () => void
 }
 
 export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({ 
@@ -25,7 +24,6 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
   salesRepInfo,
   onFormSubmit,
   onRequestForm,
-  onCapture,
 }) => {
   const { t } = useI18n()
   const [showCursor, setShowCursor] = useState(isStreaming)
@@ -68,9 +66,6 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
       case 'request-form':
         onRequestForm?.()
         break
-      case 'capture':
-        onCapture?.()
-        break
       default:
         break
     }
@@ -112,12 +107,6 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
                     </StatusIndicator>
                   )
                 },
-                ...(onCapture ? [{
-                  type: "icon-button" as const,
-                  id: "capture",
-                  iconName: "share" as const,
-                  text: t('admin.planningChat.captureToDiscussion') || 'Capture to Discussion',
-                }] : []),
               ]}
               onItemClick={({ detail }) => handleActionClick(detail.id)}
             />

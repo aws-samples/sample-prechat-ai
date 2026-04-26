@@ -55,44 +55,11 @@ def generate_meeting_plan(event, context):
     except Exception:
         messages = []
 
-    # KB RAG 검색은 이제 Planning Agent 내부의 @tool로 수행됨
-    # AgentCore Planning Agent가 배포되어 있으면 호출
-    from agent_runtime import AgentCoreClient, get_agent_config_for_session
-
+    # Planning Agent 제거로 인해 AI 기반 생성은 비활성화됨.
+    # 현재는 대화 이력과 상담 목적으로부터 단순 폴백 토픽만 생성.
+    # 추후 Consultation Agent에 planning 도구 추가 또는 별도 로직 구현 예정.
     campaign_id = session.get('campaignId', '')
-    planning_arn, planning_config = get_agent_config_for_session(session_id, 'planning')
-
-    if not planning_arn:
-        return lambda_response(400, {'error': 'No planning agent configured'})
-
-    # Planning Agent 호출 (Structured Output → PlanningOutput dict)
-    try:
-        client = AgentCoreClient()
-        conversation_text = ' '.join([m.get('content', '') for m in messages])
-        locale = session.get('locale', 'ko')
-        plan_result = client.invoke_planning(
-            agent_runtime_arn=planning_config.agent_runtime_arn if planning_config else planning_arn,
-            session_id=session_id,
-            session_summary=conversation_text[:3000],
-            config=planning_config,
-            locale=locale,
-        )
-
-        # Structured Output 결과 파싱
-        raw = plan_result.get('result', {})
-        if isinstance(raw, str):
-            import json as json_mod
-            try:
-                raw = json_mod.loads(raw)
-            except (json_mod.JSONDecodeError, TypeError):
-                raw = {}
-
-        if not isinstance(raw, dict):
-            raw = {}
-
-    except Exception as e:
-        print(f"Planning agent call failed: {str(e)}")
-        raw = {}
+    raw: dict = {}
 
     # Meeting Plan 생성 — 에이전트 결과를 직접 매핑
     timestamp = get_timestamp()

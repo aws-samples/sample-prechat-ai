@@ -2,7 +2,7 @@
 #
 # PreChat Strands Agents 배포 스크립트
 #
-# 세 에이전트를 AgentCore Runtime에 배포하고,
+# 두 에이전트를 AgentCore Runtime에 배포하고,
 # 산출된 Agent Runtime ARN을 SSM Parameter Store에 등록합니다.
 # Lambda 함수들은 SSM 파라미터를 통해 에이전트 ARN을 참조합니다.
 #
@@ -14,7 +14,7 @@
 #   ./deploy-agents.sh default dev ap-northeast-2 ABCDEFGHIJ
 #
 # BEDROCK_KB_ID:
-#   Consultation Agent와 Planning Agent가 유사 고객사례 검색에 사용합니다.
+#   Consultation Agent가 유사 고객사례 검색에 사용합니다.
 #   deploy_agent.py → launch(env_vars={BEDROCK_KB_ID: ...})로 컨테이너에 주입됩니다.
 #   KB가 없으면 생략 가능 (NONE으로 전달).
 #
@@ -127,16 +127,6 @@ deploy_agent "consultation-agent" "consultation"
 # 2. Summary Agent (NO_MEMORY, no KB)
 # ============================================
 deploy_agent "summary-agent" "summary"
-
-# ============================================
-# 3. Planning Agent (NO_MEMORY + KB)
-# ============================================
-deploy_agent "planning-agent" "planning"
-
-# ============================================
-# 4. SHIP Security Agent (NO_MEMORY, no KB)
-# ============================================
-deploy_agent "ship-agent" "ship"
 
 # ============================================
 # 결과 요약

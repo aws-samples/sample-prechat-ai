@@ -1179,29 +1179,6 @@
       "confirmButton": "Reset"
     }
   },
-  "admin": {
-    "planningChat": {
-      "tabLabel": "Planning Chat",
-      "title": "Planning Agent",
-      "description": "Get help with account analysis, service recommendations, and similar customer case searches.",
-      "suggestedQuestion1": "Suggest good services to recommend",
-      "suggestedQuestion2": "Find similar customer cases",
-      "suggestedQuestion3": "Suggest Action Items systematically",
-      "suggestedQuestion4": "Extract SHIP A2T log",
-      "clearHistory": "Clear chat history",
-      "inputPlaceholder": "Ask the Planning Agent...",
-      "captureToDiscussion": "Capture to Discussion",
-      "captureModalTitle": "Capture to Discussion",
-      "annotationLabel": "Annotation",
-      "annotationDescription": "Enter an annotation for the content to capture.",
-      "annotationPlaceholder": "e.g., Service recommendation insights",
-      "captureContentLabel": "Content to Capture",
-      "captureSuccess": "Capture completed successfully.",
-      "captureError": "Capture failed. Please try again.",
-      "toolRunning": "Running...",
-      "toolComplete": "Complete"
-    }
-  },
   "common": {
     "cancel": "Cancel",
     "confirm": "Confirm"

@@ -75,9 +75,7 @@ prechat/
 │   ├── web-app/              # React SPA (Vite + Cloudscape)
 │   └── strands-agents/       # Strands SDK AI Agents (AgentCore)
 │       ├── consultation-agent/  # Customer consultation agent
-│       ├── summary-agent/       # BANT summary agent
-│       ├── planning-agent/      # Meeting plan + Sales Rep chat agent
-│       └── ship-agent/          # SHIP Security Assessment agent
+│       └── summary-agent/       # BANT summary agent
 ├── template.yaml             # AWS SAM IaC
 ├── deploy-full.sh            # Full deploy (agents → SAM → frontend)
 ├── deploy-website.sh         # Frontend-only deploy
