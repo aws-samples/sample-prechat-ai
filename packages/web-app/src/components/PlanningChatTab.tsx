@@ -12,6 +12,7 @@ import {
 import type { SelectProps } from '@cloudscape-design/components';
 import { usePlanningWebSocket } from '../hooks/usePlanningWebSocket';
 import { StreamingChatMessage } from './StreamingChatMessage';
+import { ChatMessage } from './ChatMessage';
 import { MultilineChatInput } from './MultilineChatInput';
 import { WS_URL } from '../config/api';
 import { useI18n } from '../i18n';
@@ -255,6 +256,12 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
     setMessages((prev) => updateStreamingMessage(prev, chunk));
   }, []);
 
+  // 에이전트가 paragraph 경계(\n\n)를 boundary 이벤트로 보낸다.
+  // 단일 말풍선 내 paragraph 분리를 위해 \n\n을 복원한다.
+  const handleBoundary = useCallback(() => {
+    setMessages((prev) => updateStreamingMessage(prev, '\n\n'));
+  }, []);
+
   const handleTool = useCallback((tool: ToolEvent) => {
     setMessages((prev) => {
       if (prev.length === 0) return prev;
@@ -294,6 +301,7 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
       locale: 'ko',
       configId: selectedConfigId || undefined,
       onChunk: handleChunk,
+      onBoundary: handleBoundary,
       onTool: handleTool,
       onComplete: handleComplete,
       onError: handleError,
@@ -502,16 +510,10 @@ export const PlanningChatTab: React.FC<PlanningChatTabProps> = ({
                 {messages.map((msg) => (
                   <div key={msg.id}>
                     {msg.sender === 'user' ? (
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'flex-end',
-                        }}
-                      >
-                        <Box padding="s" variant="awsui-gen-ai-label">
-                          {msg.content}
-                        </Box>
-                      </div>
+                      <ChatMessage
+                        message={toStreamingMessage(msg)}
+                        isCustomer={true}
+                      />
                     ) : (
                       <div>
                         {msg.toolEvents && msg.toolEvents.length > 0 && (
