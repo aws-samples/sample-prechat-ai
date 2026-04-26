@@ -301,6 +301,7 @@ export default function AdminDashboard() {
 
         <div style={{ minHeight: '50vh' }}>
           <Table
+            wrapLines
             columnDefinitions={[
               {
                 id: 'customer',

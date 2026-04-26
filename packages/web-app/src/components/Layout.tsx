@@ -21,6 +21,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { customizingSet, getLocalizedValue } = useCustomizationContext();
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [modalTab, setModalTab] = useState<'privacy' | 'terms'>('privacy');
+  const [navigationOpen, setNavigationOpen] = useState(true);
 
   const handlePrivacyClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -240,6 +241,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               onFollow={handleNavigate}
             />
           }
+          navigationOpen={navigationOpen}
+          onNavigationChange={({ detail }) => setNavigationOpen(detail.open)}
           content={contentWithHeader}
           toolsHide
           navigationWidth={280}

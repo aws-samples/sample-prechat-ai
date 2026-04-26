@@ -25,6 +25,9 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Header */
@@ -69,6 +72,10 @@ body {
   align-items: center;
   padding: 4rem 2rem;
   text-align: center;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .welcome-title {
@@ -374,6 +381,9 @@ div[class*="awsui"][class*="layout"] {
   border: 1px solid var(--glass-border) !important;
   border-radius: 12px !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* File Upload Modal Z-Index Fix */
