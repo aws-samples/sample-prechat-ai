@@ -518,10 +518,11 @@ def reanalyze_with_meeting_log(event, context):
             if 'Item' not in config_resp:
                 return lambda_response(404, {'error': 'Agent configuration not found'})
         else:
+            # ARN은 환경변수(get_agent_runtime_arn)에서 해결되므로 config만 확인
             _arn, config = get_agent_config_for_session(session_id, 'summary')
-            if not config or not config.agent_runtime_arn:
+            if not config:
                 if _arn:
-                    config = AgentConfiguration(config_id='fallback', agent_role='summary', agent_runtime_arn=_arn)
+                    config = AgentConfiguration(config_id='fallback', agent_role='summary')
                 else:
                     return lambda_response(400, {'error': 'No summary agent configured for this session'})
             config_id = config.config_id
@@ -608,10 +609,11 @@ def request_analysis(event, context):
             if 'Item' not in config_resp:
                 return lambda_response(404, {'error': 'Agent configuration not found'})
         else:
+            # ARN은 환경변수(get_agent_runtime_arn)에서 해결되므로 config만 확인
             _arn, config = get_agent_config_for_session(session_id, 'summary')
-            if not config or not config.agent_runtime_arn:
+            if not config:
                 if _arn:
-                    config = AgentConfiguration(config_id='fallback', agent_role='summary', agent_runtime_arn=_arn)
+                    config = AgentConfiguration(config_id='fallback', agent_role='summary')
                 else:
                     return lambda_response(400, {'error': 'No summary agent configured for this session'})
             config_id = config.config_id
@@ -751,24 +753,16 @@ def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False
 
         # config가 없으면 세션 캠페인의 summary 설정 자동 조회
         if not config:
-            arn, config = get_agent_config_for_session(session_id, 'summary')
-            if config and not config.agent_runtime_arn and arn:
-                config.agent_runtime_arn = arn
-            elif not config and arn:
+            _arn, config = get_agent_config_for_session(session_id, 'summary')
+            if not config and _arn:
                 config = AgentConfiguration(
                     config_id='fallback',
                     agent_role='summary',
-                    agent_runtime_arn=arn,
                 )
 
-        # config는 있지만 ARN이 없으면 환경 변수에서 주입
-        if config and not config.agent_runtime_arn:
-            env_arn = get_agent_runtime_arn('summary')
-            if env_arn:
-                config.agent_runtime_arn = env_arn
-                logger.info(f"Injected ARN from env var for configId={config.config_id}: {env_arn}")
-
-        if not config or not config.agent_runtime_arn:
+        # ARN은 환경변수에서 해결 (config에는 ARN 속성 없음)
+        arn = get_agent_runtime_arn('summary')
+        if not config or not arn:
             logger.error(f"No summary agent ARN available for session {session_id}")
             sessions_table.update_item(
                 Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
@@ -778,10 +772,10 @@ def _perform_agentcore_analysis(session_id, config_id, include_meeting_log=False
             return {'success': False, 'error': 'Summary Agent가 구성되지 않았습니다. SSM 파라미터(/prechat/{stage}/agents/summary/runtime-arn)를 확인하세요.'}
 
         # AgentCore Summary Agent 호출
-        logger.info(f"Invoking AgentCore Summary Agent: {config.agent_runtime_arn}")
+        logger.info(f"Invoking AgentCore Summary Agent: {arn}")
         locale = session.get('locale', 'ko')
         result = agentcore_client.invoke_analysis(
-            agent_runtime_arn=config.agent_runtime_arn,
+            agent_runtime_arn=arn,
             session_id=session_id,
             conversation_history=conversation_text,
             config=config,
