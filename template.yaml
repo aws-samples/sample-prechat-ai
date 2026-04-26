@@ -1437,16 +1437,20 @@ Resources:
               Authorizer: CognitoAuthorizer
 
   # Knowledge Base List API
+  # VPC 외부 실행: Bedrock Agent 관리 API는 VPC Endpoint가 없으면
+  # 도달할 수 없어 504 타임아웃이 발생한다. 이 함수는 DynamoDB 접근이
+  # 없고 Cognito 인증된 관리자만 호출하므로 VPC 외부 실행해도 안전하다.
   KBListFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: packages/backend/agent/
       Handler: kb_list_handler.list_knowledge_bases
+      VpcConfig: !Ref AWS::NoValue
       Policies:
         - Statement:
             Effect: Allow
             Action:
-              - bedrock-agent:ListKnowledgeBases
+              - bedrock:ListKnowledgeBases
             Resource: '*'
       Events:
         ListKnowledgeBases:
