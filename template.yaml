@@ -62,7 +62,6 @@ Globals:
         CLIENT_ID: !Ref AdminUserPoolClient
         ALLOWED_EMAIL_DOMAINS: !Ref AllowedEmailDomains
         BEDROCK_AGENT_ROLE_ARN: !GetAtt BedrockAgentServiceRole.Arn
-        BEDROCK_KB_ID: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/bedrock-kb-id}}'
         CONSULTATION_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/consultation/runtime-arn}}'
         SUMMARY_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/summary/runtime-arn}}'
         PIN_HASH_SECRET: !Ref PinHashSecret

@@ -113,7 +113,7 @@ yarn install
 
 # 2. Full deploy (agents → SAM → frontend)
 chmod +x deploy-full.sh deploy-website.sh
-./deploy-full.sh [AWS_PROFILE] [STAGE] [REGION] [BEDROCK_REGION] [STACK_NAME] [BEDROCK_KB_ID]
+./deploy-full.sh [AWS_PROFILE] [STAGE] [REGION] [BEDROCK_REGION] [STACK_NAME]
 
 # Defaults: default / dev / ap-northeast-2 / (REGION) / mte-prechat
 ```
@@ -127,7 +127,8 @@ Deploy order: `deploy-agents.sh` (AgentCore) → `sam deploy` (infra) → `deplo
 | `REGION` | `ap-northeast-2` | AWS region |
 | `BEDROCK_REGION` | Same as REGION | Bedrock model region |
 | `STACK_NAME` | `mte-prechat` | CloudFormation stack name |
-| `BEDROCK_KB_ID` | (none) | Knowledge Base ID (for reference search) |
+
+> **Knowledge Base**: no deploy-time input required. Pick the desired KB ID for the `retrieve` tool when creating an agent from the admin dashboard; it is injected at runtime.
 
 ### Post-Deployment
 

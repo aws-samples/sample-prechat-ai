@@ -3,12 +3,13 @@ Consultation Agent 배포 스크립트
 
 Capabilities:
   - STM (AgentCore Memory; 기간 30일) → memory_mode="STM_ONLY"
-  - Bedrock KB retrieve → strands_tools.retrieve (BEDROCK_KB_ID env var)
-  - Div Return → agent.py 내 @tool로 구현
+  - Bedrock KB retrieve → strands_tools.retrieve
+    (KB ID는 AgentConfig의 retrieve 도구 tool_attributes.kb_id로 런타임 주입됨)
+  - Div Return → tool_registry.py 내 render_form @tool로 구현
 
 사용법:
   pip install bedrock-agentcore-starter-toolkit
-  BEDROCK_KB_ID=xxx STAGE=dev python deploy_agent.py
+  STAGE=dev python deploy_agent.py
 """
 
 import json
@@ -21,7 +22,6 @@ from boto3.session import Session
 boto_session = Session()
 region = boto_session.region_name or "ap-northeast-2"
 stage = os.environ.get("STAGE", "prod")
-kb_id = os.environ.get("BEDROCK_KB_ID", "NONE")
 
 agentcore_runtime = Runtime()
 
@@ -40,7 +40,6 @@ launch_result = agentcore_runtime.launch(
     env_vars={
         "STAGE": stage,
         "AWS_REGION": region,
-        "BEDROCK_KB_ID": kb_id,
     },
 )
 

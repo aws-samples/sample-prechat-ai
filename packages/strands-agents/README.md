@@ -58,11 +58,15 @@ Summary Agent는 Pydantic 모델로 타입 안전한 응답을 반환합니다.
 
 ```bash
 # 두 에이전트 일괄 배포 + SSM 파라미터 등록
-./deploy-agents.sh [AWS_PROFILE] [STAGE] [REGION] [BEDROCK_KB_ID]
+./deploy-agents.sh [AWS_PROFILE] [STAGE] [REGION]
 
 # 예시
-./deploy-agents.sh default dev ap-northeast-2 ABCDEFGHIJ
+./deploy-agents.sh default dev ap-northeast-2
 ```
+
+> **Knowledge Base**: 배포 시 KB ID를 기입할 필요가 없습니다.
+> 관리자 대시보드에서 AgentConfig를 생성할 때 `retrieve` 도구의
+> `tool_attributes.kb_id`로 지정하면 런타임에 주입됩니다.
 
 ### 사전 요구사항
 
@@ -78,7 +82,6 @@ pip install bedrock-agentcore-starter-toolkit
 |-------------|------|
 | `/prechat/{stage}/agents/consultation/runtime-arn` | Consultation Agent ARN |
 | `/prechat/{stage}/agents/summary/runtime-arn` | Summary Agent ARN |
-| `/prechat/{stage}/agents/bedrock-kb-id` | Bedrock Knowledge Base ID |
 
 SAM 템플릿에서 `{{resolve:ssm:...}}`로 ARN을 resolve하여 Lambda 환경 변수에 주입합니다.
 
@@ -97,9 +100,10 @@ SAM 템플릿에서 `{{resolve:ssm:...}}`로 ARN을 resolve하여 Lambda 환경 
 
 | 변수 | 용도 | 에이전트 |
 |------|------|---------|
-| `BEDROCK_KB_ID` | Knowledge Base ID (RAG 검색) | Consultation |
 | `BEDROCK_AGENTCORE_MEMORY_ID` | AgentCore Memory ID (STM) | Consultation |
 | `BEDROCK_AGENTCORE_MEMORY_NAME` | Memory 이름 | Consultation |
+
+Knowledge Base ID 등 에이전트별 설정은 AgentConfig의 `tool_attributes`로 런타임에 주입되며, 컨테이너 빌드 시점 환경 변수에는 포함되지 않습니다.
 
 ## Payload 구조
 
