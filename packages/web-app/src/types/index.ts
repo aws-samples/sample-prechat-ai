@@ -426,6 +426,10 @@ export interface WebSocketClientMessage {
   contentType?: MessageContentType;
   locale?: string;
   agentRole?: string;
+  // Sales Rep 플래닝 채팅 모드: 메시지 저장/세션 상태 변경 스킵
+  stateless?: boolean;
+  // stateless 모드에서 사용할 임의의 Consultation Agent configId
+  configId?: string;
 }
 
 export const BEDROCK_MODELS: BedrockModel[] = [

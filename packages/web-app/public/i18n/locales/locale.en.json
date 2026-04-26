@@ -913,6 +913,18 @@
       "noAgentsTitle": "No agents",
       "noAgentsDescription": "No AgentCore agents found.",
       "createAgentButton": "Create Agent"
+    },
+    "deleteModal": {
+      "header": "Confirm Agent Deletion",
+      "warning": "This action cannot be undone. Campaigns or sessions still referencing this agent may fail. Reassign them to a different agent before deletion.",
+      "targetLabel": "Target",
+      "confirmButton": "Delete",
+      "cancelButton": "Cancel"
+    },
+    "flash": {
+      "loadFailed": "Failed to load agent list.",
+      "deleteSuccess": "Agent \"{{name}}\" has been deleted.",
+      "deleteFailed": "Failed to delete agent. Please try again."
     }
   },
   "adminAgentCreate": {
@@ -936,7 +948,7 @@
       "foundationModelLabel": "Foundation Model",
       "foundationModelDescription": "Agent's foundation model",
       "foundationModelPlaceholder": "Select a foundation model",
-      "promptOverrideLabel": "Prompt Override",
+      "promptOverrideLabel": "Edit System Prompt",
       "promptOverrideDescription": "Enable to customize the agent's system prompt. If disabled, the agent will use its default prompt.",
       "promptOverrideCheckbox": "Enable custom prompt override",
       "agentInstructionsLabel": "Agent Instructions",
@@ -991,7 +1003,7 @@
       "foundationModelLabel": "Foundation Model",
       "foundationModelDescription": "Select a Foundation model",
       "foundationModelPlaceholder": "Select a foundation model",
-      "promptOverrideLabel": "Prompt Override",
+      "promptOverrideLabel": "Edit System Prompt",
       "promptOverrideDescription": "Enable to customize the agent's system prompt. If disabled, the agent will use its default prompt.",
       "promptOverrideCheckbox": "Enable custom prompt override",
       "agentInstructionsLabel": "Agent Instructions",
@@ -1177,6 +1189,40 @@
       "description": "All customization settings will be restored to defaults. Uploaded logos and legal documents will be retained, but references will be removed from the configuration. Do you want to continue?",
       "cancelButton": "Cancel",
       "confirmButton": "Reset"
+    }
+  },
+  "admin": {
+    "planningChat": {
+      "tabLabel": "✨Planning",
+      "title": "Planning Agent",
+      "description": "Internal Sales Rep chat for strategy. Uses the tools of the selected consultation agent (KB search, AWS docs, etc.).",
+      "agentSelectLabel": "Select Consultation Agent",
+      "agentSelectDescription": "Pick a Consultation Agent to use for sales strategy discussions.",
+      "agentSelectPlaceholder": "Select an agent",
+      "agentEmpty": "No consultation agents available.",
+      "loadingAgents": "Loading agents...",
+      "loadAgentsError": "Failed to load agents.",
+      "selectAgentPrompt": "Select an agent above to start the conversation.",
+      "connected": "Connected",
+      "connecting": "Connecting...",
+      "connectionError": "Connection error",
+      "disconnected": "Idle",
+      "suggestedQuestion1": "Suggest good services to recommend",
+      "suggestedQuestion2": "Find similar customer cases",
+      "suggestedQuestion3": "Suggest structured action items",
+      "suggestedQuestion4": "Extract SHIP A2T logs",
+      "clearHistory": "Clear chat history",
+      "inputPlaceholder": "Ask the Planning Agent...",
+      "captureButton": "Capture to Discussion",
+      "captureModalTitle": "Capture to Discussion",
+      "annotationLabel": "Annotation",
+      "annotationDescription": "Enter an annotation for the captured content.",
+      "annotationPlaceholder": "e.g., Service recommendation insight",
+      "captureContentLabel": "Capture target",
+      "captureSuccess": "Captured successfully.",
+      "captureError": "Capture failed. Please try again.",
+      "toolRunning": "Running...",
+      "toolComplete": "Complete"
     }
   },
   "common": {

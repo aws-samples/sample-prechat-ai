@@ -20,6 +20,7 @@ import DiscussionTab from '../../components/DiscussionTab'
 import { adminApi, chatApi } from '../../services/api'
 import { Session } from '../../types'
 import { formatPurposesForDisplay } from '../../components/ConsultationPurposeSelector'
+import { PlanningChatTab } from '../../components/PlanningChatTab'
 import { useI18n } from '../../i18n'
 import { getReportDownloadUrl } from '../../services/assessmentApi'
 
@@ -316,6 +317,13 @@ export default function AdminSessionDetails() {
               label: t('adminSessionDetail.tabs.attachments'),
               id: 'attachments',
               content: sessionId ? <SessionAttachments sessionId={sessionId} /> : null
+            },
+            {
+              label: t('admin.planningChat.tabLabel') || '✨플래닝',
+              id: 'planning-chat',
+              content: sessionId ? (
+                <PlanningChatTab sessionId={sessionId} session={session} />
+              ) : null
             },
             {
               label: t('adminSessionDetail.tabs.discussion'),

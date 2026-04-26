@@ -11,7 +11,12 @@ import boto3
 import os
 from datetime import datetime, timezone, timedelta
 from utils import get_timestamp, generate_id, get_ttl_timestamp
-from agent_runtime import AgentCoreClient, get_agent_config_for_session
+from agent_runtime import (
+    AgentCoreClient,
+    get_agent_config_for_session,
+    get_agent_runtime_arn,
+    get_agent_config_by_id,
+)
 
 dynamodb = boto3.resource('dynamodb')
 SESSIONS_TABLE = os.environ.get('SESSIONS_TABLE')
@@ -273,24 +278,26 @@ def _post_to_connection(apigw_management, connection_id: str, data: dict) -> boo
 def handle_send_message(event, context):
     """sendMessage 라우트 핸들러
 
-    고객 메시지를 저장하고, AgentCore 스트리밍 응답을 수신하여
-    각 청크를 WebSocket Management API로 클라이언트에 실시간 전달합니다.
+    두 가지 모드를 지원합니다:
+
+    1. 고객 대화 모드 (기본, stateless=false):
+       고객 메시지를 저장하고 AgentCore 스트리밍 응답 수신. 봇 메시지 저장 및
+       EOF 감지 시 세션 완료 처리.
+
+    2. Sales Rep 플래닝 모드 (stateless=true):
+       configId로 지정된 임의의 Consultation Agent를 호출한다.
+       메시지는 저장하지 않으며 세션 상태 변경도 하지 않는다.
+       세션 대화 이력은 payload.conversation_history로 에이전트에 전달된다.
+       비활성 세션에서도 동작한다.
 
     Args:
         event: API Gateway WebSocket sendMessage 이벤트
-            body: {action, sessionId, message, messageId, contentType?}
+            body: {action, sessionId, message, messageId, contentType?,
+                   stateless?, configId?, agentRole?}
         context: Lambda 컨텍스트
 
     Returns:
         statusCode 200
-
-    Side Effects:
-        - 고객 메시지 DynamoDB 저장
-        - AgentCore 스트리밍 호출
-        - 청크별 post_to_connection (텍스트 청크 및 tool_use 이벤트)
-        - 봇 메시지 DynamoDB 저장
-        - EOF 감지 시 세션 완료 처리
-        - 완료 메타데이터 (type: done) 전송
 
     Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
     """
@@ -324,6 +331,10 @@ def handle_send_message(event, context):
     message_id = body.get('messageId', generate_id())
     request_content_type = body.get('contentType', 'text')
     locale = body.get('locale', 'ko')
+    # Sales Rep 플래닝 모드: 메시지 저장 및 상태 업데이트 스킵
+    stateless = bool(body.get('stateless', False))
+    # 임의의 Consultation Agent 지정 (stateless 모드에서만 사용)
+    override_config_id = body.get('configId', '')
 
     # 필수 파라미터 검증
     if not session_id or not message:
@@ -349,7 +360,8 @@ def handle_send_message(event, context):
             return {'statusCode': 200}
 
         session = session_resp['Item']
-        if session.get('status') != 'active':
+        # stateless 모드는 완료된 세션에서도 사용 가능 (Sales Rep 플래닝 용도)
+        if not stateless and session.get('status') != 'active':
             _post_to_connection(apigw_management, connection_id, {
                 'type': 'error',
                 'message': '비활성 세션입니다.',
@@ -364,18 +376,20 @@ def handle_send_message(event, context):
         return {'statusCode': 200}
 
     # 1. 고객 메시지 DynamoDB 저장 (Requirement 2.1)
+    # stateless 모드는 저장 및 세션 상태 변경을 스킵한다.
     timestamp = get_timestamp()
     ttl_value = get_ttl_timestamp(30)
 
-    # 세션에 locale 저장 (비동기 분석/플래닝 에이전트에서 참조)
-    try:
-        sessions_table.update_item(
-            Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
-            UpdateExpression='SET locale = :locale',
-            ExpressionAttributeValues={':locale': locale},
-        )
-    except Exception as e:
-        print(f"[WARN] 세션 locale 업데이트 실패: {str(e)}")
+    if not stateless:
+        # 세션에 locale 저장 (비동기 분석 에이전트에서 참조)
+        try:
+            sessions_table.update_item(
+                Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
+                UpdateExpression='SET locale = :locale',
+                ExpressionAttributeValues={':locale': locale},
+            )
+        except Exception as e:
+            print(f"[WARN] 세션 locale 업데이트 실패: {str(e)}")
 
     customer_msg = {
         'PK': f'SESSION#{session_id}',
@@ -389,16 +403,17 @@ def handle_send_message(event, context):
         'ttl': ttl_value,
     }
 
-    try:
-        messages_table.put_item(Item=customer_msg)
-        print(f"[INFO] 고객 메시지 저장 완료: messageId={message_id}, sessionId={session_id}")
-    except Exception as e:
-        print(f"[ERROR] 고객 메시지 저장 실패: {str(e)}")
-        _post_to_connection(apigw_management, connection_id, {
-            'type': 'error',
-            'message': '메시지 저장에 실패했습니다.',
-        })
-        return {'statusCode': 200}
+    if not stateless:
+        try:
+            messages_table.put_item(Item=customer_msg)
+            print(f"[INFO] 고객 메시지 저장 완료: messageId={message_id}, sessionId={session_id}")
+        except Exception as e:
+            print(f"[ERROR] 고객 메시지 저장 실패: {str(e)}")
+            _post_to_connection(apigw_management, connection_id, {
+                'type': 'error',
+                'message': '메시지 저장에 실패했습니다.',
+            })
+            return {'statusCode': 200}
 
     # 2. form-submission 메시지 텍스트 변환 (Requirement 2.6)
     if request_content_type == 'form-submission':
@@ -415,7 +430,22 @@ def handle_send_message(event, context):
     try:
         # 프론트엔드가 지정한 에이전트 역할로 ARN 조회 (기본: consultation)
         agent_role = body.get('agentRole', 'consultation')
-        arn, config = get_agent_config_for_session(session_id, agent_role)
+        arn = get_agent_runtime_arn(agent_role)
+
+        # stateless 모드: configId로 지정된 임의의 Consultation Agent 사용
+        # (Sales Rep 플래닝 채팅. 도구/프롬프트는 AgentConfig 설정을 그대로 따른다.)
+        if stateless and override_config_id:
+            config = get_agent_config_by_id(override_config_id)
+            if not config:
+                _post_to_connection(apigw_management, connection_id, {
+                    'type': 'error',
+                    'message': '선택한 에이전트 설정을 찾을 수 없습니다.',
+                })
+                return {'statusCode': 200}
+            print(f"[INFO] Stateless mode with override configId={override_config_id}")
+        else:
+            _arn, config = get_agent_config_for_session(session_id, agent_role)
+            arn = _arn or arn
 
         if not arn:
             print(f"[ERROR] '{agent_role}' 역할의 AgentCore ARN을 찾을 수 없습니다")
@@ -427,12 +457,35 @@ def handle_send_message(event, context):
 
         print(f"[INFO] AgentCore 스트리밍 호출 시작: ARN={arn}, sessionId={session_id}")
 
+        # stateless 모드에서는 기존 고객-AI 대화 이력을 컨텍스트로 전달
+        conversation_history = ''
+        if stateless:
+            try:
+                msgs_resp = messages_table.query(
+                    KeyConditionExpression='PK = :pk',
+                    ExpressionAttributeValues={
+                        ':pk': f'SESSION#{session_id}',
+                    },
+                )
+                items = msgs_resp.get('Items', [])
+                lines = []
+                for it in items:
+                    sender = it.get('sender', '')
+                    content = it.get('content', '')
+                    if sender and content:
+                        role = '고객' if sender == 'customer' else 'AI'
+                        lines.append(f"{role}: {content}")
+                conversation_history = '\n'.join(lines)
+            except Exception as e:
+                print(f"[WARN] 대화 이력 조회 실패 (stateless): {str(e)}")
+
         for stream_event in agentcore_client.invoke_stream_chunks(
             agent_runtime_arn=arn,
             session_id=session_id,
             message=agent_message,
             config=config,
             locale=locale,
+            conversation_history=conversation_history,
         ):
             event_type = stream_event.get('type', '')
 
@@ -506,6 +559,7 @@ def handle_send_message(event, context):
         return {'statusCode': 200}
 
     # 4. EOF 토큰 감지 및 세션 완료 처리 (Requirement 2.4)
+    # stateless 모드에서는 EOF를 감지해도 세션 상태를 변경하지 않는다.
     if 'EOF' in full_text:
         is_complete = True
         full_text = full_text.replace('EOF', '').strip()
@@ -527,14 +581,15 @@ def handle_send_message(event, context):
         'ttl': ttl_value,
     }
 
-    try:
-        messages_table.put_item(Item=bot_msg)
-        print(f"[INFO] 봇 메시지 저장 완료: messageId={bot_message_id}, sessionId={session_id}")
-    except Exception as e:
-        print(f"[ERROR] 봇 메시지 저장 실패: {str(e)}")
+    if not stateless:
+        try:
+            messages_table.put_item(Item=bot_msg)
+            print(f"[INFO] 봇 메시지 저장 완료: messageId={bot_message_id}, sessionId={session_id}")
+        except Exception as e:
+            print(f"[ERROR] 봇 메시지 저장 실패: {str(e)}")
 
     # 7. 세션 완료 처리 (Requirement 2.4)
-    if is_complete:
+    if is_complete and not stateless:
         try:
             sessions_table.update_item(
                 Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},

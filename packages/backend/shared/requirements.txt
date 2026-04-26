@@ -3,3 +3,9 @@ botocore>=1.42.0
 requests==2.31.0
 beautifulsoup4==4.12.2
 markdownify==0.11.6
+
+# 테스트 전용 의존성 (프로덕션 Lambda에는 제외됨)
+# hypothesis는 속성 기반 테스트(Property-Based Testing)에 사용
+hypothesis>=6.151.0
+# moto는 AWS 서비스 모킹을 통한 통합 테스트에 사용
+moto>=5.1.0

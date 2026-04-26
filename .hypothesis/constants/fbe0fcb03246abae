@@ -1,0 +1,4 @@
+# file: /Users/jaebin/AWS/repositories/prechat/packages/backend/shared/__tests__/../triggers/sns_trigger.py
+# hypothesis_version: 6.151.9
+
+[100, 'MessageId', 'sns']

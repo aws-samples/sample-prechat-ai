@@ -1,0 +1,4 @@
+# file: /Users/jaebin/AWS/repositories/prechat/packages/strands-agents/consultation-agent/config_parser.py
+# hypothesis_version: 6.151.9
+
+['\n\n## 사용 가능한 도구\n', '[]', 'agent_name', 'aws_docs_mcp', 'current_time', 'extract_a2t_log', 'http_request', 'kb_id', 'ko', 'locale', 'model_id', 'render_form', 'retrieve', 'system_prompt', 'tool_attributes', 'tool_name', 'tools', '{kb_id}']

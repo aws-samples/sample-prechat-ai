@@ -296,6 +296,7 @@ class AgentCoreClient:
         message: str,
         config: Optional[AgentConfiguration] = None,
         locale: str = 'ko',
+        conversation_history: str = '',
     ):
         """AgentCore 스트리밍 응답을 이벤트 단위로 yield합니다.
 
@@ -304,6 +305,7 @@ class AgentCoreClient:
         텍스트 청크 또는 tool_use 이벤트로 반환합니다.
 
         payload에 entrypoint: "stream"을 포함하여 스트리밍 엔트리포인트를 지정합니다.
+        conversation_history가 제공되면 Sales Rep 플래닝 채팅 등의 컨텍스트로 전달된다.
 
         Yields:
             dict: 파싱된 이벤트 딕셔너리. type 필드로 분류:
@@ -324,6 +326,8 @@ class AgentCoreClient:
                 "session_id": session_id,
                 "entrypoint": "stream",
             }
+            if conversation_history:
+                payload["conversation_history"] = conversation_history
             config_dict = _build_config_payload(config, locale)
             if config_dict:
                 payload["config"] = config_dict
@@ -574,3 +578,7 @@ def _get_config_by_id(config_id: str) -> Optional[AgentConfiguration]:
     except Exception as e:
         print(f"[WARN] Failed to fetch config {config_id}: {e}")
     return None
+
+
+# 공개 API: configId로 AgentConfiguration을 조회한다.
+get_agent_config_by_id = _get_config_by_id

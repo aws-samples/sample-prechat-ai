@@ -1,0 +1,4 @@
+# file: /Users/jaebin/AWS/repositories/prechat/packages/backend/agent/__tests__/../../shared/models/trigger.py
+# hypothesis_version: 6.151.9
+
+['AssessmentCompleted', 'AssessmentFailed', 'AssessmentStarted', 'CampaignCompleted', 'CampaignCreated', 'GSI1PK', 'GSI1SK', 'GSI2PK', 'GSI2SK', 'METADATA', 'PK', 'SK', 'SessionCompleted', 'SessionCreated', 'SessionInactivated', 'Trigger', 'active', 'arn:aws:sns:', 'campaignId', 'createdAt', 'createdBy', 'deliveryEndpoint', 'eventType', 'inactive', 'isGlobal', 'slack', 'sns', 'status', 'triggerId', 'triggerType', 'updatedAt', 'webhook']

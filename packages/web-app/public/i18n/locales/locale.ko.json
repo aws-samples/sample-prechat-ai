@@ -913,6 +913,18 @@
       "noAgentsTitle": "No agents",
       "noAgentsDescription": "No AgentCore agents found.",
       "createAgentButton": "에이전트 생성"
+    },
+    "deleteModal": {
+      "header": "에이전트 삭제 확인",
+      "warning": "이 작업은 되돌릴 수 없습니다. 삭제된 에이전트를 참조 중인 캠페인/세션에서 오류가 발생할 수 있으니, 삭제 전에 다른 에이전트로 재배정했는지 확인하세요.",
+      "targetLabel": "삭제 대상",
+      "confirmButton": "삭제",
+      "cancelButton": "취소"
+    },
+    "flash": {
+      "loadFailed": "에이전트 목록을 불러오지 못했습니다.",
+      "deleteSuccess": "에이전트 \"{{name}}\"가 삭제되었습니다.",
+      "deleteFailed": "에이전트 삭제에 실패했습니다. 다시 시도해 주세요."
     }
   },
   "adminAgentCreate": {
@@ -936,7 +948,7 @@
       "foundationModelLabel": "Foundation Model",
       "foundationModelDescription": "에이전트의 기반 Foundation Model",
       "foundationModelPlaceholder": "Select a foundation model",
-      "promptOverrideLabel": "프롬프트 오버라이드",
+      "promptOverrideLabel": "시스템 프롬프트 편집",
       "promptOverrideDescription": "에이전트의 시스템 프롬프트를 커스터마이징하려면 활성화하세요. 비활성화 시 에이전트의 기본 프롬프트가 사용됩니다.",
       "promptOverrideCheckbox": "커스텀 프롬프트 오버라이드 활성화",
       "agentInstructionsLabel": "Agent Instructions",
@@ -991,7 +1003,7 @@
       "foundationModelLabel": "Foundation Model",
       "foundationModelDescription": "Foundation model 을 선택합니다",
       "foundationModelPlaceholder": "Select a foundation model",
-      "promptOverrideLabel": "프롬프트 오버라이드",
+      "promptOverrideLabel": "시스템 프롬프트 편집",
       "promptOverrideDescription": "에이전트의 시스템 프롬프트를 커스터마이징하려면 활성화하세요. 비활성화 시 에이전트의 기본 프롬프트가 사용됩니다.",
       "promptOverrideCheckbox": "커스텀 프롬프트 오버라이드 활성화",
       "agentInstructionsLabel": "Agent Instructions",
@@ -1177,6 +1189,40 @@
       "description": "모든 커스터마이징 설정이 기본값으로 복원됩니다. 업로드된 로고와 리갈 문서는 유지되지만, 설정에서 참조가 해제됩니다. 계속하시겠습니까?",
       "cancelButton": "취소",
       "confirmButton": "초기화"
+    }
+  },
+  "admin": {
+    "planningChat": {
+      "tabLabel": "✨플래닝",
+      "title": "Planning Agent",
+      "description": "영업 전략을 위한 내부향 에이전트 대화. 선택한 상담 에이전트의 도구(KB 검색, AWS 문서 등)를 그대로 사용합니다.",
+      "agentSelectLabel": "상담 에이전트 선택",
+      "agentSelectDescription": "영업 전략 수립에 사용할 상담 에이전트(Consultation Agent)를 선택하세요.",
+      "agentSelectPlaceholder": "에이전트를 선택하세요",
+      "agentEmpty": "사용 가능한 상담 에이전트가 없습니다.",
+      "loadingAgents": "에이전트 목록 로딩 중...",
+      "loadAgentsError": "에이전트 목록을 불러오지 못했습니다.",
+      "selectAgentPrompt": "대화를 시작하려면 상단에서 에이전트를 선택하세요.",
+      "connected": "연결됨",
+      "connecting": "연결 중...",
+      "connectionError": "연결 오류",
+      "disconnected": "대기 중",
+      "suggestedQuestion1": "제안하기 좋은 서비스 알려줘",
+      "suggestedQuestion2": "유사 고객사례 찾아줘",
+      "suggestedQuestion3": "Action Item 체계적으로 제안해줘",
+      "suggestedQuestion4": "SHIP A2T 로그 뽑아줘",
+      "clearHistory": "대화 이력 초기화",
+      "inputPlaceholder": "Planning Agent에게 질문하세요...",
+      "captureButton": "Discussion에 캡처",
+      "captureModalTitle": "Discussion에 캡처",
+      "annotationLabel": "주석",
+      "annotationDescription": "캡처할 내용에 대한 주석을 입력하세요.",
+      "annotationPlaceholder": "예: 서비스 추천 관련 인사이트",
+      "captureContentLabel": "캡처 대상 내용",
+      "captureSuccess": "캡처가 완료되었습니다.",
+      "captureError": "캡처에 실패했습니다. 다시 시도해주세요.",
+      "toolRunning": "실행 중...",
+      "toolComplete": "완료"
     }
   },
   "common": {

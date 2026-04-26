@@ -9,10 +9,15 @@ import {
   SpaceBetween,
   Badge,
   Box,
-  ButtonDropdown,
   Select,
+  Modal,
+  Alert,
+  Flashbar,
 } from '@cloudscape-design/components';
-import type { SelectProps } from '@cloudscape-design/components';
+import type {
+  SelectProps,
+  FlashbarProps,
+} from '@cloudscape-design/components';
 import { adminApi } from '../../services/api';
 import type { AgentConfiguration, AgentRole } from '../../types';
 import { useI18n } from '../../i18n';
@@ -51,6 +56,16 @@ export default function AgentsDashboard() {
   const [roleFilter, setRoleFilter] =
     useState<SelectProps.Option>(ROLE_FILTER_OPTIONS[0]);
 
+  // 삭제 확인 모달 상태
+  const [deleteTarget, setDeleteTarget] =
+    useState<AgentConfiguration | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Flashbar 알림
+  const [flashItems, setFlashItems] = useState<
+    FlashbarProps.MessageDefinition[]
+  >([]);
+
   useEffect(() => {
     loadConfigs();
   }, [roleFilter]);
@@ -68,17 +83,66 @@ export default function AgentsDashboard() {
       setConfigs(response.configs || []);
     } catch (err) {
       console.error('Failed to load agent configs:', err);
+      pushFlash({
+        type: 'error',
+        content: t('adminAgents.flash.loadFailed'),
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (configId: string) => {
+  const pushFlash = (
+    item: Omit<FlashbarProps.MessageDefinition, 'id' | 'dismissible' | 'onDismiss'>
+  ) => {
+    const id = `flash-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 7)}`;
+    setFlashItems((prev) => [
+      ...prev,
+      {
+        ...item,
+        id,
+        dismissible: true,
+        onDismiss: () =>
+          setFlashItems((cur) =>
+            cur.filter((f) => f.id !== id)
+          ),
+      },
+    ]);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await adminApi.deleteAgentConfig(configId);
+      await adminApi.deleteAgentConfig(
+        deleteTarget.configId
+      );
+      pushFlash({
+        type: 'success',
+        content: t(
+          'adminAgents.flash.deleteSuccess',
+          {
+            name:
+              deleteTarget.agentName ||
+              deleteTarget.configId,
+          }
+        ),
+      });
+      setDeleteTarget(null);
       loadConfigs();
     } catch (err) {
-      console.error('Failed to delete agent config:', err);
+      console.error(
+        'Failed to delete agent config:',
+        err
+      );
+      pushFlash({
+        type: 'error',
+        content: t('adminAgents.flash.deleteFailed'),
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -117,6 +181,10 @@ export default function AgentsDashboard() {
         >
           {t('adminAgents.header.title')}
         </Header>
+
+        {flashItems.length > 0 && (
+          <Flashbar items={flashItems} />
+        )}
 
         <Box>
           <Select
@@ -193,7 +261,11 @@ export default function AgentsDashboard() {
                     !item.tools ||
                     item.tools.length === 0
                   ) {
-                    return <Box color="text-status-inactive">—</Box>;
+                    return (
+                      <Box color="text-status-inactive">
+                        —
+                      </Box>
+                    );
                   }
                   return (
                     <SpaceBetween
@@ -218,39 +290,37 @@ export default function AgentsDashboard() {
                   'adminAgents.table.actionsHeader'
                 ),
                 cell: (item) => (
-                  <ButtonDropdown
-                    expandToViewport
-                    items={[
-                      {
-                        text: t(
-                          'adminAgents.table.editAgentItem'
-                        ),
-                        id: 'edit',
-                        iconName: 'edit' as const,
-                      },
-                      {
-                        text: t(
-                          'adminAgents.table.removeAgentItem'
-                        ),
-                        id: 'delete',
-                        iconName: 'remove' as const,
-                      },
-                    ]}
-                    onItemClick={({ detail }) => {
-                      switch (detail.id) {
-                        case 'edit':
-                          navigate(
-                            `/admin/agents/${item.configId}/edit`
-                          );
-                          break;
-                        case 'delete':
-                          handleDelete(item.configId);
-                          break;
-                      }
-                    }}
+                  <SpaceBetween
+                    direction="horizontal"
+                    size="xs"
                   >
-                    {t('adminAgents.table.actionsButton')}
-                  </ButtonDropdown>
+                    <Button
+                      variant="inline-link"
+                      iconName="edit"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(
+                          `/admin/agents/${item.configId}/edit`
+                        );
+                      }}
+                    >
+                      {t(
+                        'adminAgents.table.editAgentItem'
+                      ) || 'Edit'}
+                    </Button>
+                    <Button
+                      variant="inline-link"
+                      iconName="remove"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget(item);
+                      }}
+                    >
+                      {t(
+                        'adminAgents.table.removeAgentItem'
+                      ) || 'Delete'}
+                    </Button>
+                  </SpaceBetween>
                 ),
               },
             ]}
@@ -291,6 +361,60 @@ export default function AgentsDashboard() {
           />
         </div>
       </SpaceBetween>
+
+      {/* 삭제 확인 모달 */}
+      <Modal
+        visible={deleteTarget !== null}
+        onDismiss={() =>
+          !deleting && setDeleteTarget(null)
+        }
+        header={t('adminAgents.deleteModal.header')}
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                variant="link"
+                disabled={deleting}
+                onClick={() => setDeleteTarget(null)}
+              >
+                {t('adminAgents.deleteModal.cancelButton')}
+              </Button>
+              <Button
+                variant="primary"
+                loading={deleting}
+                onClick={handleConfirmDelete}
+              >
+                {t('adminAgents.deleteModal.confirmButton')}
+              </Button>
+            </SpaceBetween>
+          </Box>
+        }
+      >
+        <SpaceBetween size="m">
+          <Alert type="warning">
+            {t('adminAgents.deleteModal.warning')}
+          </Alert>
+          {deleteTarget && (
+            <Box>
+              <Box variant="awsui-key-label">
+                {t('adminAgents.deleteModal.targetLabel')}
+              </Box>
+              <Box variant="p">
+                <strong>
+                  {deleteTarget.agentName ||
+                    `${getDisplayRole(deleteTarget.agentRole)} Agent`}
+                </strong>
+              </Box>
+              <Box
+                fontSize="body-s"
+                color="text-status-inactive"
+              >
+                ID: {deleteTarget.configId}
+              </Box>
+            </Box>
+          )}
+        </SpaceBetween>
+      </Modal>
     </Container>
   );
 }

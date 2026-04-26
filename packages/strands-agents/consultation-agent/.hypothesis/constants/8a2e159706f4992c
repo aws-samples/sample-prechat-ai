@@ -1,0 +1,4 @@
+# file: /Users/jaebin/AWS/repositories/prechat/packages/strands-agents/consultation-agent/tool_registry.py
+# hypothesis_version: 6.151.9
+
+['aws_docs_mcp', 'current_time', 'extract_a2t_log', 'http_request', 'render_form', 'retrieve', 'tool_name']

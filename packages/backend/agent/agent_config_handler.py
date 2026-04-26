@@ -131,7 +131,8 @@ def list_configs(event, context):
 
 def get_config(event, context):
     """에이전트 설정을 조회합니다."""
-    config_id = event.get('pathParameters', {}).get('configId')
+    path_params = event.get('pathParameters') or {}
+    config_id = path_params.get('configId')
     if not config_id:
         return lambda_response(400, {'error': 'Missing configId'})
 
@@ -149,7 +150,8 @@ def get_config(event, context):
 
 def update_config(event, context):
     """에이전트 설정을 수정합니다."""
-    config_id = event.get('pathParameters', {}).get('configId')
+    path_params = event.get('pathParameters') or {}
+    config_id = path_params.get('configId')
     if not config_id:
         return lambda_response(400, {'error': 'Missing configId'})
 
@@ -197,7 +199,8 @@ def update_config(event, context):
 
 def delete_config(event, context):
     """에이전트 설정을 삭제합니다."""
-    config_id = event.get('pathParameters', {}).get('configId')
+    path_params = event.get('pathParameters') or {}
+    config_id = path_params.get('configId')
     if not config_id:
         return lambda_response(400, {'error': 'Missing configId'})
 

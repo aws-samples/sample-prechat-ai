@@ -3,3 +3,8 @@ strands-agents-tools
 bedrock-agentcore
 boto3
 aws-opentelemetry-distro>=0.10.0
+
+# Test-only dependencies (단위/속성 테스트 전용, AgentCore 런타임에서는 불필요)
+# 프로덕션 이미지 빌드 시 pip install 대상에서 제외 가능
+pytest>=8.0
+hypothesis>=6.100
