@@ -20,13 +20,26 @@ def handle_session_stream(event, context):
     for record in event.get('Records', []):
         event_name = record.get('eventName')
         
-        # Handle TTL-based session expiration (REMOVE events)
+        # Handle session METADATA deletion (TTL expiration or explicit admin delete).
+        # REMOVE 이벤트는 SessionsTable의 모든 PK(WSCONN#*, DISCUSSION#*, SESSION#* 등)에서
+        # 발생하므로, 세션 METADATA 삭제일 때만 S3 파일을 정리해야 한다.
+        # 과거에는 sessionId 필드 유무만 확인하여 WebSocket 연결 해제 시에도
+        # uploads/ 하위 파일이 삭제되는 버그가 있었다.
         if event_name == 'REMOVE':
             old_image = record.get('dynamodb', {}).get('OldImage', {})
+            pk = old_image.get('PK', {}).get('S', '')
+            sk = old_image.get('SK', {}).get('S', '')
+
+            # 세션 METADATA 삭제가 아닌 경우(WSCONN 연결 해제 등)는 스킵
+            if not (pk.startswith('SESSION#') and sk == 'METADATA'):
+                continue
+
             session_id = old_image.get('sessionId', {}).get('S', '')
-            
             if session_id:
-                print(f"Session {session_id} expired via TTL - cleaning up S3 files")
+                print(
+                    f"Session {session_id} METADATA removed "
+                    f"(pk={pk}) - cleaning up S3 files"
+                )
                 cleanup_session_files(session_id)
         
         elif event_name == 'INSERT':
