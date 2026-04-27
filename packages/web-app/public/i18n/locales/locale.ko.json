@@ -2,12 +2,12 @@
   "welcome": {
     "pageHeader": {
       "title": "AWS PreChat",
-      "description": "AWS PreChat는 AWS 영업팀과 고객 간의 미팅 전 준비 과정을 간소화하기 위해 설계된 대화형 AI 웹 시스템입니다. 이 시스템은 기존의 엑셀 기반 양식을 직관적인 챗봇 인터페이스로 대체하여, 고객이 비즈니스 요구사항, 기술적 제약 조건 및 프로젝트 일정을 수집하는 구조화된 대화를 안내합니다. 수집된 정보는 AWS 영업 담당자와 엔지니어에게 체계적이고 실행 가능한 형식으로 제공됩니다."
+      "description": "AWS PreChat은 미팅 전 준비 과정을 간소화하는 대화형 AI 웹 시스템입니다. 기존 엑셀 양식 대신 챗봇 인터페이스로 고객의 비즈니스 요구사항, 기술 제약, 프로젝트 일정을 자연스럽게 수집합니다. 수집한 정보는 AWS 영업 담당자와 엔지니어가 바로 활용할 수 있는 형태로 정리됩니다."
     },
     "header": {
-      "title": "✨ PreChat에 오신 것을 환영합니다!",
+      "title": "✨PreChat에 오신 것을 환영합니다!",
       "subtitle": "AWS 만남전에 AI 에이전트와 대화하여 논의 주제와 기대사항을 공유해 주세요.",
-      "streamlineSubtitle": "지능형 챗봇 어시스턴트로 미팅 사전 준비를 간소화해 보세요."
+      "streamlineSubtitle": "챗봇 어시스턴트로 미팅 사전 준비를 간소화하세요."
     },
     "footer": {
       "privacyLink": "Privacy",
@@ -49,7 +49,7 @@
     "purposeSelector": {
       "modalTitle": "상담 목적을 선택해 주세요",
       "headerTitle": "상담 목적을 선택해 주세요",
-      "headerDescription": "상담을 시작하기 전에 문의 목적을 선택해 주세요. 여러 목적을 선택하실 수 있습니다.",
+      "headerDescription": "문의 목적을 선택해 주세요. 여러 개를 고를 수 있습니다.",
       "selectedTitle": "선택된 상담 목적",
       "editButton": "수정",
       "cancelButton": "취소",
@@ -77,8 +77,8 @@
       "inputPlaceholder": "비즈니스 목표, 기술문의, AWS 관련 요구사항을 말씀해 주세요",
       "inputSendAriaLabel": "메시지 전송",
       "inputClearAriaLabel": "입력 내용 지우기",
-      "inputHintMobile": "💡 여러 줄 입력이 가능합니다. 전송하려면 아래 전송 버튼을 눌러주세요.",
-      "inputHintDesktop": "💡 Enter로 줄바꿈, 전송 버튼으로 메시지 전송",
+      "inputHintMobile": "여러 줄 입력이 가능합니다. 전송하려면 아래 전송 버튼을 누르세요.",
+      "inputHintDesktop": "Enter로 줄바꿈, 전송 버튼으로 메시지 전송",
       "editPurposeButton": "상담 목적 변경",
       "selectPurposeButton": "상담 목적 선택",
       "attachFileButton": "첨부파일 제공",
@@ -99,8 +99,8 @@
       "ctaMessage": "추가 문의사항이 있으시면 위 담당자에게 직접 연락해 주세요."
     },
     "completion": {
-      "alertTitle": "✅ 상담이 완료되었습니다",
-      "alertDescription": "감사합니다. 답변이 기록되었습니다. 담당자가 연락드릴 예정입니다."
+      "alertTitle": "상담이 완료되었습니다",
+      "alertDescription": "감사합니다. 답변을 기록했습니다. 담당자가 곧 연락드리겠습니다."
     },
     "feedback": {
       "modalTitle": "사전상담 피드백",
@@ -117,7 +117,7 @@
       "modalTitle": "첨부파일 제공",
       "closeButton": "확인",
       "whyNeededTitle": "파일 업로드가 필요한 이유",
-      "whyNeededDescription": "더 정확한 상담을 위해 추가 자료를 제공해 주시면 도움이 됩니다.",
+      "whyNeededDescription": "추가 자료를 제공해 주시면 더 정확한 상담이 가능합니다.",
       "architectureDiagramLabel": "현재 아키텍처 다이어그램",
       "architectureDiagramDesc": ": 기존 시스템 구성 정보 제공",
       "requirementsDocLabel": "요구사항 문서",
@@ -126,7 +126,7 @@
       "technicalSpecDesc": ": 기술적 제약사항과 선호사항을 확인",
       "capacityPlanLabel": "성능/용량 계획서",
       "capacityPlanDesc": ": 예상 트래픽과 데이터량 등",
-      "awsReviewNote": "💡 업로드된 파일은 AWS 담당자가 사전 검토하여 더욱 효과적인 미팅을 준비할 수 있습니다.",
+      "awsReviewNote": "업로드한 파일은 AWS 담당자가 미리 검토해 미팅을 준비합니다.",
       "dropZoneActive": "파일을 여기에 놓으세요",
       "dropZoneIdle": "파일을 드래그하거나 클릭하여 업로드",
       "dropZoneSubtext": "최대 50MB • 이미지, PDF, Office 문서, 텍스트 파일 지원",
@@ -134,7 +134,7 @@
       "uploadingProgress": "업로드 중...",
       "uploadedFilesTitle": "업로드된 파일",
       "noFilesTitle": "업로드된 파일이 없습니다",
-      "noFilesDescription": "파일을 업로드하여 상담에 필요한 자료를 제공해 주세요.",
+      "noFilesDescription": "상담에 필요한 자료를 업로드해 주세요.",
       "fileNameHeader": "파일명",
       "fileSizeHeader": "크기",
       "uploadTimeHeader": "업로드 시간",
@@ -159,7 +159,7 @@
       "prepareButton": "파일 준비",
       "deleteButton": "Delete",
       "noFilesTitle": "업로드된 파일이 없습니다",
-      "noFilesDescription": "파일을 업로드하여 상담에 필요한 자료를 제공해 주세요."
+      "noFilesDescription": "상담에 필요한 자료를 업로드해 주세요."
     },
     "imageGallery": {
       "sectionTitle": "이미지 미리보기",
@@ -193,7 +193,7 @@
     },
     "header": {
       "title": "모든 세션 💬",
-      "description": "고객이 AI 에이전트와 대화할 수 있는 상담 세션을 관리합니다. 필요 정보가 획득되면 세션이 완료되고, 30일이 경과한 모든 세션은 파기됩니다.",
+      "description": "고객이 AI 에이전트와 대화하는 상담 세션을 관리합니다. 필요한 정보를 모두 수집하면 세션이 완료되고, 30일이 지난 세션은 자동 삭제됩니다.",
       "agentsButton": "PreChat 에이전트",
       "addSessionButton": "세션 추가"
     },
@@ -348,7 +348,7 @@
       "feedbackTimeLabel": "피드백 제출 시간",
       "customerOpinionLabel": "고객 의견",
       "noFeedbackSubmitted": "고객이 아직 피드백을 제출하지 않았습니다.",
-      "feedbackAfterCompletion": "세션이 완료된 후 고객 피드백을 확인할 수 있습니다."
+      "feedbackAfterCompletion": "세션이 완료되면 고객 피드백을 확인할 수 있습니다."
     },
     "conversation": {
       "sectionTitle": "대화 기록",
@@ -422,8 +422,8 @@
       "writePlaceholder": "미팅 내용을 자유롭게 작성해주세요. 마크다운 형식을 사용할 수 있습니다.",
       "noMeetingLog": "미팅 로그가 없습니다",
       "noMeetingLogDescription": "\"수정\" 버튼을 클릭하여 초도미팅록을 작성해보세요.",
-      "reanalyzeHint": "미팅 로그를 저장한 후 \"재분석\" 버튼을 클릭하면, 사전상담 대화 내용과 미팅 로그를 모두 고려하여 AI가 좌측의 분석 결과를 업데이트합니다.",
-      "analyzingMessage": "가 대화 내용과 미팅 로그를 함께 분석하고 있습니다...",
+      "reanalyzeHint": "미팅 로그를 저장한 뒤 \"재분석\"을 누르면, 사전상담 대화와 미팅 로그를 함께 반영해 AI가 좌측 분석 결과를 갱신합니다.",
+      "analyzingMessage": "대화 내용과 미팅 로그를 함께 분석하고 있습니다...",
       "analyzingProgress": "최대 1분까지 소요될 수 있습니다. (",
       "analyzingProgressSuffix": "% 완료)",
       "analysisComplete": "분석 완료:",
@@ -442,7 +442,7 @@
     },
     "discussion": {
       "sectionTitle": "Discussion",
-      "sectionDescription": "팀원들과 어카운트 전략을 논의하세요",
+      "sectionDescription": "팀원과 어카운트 전략을 논의하세요",
       "failedLoad": "Failed to load discussions",
       "failedCreate": "Failed to create discussion",
       "failedUpdate": "Failed to update discussion",
@@ -457,7 +457,7 @@
       "editCommentAriaLabel": "댓글 수정",
       "deleteCommentAriaLabel": "댓글 삭제",
       "deleteModalTitle": "댓글 삭제",
-      "deleteConfirmation": "이 댓글을 삭제하시겠습니까? 삭제된 댓글은 복구할 수 없습니다.",
+      "deleteConfirmation": "이 댓글을 삭제할까요? 삭제하면 복구할 수 없습니다.",
       "deleteButton": "삭제"
     }
   },
@@ -468,7 +468,7 @@
     },
     "header": {
       "title": "트리거 관리",
-      "description": "도메인 이벤트에 반응하여 Slack, SNS 등으로 알림을 전송하는 트리거를 관리합니다.",
+      "description": "도메인 이벤트가 발생하면 Slack, SNS 등으로 알림을 보내는 트리거를 관리합니다.",
       "createButton": "트리거 생성"
     },
     "table": {
@@ -486,7 +486,7 @@
       "loadingText": "트리거 로딩 중...",
       "searchPlaceholder": "트리거 검색...",
       "emptyTitle": "등록된 트리거가 없습니다",
-      "emptyDescription": "트리거를 생성하여 도메인 이벤트 알림을 설정하세요.",
+      "emptyDescription": "트리거를 만들어 이벤트 알림을 설정하세요.",
       "emptyCreateButton": "트리거 생성"
     },
     "modal": {
@@ -500,7 +500,7 @@
       "triggerTypeLabel": "트리거 유형",
       "eventTypeLabel": "이벤트 유형",
       "endpointLabel": "전달 엔드포인트",
-      "endpointSlackDescription": "Slack Workflow Webhook URL을 입력하세요. Workflow의 웹훅 데이터 변수는 SessionCompleted 스키마(모든 필드 포함)에 맞춰 설정하면 모든 이벤트에 호환됩니다.",
+      "endpointSlackDescription": "Slack Workflow Webhook URL을 입력하세요. 웹훅 데이터 변수를 SessionCompleted 스키마(모든 필드 포함)에 맞추면 모든 이벤트와 호환됩니다.",
       "endpointSnsDescription": "이벤트를 발행할 SNS Topic을 선택하세요.",
       "snsPlaceholder": "SNS Topic 선택...",
       "snsLoadingText": "SNS Topic 로딩 중...",
@@ -656,15 +656,15 @@
       "cancelButton": "취소",
       "saveButton": "캠페인 저장",
       "campaignNameLabel": "캠페인명",
-      "campaignNameDescription": "캠페인에 대한 설명적인 이름을 입력하세요",
+      "campaignNameDescription": "캠페인 이름을 입력하세요",
       "campaignNamePlaceholder": "예: 2025년 1분기 엔터프라이즈 마이그레이션",
       "campaignCodeLabel": "캠페인 코드",
       "campaignCodeDescription": "캠페인의 고유 코드를 입력하세요",
       "campaignCodePlaceholder": "예: Q1-ENT-MIG",
       "campaignCodeExistsError": "캠페인 코드가 이미 존재합니다",
       "descriptionLabel": "설명",
-      "descriptionDescription": "캠페인에 대한 상세 설명을 입력하세요",
-      "descriptionPlaceholder": "캠페인 목표, 대상 고객, 주요 목표를 설명해 주세요...",
+      "descriptionDescription": "캠페인 설명을 입력하세요",
+      "descriptionPlaceholder": "캠페인 목표와 대상 고객을 적어 주세요...",
       "startDateLabel": "시작일",
       "startDateDescription": "캠페인 시작일",
       "endDateLabel": "종료일",
@@ -806,7 +806,7 @@
       "completionDateHeader": "완료 날짜",
       "noNarrativeProvided": "피드백 없음",
       "noDataTitle": "CSAT 피드백 없음",
-      "noDataDescription": "이 캠페인에 대한 고객 만족도 피드백이 아직 수집되지 않았습니다.",
+      "noDataDescription": "이 캠페인의 고객 만족도 피드백이 아직 없습니다.",
       "loading": "로딩 중"
     },
     "comparisonTable": {
@@ -814,7 +814,7 @@
       "description": "여러 캠페인의 성과 지표 비교",
       "compareButton": "캠페인 비교",
       "selectLabel": "비교할 캠페인 선택",
-      "selectDescription": "비교를 활성화하려면 최소 두 개의 캠페인을 선택하세요",
+      "selectDescription": "최소 두 개의 캠페인을 선택하세요",
       "choosePlaceholder": "캠페인 선택",
       "selectedAriaLabel": "선택된 캠페인",
       "removeAriaLabel": "제거",
@@ -840,7 +840,7 @@
       "statusCancelled": "취소",
       "loadingComparison": "비교 로딩 중",
       "noDataTitle": "비교 데이터 없음",
-      "noDataDescription": "캠페인을 선택하고 비교를 클릭하여 결과를 확인하세요",
+      "noDataDescription": "캠페인을 선택하고 비교 버튼을 누르세요",
       "resultsTitle": "비교 결과",
       "resultsDescription": "완료율 기준 캠페인 순위"
     },
@@ -894,7 +894,7 @@
   "adminAgents": {
     "header": {
       "title": "PreChat 에이전트",
-      "description": "고객과 상담을 담당하는 AI 에이전트(AgentCore Agents)를 관리합니다. 구성한 에이전트는 준비(Prepared)되어야 합니다.",
+      "description": "고객 상담을 담당하는 AI 에이전트(AgentCore Agents)를 관리합니다.",
       "allSessionsButton": "모든 세션 💬",
       "refreshButton": "새로고침",
       "createAgentButton": "에이전트 생성"
@@ -916,7 +916,7 @@
     },
     "deleteModal": {
       "header": "에이전트 삭제 확인",
-      "warning": "이 작업은 되돌릴 수 없습니다. 삭제된 에이전트를 참조 중인 캠페인/세션에서 오류가 발생할 수 있으니, 삭제 전에 다른 에이전트로 재배정했는지 확인하세요.",
+      "warning": "이 작업은 되돌릴 수 없습니다. 이 에이전트를 쓰는 캠페인이나 세션이 있으면 오류가 나므로, 삭제 전에 다른 에이전트로 바꿔 두세요.",
       "targetLabel": "삭제 대상",
       "confirmButton": "삭제",
       "cancelButton": "취소"
@@ -949,10 +949,10 @@
       "foundationModelDescription": "에이전트의 기반 Foundation Model",
       "foundationModelPlaceholder": "Select a foundation model",
       "promptOverrideLabel": "시스템 프롬프트 편집",
-      "promptOverrideDescription": "에이전트의 시스템 프롬프트를 커스터마이징하려면 활성화하세요. 비활성화 시 에이전트의 기본 프롬프트가 사용됩니다.",
-      "promptOverrideCheckbox": "커스텀 프롬프트 오버라이드 활성화",
+      "promptOverrideDescription": "시스템 프롬프트를 직접 수정하려면 활성화하세요. 비활성화하면 기본 프롬프트를 씁니다.",
+      "promptOverrideCheckbox": "시스템 프롬프트 편집",
       "agentInstructionsLabel": "Agent Instructions",
-      "agentInstructionsDescription": "에이전트 행동에 대한 지침을 상세하게 작성합니다. 플레이스홀더를 사용하여 동적 정보를 포함할 수 있습니다.",
+      "agentInstructionsDescription": "에이전트 행동 지침을 작성합니다. 플레이스홀더로 동적 정보를 넣을 수 있습니다.",
       "agentInstructionsPlaceholder": "Enter agent instructions...",
       "defaultInstructionsButton": "기본 에이전트 지침",
       "i18nLabel": "에이전트 응답 언어",
@@ -966,7 +966,7 @@
       "kbLoadError": "Knowledge Base 목록을 불러오는데 실패했습니다.",
       "kbRequiredError": "retrieve 도구를 사용하려면 Knowledge Base를 선택해야 합니다.",
       "templateLabel": "상담 템플릿",
-      "templateDescription": "사전 정의된 템플릿을 선택하면 시스템 프롬프트, 도구, 모델, 언어가 자동으로 설정됩니다. 선택 후 값을 수정할 수 있습니다.",
+      "templateDescription": "템플릿을 고르면 프롬프트, 도구, 모델, 언어가 자동 설정됩니다. 선택 후 값을 바꿀 수 있습니다.",
       "templatePlaceholder": "템플릿을 선택하세요 (선택사항)",
       "templateCustom": "커스텀 (직접 설정)",
       "templateCustomDesc": "모든 설정을 직접 구성합니다",
@@ -1004,13 +1004,13 @@
       "foundationModelDescription": "Foundation model 을 선택합니다",
       "foundationModelPlaceholder": "Select a foundation model",
       "promptOverrideLabel": "시스템 프롬프트 편집",
-      "promptOverrideDescription": "에이전트의 시스템 프롬프트를 커스터마이징하려면 활성화하세요. 비활성화 시 에이전트의 기본 프롬프트가 사용됩니다.",
+      "promptOverrideDescription": "시스템 프롬프트를 직접 수정하려면 활성화하세요. 비활성화하면 기본 프롬프트를 씁니다.",
       "promptOverrideCheckbox": "커스텀 프롬프트 오버라이드 활성화",
       "agentInstructionsLabel": "Agent Instructions",
-      "agentInstructionsDescription": "에이전트 행동에 대한 지침을 상세하게 작성합니다. 플레이스홀더를 사용하여 동적 정보를 포함할 수 있습니다.",
+      "agentInstructionsDescription": "에이전트 행동 지침을 작성합니다. 플레이스홀더로 동적 정보를 넣을 수 있습니다.",
       "agentInstructionsPlaceholder": "Enter agent instructions...",
       "defaultInstructionsButton": "기본 에이전트 지침",
-      "readOnlyRoleInfo": "Summary Agent와 Planning Agent는 시스템에서 관리됩니다. 프롬프트 커스터마이징은 제공되지 않으며, 모델 선택은 가능합니다."
+      "readOnlyRoleInfo": "Summary Agent와 Planning Agent는 시스템이 관리합니다. 프롬프트는 수정할 수 없고, 모델만 선택 가능합니다."
     }
   },
   "adminCampaignEdit": {
@@ -1035,15 +1035,15 @@
       "cancelButton": "취소",
       "saveButton": "캠페인 저장",
       "campaignNameLabel": "캠페인명",
-      "campaignNameDescription": "캠페인에 대한 설명적인 이름을 입력하세요",
+      "campaignNameDescription": "캠페인 이름을 입력하세요",
       "campaignNamePlaceholder": "예: 2025년 1분기 엔터프라이즈 마이그레이션",
       "campaignCodeLabel": "캠페인 코드",
       "campaignCodeDescription": "캠페인의 고유 코드를 입력하세요",
       "campaignCodePlaceholder": "예: Q1-ENT-MIG",
       "campaignCodeExistsError": "캠페인 코드가 이미 존재합니다",
       "descriptionLabel": "설명",
-      "descriptionDescription": "캠페인에 대한 상세 설명을 입력하세요",
-      "descriptionPlaceholder": "캠페인 목표, 대상 고객, 주요 목표를 설명해 주세요...",
+      "descriptionDescription": "캠페인 설명을 입력하세요",
+      "descriptionPlaceholder": "캠페인 목표와 대상 고객을 적어 주세요...",
       "startDateLabel": "시작일",
       "startDateDescription": "캠페인 시작일",
       "endDateLabel": "종료일",
@@ -1089,7 +1089,7 @@
     },
     "panel": {
       "title": "UI 커스터마이징",
-      "description": "고객 대면 채팅 인터페이스의 외관을 설정합니다.",
+      "description": "고객용 채팅 화면의 외관을 설정합니다.",
       "localeTabs": {
         "ko": "한국어",
         "en": "English (영어)"
@@ -1186,7 +1186,7 @@
     },
     "resetModal": {
       "title": "초기화 확인",
-      "description": "모든 커스터마이징 설정이 기본값으로 복원됩니다. 업로드된 로고와 리갈 문서는 유지되지만, 설정에서 참조가 해제됩니다. 계속하시겠습니까?",
+      "description": "모든 설정이 기본값으로 돌아갑니다. 업로드한 로고와 리갈 문서는 남지만, 설정에서 연결이 해제됩니다. 계속할까요?",
       "cancelButton": "취소",
       "confirmButton": "초기화"
     }
@@ -1195,9 +1195,9 @@
     "planningChat": {
       "tabLabel": "✨플래닝",
       "title": "Planning Agent",
-      "description": "영업 전략을 위한 내부향 에이전트 대화. 선택한 상담 에이전트의 도구(KB 검색, AWS 문서 등)를 그대로 사용합니다.",
+      "description": "영업 전략 수립용 내부 에이전트 대화입니다. 선택한 상담 에이전트의 도구(KB 검색, AWS 문서 등)를 그대로 씁니다.",
       "agentSelectLabel": "상담 에이전트 선택",
-      "agentSelectDescription": "영업 전략 수립에 사용할 상담 에이전트(Consultation Agent)를 선택하세요.",
+      "agentSelectDescription": "영업 전략 수립에 쓸 상담 에이전트(Consultation Agent)를 선택하세요.",
       "agentSelectPlaceholder": "에이전트를 선택하세요",
       "agentEmpty": "사용 가능한 상담 에이전트가 없습니다.",
       "loadingAgents": "에이전트 목록 로딩 중...",
@@ -1233,18 +1233,18 @@
     "legal": {
       "title": "SHIP 보안 점검 법적 규약",
       "scopeTitle": "보안 점검 범위",
-      "scopeContent": "본 보안 점검은 AWS 계정의 기본 보안 설정을 자동으로 검사합니다. IAM 정책, 네트워크 보안 그룹, 암호화 설정, 로깅 구성 등 13개 핵심 보안 항목을 점검합니다.",
+      "scopeContent": "AWS 계정의 기본 보안 설정을 자동으로 검사합니다. IAM 정책, 네트워크 보안 그룹, 암호화 설정, 로깅 구성 등 13개 핵심 항목을 점검합니다.",
       "dataTitle": "데이터 처리 방침",
-      "dataContent": "보안 점검 과정에서 수집되는 데이터는 점검 결과 레포트 생성 목적으로만 사용되며, 점검 완료 후 AssumeRole 세션 정보는 즉시 삭제됩니다. 레포트는 암호화된 S3 버킷에 저장됩니다.",
+      "dataContent": "수집한 데이터는 점검 결과 레포트 생성에만 쓰이며, 점검이 끝나면 AssumeRole 세션 정보는 즉시 삭제합니다. 레포트는 암호화된 S3 버킷에 저장됩니다.",
       "disclaimerTitle": "면책 조항",
-      "disclaimerContent": "본 보안 점검은 AWS 계정의 보안 상태에 대한 참고 자료를 제공하며, 완전한 보안 감사를 대체하지 않습니다. 점검 결과에 따른 조치는 고객의 책임 하에 수행됩니다.",
+      "disclaimerContent": "이 보안 점검은 AWS 계정 보안 상태의 참고 자료이며, 완전한 보안 감사를 대신하지 않습니다. 점검 결과에 따른 조치는 고객 책임입니다.",
       "agreeButton": "동의합니다",
       "disagreeButton": "동의하지 않습니다",
       "errorGeneric": "법적 규약 동의 처리 중 오류가 발생했습니다."
     },
     "roleArn": {
       "label": "IAM Role ARN",
-      "description": "Prowler가 보안 점검을 수행할 수 있도록 생성한 IAM Role의 ARN을 입력해주세요.",
+      "description": "Prowler 보안 점검용으로 만든 IAM Role의 ARN을 입력하세요.",
       "required": "Role ARN을 입력해주세요.",
       "invalidFormat": "올바른 ARN 형식이 아닙니다. (예: arn:aws:iam::123456789012:role/ProwlerMemberRole)",
       "submitButton": "보안 점검 시작",
@@ -1263,14 +1263,14 @@
       "step4": "레포트 다운로드",
       "step4Desc": "생성된 보안 점검 레포트를 다운로드합니다.",
       "startLegal": "법적 규약 확인하기",
-      "roleSetupIntro": "보안 점검을 위해 고객님의 AWS 계정에 IAM Role을 생성해주세요. 아래 두 가지 방법 중 하나를 선택하여 Role을 구성한 후, 출력된 Role ARN을 입력해주세요.",
+      "roleSetupIntro": "보안 점검을 위해 AWS 계정에 IAM Role을 만들어 주세요. 아래 두 방법 중 하나로 Role을 구성한 뒤, 출력된 Role ARN을 입력하세요.",
       "cliGuide": "AWS CloudShell에서 아래 명령어를 실행하세요. 마지막 명령어의 출력값이 Role ARN입니다.",
       "cfnGuide": "아래 CloudFormation 템플릿을 다운로드하여 AWS 콘솔에서 스택을 생성하세요. Outputs 탭의 ProwlerMemberRoleArn 값이 Role ARN입니다.",
       "downloadCfn": "템플릿 다운로드 (.yaml)",
       "pasteArnHint": "위에서 생성한 Role의 ARN을 아래에 붙여넣으세요.",
-      "scanningMessage": "보안 점검이 진행 중입니다. 약 7-15분 정도 소요됩니다.",
-      "completedMessage": "보안 점검이 완료되었습니다. 우측 패널에서 레포트를 다운로드하세요.",
-      "failedMessage": "보안 점검 중 오류가 발생했습니다. Role ARN을 확인하고 다시 시도해주세요.",
+      "scanningMessage": "보안 점검 진행 중입니다. 약 7~15분 걸립니다.",
+      "completedMessage": "보안 점검이 끝났습니다. 우측 패널에서 레포트를 다운로드하세요.",
+      "failedMessage": "보안 점검 중 오류가 났습니다. Role ARN을 확인하고 다시 시도하세요.",
       "retryButton": "다시 시도"
     },
     "report": {
@@ -1284,7 +1284,7 @@
       "failed": "레포트 생성에 실패했습니다",
       "retryButton": "다시 시도",
       "dashboard": "대시보드",
-      "dashboardGuide": "CSV를 다운로드한 후, 대시보드를 열어 CSV 파일을 업로드하면 시각화된 보안 점검 결과를 확인할 수 있습니다."
+      "dashboardGuide": "CSV를 다운로드한 뒤 대시보드에서 업로드하면 보안 점검 결과를 시각화해 볼 수 있습니다."
     },
     "status": {
       "pending": "대기",
@@ -1324,7 +1324,7 @@
       "companyRequired": "회사명은 필수입니다",
       "phoneLabel": "전화번호",
       "phonePlaceholder": "+82-10-1234-5678",
-      "phoneDescription": "본인 확인 및 중복 세션 방지에 사용됩니다",
+      "phoneDescription": "본인 확인과 중복 세션 방지에 씁니다",
       "phoneInvalid": "올바른 전화번호를 입력하세요",
       "submitButton": "상담 시작",
       "backButton": "이전"
@@ -1358,7 +1358,7 @@
     },
     "access": {
       "title": "고객 접근 자산",
-      "description": "아래 URL과 QR 코드를 고객에게 공유하세요. PIN은 별도로 전달하세요.",
+      "description": "아래 URL과 QR 코드를 고객에게 공유하세요. PIN은 따로 전달하세요.",
       "urlLabel": "캠페인 URL",
       "copyButton": "복사",
       "copySuccess": "복사되었습니다",
@@ -1367,7 +1367,7 @@
       "qrUnavailable": "QR 코드 생성 라이브러리가 설치되지 않았습니다",
       "qrDownload": "QR 다운로드",
       "pinLabel": "캠페인 PIN",
-      "pinHiddenNote": "PIN은 해시로 저장되어 표시할 수 없습니다. \"PIN 재설정\"으로 새로 설정하세요.",
+      "pinHiddenNote": "PIN은 해시로 저장되어 표시할 수 없습니다. \"PIN 재설정\"으로 새로 지정하세요.",
       "resetPinButton": "PIN 재설정",
       "newPinPlaceholder": "새 6자리 PIN 입력",
       "savePinButton": "PIN 저장",
@@ -1382,7 +1382,7 @@
   },
   "onboarding": {
     "title": "시작 가이드",
-    "subtitle": "PreChat을 시작하기 위한 6단계 가이드입니다. 각 단계를 완료하여 고객 상담을 준비하세요.",
+    "subtitle": "6단계만 따라오면 고객 상담을 바로 시작할 수 있습니다.",
     "errorTitle": "온보딩 상태를 불러오지 못했습니다",
     "retry": "다시 시도",
     "stepsAriaLabel": "온보딩 단계 목록",
@@ -1395,11 +1395,11 @@
       "users": {
         "title": "1. 관리자 계정 확인",
         "description": "Cognito User Pool에 최소 1명 이상의 관리자 계정이 필요합니다.",
-        "guidance": "관리자 초대는 AWS 콘솔 또는 별도 프로세스를 통해 수동으로 진행됩니다. 신규 관리자가 필요하면 기존 관리자에게 문의하세요."
+        "guidance": "관리자 초대는 AWS 콘솔이나 별도 프로세스로 직접 진행해야 합니다. 신규 관리자가 필요하면 기존 관리자에게 문의하세요."
       },
       "agents": {
         "title": "2. AI 에이전트 설정",
-        "description": "상담(consultation) 에이전트와 요약(summary) 에이전트가 각각 최소 1개씩 필요합니다.",
+        "description": "상담(consultation) 에이전트와 요약(summary) 에이전트가 최소 1개씩 있어야 합니다.",
         "ctaLabel": "에이전트 생성하기"
       },
       "campaigns": {
@@ -1409,13 +1409,13 @@
       },
       "sessions": {
         "title": "4. 세션 생성",
-        "description": "캠페인 단위로 고객 세션을 생성하여 상담을 진행합니다.",
+        "description": "캠페인 안에서 고객 세션을 만들어 상담을 시작합니다.",
         "ctaLabel": "세션 생성하기"
       },
       "customer-invite": {
         "title": "5. 고객 초대",
-        "description": "아웃바운드는 URL + PIN을 고객에게 전달하고, 인바운드는 URL 또는 QR 코드를 배포합니다.",
-        "guidance": "아웃바운드: 세션 생성 시 발급되는 URL과 PIN을 고객에게 전달하세요. 인바운드: 캠페인 URL 또는 QR 코드를 통해 고객이 직접 세션을 생성합니다."
+        "description": "고객이 에이전트와 채팅하도록 초대하세요.",
+        "guidance": "아웃바운드: 세션 생성 시 발급되는 URL과 PIN을 고객에게 전달하세요. 인바운드: 캠페인 URL이나 QR 코드를 공유하면 고객이 직접 세션을 만들 수 있습니다."
       },
       "session-analysis": {
         "title": "6. 세션 분석",
