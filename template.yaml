@@ -62,11 +62,8 @@ Globals:
         CLIENT_ID: !Ref AdminUserPoolClient
         ALLOWED_EMAIL_DOMAINS: !Ref AllowedEmailDomains
         BEDROCK_AGENT_ROLE_ARN: !GetAtt BedrockAgentServiceRole.Arn
-        BEDROCK_KB_ID: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/bedrock-kb-id}}'
         CONSULTATION_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/consultation/runtime-arn}}'
         SUMMARY_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/summary/runtime-arn}}'
-        PLANNING_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/planning/runtime-arn}}'
-        SHIP_AGENT_ARN: !Sub '{{resolve:ssm:/prechat/${Stage}/agents/ship/runtime-arn}}'
         PIN_HASH_SECRET: !Ref PinHashSecret
     KmsKeyArn: !GetAtt DynamoDBKMSKey.Arn
   Api:
@@ -1438,6 +1435,32 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  # Knowledge Base List API
+  # VPC 외부 실행: Bedrock Agent 관리 API는 VPC Endpoint가 없으면
+  # 도달할 수 없어 504 타임아웃이 발생한다. 이 함수는 DynamoDB 접근이
+  # 없고 Cognito 인증된 관리자만 호출하므로 VPC 외부 실행해도 안전하다.
+  KBListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/agent/
+      Handler: kb_list_handler.list_knowledge_bases
+      VpcConfig: !Ref AWS::NoValue
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:ListKnowledgeBases
+            Resource: '*'
+      Events:
+        ListKnowledgeBases:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/knowledge-bases
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   GenerateMeetingPlanFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -2103,6 +2126,37 @@ Resources:
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /api/admin/migrate/campaigns/verify
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  # ============================================
+  # Admin Onboarding Landing (GET /api/admin/onboarding/status)
+  # 6개 Quest 상태를 단일 왕복으로 집계하는 읽기 전용 엔드포인트.
+  # SharedLayer, VpcConfig, Runtime, USER_POOL_ID/SESSIONS_TABLE/CAMPAIGNS_TABLE은
+  # Globals.Function에서 상속됨.
+  # ============================================
+  OnboardingStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/admin/
+      Handler: onboarding_handler.get_onboarding_status
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:ListUsers
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        GetOnboardingStatus:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/onboarding/status
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -2811,30 +2865,6 @@ Resources:
               - execute-api:ManageConnections
             Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Stage}/POST/@connections/*'
 
-  # WebSocket sendPlanningMessage 핸들러 - Planning Agent 스트리밍
-  WebSocketSendPlanningMessageFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: packages/backend/websocket/
-      Handler: websocket_handler.handle_send_planning_message
-      Timeout: 300
-      VpcConfig: !Ref AWS::NoValue
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref MessagesTable
-        - Statement:
-            Effect: Allow
-            Action:
-              - bedrock-agentcore:InvokeAgentRuntime
-            Resource: '*'
-        - Statement:
-            Effect: Allow
-            Action:
-              - execute-api:ManageConnections
-            Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Stage}/POST/@connections/*'
-
   # WebSocket $default 핸들러 - 알 수 없는 액션 처리
   WebSocketDefaultFunction:
     Type: AWS::Serverless::Function
@@ -2873,14 +2903,6 @@ Resources:
       FunctionName: !Ref WebSocketSendMessageFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/sendMessage'
-
-  WebSocketSendPlanningMessagePermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref WebSocketSendPlanningMessageFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/sendPlanningMessage'
 
   WebSocketDefaultPermission:
     Type: AWS::Lambda::Permission
@@ -2973,22 +2995,6 @@ Resources:
       RouteKey: sendMessage
       AuthorizationType: NONE
       Target: !Sub 'integrations/${WebSocketSendMessageIntegration}'
-
-  # ---- sendPlanningMessage 라우트 ----
-  WebSocketSendPlanningMessageIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketApi
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketSendPlanningMessageFunction.Arn}/invocations'
-
-  WebSocketSendPlanningMessageRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketApi
-      RouteKey: sendPlanningMessage
-      AuthorizationType: NONE
-      Target: !Sub 'integrations/${WebSocketSendPlanningMessageIntegration}'
 
   # ---- $default 라우트 ----
   WebSocketDefaultIntegration:

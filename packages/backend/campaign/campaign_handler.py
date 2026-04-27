@@ -6,6 +6,7 @@ import os
 from decimal import Decimal
 from botocore.exceptions import ClientError
 from utils import lambda_response, parse_body, get_timestamp, generate_id, convert_decimal_to_int, serialize_dynamodb_item, build_update_expression
+from models.agent_config import LEGACY_ROLE_MAP
 
 # Configure logging
 logger = logging.getLogger()
@@ -20,6 +21,78 @@ USER_POOL_ID = os.environ.get('USER_POOL_ID')
 # Campaign 도메인 이벤트 트리거
 from trigger_manager import TriggerManager
 trigger_manager = TriggerManager()
+
+def validate_agent_configurations(agent_configs, sessions_table_name):
+    """캠페인의 agentConfigurations를 검증합니다.
+
+    consultation, summary 2개 역할만 허용하며,
+    참조된 AgentConfig ID의 존재 여부와 역할 일치를 검증합니다.
+    레거시 역할(prechat, planning, ship)은 consultation으로 해석합니다.
+
+    Returns:
+        (is_valid, error_response) 튜플.
+        is_valid가 True이면 error_response는 None.
+    """
+    if not isinstance(agent_configs, dict):
+        return False, lambda_response(400, {
+            'error': 'agentConfigurations must be an object'
+        })
+
+    valid_keys = {'consultation', 'summary'}
+    invalid_keys = set(agent_configs.keys()) - valid_keys
+    if invalid_keys:
+        return False, lambda_response(400, {
+            'error': f'Invalid agentConfigurations keys: {invalid_keys}. '
+                     f'Allowed keys: {valid_keys}'
+        })
+
+    table = dynamodb.Table(sessions_table_name)
+
+    for expected_role, config_id in agent_configs.items():
+        # 빈 문자열은 연결 해제로 허용
+        if not config_id:
+            continue
+
+        # AgentConfig ID 존재 여부 확인
+        try:
+            resp = table.get_item(
+                Key={
+                    'PK': f'AGENTCONFIG#{config_id}',
+                    'SK': 'METADATA',
+                }
+            )
+        except ClientError as e:
+            logger.error(
+                f"DynamoDB error validating AgentConfig "
+                f"{config_id}: {str(e)}"
+            )
+            return False, lambda_response(500, {
+                'error': 'Failed to validate AgentConfig'
+            })
+
+        if 'Item' not in resp:
+            return False, lambda_response(400, {
+                'error': f'Referenced AgentConfig not found: '
+                         f'{config_id}'
+            })
+
+        # 역할 일치 검증 (레거시 역할 매핑 적용)
+        item = resp['Item']
+        stored_role = item.get('agentRole', '')
+        effective_role = LEGACY_ROLE_MAP.get(
+            stored_role, stored_role
+        )
+
+        if effective_role != expected_role:
+            return False, lambda_response(400, {
+                'error': f'AgentConfig role mismatch: '
+                         f'expected {expected_role}, '
+                         f'got {effective_role} '
+                         f'(stored: {stored_role})'
+            })
+
+    return True, None
+
 
 def create_campaign(event, context):
     """Create a new campaign"""
@@ -43,6 +116,15 @@ def create_campaign(event, context):
         # Validate date range
         if start_date >= end_date:
             return lambda_response(400, {'error': 'End date must be after start date'})
+        
+        # Validate agentConfigurations (consultation, summary)
+        agent_configs = body.get('agentConfigurations')
+        if agent_configs:
+            is_valid, error_resp = validate_agent_configurations(
+                agent_configs, SESSIONS_TABLE
+            )
+            if not is_valid:
+                return error_resp
         
         # Get owner information from Cognito
         owner_info = get_user_info(owner_id)
@@ -72,11 +154,10 @@ def create_campaign(event, context):
             'updatedAt': timestamp,
             'sessionCount': 0,
             'completedSessionCount': 0,
-            # Agent Configuration 연결 (prechat, summary, planning)
+            # Agent Configuration 연결 (consultation, summary)
             'agentConfigurations': body.get('agentConfigurations', {
-                'prechat': '',
+                'consultation': '',
                 'summary': '',
-                'planning': '',
             }),
             'GSI1PK': f'OWNER#{owner_id}',
             'GSI1SK': f'CAMPAIGN#{timestamp}'
@@ -234,7 +315,7 @@ def get_campaign(event, context):
             'updatedAt': campaign.get('updatedAt', campaign['createdAt']),
             'sessionCount': convert_decimal_to_int(campaign.get('sessionCount', 0)),
             'completedSessionCount': convert_decimal_to_int(campaign.get('completedSessionCount', 0)),
-            'agentConfigurations': campaign.get('agentConfigurations', {'prechat': '', 'summary': '', 'planning': ''})
+            'agentConfigurations': campaign.get('agentConfigurations', {'consultation': '', 'summary': ''})
         }
         
         return lambda_response(200, campaign_data)
@@ -284,6 +365,15 @@ def update_campaign(event, context):
         
         if start_date >= end_date:
             return lambda_response(400, {'error': 'End date must be after start date'})
+        
+        # Validate agentConfigurations if being updated
+        if 'agentConfigurations' in update_data:
+            is_valid, error_resp = validate_agent_configurations(
+                update_data['agentConfigurations'],
+                SESSIONS_TABLE,
+            )
+            if not is_valid:
+                return error_resp
         
         # Handle owner change
         if 'ownerId' in update_data:

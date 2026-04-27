@@ -16,6 +16,7 @@ interface StreamingChatMessageProps {
   salesRepInfo?: SalesRepInfo
   onFormSubmit?: (formData: Record<string, string>) => void
   onRequestForm?: () => void
+  /** Capture to Discussion 버튼 클릭 핸들러 (플래닝 채팅 전용) */
   onCapture?: () => void
 }
 
@@ -101,6 +102,12 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
                   iconName: "insert-row" as const,
                   text: t('customer.chat.requestFormButton')
                 }] : []),
+                ...(onCapture ? [{
+                  type: "icon-button" as const,
+                  id: "capture",
+                  iconName: "add-plus" as const,
+                  text: t('admin.planningChat.captureButton') || 'Capture to Discussion'
+                }] : []),
                 {
                   type: "icon-button" as const,
                   id: "copy",
@@ -112,12 +119,6 @@ export const StreamingChatMessage: React.FC<StreamingChatMessageProps> = ({
                     </StatusIndicator>
                   )
                 },
-                ...(onCapture ? [{
-                  type: "icon-button" as const,
-                  id: "capture",
-                  iconName: "share" as const,
-                  text: t('admin.planningChat.captureToDiscussion') || 'Capture to Discussion',
-                }] : []),
               ]}
               onItemClick={({ detail }) => handleActionClick(detail.id)}
             />

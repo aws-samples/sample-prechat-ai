@@ -32,19 +32,40 @@ logging.getLogger("strands").setLevel(logging.INFO)
 
 class BANTAnalysis(BaseModel):
     """BANT 프레임워크 분석 결과"""
-    budget: str = Field(description="Budget analysis - estimated range, current spending, and notes combined into a concise summary")
-    authority: str = Field(description="Authority analysis - decision makers, approval process, and notes combined into a concise summary")
-    need: str = Field(description="Need analysis - business challenges, technical requirements, and desired outcomes combined into a concise summary")
-    timeline: str = Field(description="Timeline analysis - expected timeline, key milestones, urgency, and notes combined into a concise summary")
+    budget: str = Field(
+        description="Budget analysis - estimated range, "
+        "current spending, and notes combined "
+        "into a concise summary"
+    )
+    authority: str = Field(
+        description="Authority analysis - decision makers, "
+        "approval process, and notes combined "
+        "into a concise summary"
+    )
+    need: str = Field(
+        description="Need analysis - business challenges, "
+        "technical requirements, and desired outcomes "
+        "combined into a concise summary"
+    )
+    timeline: str = Field(
+        description="Timeline analysis - expected timeline, "
+        "key milestones, urgency, and notes combined "
+        "into a concise summary"
+    )
 
 
 class AWSService(BaseModel):
     """추천 AWS 서비스"""
-    service: str = Field(description="AWS service name (e.g. Amazon Bedrock)")
-    reason: str = Field(description="Why this service is recommended for the customer's use case")
-    implementation: str = Field(description="Brief implementation guidance or approach")
-
-
+    service: str = Field(
+        description="AWS service name (e.g. Amazon Bedrock)"
+    )
+    reason: str = Field(
+        description="Why this service is recommended "
+        "for the customer's use case"
+    )
+    implementation: str = Field(
+        description="Brief implementation guidance or approach"
+    )
 
 
 class AnalysisOutput(BaseModel):
@@ -56,14 +77,17 @@ class AnalysisOutput(BaseModel):
       - awsServices: recommended AWS services list
     """
     markdownSummary: str = Field(
-        description="Executive summary of the pre-consultation in 2-3 sentences"
+        description="Executive summary of the "
+        "pre-consultation in 2-3 sentences"
     )
     bantAnalysis: BANTAnalysis = Field(
-        description="BANT (Budget, Authority, Need, Timeline) framework analysis"
+        description="BANT (Budget, Authority, Need, "
+        "Timeline) framework analysis"
     )
     awsServices: list[AWSService] = Field(
         default_factory=list,
-        description="List of recommended AWS services with reasons and implementation guidance"
+        description="List of recommended AWS services "
+        "with reasons and implementation guidance"
     )
 
 
@@ -90,43 +114,47 @@ def _get_locale_instruction(locale: str) -> str:
     """locale 코드에 따른 언어 지시를 반환합니다."""
     if locale == 'ko':
         return (
-            "## Language Instruction\n"
-            "IMPORTANT: You MUST respond in Korean (한국어). "
-            "All analysis results, field values, and summaries must be written in Korean."
+            "\n\n## Language Instruction\n"
+            "IMPORTANT: You MUST respond in Korean "
+            "(한국어). All analysis results, field values, "
+            "and summaries must be written in Korean."
         )
     return (
-        "## Language Instruction\n"
+        "\n\n## Language Instruction\n"
         "IMPORTANT: You MUST respond in English. "
-        "All analysis results, field values, and summaries must be written in English."
+        "All analysis results, field values, "
+        "and summaries must be written in English."
     )
 
 
 def create_summary_agent(
-    system_prompt: str | None = None,
-    model_id: str | None = None,
-    agent_name: str | None = None,
-    locale: str = 'ko',
+    config: dict | None = None,
 ) -> Agent:
     """Summary Agent를 생성합니다.
 
+    Summary Agent는 AgentConfig에서 model_id와 locale만
+    수신합니다. tools, system_prompt 오버라이드는 무시하고
+    항상 기본 시스템 프롬프트와 빈 도구 리스트를 사용합니다.
+
     Args:
-        system_prompt: 사용자 정의 시스템 프롬프트 (None이면 DEFAULT 사용)
-        model_id: 사용자 정의 모델 ID (None이면 DEFAULT 사용)
-        agent_name: 사용자 정의 에이전트 이름 (None이면 DEFAULT 사용)
-        locale: 응답 언어 코드 ('ko' 또는 'en')
+        config: AgentConfig payload dict.
+            - model_id: 모델 ID (없으면 DEFAULT 사용)
+            - locale: 응답 언어 코드 ('ko' 또는 'en')
+            - tools, system_prompt 등은 무시됨
 
     Returns:
         구성된 Strands Agent 인스턴스
     """
-    effective_prompt = system_prompt or DEFAULT_SYSTEM_PROMPT
-    locale_instruction = _get_locale_instruction(locale)
-    effective_prompt = f"{effective_prompt}\n\n{locale_instruction}"
-
+    model = DEFAULT_MODEL_ID
+    if config and config.get('model_id'):
+        model = config['model_id']
+    locale = config.get('locale', 'ko') if config else 'ko'
     return Agent(
-        model=model_id or DEFAULT_MODEL_ID,
-        system_prompt=effective_prompt,
-        name=agent_name or DEFAULT_AGENT_NAME,
-        tools=[],
+        model=model,
+        system_prompt=DEFAULT_SYSTEM_PROMPT
+        + _get_locale_instruction(locale),
+        name=DEFAULT_AGENT_NAME,
+        tools=[],  # Summary Agent는 도구 없음
     )
 
 
@@ -134,68 +162,79 @@ def create_summary_agent(
 def invoke(payload: dict) -> dict:
     """AgentCore Runtime 호출 엔트리포인트
 
-    Strands Structured Output을 사용하여 AnalysisOutput Pydantic 모델로
-    타입 안전한 응답을 반환합니다.
+    Strands Structured Output을 사용하여
+    AnalysisOutput Pydantic 모델로 타입 안전한
+    응답을 반환합니다.
 
     payload 구조:
       {
         "conversation_history": "대화 내용 텍스트",
-        "meeting_log": "영업 담당자가 작성한 미팅 로그 (선택, 빈 문자열 가능)",
+        "meeting_log": "미팅 로그 (선택)",
         "config": {
-          "system_prompt": "...",
           "model_id": "...",
-          "agent_name": "...",
           "locale": "ko"
         }
       }
+
+    Note: config의 tools, system_prompt는 Summary
+    Agent에서 무시됩니다.
     """
-    conversation_history = payload.get("conversation_history", "")
+    conversation_history = payload.get(
+        "conversation_history", ""
+    )
     if not conversation_history:
         return {"error": "No conversation_history provided"}
 
     meeting_log = payload.get("meeting_log", "")
     config = payload.get("config", {})
-    locale = config.get("locale", "ko")
 
-    agent = create_summary_agent(
-        system_prompt=config.get("system_prompt"),
-        model_id=config.get("model_id"),
-        agent_name=config.get("agent_name"),
-        locale=locale,
-    )
+    agent = create_summary_agent(config=config)
 
     prompt = (
-        "Analyze the following pre-consultation conversation using the BANT framework:\n\n"
+        "Analyze the following pre-consultation "
+        "conversation using the BANT framework:\n\n"
         f"{conversation_history}"
     )
 
     if meeting_log:
         prompt += (
-            "\n\n--- Meeting Log (written by Sales Rep) ---\n"
+            "\n\n--- Meeting Log (written by Sales Rep) "
+            "---\n"
             f"{meeting_log}\n"
             "---\n\n"
-            "Consider both the pre-consultation conversation and the meeting log above in your analysis."
+            "Consider both the pre-consultation "
+            "conversation and the meeting log above "
+            "in your analysis."
         )
 
     try:
-        result = agent(prompt, structured_output_model=AnalysisOutput)
+        result = agent(
+            prompt,
+            structured_output_model=AnalysisOutput,
+        )
         output: AnalysisOutput = result.structured_output
-
-        # Pydantic 모델을 프론트엔드 호환 dict로 변환
         return {"result": output.model_dump()}
 
     except StructuredOutputException as e:
-        logging.error(f"Structured output validation failed: {e}")
+        logging.error(
+            f"Structured output validation failed: {e}"
+        )
         # 폴백: 일반 텍스트 응답
         fallback_result = agent(prompt)
         return {
             "result": {
-                "markdownSummary": str(fallback_result.message),
+                "markdownSummary": str(
+                    fallback_result.message
+                ),
                 "bantAnalysis": {
-                    "budget": "Analysis parsing failed - see markdownSummary",
-                    "authority": "Analysis parsing failed - see markdownSummary",
-                    "need": "Analysis parsing failed - see markdownSummary",
-                    "timeline": "Analysis parsing failed - see markdownSummary",
+                    "budget": "Analysis parsing failed"
+                    " - see markdownSummary",
+                    "authority": "Analysis parsing failed"
+                    " - see markdownSummary",
+                    "need": "Analysis parsing failed"
+                    " - see markdownSummary",
+                    "timeline": "Analysis parsing failed"
+                    " - see markdownSummary",
                 },
                 "awsServices": [],
             }

@@ -913,6 +913,18 @@
       "noAgentsTitle": "No agents",
       "noAgentsDescription": "No AgentCore agents found.",
       "createAgentButton": "에이전트 생성"
+    },
+    "deleteModal": {
+      "header": "에이전트 삭제 확인",
+      "warning": "이 작업은 되돌릴 수 없습니다. 삭제된 에이전트를 참조 중인 캠페인/세션에서 오류가 발생할 수 있으니, 삭제 전에 다른 에이전트로 재배정했는지 확인하세요.",
+      "targetLabel": "삭제 대상",
+      "confirmButton": "삭제",
+      "cancelButton": "취소"
+    },
+    "flash": {
+      "loadFailed": "에이전트 목록을 불러오지 못했습니다.",
+      "deleteSuccess": "에이전트 \"{{name}}\"가 삭제되었습니다.",
+      "deleteFailed": "에이전트 삭제에 실패했습니다. 다시 시도해 주세요."
     }
   },
   "adminAgentCreate": {
@@ -936,14 +948,34 @@
       "foundationModelLabel": "Foundation Model",
       "foundationModelDescription": "에이전트의 기반 Foundation Model",
       "foundationModelPlaceholder": "Select a foundation model",
-      "promptOverrideLabel": "프롬프트 오버라이드",
+      "promptOverrideLabel": "시스템 프롬프트 편집",
       "promptOverrideDescription": "에이전트의 시스템 프롬프트를 커스터마이징하려면 활성화하세요. 비활성화 시 에이전트의 기본 프롬프트가 사용됩니다.",
       "promptOverrideCheckbox": "커스텀 프롬프트 오버라이드 활성화",
       "agentInstructionsLabel": "Agent Instructions",
       "agentInstructionsDescription": "에이전트 행동에 대한 지침을 상세하게 작성합니다. 플레이스홀더를 사용하여 동적 정보를 포함할 수 있습니다.",
       "agentInstructionsPlaceholder": "Enter agent instructions...",
       "defaultInstructionsButton": "기본 에이전트 지침",
-      "readOnlyRoleInfo": "Summary Agent와 Planning Agent는 시스템에서 관리됩니다. 프롬프트 커스터마이징은 제공되지 않으며, 모델 선택은 가능합니다."
+      "i18nLabel": "에이전트 응답 언어",
+      "i18nDescription": "에이전트가 고객에게 응답할 때 사용할 언어를 선택하세요",
+      "toolsLabel": "도구",
+      "toolsDescription": "상담 중 에이전트가 사용할 수 있는 도구를 선택하세요",
+      "toolsPlaceholder": "도구 설정은 다음 업데이트에서 제공됩니다.",
+      "kbPlaceholder": "Knowledge Base를 선택하세요",
+      "kbLoading": "Knowledge Base 목록 로딩 중...",
+      "kbEmpty": "사용 가능한 Knowledge Base가 없습니다",
+      "kbLoadError": "Knowledge Base 목록을 불러오는데 실패했습니다.",
+      "kbRequiredError": "retrieve 도구를 사용하려면 Knowledge Base를 선택해야 합니다.",
+      "templateLabel": "상담 템플릿",
+      "templateDescription": "사전 정의된 템플릿을 선택하면 시스템 프롬프트, 도구, 모델, 언어가 자동으로 설정됩니다. 선택 후 값을 수정할 수 있습니다.",
+      "templatePlaceholder": "템플릿을 선택하세요 (선택사항)",
+      "templateCustom": "커스텀 (직접 설정)",
+      "templateCustomDesc": "모든 설정을 직접 구성합니다",
+      "templateCustomer": "고객 상담",
+      "templateCustomerDesc": "고객 사전 상담용 기본 템플릿 (KB 검색, 폼 생성, 시간 조회)",
+      "templateSales": "영업 전략 상담",
+      "templateSalesDesc": "영업 전략 수립 지원 템플릿 (KB 검색, AWS 문서, 시간 조회)",
+      "templateSecurity": "보안 상담",
+      "templateSecurityDesc": "보안 평가 및 컴플라이언스 상담 템플릿 (KB 검색, A2T 로그, 시간 조회)"
     }
   },
   "adminAgentEdit": {
@@ -971,7 +1003,7 @@
       "foundationModelLabel": "Foundation Model",
       "foundationModelDescription": "Foundation model 을 선택합니다",
       "foundationModelPlaceholder": "Select a foundation model",
-      "promptOverrideLabel": "프롬프트 오버라이드",
+      "promptOverrideLabel": "시스템 프롬프트 편집",
       "promptOverrideDescription": "에이전트의 시스템 프롬프트를 커스터마이징하려면 활성화하세요. 비활성화 시 에이전트의 기본 프롬프트가 사용됩니다.",
       "promptOverrideCheckbox": "커스텀 프롬프트 오버라이드 활성화",
       "agentInstructionsLabel": "Agent Instructions",
@@ -1161,16 +1193,27 @@
   },
   "admin": {
     "planningChat": {
-      "tabLabel": "플래닝✨",
+      "tabLabel": "✨플래닝",
       "title": "Planning Agent",
-      "description": "어카운트 분석, 서비스 추천, 유사 고객사례 검색을 도와드립니다.",
+      "description": "영업 전략을 위한 내부향 에이전트 대화. 선택한 상담 에이전트의 도구(KB 검색, AWS 문서 등)를 그대로 사용합니다.",
+      "agentSelectLabel": "상담 에이전트 선택",
+      "agentSelectDescription": "영업 전략 수립에 사용할 상담 에이전트(Consultation Agent)를 선택하세요.",
+      "agentSelectPlaceholder": "에이전트를 선택하세요",
+      "agentEmpty": "사용 가능한 상담 에이전트가 없습니다.",
+      "loadingAgents": "에이전트 목록 로딩 중...",
+      "loadAgentsError": "에이전트 목록을 불러오지 못했습니다.",
+      "selectAgentPrompt": "대화를 시작하려면 상단에서 에이전트를 선택하세요.",
+      "connected": "연결됨",
+      "connecting": "연결 중...",
+      "connectionError": "연결 오류",
+      "disconnected": "대기 중",
       "suggestedQuestion1": "제안하기 좋은 서비스 알려줘",
       "suggestedQuestion2": "유사 고객사례 찾아줘",
       "suggestedQuestion3": "Action Item 체계적으로 제안해줘",
       "suggestedQuestion4": "SHIP A2T 로그 뽑아줘",
       "clearHistory": "대화 이력 초기화",
       "inputPlaceholder": "Planning Agent에게 질문하세요...",
-      "captureToDiscussion": "Discussion에 캡처",
+      "captureButton": "Discussion에 캡처",
       "captureModalTitle": "Discussion에 캡처",
       "annotationLabel": "주석",
       "annotationDescription": "캡처할 내용에 대한 주석을 입력하세요.",
@@ -1332,6 +1375,54 @@
       "pinSaved": "PIN이 업데이트되었습니다",
       "pinSaveFailed": "PIN 업데이트 실패",
       "pinFormatError": "PIN은 6자리 숫자여야 합니다"
+    }
+  },
+  "nav": {
+    "onboarding": "온보딩"
+  },
+  "onboarding": {
+    "title": "시작 가이드",
+    "subtitle": "PreChat을 시작하기 위한 6단계 가이드입니다. 각 단계를 완료하여 고객 상담을 준비하세요.",
+    "errorTitle": "온보딩 상태를 불러오지 못했습니다",
+    "retry": "다시 시도",
+    "stepsAriaLabel": "온보딩 단계 목록",
+    "status": {
+      "complete": "완료",
+      "incomplete": "미완료",
+      "info": "안내"
+    },
+    "quests": {
+      "users": {
+        "title": "1. 관리자 계정 확인",
+        "description": "Cognito User Pool에 최소 1명 이상의 관리자 계정이 필요합니다.",
+        "guidance": "관리자 초대는 AWS 콘솔 또는 별도 프로세스를 통해 수동으로 진행됩니다. 신규 관리자가 필요하면 기존 관리자에게 문의하세요."
+      },
+      "agents": {
+        "title": "2. AI 에이전트 설정",
+        "description": "상담(consultation) 에이전트와 요약(summary) 에이전트가 각각 최소 1개씩 필요합니다.",
+        "ctaLabel": "에이전트 생성하기"
+      },
+      "campaigns": {
+        "title": "3. 캠페인 생성",
+        "description": "고객 상담을 진행할 활성 캠페인을 최소 1개 이상 생성하세요.",
+        "ctaLabel": "캠페인 생성하기"
+      },
+      "sessions": {
+        "title": "4. 세션 생성",
+        "description": "캠페인 단위로 고객 세션을 생성하여 상담을 진행합니다.",
+        "ctaLabel": "세션 생성하기"
+      },
+      "customer-invite": {
+        "title": "5. 고객 초대",
+        "description": "아웃바운드는 URL + PIN을 고객에게 전달하고, 인바운드는 URL 또는 QR 코드를 배포합니다.",
+        "guidance": "아웃바운드: 세션 생성 시 발급되는 URL과 PIN을 고객에게 전달하세요. 인바운드: 캠페인 URL 또는 QR 코드를 통해 고객이 직접 세션을 생성합니다."
+      },
+      "session-analysis": {
+        "title": "6. 세션 분석",
+        "description": "완료된 세션의 AI 분석 리포트와 미팅 플랜을 확인하세요.",
+        "ctaLabel": "대시보드로 이동",
+        "countLabel": "완료된 세션 수"
+      }
     }
   }
 }

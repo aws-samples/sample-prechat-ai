@@ -45,6 +45,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# Python property-based test (hypothesis) cache
+.hypothesis/
+
 # AWS SAM
 .aws-sam/
 samconfig.toml

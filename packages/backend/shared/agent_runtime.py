@@ -22,21 +22,19 @@ from models.agent_config import AgentConfiguration
 # 모듈 로드 시점에 환경 변수 읽기
 DEFAULT_CONSULTATION_AGENT_ARN = os.environ.get('CONSULTATION_AGENT_ARN', '')
 DEFAULT_SUMMARY_AGENT_ARN = os.environ.get('SUMMARY_AGENT_ARN', '')
-DEFAULT_PLANNING_AGENT_ARN = os.environ.get('PLANNING_AGENT_ARN', '')
-DEFAULT_SHIP_AGENT_ARN = os.environ.get('SHIP_AGENT_ARN', '')
 
 print(f"[INIT] Module loaded - DEFAULT_CONSULTATION_AGENT_ARN: '{DEFAULT_CONSULTATION_AGENT_ARN}'")
 print(f"[INIT] Module loaded - DEFAULT_SUMMARY_AGENT_ARN: '{DEFAULT_SUMMARY_AGENT_ARN}'")
-print(f"[INIT] Module loaded - DEFAULT_PLANNING_AGENT_ARN: '{DEFAULT_PLANNING_AGENT_ARN}'")
-print(f"[INIT] Module loaded - DEFAULT_SHIP_AGENT_ARN: '{DEFAULT_SHIP_AGENT_ARN}'")
 
 # 역할별 기본 ARN 매핑
+# 레거시 역할(prechat, planning, ship)은 모두 consultation ARN으로 매핑 (기존 세션 하위 호환성)
 DEFAULT_AGENT_ARNS = {
-    'prechat': DEFAULT_CONSULTATION_AGENT_ARN,
     'consultation': DEFAULT_CONSULTATION_AGENT_ARN,
     'summary': DEFAULT_SUMMARY_AGENT_ARN,
-    'planning': DEFAULT_PLANNING_AGENT_ARN,
-    'ship': DEFAULT_SHIP_AGENT_ARN,
+    # 레거시 역할 → consultation ARN (Requirements 15.1, 15.4)
+    'prechat': DEFAULT_CONSULTATION_AGENT_ARN,
+    'planning': DEFAULT_CONSULTATION_AGENT_ARN,
+    'ship': DEFAULT_CONSULTATION_AGENT_ARN,
 }
 
 dynamodb = boto3.resource('dynamodb')
@@ -49,6 +47,9 @@ def _build_config_payload(config: Optional[AgentConfiguration], locale: str = 'k
 
     이 dict는 AgentCore payload의 "config" 키로 전달되어,
     에이전트 컨테이너의 invoke 엔트리포인트에서 Agent 객체 초기화에 사용됩니다.
+
+    locale 우선순위: config.i18n > 파라미터 locale
+    tools: '[]'이 아닌 경우에만 포함 (JSON 문자열 그대로 전달)
     """
     if not config:
         return {'locale': locale} if locale else {}
@@ -59,8 +60,9 @@ def _build_config_payload(config: Optional[AgentConfiguration], locale: str = 'k
         result['model_id'] = config.model_id
     if config.agent_name:
         result['agent_name'] = config.agent_name
-    if locale:
-        result['locale'] = locale
+    if config.tools and config.tools != '[]':
+        result['tools'] = config.tools
+    result['locale'] = config.i18n or locale
     return result
 
 
@@ -212,8 +214,7 @@ class AgentCoreClient:
         AgentCore Runtime의 스트리밍 응답에서 SSE data: 라인을 추출하고,
         JSON 파싱하여 이벤트 타입별로 반환하는 공통 헬퍼입니다.
 
-        invoke_consultation_stream_chunks와 invoke_planning_stream_chunks에서
-        동일한 SSE 파싱 로직을 재활용합니다.
+        invoke_stream_chunks에서 SSE 파싱 로직을 재활용합니다.
 
         Args:
             response: invoke_agent_runtime의 응답 딕셔너리.
@@ -295,6 +296,7 @@ class AgentCoreClient:
         message: str,
         config: Optional[AgentConfiguration] = None,
         locale: str = 'ko',
+        conversation_history: str = '',
     ):
         """AgentCore 스트리밍 응답을 이벤트 단위로 yield합니다.
 
@@ -303,6 +305,7 @@ class AgentCoreClient:
         텍스트 청크 또는 tool_use 이벤트로 반환합니다.
 
         payload에 entrypoint: "stream"을 포함하여 스트리밍 엔트리포인트를 지정합니다.
+        conversation_history가 제공되면 Sales Rep 플래닝 채팅 등의 컨텍스트로 전달된다.
 
         Yields:
             dict: 파싱된 이벤트 딕셔너리. type 필드로 분류:
@@ -323,6 +326,8 @@ class AgentCoreClient:
                 "session_id": session_id,
                 "entrypoint": "stream",
             }
+            if conversation_history:
+                payload["conversation_history"] = conversation_history
             config_dict = _build_config_payload(config, locale)
             if config_dict:
                 payload["config"] = config_dict
@@ -341,85 +346,6 @@ class AgentCoreClient:
 
         except Exception as e:
             print(f"[ERROR] AgentCore stream chunks error: {str(e)}")
-            import traceback
-            print(f"[ERROR] Traceback: {traceback.format_exc()}")
-            yield {"type": "error", "message": self._handle_error(e)}
-
-    def invoke_planning_stream_chunks(
-        self,
-        agent_runtime_arn: str,
-        session_id: str,
-        prompt: str,
-        customer_info: dict = None,
-        conversation_history: str = '',
-        config: Optional[AgentConfiguration] = None,
-        locale: str = 'ko',
-    ):
-        """Planning Agent 스트리밍 응답을 이벤트 단위로 yield합니다.
-
-        Planning Agent의 'stream' 엔트리포인트를 호출하고,
-        공통 SSE 파싱 헬퍼(_parse_sse_stream)를 사용하여
-        텍스트 청크 또는 tool_use 이벤트로 반환합니다.
-
-        Planning_Chat_Payload 형식으로 페이로드를 구성합니다:
-        prompt, session_id, customer_info, conversation_history, config
-
-        Args:
-            agent_runtime_arn: Planning Agent의 AgentCore Runtime ARN
-            session_id: PreChat 세션 ID
-            prompt: Sales Rep 질문
-            customer_info: 고객 정보 (name, email, company)
-            conversation_history: 고객-AI 대화 이력 텍스트
-            config: 에이전트 설정 (AgentConfiguration)
-            locale: 언어 설정 (기본값: 'ko')
-
-        Yields:
-            dict: 파싱된 이벤트 딕셔너리. type 필드로 분류:
-                - {"type": "chunk", "content": "텍스트 조각"}
-                - {"type": "tool", "toolName": "...", "toolUseId": "...", "status": "running|complete", ...}
-                - {"type": "result", "message": "전체 응답 텍스트"}
-                - {"type": "error", "message": "에러 메시지"}
-        """
-        # runtimeSessionId는 최소 33자 이상이어야 함
-        runtime_session_id = session_id
-        if len(runtime_session_id) < 33:
-            runtime_session_id = runtime_session_id + '-' + uuid.uuid4().hex[:10]
-
-        try:
-            # Planning 전용 페이로드 구성
-            payload = {
-                "prompt": prompt,
-                "session_id": session_id,
-                "entrypoint": "stream",
-            }
-
-            # 고객 정보가 있으면 페이로드에 포함
-            if customer_info:
-                payload["customer_info"] = customer_info
-
-            # 대화 이력이 있으면 페이로드에 포함
-            if conversation_history:
-                payload["conversation_history"] = conversation_history
-
-            # 에이전트 설정 구성
-            config_dict = _build_config_payload(config, locale)
-            if config_dict:
-                payload["config"] = config_dict
-
-            print(f"[INFO] Invoking Planning AgentCore stream - ARN: {agent_runtime_arn}")
-            print(f"[INFO] Runtime Session ID: {runtime_session_id}")
-
-            response = self.client.invoke_agent_runtime(
-                agentRuntimeArn=agent_runtime_arn,
-                runtimeSessionId=runtime_session_id,
-                payload=json.dumps(payload).encode('utf-8'),
-            )
-
-            # 공통 SSE 파싱 헬퍼를 사용하여 이벤트를 yield
-            yield from self._parse_sse_stream(response)
-
-        except Exception as e:
-            print(f"[ERROR] Planning AgentCore stream chunks error: {str(e)}")
             import traceback
             print(f"[ERROR] Traceback: {traceback.format_exc()}")
             yield {"type": "error", "message": self._handle_error(e)}
@@ -451,31 +377,6 @@ class AgentCoreClient:
             return result
         except Exception as e:
             print(f"Summary agent error: {str(e)}")
-            return {"error": str(e)}
-
-    def invoke_planning(
-        self,
-        agent_runtime_arn: str,
-        session_id: str,
-        session_summary: str,
-        config: Optional[AgentConfiguration] = None,
-        locale: str = 'ko',
-    ) -> dict:
-        """Planning Agent를 호출하여 미팅 플랜을 반환합니다."""
-        try:
-            payload = {"session_summary": session_summary}
-            config_dict = _build_config_payload(config, locale)
-            if config_dict:
-                payload["config"] = config_dict
-
-            result = self.invoke(
-                agent_runtime_arn=agent_runtime_arn,
-                session_id=session_id,
-                payload=payload,
-            )
-            return result
-        except Exception as e:
-            print(f"Planning agent error: {str(e)}")
             return {"error": str(e)}
 
     @staticmethod
@@ -677,3 +578,7 @@ def _get_config_by_id(config_id: str) -> Optional[AgentConfiguration]:
     except Exception as e:
         print(f"[WARN] Failed to fetch config {config_id}: {e}")
     return None
+
+
+# 공개 API: configId로 AgentConfiguration을 조회한다.
+get_agent_config_by_id = _get_config_by_id

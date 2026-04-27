@@ -27,7 +27,7 @@ export { CampaignReportExport } from './CampaignReportExport'
 export { DivReturnRenderer } from './DivReturnRenderer'
 export { FormSubmissionSummary } from './FormSubmissionSummary'
 
-// Planning Agent Chat
+// Planning Agent Chat (Sales Rep 내부향 채팅)
 export { PlanningChatTab } from './PlanningChatTab'
 export { CaptureDiscussionModal } from './CaptureDiscussionModal'
 
@@ -39,3 +39,7 @@ export { ShipReportPanel } from './ShipReportPanel'
 
 // Customization Gate
 export { CustomizationGate } from './CustomizationGate'
+
+// Onboarding (Admin Landing)
+export { QuestCard } from './QuestCard'
+export { QuestSteps } from './QuestSteps'

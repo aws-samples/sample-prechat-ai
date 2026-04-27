@@ -1,0 +1,4 @@
+# file: /Users/jaebin/AWS/repositories/prechat/packages/backend/shared/__tests__/../models/agent_config.py
+# hypothesis_version: 6.151.9
+
+['AgentConfiguration', 'GSI1PK', 'GSI1SK', 'METADATA', 'PK', 'SK', '[]', 'agentName', 'agentRole', 'configId', 'consultation', 'i18n', 'kb_id', 'ko', 'modelId', 'planning', 'prechat', 'retrieve', 'ship', 'summary', 'systemPrompt', 'tool_attributes', 'tool_name', 'tools']

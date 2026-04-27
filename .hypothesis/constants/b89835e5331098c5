@@ -1,0 +1,4 @@
+# file: /Users/jaebin/AWS/repositories/prechat/packages/backend/shared/__tests__/../triggers/slack_trigger.py
+# hypothesis_version: 6.151.9
+
+[200, 202, 'Content-Type', 'application/json']

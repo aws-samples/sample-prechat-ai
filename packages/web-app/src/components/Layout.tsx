@@ -35,8 +35,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     setShowPrivacyModal(true);
   };
 
-  // Check if we're on an admin page
-  const isAdminPage = location.pathname.startsWith('/admin');
+  // Check if we're on an admin page (includes onboarding landing)
+  const isAdminPage =
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/onboarding');
 
   // Admin navigation items
   const navigationItems: SideNavigationProps.Item[] = [
@@ -116,6 +118,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     },
     {
       type: 'link',
+      text: t('nav.onboarding'),
+      href: '/onboarding',
+    },
+    {
+      type: 'link',
       text: 'SATv2 Dashboard',
       href: '/satv2-dashboard.html',
       external: true,
@@ -132,6 +139,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Determine active href based on current location
   const getActiveHref = () => {
     const path = location.pathname;
+
+    // Onboarding landing
+    if (path.startsWith('/onboarding')) return '/onboarding';
 
     // Campaign routes
     if (path.startsWith('/admin/campaigns/create')) return '/admin/campaigns/create';

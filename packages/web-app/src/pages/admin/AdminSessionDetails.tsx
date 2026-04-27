@@ -319,7 +319,7 @@ export default function AdminSessionDetails() {
               content: sessionId ? <SessionAttachments sessionId={sessionId} /> : null
             },
             {
-              label: t('admin.planningChat.tabLabel'),
+              label: t('admin.planningChat.tabLabel') || '✨플래닝',
               id: 'planning-chat',
               content: sessionId ? (
                 <PlanningChatTab sessionId={sessionId} session={session} />

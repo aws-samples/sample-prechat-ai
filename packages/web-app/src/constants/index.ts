@@ -1,3 +1,6 @@
+// Onboarding button styles
+export { ONBOARDING_CTA_BUTTON_STYLE } from './buttonStyles'
+
 // Status mappings
 export const SESSION_STATUS = {
   ACTIVE: 'active',

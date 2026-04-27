@@ -75,9 +75,7 @@ prechat/
 │   ├── web-app/              # React SPA (Vite + Cloudscape)
 │   └── strands-agents/       # Strands SDK AI 에이전트 (AgentCore)
 │       ├── consultation-agent/  # 고객 상담 에이전트
-│       ├── summary-agent/       # BANT 요약 에이전트
-│       ├── planning-agent/      # 미팅 플랜 + Sales Rep 채팅 에이전트
-│       └── ship-agent/          # SHIP 보안 점검 에이전트
+│       └── summary-agent/       # BANT 요약 에이전트
 ├── template.yaml             # AWS SAM IaC
 ├── deploy-full.sh            # 전체 배포 (에이전트 → SAM → 프론트엔드)
 ├── deploy-website.sh         # 프론트엔드만 배포
@@ -115,7 +113,7 @@ yarn install
 
 # 2. 전체 배포 (에이전트 → SAM → 프론트엔드)
 chmod +x deploy-full.sh deploy-website.sh
-./deploy-full.sh [AWS_PROFILE] [STAGE] [REGION] [BEDROCK_REGION] [STACK_NAME] [BEDROCK_KB_ID]
+./deploy-full.sh [AWS_PROFILE] [STAGE] [REGION] [BEDROCK_REGION] [STACK_NAME]
 
 # 기본값: default / dev / ap-northeast-2 / (REGION) / mte-prechat
 ```
@@ -129,7 +127,8 @@ chmod +x deploy-full.sh deploy-website.sh
 | `REGION` | `ap-northeast-2` | AWS 리전 |
 | `BEDROCK_REGION` | REGION과 동일 | Bedrock 모델 리전 |
 | `STACK_NAME` | `mte-prechat` | CloudFormation 스택명 |
-| `BEDROCK_KB_ID` | (없음) | Knowledge Base ID (유사사례 검색용) |
+
+> **Knowledge Base**: 배포 시점에 기입할 필요 없습니다. 관리자 대시보드에서 에이전트를 생성할 때 `retrieve` 도구에 원하는 KB ID를 선택하면 런타임에 주입됩니다.
 
 ### 배포 후 확인
 

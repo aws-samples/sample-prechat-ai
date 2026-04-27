@@ -16,7 +16,6 @@ import {
 } from '@cloudscape-design/components'
 import { adminApi, campaignApi } from '../../services/api'
 import { authService } from '../../services/auth'
-import { StatusBadge } from '../../components'
 import { extractModelName } from '../../constants'
 import { generateSessionCSV, downloadCSV, generateCSVFilename } from '../../utils/csvExport'
 import type { Campaign, AgentConfiguration } from '../../types'
@@ -69,7 +68,7 @@ export default function CreateSession() {
       // campaignId 없이 호출하면 전체 에이전트 목록 반환
       const response = await adminApi.listAgentConfigs(campaignId)
       const configs = (response.configs || []).filter(
-        (c: AgentConfiguration) => c.agentRole === 'prechat' && c.status === 'active'
+        (c: AgentConfiguration) => c.agentRole === 'consultation'
       )
       setAgentConfigs(configs)
       // 단일 에이전트만 있을 경우 자동 선택
@@ -413,11 +412,6 @@ export default function CreateSession() {
                 id: 'model',
                 header: t('adminSessionCreate.agentTable.modelHeader'),
                 cell: (item) => extractModelName(item.modelId)
-              },
-              {
-                id: 'status',
-                header: t('adminSessionCreate.agentTable.statusHeader'),
-                cell: (item) => <StatusBadge status={item.status} type="session" />
               }
             ]}
             items={agentConfigs}

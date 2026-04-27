@@ -9,7 +9,6 @@ STAGE=${2:-dev}
 REGION=${3:-ap-northeast-2}
 BEDROCK_REGION=${4:-$REGION}
 STACK_NAME=${5:-mte-prechat}
-BEDROCK_KB_ID=${6:-""}
 
 echo "🚀 Starting full deployment..."
 echo "📋 Configuration:"
@@ -18,13 +17,12 @@ echo "   Stage: $STAGE"
 echo "   Region: $REGION"
 echo "   Bedrock Region: $BEDROCK_REGION"
 echo "   Stack Name: $STACK_NAME"
-echo "   Bedrock KB: ${BEDROCK_KB_ID:-"(없음)"}"
 echo ""
 
 # Step 1: Deploy Strands Agents (must run before SAM to register SSM parameters)
 echo "🤖 Deploying Strands Agents to AgentCore..."
 if [ -f "packages/strands-agents/deploy-agents.sh" ]; then
-  ./packages/strands-agents/deploy-agents.sh $PROFILE $STAGE $REGION $BEDROCK_KB_ID
+  ./packages/strands-agents/deploy-agents.sh $PROFILE $STAGE $REGION
   echo "✅ Strands Agents deployed and SSM parameters registered"
 else
   echo "⚠️  deploy-agents.sh not found, skipping agent deployment"

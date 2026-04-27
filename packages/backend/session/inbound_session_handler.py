@@ -200,7 +200,7 @@ def _create_new_inbound_session(
             'phone': customer_phone,
         },
         'salesRepEmail': campaign.get('ownerEmail', ''),
-        'agentId': campaign.get('agentConfigurations', {}).get('prechat', ''),
+        'agentId': campaign.get('agentConfigurations', {}).get('consultation', ''),
         'csrfToken': csrf_token,
         'createdAt': timestamp,
         'privacyConsentAgreed': True,

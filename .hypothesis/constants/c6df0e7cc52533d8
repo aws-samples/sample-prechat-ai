@@ -1,0 +1,4 @@
+# file: /Users/jaebin/AWS/repositories/prechat/packages/backend/shared/__tests__/../trigger_manager.py
+# hypothesis_version: 6.151.9
+
+[':pk', 'GSI1', 'GSI1PK = :pk', 'Items', 'None', 'SESSIONS_TABLE', 'dynamodb', 'slack', 'sns']

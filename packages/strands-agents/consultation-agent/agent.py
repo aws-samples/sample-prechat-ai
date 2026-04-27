@@ -22,13 +22,12 @@ import os
 import json
 import logging
 from strands import Agent
-from strands.tools import tool
-from strands.tools.mcp import MCPClient
-from mcp import stdio_client, StdioServerParameters
 from strands_tools import retrieve, current_time
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from bedrock_agentcore.memory.integrations.strands.config import AgentCoreMemoryConfig
 from bedrock_agentcore.memory.integrations.strands.session_manager import AgentCoreMemorySessionManager
+from config_parser import parse_config
+from tool_registry import render_form, aws_docs_mcp_client
 
 app = BedrockAgentCoreApp()
 logging.getLogger("strands").setLevel(logging.INFO)
@@ -36,72 +35,10 @@ logging.getLogger("strands").setLevel(logging.INFO)
 # AgentCore Memory ID: deploy 시 env_vars로 컨테이너에 주입됨
 MEMORY_ID = os.environ.get('BEDROCK_AGENTCORE_MEMORY_ID', '')
 
-# Bedrock KB ID: deploy 시 env_vars로 컨테이너에 주입됨
-kb_id = os.environ.get('BEDROCK_KB_ID', '')
-
-# AWS Documentation MCP 클라이언트 (Dockerfile에서 사전 설치됨)
-aws_docs_mcp_client = MCPClient(lambda: stdio_client(
-    StdioServerParameters(
-        command="uvx",
-        args=["awslabs.aws-documentation-mcp-server@latest"]
-    )
-))
-
-
-@tool
-def render_form(form_title: str, fields: str) -> str:
-    """고객이 정보를 기입할 수 있는 HTML Form을 생성합니다 (Div Return).
-
-    프론트엔드에서 동적으로 렌더링되는 HTML을 반환합니다.
-    고객이 Form에 정보를 기입하면 messages로 취급 & 저장됩니다.
-
-    Args:
-        form_title: 폼 제목
-        fields: JSON 형식의 필드 정의 (예: '[{"name":"company","label":"회사명","type":"text"}]')
-
-    Returns:
-        렌더링 가능한 HTML Form 문자열
-    """
-    try:
-        field_list = json.loads(fields)
-    except json.JSONDecodeError:
-        return '<div><p>폼 필드 정의가 올바르지 않습니다.</p></div>'
-
-    form_html = f'<div class="prechat-form" data-form-type="div-return">'
-    form_html += f'<h3>{form_title}</h3>'
-    form_html += '<form>'
-
-    for field in field_list:
-        name = field.get('name', '')
-        label = field.get('label', name)
-        field_type = field.get('type', 'text')
-        required = field.get('required', False)
-        options = field.get('options', [])
-
-        form_html += f'<div class="form-field">'
-        form_html += f'<label for="{name}">{label}</label>'
-
-        if field_type == 'textarea':
-            form_html += f'<textarea name="{name}" id="{name}" {"required" if required else ""}></textarea>'
-        elif field_type == 'select':
-            form_html += f'<select name="{name}" id="{name}" {"required" if required else ""}>'
-            for opt in options:
-                form_html += f'<option value="{opt}">{opt}</option>'
-            form_html += '</select>'
-        else:
-            form_html += f'<input type="{field_type}" name="{name}" id="{name}" {"required" if required else ""} />'
-
-        form_html += '</div>'
-
-    form_html += '<button type="submit" data-i18n="submit">Submit</button>'
-    form_html += '</form></div>'
-
-    return form_html
-
 
 # 기본 시스템 프롬프트 (PreChat User가 오버라이드 가능)
 def _default_system_prompt() -> str:
-    return f"""당신은 AWS PreChat 사전 상담 AI 어시스턴트입니다.
+    return """당신은 AWS PreChat 사전 상담 AI 어시스턴트입니다.
 ## 역할
 
 AWS 미팅 전 고객정보 수집 대화형 AI
@@ -153,9 +90,9 @@ AWS 미팅 전 고객정보 수집 대화형 AI
 
 **대화 8회 초과, 담당자 정보 요청시:**
 "담당자 정보:
-- {{{{sales_rep.name}}}}
-- {{{{sales_rep.phone}}}}
-- {{{{sales_rep.email}}}}
+- {{sales_rep.name}}
+- {{sales_rep.phone}}
+- {{sales_rep.email}}
 
 금번 대화에서 제공해주신 내용을 기반으로 담당자가 미팅을 준비하여 안내드릴 예정입니다.
 필요시 유사 사례나 레퍼런스 아키텍처 등도 함께 준비해드릴 수 있습니다."
@@ -182,13 +119,8 @@ EOF 토큰 반드시 출력하기
 
 - 단계별 인터뷰에서 구체적 예시를 제공하세요.
 - 단계별 인터뷰의 대화 예시는 예시일 뿐입니다. 능동적이되 절제된 톤으로 인터뷰를 진행하세요.
-- 담당자 정보를 요구할 경우 플레이스 홀더로 표시하세요: {{{{sales_rep.name}}}} {{{{sales_rep.phone}}}} {{{{sales_rep.email}}}}
+- 담당자 정보를 요구할 경우 플레이스 홀더로 표시하세요: {{sales_rep.name}} {{sales_rep.phone}} {{sales_rep.email}}
 - 대화 종료시 반드시(MUST) "EOF" 토큰을 넣어주셔야 합니다.
-
-## 사용 가능한 도구
-
-1. `retrieve`: Bedrock Knowledge Base에서 유사 고객사례를 검색합니다. 고객이 사례를 물으면 `retrieve(text="고객 질문 키워드", knowledgeBaseId="{kb_id}")` 형태로 호출하세요. knowledgeBaseId 파라미터는 반드시 포함해야 합니다.
-2. `render_form`: 고객이 구조화된 정보를 입력해야 할 때 HTML Form을 생성합니다. 참석자 정보, 인프라 현황 등 여러 필드를 한번에 수집할 때 활용하세요.
 
 **핵심: 8회내 필수정보 수집, 단계별 세분화, 정확한 담당자 정보 제공**
 """
@@ -210,50 +142,99 @@ def _get_locale_instruction(locale: str) -> str:
     return ""
 
 
-def create_consultation_agent(
-    session_id: str,
-    system_prompt: str | None = None,
-    model_id: str | None = None,
-    agent_name: str | None = None,
-    locale: str = 'ko',
-) -> Agent:
-    """PreChat User의 구성을 주입하여 Consultation Agent를 생성합니다.
+def _build_session_manager(session_id: str):
+    """AgentCore Memory STM 세션 매니저를 생성합니다.
 
     Args:
         session_id: PreChat 세션 ID (STM 메모리 및 actor 식별에 사용)
-        system_prompt: 사용자 정의 시스템 프롬프트 (None이면 DEFAULT 사용)
-        model_id: 사용자 정의 모델 ID (None이면 DEFAULT 사용)
-        agent_name: 사용자 정의 에이전트 이름 (None이면 DEFAULT 사용)
-        locale: 응답 언어 코드 ('ko' 또는 'en')
+
+    Returns:
+        AgentCoreMemorySessionManager 또는 None
+    """
+    if not MEMORY_ID:
+        return None
+    memory_config = AgentCoreMemoryConfig(
+        memory_id=MEMORY_ID,
+        session_id=session_id,
+        actor_id=session_id,
+    )
+    return AgentCoreMemorySessionManager(
+        agentcore_memory_config=memory_config,
+    )
+
+
+def create_consultation_agent(
+    session_id: str,
+    config: dict | None = None,
+) -> Agent:
+    """PreChat User의 구성을 주입하여 Consultation Agent를 생성합니다.
+
+    config에 tools가 있으면 Config Parser로 도구를 해석하고,
+    없으면 기존 기본 도구 세트로 폴백합니다.
+
+    Args:
+        session_id: PreChat 세션 ID (STM 메모리 및 actor 식별에 사용)
+        config: AgentConfig payload dict (None이면 기본값 사용)
+            - system_prompt (str): 시스템 프롬프트
+            - model_id (str): Bedrock 모델 ID
+            - agent_name (str): 에이전트 이름
+            - locale (str): 언어 코드 ('ko' 또는 'en')
+            - tools (str|list): 도구 구성 JSON 문자열 또는 리스트
 
     Returns:
         구성된 Strands Agent 인스턴스
     """
-    # AgentCore Memory STM 설정 (고객은 익명이므로 actor_id = session_id)
-    session_manager = None
-    if MEMORY_ID:
-        memory_config = AgentCoreMemoryConfig(
-            memory_id=MEMORY_ID,
-            session_id=session_id,
-            actor_id=session_id,
+    session_manager = _build_session_manager(session_id)
+
+    # config에 tools가 있으면 Config Parser로 도구 해석
+    if config and config.get('tools'):
+        parsed = parse_config(config)
+        effective_prompt = (
+            parsed['system_prompt']
+            or _default_system_prompt()
         )
-        session_manager = AgentCoreMemorySessionManager(
-            agentcore_memory_config=memory_config,
+        locale = parsed.get('locale', 'ko')
+        locale_instruction = _get_locale_instruction(locale)
+        if locale_instruction:
+            effective_prompt = (
+                f"{effective_prompt}\n\n{locale_instruction}"
+            )
+        return Agent(
+            model=parsed['model_id'] or DEFAULT_MODEL_ID,
+            system_prompt=effective_prompt,
+            name=parsed['agent_name'] or DEFAULT_AGENT_NAME,
+            tools=parsed['tools'],
+            session_manager=session_manager,
         )
 
-    # 시스템 프롬프트에 KB ID 주입
-    effective_prompt = system_prompt or _default_system_prompt()
-
-    # locale에 따른 언어 지시 추가
+    # 폴백: 기존 기본 도구 세트
+    effective_prompt = (
+        config.get('system_prompt')
+        if config
+        else None
+    ) or _default_system_prompt()
+    locale = (
+        config.get('locale', 'ko') if config else 'ko'
+    )
     locale_instruction = _get_locale_instruction(locale)
     if locale_instruction:
-        effective_prompt = f"{effective_prompt}\n\n{locale_instruction}"
-
+        effective_prompt = (
+            f"{effective_prompt}\n\n{locale_instruction}"
+        )
     return Agent(
-        model=model_id or DEFAULT_MODEL_ID,
+        model=(
+            config.get('model_id') if config
+            else None
+        ) or DEFAULT_MODEL_ID,
         system_prompt=effective_prompt,
-        name=agent_name or DEFAULT_AGENT_NAME,
-        tools=[retrieve, current_time, render_form, aws_docs_mcp_client],
+        name=(
+            config.get('agent_name') if config
+            else None
+        ) or DEFAULT_AGENT_NAME,
+        tools=[
+            retrieve, current_time,
+            render_form, aws_docs_mcp_client,
+        ],
         session_manager=session_manager,
     )
 
@@ -275,7 +256,11 @@ async def stream(payload: dict):
       {
         "prompt": "고객 메시지",
         "session_id": "PreChat 세션 ID",
-        "config": { "system_prompt": "...", "model_id": "...", "agent_name": "..." }
+        "config": {
+          "system_prompt": "...", "model_id": "...",
+          "agent_name": "...", "locale": "ko",
+          "tools": "[{\"tool_name\": \"retrieve\", ...}]"
+        }
       }
     """
     prompt = payload.get("prompt", "")
@@ -288,10 +273,7 @@ async def stream(payload: dict):
 
     agent = create_consultation_agent(
         session_id=session_id,
-        system_prompt=config.get("system_prompt"),
-        model_id=config.get("model_id"),
-        agent_name=config.get("agent_name"),
-        locale=config.get("locale", "ko"),
+        config=config,
     )
 
     # 현재 진행 중인 도구 사용을 추적 (중복 이벤트 방지)

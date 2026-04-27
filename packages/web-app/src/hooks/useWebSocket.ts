@@ -10,9 +10,16 @@ export type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'err
 
 export interface UseWebSocketOptions {
   sessionId: string
-  pin: string
+  /** 고객용 PIN 인증. token과 둘 중 하나 필수. */
+  pin?: string
+  /** Admin용 Cognito 토큰 인증. pin과 둘 중 하나 필수. */
+  token?: string
   wsUrl: string
   locale?: string
+  /** Sales Rep 플래닝 채팅용 stateless 모드 플래그 */
+  stateless?: boolean
+  /** stateless 모드에서 사용할 Consultation Agent configId */
+  configId?: string
   onChunk: (chunk: string) => void
   onBoundary?: () => void
   onTool?: (tool: {
@@ -44,7 +51,20 @@ export interface UseWebSocketReturn {
  * - 연결 끊김 시 메시지 큐잉 및 재연결 후 재전송
  */
 export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
-  const { sessionId, pin, wsUrl, locale, onChunk, onBoundary, onTool, onComplete, onError } = options
+  const {
+    sessionId,
+    pin,
+    token,
+    wsUrl,
+    locale,
+    stateless,
+    configId,
+    onChunk,
+    onBoundary,
+    onTool,
+    onComplete,
+    onError,
+  } = options
 
   const [connectionState, setConnectionState] = useState<ConnectionState>('disconnected')
 
@@ -132,7 +152,9 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     isIntentionalCloseRef.current = false
 
     let url = `${wsUrl}?sessionId=${encodeURIComponent(sessionId)}`
-    if (pin) {
+    if (token) {
+      url += `&token=${encodeURIComponent(token)}`
+    } else if (pin) {
       url += `&pin=${encodeURIComponent(pin)}`
     }
     const ws = new WebSocket(url)
@@ -166,7 +188,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     }
 
     wsRef.current = ws
-  }, [wsUrl, sessionId, pin, handleMessage, flushMessageQueue])
+  }, [wsUrl, sessionId, pin, token, handleMessage, flushMessageQueue])
 
   // 지수 백오프 재연결
   const attemptReconnect = useCallback(() => {
@@ -200,6 +222,8 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
         ...(contentType && { contentType }),
         ...(locale && { locale }),
         ...(agentRole && { agentRole }),
+        ...(stateless && { stateless: true }),
+        ...(configId && { configId }),
       }
 
       if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -209,7 +233,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
         messageQueueRef.current.push(payload)
       }
     },
-    [sessionId, locale]
+    [sessionId, locale, stateless, configId]
   )
 
   // 연결 수립 및 정리

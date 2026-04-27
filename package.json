@@ -28,9 +28,10 @@
     "yarn": ">=1.22.22"
   },
   "dependencies": {
-    "@cloudscape-design/component-toolkit": "^1.0.0-beta.124"
+    "@cloudscape-design/component-toolkit": "^1.0.0-beta.157"
   },
   "resolutions": {
-    "@cloudscape-design/component-toolkit": "1.0.0-beta.124"
+    "@cloudscape-design/component-toolkit": "1.0.0-beta.157",
+    "@cloudscape-design/components": "3.0.1285"
   }
 }

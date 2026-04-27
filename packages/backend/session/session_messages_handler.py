@@ -166,10 +166,10 @@ def send_message(event, context):
 
     # AgentCore Agent 응답 생성
     try:
-        arn, config = get_agent_config_for_session(session_id, 'prechat')
+        arn, config = get_agent_config_for_session(session_id, 'consultation')
         
         if not arn:
-            print(f"[ERROR] No ARN found for role: prechat")
+            print(f"[ERROR] No ARN found for role: consultation")
             return lambda_response(500, {'error': 'Agent runtime ARN not configured'})
         
         print(f"[INFO] Calling AgentCore ARN: {arn}")
@@ -338,7 +338,7 @@ def send_message_stream(event, context):
 
     # AgentCore Agent 스트리밍 응답 생성
     try:
-        arn, config = get_agent_config_for_session(session_id, 'prechat')
+        arn, config = get_agent_config_for_session(session_id, 'consultation')
         # Strands Agent 스트리밍 호출
         full_response = ""
         for chunk in agentcore_client.invoke_consultation_stream(

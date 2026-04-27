@@ -913,6 +913,18 @@
       "noAgentsTitle": "No agents",
       "noAgentsDescription": "No AgentCore agents found.",
       "createAgentButton": "Create Agent"
+    },
+    "deleteModal": {
+      "header": "Confirm Agent Deletion",
+      "warning": "This action cannot be undone. Campaigns or sessions still referencing this agent may fail. Reassign them to a different agent before deletion.",
+      "targetLabel": "Target",
+      "confirmButton": "Delete",
+      "cancelButton": "Cancel"
+    },
+    "flash": {
+      "loadFailed": "Failed to load agent list.",
+      "deleteSuccess": "Agent \"{{name}}\" has been deleted.",
+      "deleteFailed": "Failed to delete agent. Please try again."
     }
   },
   "adminAgentCreate": {
@@ -936,14 +948,34 @@
       "foundationModelLabel": "Foundation Model",
       "foundationModelDescription": "Agent's foundation model",
       "foundationModelPlaceholder": "Select a foundation model",
-      "promptOverrideLabel": "Prompt Override",
+      "promptOverrideLabel": "Edit System Prompt",
       "promptOverrideDescription": "Enable to customize the agent's system prompt. If disabled, the agent will use its default prompt.",
       "promptOverrideCheckbox": "Enable custom prompt override",
       "agentInstructionsLabel": "Agent Instructions",
       "agentInstructionsDescription": "Write detailed instructions for agent behavior. You can use placeholders to include dynamic information.",
       "agentInstructionsPlaceholder": "Enter agent instructions...",
       "defaultInstructionsButton": "Default Agent Instructions",
-      "readOnlyRoleInfo": "Summary Agent and Planning Agent are managed by the system. Prompt customization is not available, but model selection is supported."
+      "i18nLabel": "Agent Response Language",
+      "i18nDescription": "Select the language the agent will use when responding to customers",
+      "toolsLabel": "Tools",
+      "toolsDescription": "Select the tools the agent can use during consultation",
+      "toolsPlaceholder": "Tool configuration will be available in the next update.",
+      "kbPlaceholder": "Select a Knowledge Base",
+      "kbLoading": "Loading Knowledge Bases...",
+      "kbEmpty": "No Knowledge Bases available",
+      "kbLoadError": "Failed to load Knowledge Bases.",
+      "kbRequiredError": "A Knowledge Base must be selected to use the retrieve tool.",
+      "templateLabel": "Consultation Template",
+      "templateDescription": "Select a predefined template to auto-fill system prompt, tools, model, and language. You can modify values after selection.",
+      "templatePlaceholder": "Select a template (optional)",
+      "templateCustom": "Custom (Manual Setup)",
+      "templateCustomDesc": "Configure all settings manually",
+      "templateCustomer": "Customer Consultation",
+      "templateCustomerDesc": "Default pre-consultation template (KB search, form generation, time)",
+      "templateSales": "Sales Strategy Consultation",
+      "templateSalesDesc": "Sales strategy support template (KB search, AWS docs, time)",
+      "templateSecurity": "Security Consultation",
+      "templateSecurityDesc": "Security assessment & compliance template (KB search, A2T log, time)"
     }
   },
   "adminAgentEdit": {
@@ -971,7 +1003,7 @@
       "foundationModelLabel": "Foundation Model",
       "foundationModelDescription": "Select a Foundation model",
       "foundationModelPlaceholder": "Select a foundation model",
-      "promptOverrideLabel": "Prompt Override",
+      "promptOverrideLabel": "Edit System Prompt",
       "promptOverrideDescription": "Enable to customize the agent's system prompt. If disabled, the agent will use its default prompt.",
       "promptOverrideCheckbox": "Enable custom prompt override",
       "agentInstructionsLabel": "Agent Instructions",
@@ -1161,22 +1193,33 @@
   },
   "admin": {
     "planningChat": {
-      "tabLabel": "Planning Chat",
+      "tabLabel": "✨Planning",
       "title": "Planning Agent",
-      "description": "Get help with account analysis, service recommendations, and similar customer case searches.",
+      "description": "Internal Sales Rep chat for strategy. Uses the tools of the selected consultation agent (KB search, AWS docs, etc.).",
+      "agentSelectLabel": "Select Consultation Agent",
+      "agentSelectDescription": "Pick a Consultation Agent to use for sales strategy discussions.",
+      "agentSelectPlaceholder": "Select an agent",
+      "agentEmpty": "No consultation agents available.",
+      "loadingAgents": "Loading agents...",
+      "loadAgentsError": "Failed to load agents.",
+      "selectAgentPrompt": "Select an agent above to start the conversation.",
+      "connected": "Connected",
+      "connecting": "Connecting...",
+      "connectionError": "Connection error",
+      "disconnected": "Idle",
       "suggestedQuestion1": "Suggest good services to recommend",
       "suggestedQuestion2": "Find similar customer cases",
-      "suggestedQuestion3": "Suggest Action Items systematically",
-      "suggestedQuestion4": "Extract SHIP A2T log",
+      "suggestedQuestion3": "Suggest structured action items",
+      "suggestedQuestion4": "Extract SHIP A2T logs",
       "clearHistory": "Clear chat history",
       "inputPlaceholder": "Ask the Planning Agent...",
-      "captureToDiscussion": "Capture to Discussion",
+      "captureButton": "Capture to Discussion",
       "captureModalTitle": "Capture to Discussion",
       "annotationLabel": "Annotation",
-      "annotationDescription": "Enter an annotation for the content to capture.",
-      "annotationPlaceholder": "e.g., Service recommendation insights",
-      "captureContentLabel": "Content to Capture",
-      "captureSuccess": "Capture completed successfully.",
+      "annotationDescription": "Enter an annotation for the captured content.",
+      "annotationPlaceholder": "e.g., Service recommendation insight",
+      "captureContentLabel": "Capture target",
+      "captureSuccess": "Captured successfully.",
       "captureError": "Capture failed. Please try again.",
       "toolRunning": "Running...",
       "toolComplete": "Complete"
@@ -1332,6 +1375,54 @@
       "pinSaved": "PIN updated successfully",
       "pinSaveFailed": "Failed to update PIN",
       "pinFormatError": "PIN must be exactly 6 digits"
+    }
+  },
+  "nav": {
+    "onboarding": "Onboarding"
+  },
+  "onboarding": {
+    "title": "Getting Started",
+    "subtitle": "Complete these 6 steps to start running customer consultations on PreChat.",
+    "errorTitle": "Failed to load onboarding status",
+    "retry": "Retry",
+    "stepsAriaLabel": "Onboarding steps",
+    "status": {
+      "complete": "Complete",
+      "incomplete": "Incomplete",
+      "info": "Info"
+    },
+    "quests": {
+      "users": {
+        "title": "1. Verify admin account",
+        "description": "At least one admin account must exist in the Cognito User Pool.",
+        "guidance": "Admin invites are a manual process handled via the AWS console or a separate workflow. If you need a new admin, contact an existing administrator."
+      },
+      "agents": {
+        "title": "2. Configure AI agents",
+        "description": "You need at least one consultation agent and one summary agent.",
+        "ctaLabel": "Create agent"
+      },
+      "campaigns": {
+        "title": "3. Create a campaign",
+        "description": "Create at least one active campaign to host customer consultations.",
+        "ctaLabel": "Create campaign"
+      },
+      "sessions": {
+        "title": "4. Create a session",
+        "description": "Create customer sessions within a campaign to run consultations.",
+        "ctaLabel": "Create session"
+      },
+      "customer-invite": {
+        "title": "5. Invite customers",
+        "description": "Outbound campaigns share a URL + PIN with customers. Inbound campaigns share a URL or QR code.",
+        "guidance": "Outbound: Send the session URL and PIN generated at session creation to your customer. Inbound: Share the campaign URL or QR code so customers can start a session themselves."
+      },
+      "session-analysis": {
+        "title": "6. Review session analysis",
+        "description": "Review AI analysis reports and meeting plans for completed sessions.",
+        "ctaLabel": "Go to dashboard",
+        "countLabel": "Completed sessions"
+      }
     }
   }
 }

@@ -231,19 +231,32 @@ export interface AgentCoreAgent {
   agentArn?: string;
 }
 
-export type AgentRole = 'prechat' | 'summary' | 'planning' | 'ship';
+export type AgentRole = 'consultation' | 'summary';
+
+export interface ToolConfig {
+  tool_name: string;
+  tool_attributes?: Record<string, string>;
+}
 
 export interface AgentConfiguration {
   configId: string;
   agentRole: AgentRole;
-  agentRuntimeArn: string;
-  modelId: string;
-  systemPrompt: string;
   agentName: string;
-  status: 'active' | 'inactive';
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
+  systemPrompt: string;
+  tools: ToolConfig[];
+  modelId: string;
+  i18n: string;
+}
+
+export interface KnowledgeBase {
+  knowledgeBaseId: string;
+  name: string;
+  status: string;
+}
+
+export interface CampaignAgentConfigurations {
+  consultation: string; // configId
+  summary: string; // configId
 }
 
 
@@ -286,11 +299,7 @@ export interface CreateCampaignRequest {
   ownerId: string;
   campaignType?: 'outbound' | 'inbound';
   campaignPin?: string;
-  agentConfigurations?: {
-    prechat: string;
-    summary: string;
-    planning: string;
-  };
+  agentConfigurations?: CampaignAgentConfigurations;
 }
 
 export interface UpdateCampaignRequest {
@@ -304,11 +313,7 @@ export interface UpdateCampaignRequest {
   ownerName?: string;
   status?: 'active' | 'completed' | 'paused' | 'cancelled';
   campaignPin?: string;
-  agentConfigurations?: {
-    prechat: string;
-    summary: string;
-    planning: string;
-  };
+  agentConfigurations?: CampaignAgentConfigurations;
 }
 
 export interface CampaignListResponse {
@@ -421,6 +426,10 @@ export interface WebSocketClientMessage {
   contentType?: MessageContentType;
   locale?: string;
   agentRole?: string;
+  // Sales Rep 플래닝 채팅 모드: 메시지 저장/세션 상태 변경 스킵
+  stateless?: boolean;
+  // stateless 모드에서 사용할 임의의 Consultation Agent configId
+  configId?: string;
 }
 
 export const BEDROCK_MODELS: BedrockModel[] = [
@@ -430,3 +439,82 @@ export const BEDROCK_MODELS: BedrockModel[] = [
   { id: 'global.anthropic.claude-opus-4-5-20251101-v1:0', name: 'Claude Opus 4.5', provider: 'Anthropic', region: 'us-east-1' },
   { id: 'global.anthropic.claude-opus-4-6-v1', name: 'Claude Opus 4.6', provider: 'Anthropic', region: 'us-east-1' },
 ];
+
+
+// ============================================================================
+// Admin Onboarding Landing Types
+// ----------------------------------------------------------------------------
+// `/onboarding` 어드민 랜딩 페이지와 `GET /api/admin/onboarding/status` API의
+// 응답 계약을 정의한다. 6개 Quest(Users, Agents, Campaigns, Sessions,
+// Customer Invite, Session Analysis)의 상태를 단일 왕복으로 수급한다.
+// 참고: .kiro/specs/admin-onboarding-landing/design.md "Data Models" 섹션
+// ============================================================================
+
+/**
+ * 온보딩 Quest 식별자.
+ *
+ * 6개 Quest는 항상 다음 순서로 반환된다:
+ * users → agents → campaigns → sessions → customer-invite → session-analysis
+ */
+export type QuestId =
+  | 'users'
+  | 'agents'
+  | 'campaigns'
+  | 'sessions'
+  | 'customer-invite'
+  | 'session-analysis';
+
+/**
+ * Quest 완료 상태.
+ *
+ * - `complete`: 완료 조건을 만족
+ * - `incomplete`: 완료 조건 미달 (CTA로 작업 유도)
+ * - `info-only`: 완료 판정이 없는 정보 표시용 Quest (sessions, customer-invite, session-analysis)
+ */
+export type QuestStatus = 'complete' | 'incomplete' | 'info-only';
+
+/**
+ * 단일 Quest의 상태 스냅샷.
+ *
+ * 서버가 Cognito / DynamoDB 집계 결과로 생성하며,
+ * 프론트엔드는 이 객체만으로 카드를 렌더할 수 있어야 한다.
+ */
+export interface QuestState {
+  /** Quest 식별자 (6개 중 하나, 응답 내 유일) */
+  questId: QuestId;
+
+  /** 완료 판정 결과 */
+  status: QuestStatus;
+
+  /** 화면 표시용 현재 카운트. 해당 없는 경우 null */
+  currentCount: number | null;
+
+  /** 완료 판정에 사용된 최소 요구 카운트. 해당 없는 경우 null */
+  requiredCount: number | null;
+
+  /**
+   * 추가 세부 카운트 (예: agents Quest의 consultation/summary 구분).
+   * 값은 0 이상의 정수.
+   */
+  subCounts?: Record<string, number>;
+
+  /**
+   * CTA(Call-To-Action) 대상 경로.
+   * null이면 버튼을 렌더하지 않고 평문 가이드만 노출한다.
+   * 보안상 null이 아닌 값은 항상 `/admin`으로 시작해야 한다.
+   */
+  ctaPath: string | null;
+}
+
+/**
+ * 온보딩 집계 API의 응답 DTO.
+ *
+ * `GET /api/admin/onboarding/status`가 반환하는 전체 본문.
+ */
+export interface OnboardingStatus {
+  /** 6개 Quest의 상태 배열 (고정 순서) */
+  quests: QuestState[];
+
+  /** 서버 집계 시각 (ISO 8601 UTC 문자열) */
+  generatedAt: string;
+}

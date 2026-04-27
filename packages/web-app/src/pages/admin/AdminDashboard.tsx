@@ -51,6 +51,41 @@ export default function AdminDashboard() {
   const [selectedCampaign, setSelectedCampaign] = useState<{ label: string; value: string } | null>({ label: t('adminSessions.filter.allCampaigns'), value: 'all' })
   const [campaignsLoading, setCampaignsLoading] = useState(false)
 
+  // 컬럼 너비 상태 (localStorage에 저장하여 사용자 조정값 유지)
+  const COLUMN_WIDTHS_STORAGE_KEY = 'adminDashboard.sessionTable.columnWidths'
+  const DEFAULT_COLUMN_WIDTHS: Record<string, number> = {
+    customer: 320,
+    campaign: 180,
+    agent: 160,
+    status: 120,
+    created: 140,
+    completed: 140,
+    actions: 140
+  }
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
+    try {
+      const saved = localStorage.getItem(COLUMN_WIDTHS_STORAGE_KEY)
+      if (saved) {
+        return { ...DEFAULT_COLUMN_WIDTHS, ...JSON.parse(saved) }
+      }
+    } catch (err) {
+      console.warn('Failed to load column widths from localStorage:', err)
+    }
+    return DEFAULT_COLUMN_WIDTHS
+  })
+
+  // 사용자가 컬럼 너비를 변경하면 localStorage에 저장
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        COLUMN_WIDTHS_STORAGE_KEY,
+        JSON.stringify(columnWidths)
+      )
+    } catch (err) {
+      console.warn('Failed to persist column widths:', err)
+    }
+  }, [columnWidths])
+
   useEffect(() => {
     loadCurrentUser()
     loadSessions()
@@ -302,11 +337,21 @@ export default function AdminDashboard() {
         <div style={{ minHeight: '50vh' }}>
           <Table
             wrapLines
+            resizableColumns
+            onColumnWidthsChange={({ detail }) => {
+              const next: Record<string, number> = { ...columnWidths }
+              detail.widths.forEach((w, idx) => {
+                const id = ['customer', 'campaign', 'agent', 'status', 'created', 'completed', 'actions'][idx]
+                if (id) next[id] = w
+              })
+              setColumnWidths(next)
+            }}
             columnDefinitions={[
               {
                 id: 'customer',
                 header: t('adminSessions.table.customerCompanyContact'),
                 sortingField: 'customer',
+                width: columnWidths.customer,
                 cell: (item) => (
                   <Box>
                     <Box fontWeight="bold">{item.customerCompany}/{item.customerName}</Box>
@@ -330,6 +375,7 @@ export default function AdminDashboard() {
                 id: 'campaign',
                 header: t('adminSessions.table.campaignAssociation'),
                 sortingField: 'campaign',
+                width: columnWidths.campaign,
                 cell: (item) => (
                   <Box fontSize="body-s">
                     {item.campaignName ? (
@@ -344,6 +390,7 @@ export default function AdminDashboard() {
                 id: 'agent',
                 header: t('adminSessions.table.conversationAgent'),
                 sortingField: 'agent',
+                width: columnWidths.agent,
                 cell: (item) => (
                   <Box fontSize="body-s" color="text-status-inactive">
                     {item.agentId ? `Agent: ${item.agentId}` : t('adminSessions.table.noAgentAssigned')}
@@ -354,23 +401,27 @@ export default function AdminDashboard() {
                 id: 'status',
                 header: t('adminSessions.table.sessionStatus'),
                 sortingField: 'status',
+                width: columnWidths.status,
                 cell: (item) => <StatusBadge status={item.status} type="session" />
               },
               {
                 id: 'created',
                 header: t('adminSessions.table.createdDate'),
                 sortingField: 'created',
+                width: columnWidths.created,
                 cell: (item) => new Date(item.createdAt).toLocaleDateString()
               },
               {
                 id: 'completed',
                 header: t('adminSessions.table.completedDate'),
                 sortingField: 'completed',
+                width: columnWidths.completed,
                 cell: (item) => item.completedAt ? new Date(item.completedAt).toLocaleDateString() : '-'
               },
               {
                 id: 'actions',
                 header: t('adminSessions.actions.actionsLabel'),
+                width: columnWidths.actions,
                 cell: (item) => (
                   <ButtonDropdown
                     expandToViewport

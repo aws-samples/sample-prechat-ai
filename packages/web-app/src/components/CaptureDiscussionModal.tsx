@@ -27,7 +27,6 @@ export function formatCaptureContent(
 
 /**
  * 주석 입력 유효성을 검증합니다.
- * 빈 문자열이나 공백만 있는 문자열은 유효하지 않습니다.
  */
 export function validateAnnotation(annotation: string): boolean {
   return annotation.trim().length > 0;
@@ -49,7 +48,6 @@ export function buildDiscussionPayload(
 
 /**
  * 캡처 핸들러를 생성합니다.
- * API 호출 성공/실패에 따라 콜백을 호출합니다.
  */
 export function createCaptureHandler(options: {
   apiCall: (sessionId: string, content: string) => Promise<unknown>;
@@ -90,12 +88,7 @@ export interface CaptureDiscussionModalProps {
 // --- React 컴포넌트 ---
 
 /**
- * Planning Agent 응답을 Discussion 탭에 캡처하기 위한 주석 입력 모달
- *
- * 1. Sales Rep이 AI 응답 말풍선의 캡처 버튼 클릭
- * 2. 모달 표시 → 주석 입력 필드
- * 3. 확인 클릭 → adminApi.createDiscussion 호출
- * 4. 성공 시 토스트 알림 표시 및 모달 닫기
+ * Planning 응답을 Discussion 탭에 캡처하기 위한 주석 입력 모달
  */
 export const CaptureDiscussionModal: React.FC<
   CaptureDiscussionModalProps
@@ -125,7 +118,6 @@ export const CaptureDiscussionModal: React.FC<
         ]);
         setAnnotation('');
         setIsSubmitting(false);
-        // 토스트 표시 후 모달 닫기
         setTimeout(() => {
           setFlashItems([]);
           onSuccess();
@@ -185,9 +177,7 @@ export const CaptureDiscussionModal: React.FC<
       }
     >
       <SpaceBetween size="m">
-        {flashItems.length > 0 && (
-          <Flashbar items={flashItems} />
-        )}
+        {flashItems.length > 0 && <Flashbar items={flashItems} />}
         <FormField
           label={
             t('admin.planningChat.annotationLabel') || '주석'
@@ -199,13 +189,10 @@ export const CaptureDiscussionModal: React.FC<
         >
           <Input
             value={annotation}
-            onChange={({ detail }) =>
-              setAnnotation(detail.value)
-            }
+            onChange={({ detail }) => setAnnotation(detail.value)}
             placeholder={
-              t(
-                'admin.planningChat.annotationPlaceholder'
-              ) || '예: 서비스 추천 관련 인사이트'
+              t('admin.planningChat.annotationPlaceholder') ||
+              '예: 서비스 추천 관련 인사이트'
             }
             disabled={isSubmitting}
           />
@@ -216,10 +203,7 @@ export const CaptureDiscussionModal: React.FC<
             '캡처 대상 내용'
           }
         >
-          <Box
-            variant="code"
-            padding="s"
-          >
+          <Box variant="code" padding="s">
             {messageContent.length > 200
               ? `${messageContent.slice(0, 200)}...`
               : messageContent}

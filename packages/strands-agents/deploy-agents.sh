@@ -2,21 +2,18 @@
 #
 # PreChat Strands Agents 배포 스크립트
 #
-# 세 에이전트를 AgentCore Runtime에 배포하고,
+# 두 에이전트를 AgentCore Runtime에 배포하고,
 # 산출된 Agent Runtime ARN을 SSM Parameter Store에 등록합니다.
 # Lambda 함수들은 SSM 파라미터를 통해 에이전트 ARN을 참조합니다.
 #
+# Knowledge Base는 AgentConfig의 retrieve 도구 tool_attributes.kb_id로
+# 런타임에 주입되므로, 배포 시 KB ID 기입이 필요하지 않습니다.
+#
 # 사용법:
-#   ./deploy-agents.sh [AWS_PROFILE] [STAGE] [REGION] [BEDROCK_KB_ID]
+#   ./deploy-agents.sh [AWS_PROFILE] [STAGE] [REGION]
 #
 # 예시:
 #   ./deploy-agents.sh default dev ap-northeast-2
-#   ./deploy-agents.sh default dev ap-northeast-2 ABCDEFGHIJ
-#
-# BEDROCK_KB_ID:
-#   Consultation Agent와 Planning Agent가 유사 고객사례 검색에 사용합니다.
-#   deploy_agent.py → launch(env_vars={BEDROCK_KB_ID: ...})로 컨테이너에 주입됩니다.
-#   KB가 없으면 생략 가능 (NONE으로 전달).
 #
 # 사전 요구사항:
 #   pip install bedrock-agentcore-starter-toolkit
@@ -29,7 +26,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROFILE=${1:-default}
 STAGE=${2:-dev}
 REGION=${3:-ap-northeast-2}
-BEDROCK_KB_ID=${4:-"NONE"}
 
 # SSM 파라미터 경로 prefix
 SSM_PREFIX="/prechat/${STAGE}/agents"
@@ -41,26 +37,7 @@ echo "  AWS Profile  : $PROFILE"
 echo "  Stage        : $STAGE"
 echo "  Region       : $REGION"
 echo "  SSM Prefix   : $SSM_PREFIX"
-echo "  Bedrock KB ID: ${BEDROCK_KB_ID}"
 echo "============================================"
-echo ""
-
-# KB ID를 SSM에 등록 (SAM template의 resolve:ssm 용)
-echo "📝 Registering Bedrock KB ID in SSM..."
-aws ssm put-parameter \
-    --name "${SSM_PREFIX}/bedrock-kb-id" \
-    --value "${BEDROCK_KB_ID}" \
-    --type "String" \
-    --overwrite \
-    --region "${REGION}" \
-    --profile "${PROFILE}" \
-    --description "Bedrock Knowledge Base ID for PreChat agents (${STAGE})"
-
-if [ "$BEDROCK_KB_ID" != "NONE" ]; then
-    echo "✅ KB ID registered: ${BEDROCK_KB_ID}"
-else
-    echo "ℹ️  KB ID not provided - registered as NONE (KB RAG will be inactive)"
-fi
 echo ""
 
 # 공통 함수: 에이전트 배포 → ARN 추출 → SSM 등록
@@ -77,9 +54,8 @@ deploy_agent() {
 
     cd "${SCRIPT_DIR}/${AGENT_DIR}"
 
-    # deploy_agent.py 실행
-    # BEDROCK_KB_ID, STAGE를 환경변수로 전달 → deploy_agent.py가 launch(env_vars=...)로 컨테이너에 주입
-    DEPLOY_OUTPUT=$(AWS_PROFILE=$PROFILE AWS_DEFAULT_REGION=$REGION STAGE=$STAGE BEDROCK_KB_ID=$BEDROCK_KB_ID python deploy_agent.py 2>&1 | tee /dev/stderr | tail -1)
+    # deploy_agent.py 실행 (STAGE만 컨테이너 환경변수로 주입)
+    DEPLOY_OUTPUT=$(AWS_PROFILE=$PROFILE AWS_DEFAULT_REGION=$REGION STAGE=$STAGE python deploy_agent.py 2>&1 | tee /dev/stderr | tail -1)
 
     # JSON에서 ARN 추출
     AGENT_ARN=$(echo "$DEPLOY_OUTPUT" | python3 -c "
@@ -119,24 +95,14 @@ except:
 }
 
 # ============================================
-# 1. Consultation Agent (STM_ONLY + KB)
+# 1. Consultation Agent (STM_ONLY, KB는 AgentConfig에서 런타임 주입)
 # ============================================
 deploy_agent "consultation-agent" "consultation"
 
 # ============================================
-# 2. Summary Agent (NO_MEMORY, no KB)
+# 2. Summary Agent (NO_MEMORY)
 # ============================================
 deploy_agent "summary-agent" "summary"
-
-# ============================================
-# 3. Planning Agent (NO_MEMORY + KB)
-# ============================================
-deploy_agent "planning-agent" "planning"
-
-# ============================================
-# 4. SHIP Security Agent (NO_MEMORY, no KB)
-# ============================================
-deploy_agent "ship-agent" "ship"
 
 # ============================================
 # 결과 요약

@@ -242,17 +242,18 @@
   resolved "https://registry.npmjs.org/@cloudscape-design/collection-hooks/-/collection-hooks-1.0.74.tgz"
   integrity sha512-yAcD7vjFqbwqMCamUcKRXp403u8RcmC9izyPEYiWod9elt7x0GT1ypPyo9ZRyQuFrBsv2nwubBUrChcYaWooZw==
 
-"@cloudscape-design/component-toolkit@1.0.0-beta.124", "@cloudscape-design/component-toolkit@^1.0.0-beta", "@cloudscape-design/component-toolkit@^1.0.0-beta.124":
-  version "1.0.0-beta.124"
-  resolved "https://registry.npmjs.org/@cloudscape-design/component-toolkit/-/component-toolkit-1.0.0-beta.124.tgz#9e3f5893d0dc058d6d59490c0312258e55760128"
-  integrity sha512-QB6IK9yubn+5XDKXvWJKmyZRd/ZuZsfTK/EpU6usgTVqiYcdjQ4ojhTir6n9KC8Ha/IvRM7D4E8br2Nw8C2cgw==
+"@cloudscape-design/component-toolkit@1.0.0-beta.157", "@cloudscape-design/component-toolkit@^1.0.0-beta", "@cloudscape-design/component-toolkit@^1.0.0-beta.157":
+  version "1.0.0-beta.157"
+  resolved "https://registry.npmjs.org/@cloudscape-design/component-toolkit/-/component-toolkit-1.0.0-beta.157.tgz#d4f2f398ac8e9cbac84a85f5571cc2ecd07f1586"
+  integrity sha512-fBO+eZNSRjZGQSLGKg+QFBa2Ik/FJHV1MUDp5bz03ZCXZ9A3rsN4ixy7gPFbG6gMRu1i4NZ17ASr7VYnMEFY9Q==
   dependencies:
     tslib "^2.3.1"
+    weekstart "^2.0.0"
 
-"@cloudscape-design/components@^3.0.0":
-  version "3.0.1036"
-  resolved "https://registry.npmjs.org/@cloudscape-design/components/-/components-3.0.1036.tgz"
-  integrity sha512-OIZQzP3LFzOEn/NIqK+CllCcRkE5VUL7RC3uS3oa2VQOGvaOwk47cHShJPvLx42hiQkokzUVse3/a/0JGFQnFw==
+"@cloudscape-design/components@3.0.1285", "@cloudscape-design/components@^3.0.1285":
+  version "3.0.1285"
+  resolved "https://registry.npmjs.org/@cloudscape-design/components/-/components-3.0.1285.tgz#d42ba98579865bcdce43026085574090fb344b80"
+  integrity sha512-Sp2MIQWKz0JU8tPJlJxo64A/zJaGlP+IHotuRMC+3i3YTjqx80LSMgMLM8cJOfs02PzbVvQ2MEK1QvKqMqHgLw==
   dependencies:
     "@cloudscape-design/collection-hooks" "^1.0.0"
     "@cloudscape-design/component-toolkit" "^1.0.0-beta"
@@ -261,15 +262,13 @@
     "@dnd-kit/core" "^6.0.8"
     "@dnd-kit/sortable" "^7.0.2"
     "@dnd-kit/utilities" "^3.2.1"
-    "@juggle/resize-observer" "^3.3.1"
     ace-builds "^1.34.0"
-    balanced-match "^1.0.2"
     clsx "^1.1.0"
     d3-shape "^1.3.7"
     date-fns "^2.25.0"
     intl-messageformat "^10.3.1"
     mnth "^2.0.0"
-    react-keyed-flatten-children "^2.2.1"
+    react-is "^18.2.0"
     react-transition-group "^4.4.2"
     tslib "^2.4.0"
     weekstart "^1.1.0"
@@ -728,11 +727,6 @@
   dependencies:
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
-
-"@juggle/resize-observer@^3.3.1":
-  version "3.4.0"
-  resolved "https://registry.npmjs.org/@juggle/resize-observer/-/resize-observer-3.4.0.tgz"
-  integrity sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -1309,7 +1303,7 @@ bail@^2.0.0:
   resolved "https://registry.npmjs.org/bail/-/bail-2.0.2.tgz"
   integrity sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==
 
-balanced-match@^1.0.0, balanced-match@^1.0.2:
+balanced-match@^1.0.0:
   version "1.0.2"
   resolved "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz"
   integrity sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
@@ -3316,13 +3310,6 @@ react-is@^18.0.0, react-is@^18.2.0:
   resolved "https://registry.npmjs.org/react-is/-/react-is-18.3.1.tgz"
   integrity sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==
 
-react-keyed-flatten-children@^2.2.1:
-  version "2.2.1"
-  resolved "https://registry.npmjs.org/react-keyed-flatten-children/-/react-keyed-flatten-children-2.2.1.tgz"
-  integrity sha512-6yBLVO6suN8c/OcJk1mzIrUHdeEzf5rtRVBhxEXAHO49D7SlJ70cG4xrSJrBIAG7MMeQ+H/T151mM2dRDNnFaA==
-  dependencies:
-    react-is "^18.2.0"
-
 react-markdown@^10.1.0:
   version "10.1.0"
   resolved "https://registry.npmjs.org/react-markdown/-/react-markdown-10.1.0.tgz"
@@ -3978,6 +3965,11 @@ weekstart@^1.1.0:
   version "1.1.0"
   resolved "https://registry.npmjs.org/weekstart/-/weekstart-1.1.0.tgz"
   integrity sha512-ZO3I7c7J9nwGN1PZKZeBYAsuwWEsCOZi5T68cQoVNYrzrpp5Br0Bgi0OF4l8kH/Ez7nKfxa5mSsXjsgris3+qg==
+
+weekstart@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/weekstart/-/weekstart-2.0.0.tgz#3925b0626b311b353097d81638bd0403a53d81f7"
+  integrity sha512-HjYc14IQUwDcnGICuc8tVtqAd6EFpoAQMqgrqcNtWWZB+F1b7iTq44GzwM1qvnH4upFgbhJsaNHuK93NOFheSg==
 
 whatwg-encoding@^3.1.1:
   version "3.1.1"

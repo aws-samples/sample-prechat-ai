@@ -1,6 +1,6 @@
 // nosemgrep
-import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Container,
   Header,
@@ -12,119 +12,309 @@ import {
   Alert,
   Select,
   Textarea,
+  Checkbox,
+  Box,
   Spinner,
-  Badge,
-  Checkbox
-} from '@cloudscape-design/components'
-import { adminApi } from '../../services/api'
-import { BEDROCK_MODELS } from '../../types'
-import { PlaceholderTooltip } from '../../components'
-import consultationPrompt from '../../assets/prechat-agent-prompt.md?raw'
-import analysisPrompt from '../../assets/summary-agent-prompt.md?raw'
-import planningPrompt from '../../assets/planning-agent-prompt.md?raw'
-import { useI18n } from '../../i18n'
+} from '@cloudscape-design/components';
+import { adminApi } from '../../services/api';
+import { BEDROCK_MODELS } from '../../types';
+import type {
+  AgentRole,
+  ToolConfig,
+  KnowledgeBase,
+} from '../../types';
+import { PlaceholderTooltip } from '../../components';
+import consultationPrompt from '../../assets/prechat-agent-prompt.md?raw';
+import { useI18n } from '../../i18n';
 
-const ROLE_LABELS: Record<string, string> = {
-  prechat: 'Consultation Agent',
-  summary: 'Summary Agent',
-  planning: 'Planning Agent',
-  ship: 'SHIP Security Agent',
-}
+const AGENT_ROLES: {
+  value: AgentRole;
+  label: string;
+}[] = [
+  { value: 'consultation', label: 'Consultation Agent' },
+  { value: 'summary', label: 'Summary Agent' },
+];
 
 const DEFAULT_PROMPTS: Record<string, string> = {
-  prechat: consultationPrompt,
-  summary: analysisPrompt,
-  planning: planningPrompt,
-  ship: 'SHIP Security Assessment 전문 상담 에이전트입니다. 고객의 AWS 보안 현황을 파악하고 A2T 로그 작성에 필요한 정보를 수집합니다.',
+  consultation: consultationPrompt,
+};
+
+const I18N_OPTIONS = [
+  { value: 'ko', label: '한국어 (Korean)' },
+  { value: 'en', label: 'English' },
+];
+
+interface AvailableTool {
+  name: string;
+  label: string;
+  description: string;
+  hasAttributes?: boolean;
+  alwaysEnabled?: boolean;
 }
 
-const READONLY_ROLES = ['summary', 'planning', 'ship']
+const AVAILABLE_TOOLS: AvailableTool[] = [
+  {
+    name: 'retrieve',
+    label: 'Knowledge Base 검색',
+    description: 'Bedrock KB에서 유사 사례 검색',
+    hasAttributes: true,
+  },
+  {
+    name: 'current_time',
+    label: '현재 시간',
+    description: '현재 시간 조회 (항상 포함)',
+    alwaysEnabled: true,
+  },
+  {
+    name: 'render_form',
+    label: 'HTML Form 생성',
+    description: '고객 정보 수집용 동적 폼',
+  },
+  {
+    name: 'aws_docs_mcp',
+    label: 'AWS 문서 검색',
+    description: 'AWS 공식 문서 MCP 검색',
+  },
+  {
+    name: 'http_request',
+    label: 'HTTP 요청',
+    description: '외부 API 호출',
+  },
+  {
+    name: 'extract_a2t_log',
+    label: 'A2T 로그 추출',
+    description: 'A2T 로그 데이터 추출',
+  },
+];
 
 export default function EditAgent() {
-  const navigate = useNavigate()
-  const { t } = useI18n()
-  const { agentId: configId } = useParams<{ agentId: string }>()
-  const [loading, setLoading] = useState(false)
-  const [loadingConfig, setLoadingConfig] = useState(true)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [overridePrompt, setOverridePrompt] = useState(false)
-  const [agentRole, setAgentRole] = useState('')
-  const isReadOnlyRole = READONLY_ROLES.includes(agentRole)
+  const navigate = useNavigate();
+  const { t } = useI18n();
+  const { agentId: configId } = useParams<{
+    agentId: string;
+  }>();
+  const [loading, setLoading] = useState(false);
+  const [loadingConfig, setLoadingConfig] =
+    useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [overridePrompt, setOverridePrompt] =
+    useState(false);
+  const [selectedKbId, setSelectedKbId] =
+    useState('');
+  const [knowledgeBases, setKnowledgeBases] =
+    useState<KnowledgeBase[]>([]);
+  const [kbLoading, setKbLoading] = useState(false);
+  const [kbError, setKbError] = useState('');
   const [formData, setFormData] = useState({
     agentName: '',
+    agentRole: '' as AgentRole | '',
     modelId: '',
-    systemPrompt: ''
-  })
+    systemPrompt: '',
+    i18n: 'ko',
+    tools: [] as ToolConfig[],
+  });
 
+  const isConsultation =
+    formData.agentRole === 'consultation';
+
+  // retrieve 도구가 선택되었는지 확인
+  const isRetrieveChecked = formData.tools.some(
+    (tc) => tc.tool_name === 'retrieve'
+  );
+
+  // retrieve 체크 + KB 미선택 시 제출 비활성화
+  const isRetrieveMissingKb =
+    isRetrieveChecked && !selectedKbId;
+
+  // 기존 AgentConfig 로드
   useEffect(() => {
     if (configId) {
-      loadConfig()
+      loadConfig();
     }
-  }, [configId])
+  }, [configId]); // eslint-disable-line
 
   const loadConfig = async () => {
-    if (!configId) return
-
+    if (!configId) return;
     try {
-      setLoadingConfig(true)
-      const config = await adminApi.getAgentConfig(configId)
+      setLoadingConfig(true);
+      const config =
+        await adminApi.getAgentConfig(configId);
       setFormData({
         agentName: config.agentName,
+        agentRole: config.agentRole,
         modelId: config.modelId,
-        systemPrompt: config.systemPrompt
-      })
-      setAgentRole(config.agentRole)
+        systemPrompt: config.systemPrompt || '',
+        i18n: config.i18n || 'ko',
+        tools: config.tools || [],
+      });
+      // 시스템 프롬프트가 기본값과 다르면 오버라이드 활성화
+      if (
+        config.systemPrompt &&
+        config.systemPrompt !==
+          DEFAULT_PROMPTS[config.agentRole]
+      ) {
+        setOverridePrompt(true);
+      }
+      // retrieve 도구의 kb_id 사전 선택
+      const retrieveTool = (config.tools || []).find(
+        (tc) => tc.tool_name === 'retrieve'
+      );
+      if (retrieveTool?.tool_attributes?.kb_id) {
+        setSelectedKbId(
+          retrieveTool.tool_attributes.kb_id
+        );
+      }
     } catch (err) {
-      setError(t('adminAgentEdit.alert.failedLoadAgent'))
+      setError(
+        t('adminAgentEdit.alert.failedLoadAgent')
+      );
     } finally {
-      setLoadingConfig(false)
+      setLoadingConfig(false);
     }
-  }
+  };
+
+  // KB 목록 조회: retrieve 체크 시 fetch
+  useEffect(() => {
+    if (!isRetrieveChecked) return;
+    if (knowledgeBases.length > 0) return;
+    setKbLoading(true);
+    setKbError('');
+    adminApi
+      .fetchKnowledgeBases()
+      .then((res) => {
+        setKnowledgeBases(
+          res.knowledgeBases || []
+        );
+      })
+      .catch(() => {
+        setKbError(
+          t('adminAgentCreate.form.kbLoadError')
+        );
+      })
+      .finally(() => {
+        setKbLoading(false);
+      });
+  }, [isRetrieveChecked]); // eslint-disable-line
+
+  // 도구 체크박스 토글 핸들러
+  const handleToolToggle = (
+    toolName: string,
+    checked: boolean
+  ) => {
+    setFormData((prev) => {
+      let updatedTools: ToolConfig[];
+      if (checked) {
+        updatedTools = [
+          ...prev.tools,
+          { tool_name: toolName },
+        ];
+      } else {
+        updatedTools = prev.tools.filter(
+          (tc) => tc.tool_name !== toolName
+        );
+        if (toolName === 'retrieve') {
+          setSelectedKbId('');
+        }
+      }
+      return { ...prev, tools: updatedTools };
+    });
+  };
+
+  // KB 선택 핸들러
+  const handleKbSelect = (kbId: string) => {
+    setSelectedKbId(kbId);
+    setFormData((prev) => {
+      const updatedTools = prev.tools.map((tc) => {
+        if (tc.tool_name === 'retrieve') {
+          return {
+            ...tc,
+            tool_attributes: { kb_id: kbId },
+          };
+        }
+        return tc;
+      });
+      return { ...prev, tools: updatedTools };
+    });
+  };
 
   const handleSubmit = async () => {
-    if (!configId) return
-
-    setLoading(true)
-    setError('')
-    setSuccess('')
+    if (!configId) return;
+    setLoading(true);
+    setError('');
+    setSuccess('');
 
     try {
       await adminApi.updateAgentConfig(configId, {
         modelId: formData.modelId,
-        systemPrompt: overridePrompt ? formData.systemPrompt : '',
-        agentName: formData.agentName
-      })
-      setSuccess(t('adminAgentEdit.alert.updatedSuccess', { name: formData.agentName }))
-      setTimeout(() => navigate('/admin/agents'), 3000)
+        agentName: formData.agentName,
+        ...(isConsultation && {
+          systemPrompt: formData.systemPrompt,
+          tools: formData.tools,
+          i18n: formData.i18n,
+        }),
+      });
+      setSuccess(
+        t('adminAgentEdit.alert.updatedSuccess', {
+          name: formData.agentName,
+        })
+      );
+      setTimeout(
+        () => navigate('/admin/agents'),
+        3000
+      );
     } catch (err) {
-      setError(t('adminAgentEdit.alert.failedUpdateAgent'))
+      setError(
+        t('adminAgentEdit.alert.failedUpdateAgent')
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const updateFormData = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
+  const updateFormData = (
+    field: string,
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
-  const modelOptions = BEDROCK_MODELS.map(model => ({
-    label: `${model.name} (${model.provider})`,
-    value: model.id
-  }))
+  const modelOptions = BEDROCK_MODELS.map((m) => ({
+    label: `${m.name} (${m.provider})`,
+    value: m.id,
+  }));
+
+  const kbOptions = knowledgeBases.map((kb) => ({
+    label: `${kb.name} (${kb.knowledgeBaseId})`,
+    value: kb.knowledgeBaseId,
+  }));
 
   if (loadingConfig) {
     return (
       <Container>
         <SpaceBetween size="l">
-          <Header variant="h1">{t('adminAgentEdit.loading.pageTitle')}</Header>
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <Header variant="h1">
+            {t('adminAgentEdit.loading.pageTitle')}
+          </Header>
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '2rem',
+            }}
+          >
             <Spinner size="large" />
-            <div style={{ marginTop: '1rem' }}>{t('adminAgentEdit.loading.agentDetails')}</div>
+            <div style={{ marginTop: '1rem' }}>
+              {t(
+                'adminAgentEdit.loading.agentDetails'
+              )}
+            </div>
           </div>
         </SpaceBetween>
       </Container>
-    )
+    );
   }
 
   return (
@@ -133,126 +323,371 @@ export default function EditAgent() {
         <Header
           variant="h1"
           actions={
-            <Button variant="normal" onClick={() => navigate('/admin/agents')}>
-              {t('adminAgentEdit.header.toDashboardButton')}
+            <Button
+              variant="normal"
+              onClick={() =>
+                navigate('/admin/agents')
+              }
+            >
+              {t(
+                'adminAgentEdit.header.toDashboardButton'
+              )}
             </Button>
           }
         >
           {t('adminAgentEdit.header.title')}
         </Header>
 
-        {error && <Alert type="error">{error}</Alert>}
-        {success && <Alert type="success">{success}</Alert>}
+        {error && (
+          <Alert type="error">{error}</Alert>
+        )}
+        {success && (
+          <Alert type="success">{success}</Alert>
+        )}
 
         <Form
           actions={
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => navigate('/admin/agents')}>
-                {t('adminAgentEdit.form.cancelButton')}
+            <SpaceBetween
+              direction="horizontal"
+              size="xs"
+            >
+              <Button
+                variant="link"
+                onClick={() =>
+                  navigate('/admin/agents')
+                }
+              >
+                {t(
+                  'adminAgentEdit.form.cancelButton'
+                )}
               </Button>
               <Button
                 variant="primary"
                 onClick={handleSubmit}
                 loading={loading}
-                disabled={!formData.modelId}
+                disabled={
+                  !formData.agentName ||
+                  !formData.modelId ||
+                  isRetrieveMissingKb
+                }
               >
-                {t('adminAgentEdit.form.updateAgentButton')}
+                {t(
+                  'adminAgentEdit.form.updateAgentButton'
+                )}
               </Button>
             </SpaceBetween>
           }
         >
           <SpaceBetween size="l">
+            {/* 에이전트 이름 */}
             <FormField
-              label={t('adminAgentEdit.form.agentRoleLabel')}
-              description={t('adminAgentEdit.form.agentRoleReadonlyDescription')}
-              stretch
-            >
-              <Badge color={
-                agentRole === 'prechat' ? 'blue' :
-                agentRole === 'summary' ? 'green' :
-                agentRole === 'ship' ? 'red' : 'grey'
-              }>
-                {ROLE_LABELS[agentRole] || agentRole}
-              </Badge>
-            </FormField>
-
-            <FormField
-              label={t('adminAgentEdit.form.agentNameLabel')}
-              description={t('adminAgentEdit.form.agentNameDescription')}
+              label={t(
+                'adminAgentEdit.form.agentNameLabel'
+              )}
+              description={t(
+                'adminAgentEdit.form.agentNameDescription'
+              )}
               stretch
             >
               <Input
                 value={formData.agentName}
-                onChange={({ detail }) => updateFormData('agentName', detail.value)}
-                placeholder={t('adminAgentEdit.form.agentNamePlaceholder')}
-                disabled={isReadOnlyRole}
+                onChange={({ detail }) =>
+                  updateFormData(
+                    'agentName',
+                    detail.value
+                  )
+                }
+                placeholder={t(
+                  'adminAgentEdit.form.agentNamePlaceholder'
+                )}
               />
             </FormField>
 
-            {isReadOnlyRole && (
-              <Alert type="info">
-                {t('adminAgentEdit.form.readOnlyRoleInfo')}
-              </Alert>
-            )}
-
+            {/* 역할 선택기 (읽기 전용) */}
             <FormField
-              label={t('adminAgentEdit.form.foundationModelLabel')}
-              description={t('adminAgentEdit.form.foundationModelDescription')}
+              label={t(
+                'adminAgentEdit.form.agentRoleLabel'
+              )}
+              description={t(
+                'adminAgentEdit.form.agentRoleReadonlyDescription'
+              )}
+              stretch
+            >
+              <Select
+                selectedOption={
+                  formData.agentRole
+                    ? AGENT_ROLES.find(
+                        (r) =>
+                          r.value ===
+                          formData.agentRole
+                      ) || null
+                    : null
+                }
+                onChange={() => {}}
+                options={AGENT_ROLES}
+                disabled
+              />
+            </FormField>
+
+            {/* 모델 선택 (공통) */}
+            <FormField
+              label={t(
+                'adminAgentEdit.form.foundationModelLabel'
+              )}
+              description={t(
+                'adminAgentEdit.form.foundationModelDescription'
+              )}
               stretch
             >
               <Select
                 selectedOption={
                   formData.modelId
-                    ? modelOptions.find(opt => opt.value === formData.modelId) || null
+                    ? modelOptions.find(
+                        (opt) =>
+                          opt.value ===
+                          formData.modelId
+                      ) || null
                     : null
                 }
                 onChange={({ detail }) =>
-                  updateFormData('modelId', detail.selectedOption?.value || '')
+                  updateFormData(
+                    'modelId',
+                    detail.selectedOption
+                      ?.value || ''
+                  )
                 }
                 options={modelOptions}
-                placeholder={t('adminAgentEdit.form.foundationModelPlaceholder')}
+                placeholder={t(
+                  'adminAgentEdit.form.foundationModelPlaceholder'
+                )}
               />
             </FormField>
 
-            {!isReadOnlyRole && (
+            {/* Consultation 전용 필드 */}
+            {isConsultation && (
               <>
+                {/* i18n 언어 선택 */}
                 <FormField
-                  label={t('adminAgentEdit.form.promptOverrideLabel')}
-                  description={t('adminAgentEdit.form.promptOverrideDescription')}
+                  label={t(
+                    'adminAgentCreate.form.i18nLabel'
+                  )}
+                  description={t(
+                    'adminAgentCreate.form.i18nDescription'
+                  )}
+                  stretch
+                >
+                  <Select
+                    selectedOption={
+                      I18N_OPTIONS.find(
+                        (opt) =>
+                          opt.value ===
+                          formData.i18n
+                      ) || I18N_OPTIONS[0]
+                    }
+                    onChange={({ detail }) =>
+                      updateFormData(
+                        'i18n',
+                        detail.selectedOption
+                          ?.value || 'ko'
+                      )
+                    }
+                    options={I18N_OPTIONS}
+                  />
+                </FormField>
+
+                {/* 도구 체크박스 목록 */}
+                <FormField
+                  label={t(
+                    'adminAgentCreate.form.toolsLabel'
+                  )}
+                  description={t(
+                    'adminAgentCreate.form.toolsDescription'
+                  )}
+                  stretch
+                  errorText={
+                    isRetrieveMissingKb
+                      ? t(
+                          'adminAgentCreate.form.kbRequiredError'
+                        )
+                      : undefined
+                  }
+                >
+                  <SpaceBetween size="xs">
+                    {AVAILABLE_TOOLS.map((tool) => {
+                      const isChecked =
+                        tool.alwaysEnabled ||
+                        formData.tools.some(
+                          (tc) =>
+                            tc.tool_name ===
+                            tool.name
+                        );
+                      return (
+                        <div key={tool.name}>
+                          <Checkbox
+                            checked={isChecked}
+                            disabled={
+                              tool.alwaysEnabled
+                            }
+                            onChange={({
+                              detail,
+                            }) =>
+                              handleToolToggle(
+                                tool.name,
+                                detail.checked
+                              )
+                            }
+                          >
+                            <span>
+                              <Box
+                                variant="span"
+                                fontWeight="bold"
+                              >
+                                {tool.label}
+                              </Box>
+                              {' — '}
+                              {tool.description}
+                            </span>
+                          </Checkbox>
+                          {/* retrieve 체크 시 KB 선택기 */}
+                          {tool.name ===
+                            'retrieve' &&
+                            isRetrieveChecked && (
+                              <div
+                                style={{
+                                  marginLeft: 28,
+                                  marginTop: 4,
+                                }}
+                              >
+                                {kbError && (
+                                  <Alert
+                                    type="error"
+                                  >
+                                    {kbError}
+                                  </Alert>
+                                )}
+                                <Select
+                                  selectedOption={
+                                    selectedKbId
+                                      ? kbOptions.find(
+                                          (o) =>
+                                            o.value ===
+                                            selectedKbId
+                                        ) || null
+                                      : null
+                                  }
+                                  onChange={({
+                                    detail,
+                                  }) =>
+                                    handleKbSelect(
+                                      detail
+                                        .selectedOption
+                                        ?.value ||
+                                        ''
+                                    )
+                                  }
+                                  options={
+                                    kbOptions
+                                  }
+                                  placeholder={t(
+                                    'adminAgentCreate.form.kbPlaceholder'
+                                  )}
+                                  loadingText={t(
+                                    'adminAgentCreate.form.kbLoading'
+                                  )}
+                                  statusType={
+                                    kbLoading
+                                      ? 'loading'
+                                      : 'finished'
+                                  }
+                                  empty={t(
+                                    'adminAgentCreate.form.kbEmpty'
+                                  )}
+                                />
+                              </div>
+                            )}
+                        </div>
+                      );
+                    })}
+                  </SpaceBetween>
+                </FormField>
+
+                {/* 시스템 프롬프트 오버라이드 */}
+                <FormField
+                  label={t(
+                    'adminAgentEdit.form.promptOverrideLabel'
+                  )}
+                  description={t(
+                    'adminAgentEdit.form.promptOverrideDescription'
+                  )}
                   stretch
                 >
                   <Checkbox
                     checked={overridePrompt}
-                    onChange={({ detail }) => setOverridePrompt(detail.checked)}
+                    onChange={({ detail }) =>
+                      setOverridePrompt(
+                        detail.checked
+                      )
+                    }
                   >
-                    {t('adminAgentEdit.form.promptOverrideCheckbox')}
+                    {t(
+                      'adminAgentEdit.form.promptOverrideCheckbox'
+                    )}
                   </Checkbox>
                 </FormField>
 
                 {overridePrompt && (
                   <FormField
                     label={
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>{t('adminAgentEdit.form.agentInstructionsLabel')}</span>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <span>
+                          {t(
+                            'adminAgentEdit.form.agentInstructionsLabel'
+                          )}
+                        </span>
                         <PlaceholderTooltip />
                       </div>
                     }
-                    description={t('adminAgentEdit.form.agentInstructionsDescription')}
+                    description={t(
+                      'adminAgentEdit.form.agentInstructionsDescription'
+                    )}
                     stretch
                     secondaryControl={
                       <Button
                         variant="normal"
                         iconName="refresh"
-                        onClick={() => updateFormData('systemPrompt', DEFAULT_PROMPTS[agentRole] || consultationPrompt)}
+                        onClick={() =>
+                          updateFormData(
+                            'systemPrompt',
+                            DEFAULT_PROMPTS
+                              .consultation
+                          )
+                        }
                       >
-                        {t('adminAgentEdit.form.defaultInstructionsButton')}
+                        {t(
+                          'adminAgentEdit.form.defaultInstructionsButton'
+                        )}
                       </Button>
                     }
                   >
                     <Textarea
-                      value={formData.systemPrompt}
-                      onChange={({ detail }) => updateFormData('systemPrompt', detail.value)}
-                      placeholder={t('adminAgentEdit.form.agentInstructionsPlaceholder')}
+                      value={
+                        formData.systemPrompt
+                      }
+                      onChange={({ detail }) =>
+                        updateFormData(
+                          'systemPrompt',
+                          detail.value
+                        )
+                      }
+                      placeholder={t(
+                        'adminAgentEdit.form.agentInstructionsPlaceholder'
+                      )}
                       rows={15}
                     />
                   </FormField>
@@ -263,5 +698,5 @@ export default function EditAgent() {
         </Form>
       </SpaceBetween>
     </Container>
-  )
+  );
 }
