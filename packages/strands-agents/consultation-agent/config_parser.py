@@ -41,7 +41,21 @@ TOOL_INSTRUCTIONS: dict[str, str] = {
         '형태로 호출하세요.'
     ),
     'render_form': (
-        '`render_form`: 고객 정보 수집용 HTML Form을 생성합니다.'
+        '`render_form`: 고객 정보 수집용 HTML Form을 생성합니다. '
+        '`render_form(form_title="제목", fields=\'[{"name":"...","label":"...","type":"text|textarea|select|email|tel"}]\')` '
+        '형태로 호출하세요.\n'
+        '  **중요 — 도구 응답 전달 규칙**:\n'
+        '  1. 이 도구가 반환하는 `<div>...</div>` HTML 문자열은 '
+        '프론트엔드가 직접 렌더링하는 UI 페이로드입니다. '
+        '반환값을 요약하거나 재서술하지 말고, 최종 응답 메시지에 '
+        '**원본 그대로(verbatim) 포함**시켜 고객에게 전달하세요.\n'
+        '  2. HTML 앞에 1-2문장의 짧은 안내(예: "아래 폼에 정보를 '
+        '입력해 주세요")를 덧붙일 수 있으나, HTML 자체는 변형하지 '
+        '않습니다.\n'
+        '  3. "폼을 준비했습니다" 같은 메타 설명만 보내고 HTML을 '
+        '생략하는 것은 금지입니다. HTML이 응답에 포함되지 않으면 '
+        '고객은 폼을 볼 수 없습니다.\n'
+        '  4. HTML을 코드블록(```)으로 감싸지 마세요.'
     ),
     'aws_docs_mcp': (
         '`aws_docs_mcp`: AWS 공식 문서를 검색합니다.'

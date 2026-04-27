@@ -48,13 +48,26 @@ def render_form(form_title: str, fields: str) -> str:
     프론트엔드에서 동적으로 렌더링되는 HTML을 반환합니다.
     고객이 Form에 정보를 기입하면 messages로 취급 & 저장됩니다.
 
+    CRITICAL - 에이전트 행동 지침 (반드시 지킬 것):
+    이 도구가 반환하는 HTML 문자열은 프론트엔드가 직접 파싱/렌더링해야 하는
+    UI 페이로드입니다. 따라서 에이전트는 도구의 반환값을 다음 규칙에 따라
+    처리해야 합니다.
+
+    1. 반환된 HTML(<div>...</div>)을 요약하거나 재서술하지 말고,
+       그대로(verbatim) 최종 응답 메시지에 포함시켜 고객에게 전달한다.
+    2. HTML 바로 앞에 1-2문장의 간단한 안내 텍스트(예: "아래 폼에 정보를
+       입력해 주세요")를 덧붙일 수 있으나, HTML 자체는 변형하지 않는다.
+    3. "폼을 생성했습니다" 같은 메타 설명만 전달하고 HTML을 생략하는 것은
+       금지된다. HTML이 응답에 포함되지 않으면 고객은 폼을 볼 수 없다.
+    4. HTML을 코드블록(```)으로 감싸지 않는다. 원본 그대로 전달한다.
+
     Args:
         form_title: 폼 제목
         fields: JSON 형식의 필드 정의
             예: '[{"name":"company","label":"회사명","type":"text"}]'
 
     Returns:
-        렌더링 가능한 HTML Form 문자열
+        렌더링 가능한 HTML Form 문자열 — 최종 응답에 그대로 포함되어야 함.
     """
     try:
         field_list = json.loads(fields)
