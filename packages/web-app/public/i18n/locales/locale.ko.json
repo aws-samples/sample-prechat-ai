@@ -1376,5 +1376,56 @@
       "pinSaveFailed": "PIN 업데이트 실패",
       "pinFormatError": "PIN은 6자리 숫자여야 합니다"
     }
+  },
+  "nav": {
+    "onboarding": "온보딩"
+  },
+  "onboarding": {
+    "title": "시작 가이드",
+    "subtitle": "PreChat을 시작하기 위한 6단계 가이드입니다. 각 단계를 완료하여 고객 상담을 준비하세요.",
+    "errorTitle": "온보딩 상태를 불러오지 못했습니다",
+    "retry": "다시 시도",
+    "stepsAriaLabel": "온보딩 단계 목록",
+    "stepsTitle": "완료해야 하는 단계",
+    "guidesTitle": "참고 안내",
+    "guidesSubtitle": "아래는 완료 여부가 자동으로 판정되지 않는 안내성 단계입니다.",
+    "status": {
+      "complete": "완료",
+      "incomplete": "미완료",
+      "info": "안내"
+    },
+    "quests": {
+      "users": {
+        "title": "1. 관리자 계정 확인",
+        "description": "Cognito User Pool에 최소 1명 이상의 관리자 계정이 필요합니다.",
+        "guidance": "관리자 초대는 AWS 콘솔 또는 별도 프로세스를 통해 수동으로 진행됩니다. 신규 관리자가 필요하면 기존 관리자에게 문의하세요."
+      },
+      "agents": {
+        "title": "2. AI 에이전트 설정",
+        "description": "상담(consultation) 에이전트와 요약(summary) 에이전트가 각각 최소 1개씩 필요합니다.",
+        "ctaLabel": "에이전트 생성하기"
+      },
+      "campaigns": {
+        "title": "3. 캠페인 생성",
+        "description": "고객 상담을 진행할 활성 캠페인을 최소 1개 이상 생성하세요.",
+        "ctaLabel": "캠페인 생성하기"
+      },
+      "sessions": {
+        "title": "4. 세션 생성",
+        "description": "캠페인 단위로 고객 세션을 생성하여 상담을 진행합니다.",
+        "ctaLabel": "세션 생성하기"
+      },
+      "customer-invite": {
+        "title": "5. 고객 초대",
+        "description": "아웃바운드는 URL + PIN을 고객에게 전달하고, 인바운드는 URL 또는 QR 코드를 배포합니다.",
+        "guidance": "아웃바운드: 세션 생성 시 발급되는 URL과 PIN을 고객에게 전달하세요. 인바운드: 캠페인 URL 또는 QR 코드를 통해 고객이 직접 세션을 생성합니다."
+      },
+      "session-analysis": {
+        "title": "6. 세션 분석",
+        "description": "완료된 세션의 AI 분석 리포트와 미팅 플랜을 확인하세요.",
+        "ctaLabel": "대시보드로 이동",
+        "countLabel": "완료된 세션 수"
+      }
+    }
   }
 }

@@ -33,6 +33,8 @@ export const AppTopNavigation: React.FC = () => {
     if (event.detail.id === 'logout') {
       authService.signout();
       navigate('/login');
+    } else if (event.detail.id === 'onboarding') {
+      navigate('/onboarding');
     }
   };
 
@@ -81,6 +83,9 @@ export const AppTopNavigation: React.FC = () => {
           ariaLabel: t('welcome.topNavigation.userMenuAriaLabel'),
           onItemClick: handleUserMenuClick,
           items: [
+            ...(authService.isAuthenticated()
+              ? [{ id: "onboarding", text: t('nav.onboarding') }]
+              : []),
             { id: "profile", text: t('welcome.topNavigation.profileMenuItem') },
             { id: "logout", text: t('welcome.topNavigation.logoutMenuItem') }
           ]

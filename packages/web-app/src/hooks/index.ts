@@ -9,3 +9,5 @@ export type {
   UsePlanningWebSocketOptions,
   UsePlanningWebSocketReturn,
 } from './usePlanningWebSocket'
+export { useOnboardingStatus } from './useOnboardingStatus'
+export type { UseOnboardingStatusResult } from './useOnboardingStatus'

@@ -18,6 +18,7 @@ import EditCampaign from './pages/admin/EditCampaign'
 import CampaignDetails from './pages/admin/CampaignDetails'
 import TriggerDashboard from './pages/admin/TriggerDashboard'
 import CustomizationPanel from './pages/admin/CustomizationPanel'
+import OnboardingLanding from './pages/admin/OnboardingLanding'
 import InboundEntry from './pages/customer/InboundEntry'
 
 import Login from './pages/auth/Login'
@@ -97,6 +98,11 @@ function App() {
         <Route path="/admin/agents/:agentId/edit" element={
           <ProtectedRoute>
             <EditAgent />
+          </ProtectedRoute>
+        } />
+        <Route path="/onboarding" element={
+          <ProtectedRoute>
+            <OnboardingLanding />
           </ProtectedRoute>
         } />
         </Routes>

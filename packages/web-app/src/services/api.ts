@@ -36,6 +36,9 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// 다른 services 모듈이 재사용할 수 있도록 axios 인스턴스를 export
+export { api as apiClient }
+
 // Retry configuration
 const RETRY_CONFIG = {
   maxRetries: 3,

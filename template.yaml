@@ -2130,6 +2130,37 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  # ============================================
+  # Admin Onboarding Landing (GET /api/admin/onboarding/status)
+  # 6개 Quest 상태를 단일 왕복으로 집계하는 읽기 전용 엔드포인트.
+  # SharedLayer, VpcConfig, Runtime, USER_POOL_ID/SESSIONS_TABLE/CAMPAIGNS_TABLE은
+  # Globals.Function에서 상속됨.
+  # ============================================
+  OnboardingStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: packages/backend/admin/
+      Handler: onboarding_handler.get_onboarding_status
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CampaignsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - cognito-idp:ListUsers
+            Resource: !GetAtt AdminUserPool.Arn
+      Events:
+        GetOnboardingStatus:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /api/admin/onboarding/status
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   # Admin File Functions (no CSRF required)
   ListSessionFilesAdminFunction:
     Type: AWS::Serverless::Function

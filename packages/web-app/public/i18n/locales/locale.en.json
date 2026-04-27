@@ -1376,5 +1376,56 @@
       "pinSaveFailed": "Failed to update PIN",
       "pinFormatError": "PIN must be exactly 6 digits"
     }
+  },
+  "nav": {
+    "onboarding": "Onboarding"
+  },
+  "onboarding": {
+    "title": "Getting Started",
+    "subtitle": "Complete these 6 steps to start running customer consultations on PreChat.",
+    "errorTitle": "Failed to load onboarding status",
+    "retry": "Retry",
+    "stepsAriaLabel": "Onboarding steps",
+    "stepsTitle": "Steps to complete",
+    "guidesTitle": "Additional guidance",
+    "guidesSubtitle": "These steps are informational and are not automatically marked complete.",
+    "status": {
+      "complete": "Complete",
+      "incomplete": "Incomplete",
+      "info": "Info"
+    },
+    "quests": {
+      "users": {
+        "title": "1. Verify admin account",
+        "description": "At least one admin account must exist in the Cognito User Pool.",
+        "guidance": "Admin invites are a manual process handled via the AWS console or a separate workflow. If you need a new admin, contact an existing administrator."
+      },
+      "agents": {
+        "title": "2. Configure AI agents",
+        "description": "You need at least one consultation agent and one summary agent.",
+        "ctaLabel": "Create agent"
+      },
+      "campaigns": {
+        "title": "3. Create a campaign",
+        "description": "Create at least one active campaign to host customer consultations.",
+        "ctaLabel": "Create campaign"
+      },
+      "sessions": {
+        "title": "4. Create a session",
+        "description": "Create customer sessions within a campaign to run consultations.",
+        "ctaLabel": "Create session"
+      },
+      "customer-invite": {
+        "title": "5. Invite customers",
+        "description": "Outbound campaigns share a URL + PIN with customers. Inbound campaigns share a URL or QR code.",
+        "guidance": "Outbound: Send the session URL and PIN generated at session creation to your customer. Inbound: Share the campaign URL or QR code so customers can start a session themselves."
+      },
+      "session-analysis": {
+        "title": "6. Review session analysis",
+        "description": "Review AI analysis reports and meeting plans for completed sessions.",
+        "ctaLabel": "Go to dashboard",
+        "countLabel": "Completed sessions"
+      }
+    }
   }
 }

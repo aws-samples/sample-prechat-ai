@@ -10,3 +10,6 @@ export { default as CampaignDashboard } from './CampaignDashboard'
 export { default as CreateCampaign } from './CreateCampaign'
 export { default as EditCampaign } from './EditCampaign'
 export { default as CampaignDetails } from './CampaignDetails'
+
+// Onboarding Landing
+export { default as OnboardingLanding } from './OnboardingLanding'
