@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import type { QuestState } from '../types';
 import { mapQuestToPresentation } from '../utils';
+import { ONBOARDING_CTA_BUTTON_STYLE } from '../constants';
 
 interface QuestGuidesProps {
   quests: QuestState[];
@@ -42,7 +43,10 @@ export function QuestGuides({ quests }: QuestGuidesProps) {
             header={t(titleKey)}
             action={
               showCta && safeCtaPath ? (
-                <Button onClick={() => navigate(safeCtaPath)}>
+                <Button
+                  onClick={() => navigate(safeCtaPath)}
+                  style={ONBOARDING_CTA_BUTTON_STYLE}
+                >
                   {t(ctaLabelKey)}
                 </Button>
               ) : undefined

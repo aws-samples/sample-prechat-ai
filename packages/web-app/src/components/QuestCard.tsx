@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import type { QuestState } from '../types';
 import { mapQuestToPresentation } from '../utils';
+import { ONBOARDING_CTA_BUTTON_STYLE } from '../constants';
 
 interface QuestCardProps {
   quest: QuestState;
@@ -71,7 +72,11 @@ export function QuestCard({ quest }: QuestCardProps) {
           </Box>
         )}
         {showCta && (
-          <Button variant="primary" onClick={handleCtaClick}>
+          <Button
+            variant="primary"
+            onClick={handleCtaClick}
+            style={ONBOARDING_CTA_BUTTON_STYLE}
+          >
             {t(ctaLabelKey)}
           </Button>
         )}
