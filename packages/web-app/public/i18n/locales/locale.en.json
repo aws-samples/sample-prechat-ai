@@ -1386,9 +1386,6 @@
     "errorTitle": "Failed to load onboarding status",
     "retry": "Retry",
     "stepsAriaLabel": "Onboarding steps",
-    "stepsTitle": "Steps to complete",
-    "guidesTitle": "Additional guidance",
-    "guidesSubtitle": "These steps are informational and are not automatically marked complete.",
     "status": {
       "complete": "Complete",
       "incomplete": "Incomplete",

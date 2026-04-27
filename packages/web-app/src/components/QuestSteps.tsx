@@ -23,7 +23,6 @@ function resolveStepStatus(status: QuestState['status']): StepStatus {
     case 'complete':
       return 'success';
     case 'incomplete':
-      return 'pending';
     case 'info-only':
     default:
       return 'info';

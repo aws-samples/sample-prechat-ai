@@ -73,7 +73,6 @@ export function QuestCard({ quest }: QuestCardProps) {
         )}
         {showCta && (
           <Button
-            variant="primary"
             onClick={handleCtaClick}
             style={ONBOARDING_CTA_BUTTON_STYLE}
           >

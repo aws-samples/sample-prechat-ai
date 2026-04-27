@@ -1386,9 +1386,6 @@
     "errorTitle": "온보딩 상태를 불러오지 못했습니다",
     "retry": "다시 시도",
     "stepsAriaLabel": "온보딩 단계 목록",
-    "stepsTitle": "완료해야 하는 단계",
-    "guidesTitle": "참고 안내",
-    "guidesSubtitle": "아래는 완료 여부가 자동으로 판정되지 않는 안내성 단계입니다.",
     "status": {
       "complete": "완료",
       "incomplete": "미완료",
