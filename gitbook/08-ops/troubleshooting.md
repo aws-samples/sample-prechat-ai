@@ -143,7 +143,7 @@ Lambda 타임아웃(300초)에 도달했거나 WebSocket 연결이 끊긴 경우
 
 세션이 여전히 `Active` 상태이면 리포트가 생성되지 않습니다.
 
-**2. Summary Agent 런타임 상태 확인**
+**2. 요약 에이전트 런타임 상태 확인**
 
 Bedrock 콘솔 → AgentCore → `prechat-summary-agent-*` Status 확인
 

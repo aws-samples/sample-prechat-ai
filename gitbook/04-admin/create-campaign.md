@@ -46,11 +46,10 @@ icon: bullhorn
 
 | 역할 | 선택 |
 |------|------|
-| **PreChat Agent** | 조금 전에 만든 상담 에이전트 |
-| **Summary Agent** | `default-summary-agent` (기본 제공) |
-| **Planning Agent** | `default-planning-agent` (기본 제공) |
+| **상담 에이전트 (PreChat Agent)** | 조금 전에 만든 상담 에이전트 |
+| **요약 에이전트 (Summary Agent)** | `default-summary-agent` (기본 제공) |
 
-PreChat Agent만 커스텀해도 충분합니다. Summary/Planning은 기본 제공 에이전트가 BANT 분석과 미팅 플랜을 자동 생성합니다.
+상담 에이전트만 커스텀해도 충분합니다. 요약 에이전트는 기본 제공 에이전트가 BANT 분석과 미팅 플랜을 자동 생성합니다.
 
 ![Agent Configurations 섹션](../.gitbook/assets/04-create-campaign-02-create-form.png)
 {% endstep %}

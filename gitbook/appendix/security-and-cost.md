@@ -104,7 +104,7 @@ PreChat의 비용은 크게 다음으로 구성됩니다.
 | 최적화 | 효과 |
 |--------|-----|
 | 모델을 Claude Haiku 또는 Nova Lite/Micro로 교체 | Bedrock 비용 50~80% 감소 |
-| Summary Agent 재생성 횟수 제한 | 재호출 비용 절감 |
+| 요약 에이전트 재생성 횟수 제한 | 재호출 비용 절감 |
 | 세션 TTL을 14일로 단축 | DynamoDB 저장 비용 감소 |
 | Lambda ReservedConcurrency 조정 | 콜드스타트 감수 시 비용 감소 |
 | CloudWatch Logs Retention 7일 설정 | 로그 저장 비용 감소 |

@@ -32,9 +32,8 @@ icon: book
 |------|------|
 | **AgentCore** | Amazon Bedrock AgentCore. Strands SDK로 개발한 에이전트의 런타임 실행 환경 |
 | **Strands SDK** | 에이전트를 선언적으로 작성하는 Python SDK |
-| **Consultation Agent** | 고객과 대화하는 메인 에이전트 |
-| **Summary Agent** | 세션 종료 후 BANT 분석 요약을 생성하는 에이전트 |
-| **Planning Agent** | 미팅 플랜과 Sales Rep 채팅을 담당하는 에이전트 |
+| **상담 에이전트 (Consultation Agent)** | 고객과 대화하는 메인 에이전트 |
+| **요약 에이전트 (Summary Agent)** | 세션 종료 후 BANT 분석 요약을 생성하는 에이전트 |
 | **System Prompt** | 에이전트의 페르소나와 행동 지침 |
 | **Tool / 도구** | 에이전트가 외부 기능을 호출하기 위한 함수 (예: retrieve, render_form) |
 | **MCP** | Model Context Protocol. 에이전트가 외부 서비스와 통신하는 표준 |

@@ -21,7 +21,7 @@ icon: sitemap
 │  (관리자)        │     │  (KMS Encrypted) │     │  ┌─────────────────────┐ │
 └─────────────────┘     │  Sessions        │     │  │ Consultation Agent  │ │
                         │  Messages        │     │  │ Summary Agent       │ │
-┌─────────────────┐     │  Campaigns       │     │  │ Planning Agent      │ │
+┌─────────────────┐     │  Campaigns       │     │  │                     │ │
 │  S3 + CloudFront│     └──────────────────┘     │  └─────────────────────┘ │
 │  (정적 + 업로드) │                             │  Strands SDK + MCP       │
 └─────────────────┘                              └──────────────────────────┘
@@ -33,7 +33,7 @@ PreChat은 세 가지 독립 배포 단위로 구성됩니다.
 
 ### 1. Strands Agents on Bedrock AgentCore
 
-AI 에이전트가 Docker 컨테이너로 AgentCore Runtime에 배포됩니다. Consultation, Summary 두 에이전트가 있으며 Planning은 향후 추가 예정 (현재는 Consultation Agent로 대체 가능).
+AI 에이전트가 Docker 컨테이너로 AgentCore Runtime에 배포됩니다. 상담 에이전트와 요약 에이전트 두 역할을 제공하며, 이를 상속해 목적에 맞는 구현체를 자유롭게 정의합니다.
 
 ### 2. Backend (SAM)
 
@@ -122,7 +122,7 @@ CampaignCodeIndex:
 
 ## 에이전트 페이로드
 
-### Consultation Agent (stream)
+### 상담 에이전트 (stream)
 
 ```json
 {
@@ -146,7 +146,7 @@ CampaignCodeIndex:
 | `result` | 최종 결과 |
 | `error` | 에러 발생 |
 
-### Summary Agent (invoke)
+### 요약 에이전트 (invoke)
 
 ```json
 {
@@ -176,7 +176,7 @@ Stream Handler가 상태 변화를 감지하여 후속 작업을 트리거합니
 {% endstep %}
 
 {% step %}
-### Stream Handler가 Summary Agent와 Planning Agent 호출
+### Stream Handler가 요약 에이전트를 호출
 
 `bedrock-agentcore:InvokeAgentRuntime`로 에이전트를 동기 호출합니다.
 {% endstep %}

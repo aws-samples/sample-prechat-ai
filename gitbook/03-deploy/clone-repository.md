@@ -67,7 +67,7 @@ npm install
 
 ## 5. 배포 스크립트 실행 권한
 
-macOS/Linux/WSL/CloudShell에서 스크립트에 실행 권한을 부여합니다.
+macOS/Linux/CloudShell에서 스크립트에 실행 권한을 부여합니다.
 
 ```bash
 chmod +x deploy-full.sh deploy-website.sh update-env-vars.sh
@@ -88,4 +88,4 @@ chmod +x packages/strands-agents/deploy-agents.sh
 
 ## 다음 단계
 
-[에이전트 → SAM → 프론트엔드 배포](full-deployment.md)로 이동합니다.
+[전체 배포](full-deployment.md)로 이동합니다.
