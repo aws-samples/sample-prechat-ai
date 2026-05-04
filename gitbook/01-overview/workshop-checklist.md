@@ -31,7 +31,6 @@ icon: list-check
 {% tab title="macOS" %}
 - [ ] Homebrew 설치 완료
 - [ ] Node.js 20.18.1+ (`node --version`)
-- [ ] Yarn 1.22.22+ (`yarn --version`)
 - [ ] Python 3.13 (`python3 --version`)
 - [ ] AWS CLI v2 (`aws --version`)
 - [ ] SAM CLI v1 (`sam --version`)
@@ -42,7 +41,6 @@ icon: list-check
 {% tab title="Windows" %}
 - [ ] WSL2 (Ubuntu 22.04 권장) 또는 Windows용 네이티브 도구
 - [ ] Node.js 20.18.1+
-- [ ] Yarn 1.22.22+
 - [ ] Python 3.13
 - [ ] AWS CLI v2
 - [ ] SAM CLI v1

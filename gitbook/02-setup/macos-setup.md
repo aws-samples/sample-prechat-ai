@@ -32,9 +32,6 @@ brew install aws-sam-cli
 brew install node@20
 brew link --force --overwrite node@20
 
-# Yarn Classic (v1)
-npm install -g yarn
-
 # Python 3.13
 brew install python@3.13
 
@@ -48,7 +45,6 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 aws --version          # aws-cli/2.x
 sam --version          # SAM CLI, version 1.x
 node --version         # v20.x
-yarn --version         # 1.22.x
 python3.13 --version   # Python 3.13.x
 uv --version
 ```

@@ -103,7 +103,7 @@ DynamoDB 콘솔에서 `Export to S3`를 사용하거나, Lambda에서 직접 Sca
 
 ```bash
 cd packages/web-app
-yarn dev
+npm run dev
 ```
 
 포트 5173에서 열립니다. 백엔드는 배포된 API Gateway를 가리킵니다.
@@ -122,8 +122,8 @@ sam local start-api
 ```bash
 cd packages/web-app
 # public/i18n/locales/locale.ko.json 편집
-yarn validate-translations
-yarn build:optimized
+npm run validate-translations
+npm run build:optimized
 ```
 
 배포는 `deploy-website.sh` 한 줄이면 충분합니다.

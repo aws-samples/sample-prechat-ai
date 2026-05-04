@@ -57,11 +57,11 @@ git branch -r | grep prsworkshop
 레포지토리 루트에서 모노레포 전체 의존성을 설치합니다.
 
 ```bash
-yarn install
+npm install
 ```
 
 {% hint style="warning" %}
-**CloudShell 사용자**: `yarn install`이 끝나면 `du -sh node_modules`로 용량을 확인합니다. 약 500~700 MB가 사용됩니다. 홈 1 GB 한도를 감안해 다른 큰 파일이 있으면 미리 정리하세요.
+**CloudShell 사용자**: `npm install`이 끝나면 `du -sh node_modules`로 용량을 확인합니다. 약 500~700 MB가 사용됩니다. 홈 1 GB 한도를 감안해 다른 큰 파일이 있으면 미리 정리하세요.
 {% endhint %}
 
 ## 5. 배포 스크립트 실행 권한
