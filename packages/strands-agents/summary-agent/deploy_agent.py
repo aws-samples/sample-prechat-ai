@@ -35,6 +35,7 @@ response = agentcore_runtime.configure(
 
 print("🚀 Summary Agent 배포 시작...", file=sys.stderr)
 launch_result = agentcore_runtime.launch(
+    auto_update_on_conflict=True,
     env_vars={
         "STAGE": stage,
         "AWS_REGION": region,
