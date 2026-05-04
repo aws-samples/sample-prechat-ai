@@ -14,7 +14,6 @@
 * [AWS CloudShell로 시작하기 (권장)](02-setup/cloudshell-setup.md)
 * [macOS 로컬 환경 구성](02-setup/macos-setup.md)
 * [Windows 로컬 환경 구성](02-setup/windows-setup.md)
-* [Bedrock 모델 액세스 승인](02-setup/bedrock-model-access.md)
 
 ## 3. 배포
 

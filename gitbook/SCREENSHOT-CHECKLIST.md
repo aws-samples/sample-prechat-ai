@@ -37,14 +37,6 @@ hidden: true
 
 - [ ] 1. AWS Console 상단 CloudShell 아이콘
 
-### `02-setup/bedrock-model-access.md` (5장)
-
-- [ ] 1. Bedrock 콘솔 홈 + 리전 셀렉터 화면
-- [ ] 2. Model access 메뉴 경로
-- [ ] 3. Modify model access 버튼 위치
-- [ ] 4. 모델 선택 체크리스트 화면
-- [ ] 5. Access granted 상태 화면
-
 ### `02-setup/windows-setup.md` (2장)
 
 - [ ] 1. Docker Desktop Settings의 WSL 2 based engine 옵션

@@ -46,7 +46,7 @@ icon: robot
 - **Amazon Nova Pro** — 한국어 품질이 좋고 응답 속도가 빠름
 - **Amazon Nova Lite** — 비용 절감용
 
-Bedrock 모델 액세스에서 승인된 모델만 표시됩니다.
+Bedrock에서 사용 가능한 모델이 표시됩니다.
 
 ![모델 선택 드롭다운](../.gitbook/assets/04-create-agent-03-role-dropdown.png)
 {% endstep %}

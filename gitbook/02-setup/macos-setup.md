@@ -141,7 +141,7 @@ aws sso login --profile workshop
 
 ## 다음 단계
 
-[Bedrock 모델 액세스 승인](bedrock-model-access.md)을 완료한 후 [레포지토리 클론](../03-deploy/clone-repository.md)으로 이동합니다.
+[레포지토리 클론](../03-deploy/clone-repository.md)으로 이동합니다.
 
 ## 문제 해결
 

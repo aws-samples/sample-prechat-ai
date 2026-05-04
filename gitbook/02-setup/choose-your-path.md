@@ -47,13 +47,8 @@ WSL2 Ubuntu에서 macOS와 거의 동일한 경험으로 진행합니다. PowerS
 ## 어떤 경로를 고르더라도 공통으로 필요한 것
 
 - AWS 계정과 적절한 IAM 권한
-- Bedrock 모델 액세스 승인
 - 유효한 관리자 가입 이메일
-
-Bedrock 모델 액세스 승인은 다음 페이지에서 따로 안내합니다.
-
-→ [Bedrock 모델 액세스 승인](bedrock-model-access.md)
 
 ## 다음 단계
 
-선택한 경로의 상세 가이드를 먼저 끝낸 뒤, Bedrock 모델 액세스 승인을 진행하고 [배포 섹션](../03-deploy/clone-repository.md)으로 이동합니다.
+선택한 경로의 상세 가이드를 먼저 끝낸 뒤 [배포 섹션](../03-deploy/clone-repository.md)으로 이동합니다.

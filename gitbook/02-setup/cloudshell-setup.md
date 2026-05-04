@@ -134,7 +134,7 @@ du -sh ~/* | sort -h
 
 ## 5. 다음 단계
 
-CloudShell 준비가 끝났으면 [Bedrock 모델 액세스 승인](bedrock-model-access.md)을 완료한 후 [레포지토리 클론](../03-deploy/clone-repository.md)으로 이동합니다.
+CloudShell 준비가 끝났으면 [레포지토리 클론](../03-deploy/clone-repository.md)으로 이동합니다.
 
 ## 문제 해결
 

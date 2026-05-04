@@ -57,11 +57,7 @@ aws cloudformation wait stack-delete-complete --stack-name mte-prechat-workshop 
 
 ### "insufficient permissions to perform bedrock:InvokeModel"
 
-Bedrock 모델 액세스가 승인되지 않았습니다.
-
-**해결**
-
-[Bedrock 모델 액세스 승인](../02-setup/bedrock-model-access.md)을 다시 진행하고, 배포 리전과 `BEDROCK_REGION`이 일치하는지 확인합니다.
+배포 리전과 `BEDROCK_REGION`이 일치하는지 확인합니다. 리전이 다르면 해당 리전에서 모델을 사용할 수 있는지 점검합니다.
 
 ## 관리자 로그인
 
