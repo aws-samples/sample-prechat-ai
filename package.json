@@ -26,9 +26,6 @@
   "engines": {
     "node": ">=20.18.1"
   },
-  "dependencies": {
-    "@cloudscape-design/component-toolkit": "^1.0.0-beta.157"
-  },
   "overrides": {
     "@cloudscape-design/component-toolkit": "1.0.0-beta.157",
     "@cloudscape-design/components": "3.0.1285"
