@@ -16,31 +16,29 @@ cd /home/workshop/sample-prechat-ai
 ./deploy-full.sh default dev ap-northeast-2 ap-northeast-2 mte-prechat-workshop
 ```
 
-![CloudShell 에서 배포 명령하기](../.gitbook/assets/03-full-deployment.png)
-
 {% hint style="info" %}
 배포는 20~40분 걸립니다. 중간에 터미널을 닫지 마세요.
 {% endhint %}
 
-## 2. 중간에 확인이 필요한 순간
+## 2. 배포 완료 확인
 
-배포 도중 아래 프롬프트가 나타나면 **`y`를 입력**하고 Enter를 누릅니다.
-
-```
-Deploy this changeset? [y/N]:
-```
-
-그 외에는 자동으로 진행되므로 기다리면 됩니다.
-
-## 3. 배포 완료 확인
-
-마지막에 다음과 같은 요약이 출력됩니다.
+모든 단계가 자동으로 진행됩니다. 마지막에 다음과 같은 요약이 출력되면 성공입니다.
 
 ```
+✅ Full deployment completed successfully!
+🎉 Your MTE PreChat application is ready!
+
 📋 Deployment Summary:
    🔗 API URL: https://xxxx.execute-api.ap-northeast-2.amazonaws.com/dev/api
    🌐 Website URL: https://dxxx.cloudfront.net
    🌍 Region: ap-northeast-2
+   🤖 Bedrock Region: ap-northeast-2
+   📋 Stage: dev
+
+🎯 Next steps:
+   1. Access the admin dashboard at: https://dxxx.cloudfront.net/admin
+   2. Configure Agent settings for your campaigns
+   3. Create customer sessions and start chatting!
 ```
 
 {% hint style="warning" %}
@@ -48,7 +46,7 @@ Deploy this changeset? [y/N]:
 {% endhint %}
 
 
-## 4. 배포가 중간에 실패했다면
+## 3. 배포가 중간에 실패했다면
 
 실패한 지점부터 다시 실행하면 됩니다. 전체를 처음부터 돌릴 필요는 없습니다.
 
