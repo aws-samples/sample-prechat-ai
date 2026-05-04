@@ -55,7 +55,12 @@ deploy_agent() {
     cd "${SCRIPT_DIR}/${AGENT_DIR}"
 
     # deploy_agent.py 실행 (STAGE만 컨테이너 환경변수로 주입)
-    DEPLOY_OUTPUT=$(AWS_PROFILE=$PROFILE AWS_DEFAULT_REGION=$REGION STAGE=$STAGE uv run --python 3.13 --with bedrock-agentcore-starter-toolkit python deploy_agent.py 2>&1 | tee /dev/stderr | tail -1)
+    # CloudShell은 프로필 없이 환경변수로 자격증명을 제공하므로 default일 때는 AWS_PROFILE을 설정하지 않음
+    local PROFILE_ENV=""
+    if [ "$PROFILE" != "default" ]; then
+        PROFILE_ENV="AWS_PROFILE=$PROFILE"
+    fi
+    DEPLOY_OUTPUT=$(env $PROFILE_ENV AWS_DEFAULT_REGION=$REGION STAGE=$STAGE uv run --python 3.13 --with bedrock-agentcore-starter-toolkit python deploy_agent.py 2>&1 | tee /dev/stderr | tail -1)
 
     # JSON에서 ARN 추출
     AGENT_ARN=$(echo "$DEPLOY_OUTPUT" | python3 -c "
