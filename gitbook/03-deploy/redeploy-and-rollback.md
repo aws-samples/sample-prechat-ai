@@ -20,21 +20,10 @@ icon: arrows-rotate
 
 ## 프론트엔드만 재배포
 
-{% tabs %}
-{% tab title="CloudShell" %}
 ```bash
 cd ~/sample-prechat-ai
 ./deploy-website.sh dev default ap-northeast-2 mte-prechat-workshop
 ```
-{% endtab %}
-
-{% tab title="로컬" %}
-```bash
-cd ~/sample-prechat-ai
-./deploy-website.sh dev workshop ap-northeast-2 mte-prechat-workshop
-```
-{% endtab %}
-{% endtabs %}
 
 {% hint style="info" %}
 CloudFront 캐시 무효화가 포함되지만 전파에 1~3분이 걸립니다. 브라우저 하드 리프레시(⌘+Shift+R 또는 Ctrl+F5)로 확인합니다.

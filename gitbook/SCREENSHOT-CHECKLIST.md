@@ -37,11 +37,6 @@ hidden: true
 
 - [ ] 1. AWS Console 상단 CloudShell 아이콘
 
-### `02-setup/windows-setup.md` (2장)
-
-- [ ] 1. Docker Desktop Settings의 WSL 2 based engine 옵션
-- [ ] 2. WSL integration 화면
-
 ---
 
 ## 03. 배포 (3장)

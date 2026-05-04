@@ -18,36 +18,12 @@ icon: list-check
 
 ## 도구 준비
 
-다음 중 **하나의 경로**를 택해 준비합니다. 상세는 [환경 준비](../02-setup/choose-your-path.md) 섹션에서 안내합니다.
-
-{% tabs %}
-{% tab title="CloudShell (권장)" %}
-별도 설치가 거의 없고 AWS 인증이 자동입니다.
+이 워크샵은 **AWS CloudShell**에서 진행합니다. 별도 로컬 설치가 필요하지 않습니다.
 
 - [ ] AWS Console에서 CloudShell을 열 수 있다
-- [ ] Docker를 쓰는 에이전트 빌드 단계에서는 CodeBuild가 대신 빌드하므로 CloudShell에서도 실행 가능
-{% endtab %}
+- [ ] 워크샵을 진행할 리전을 정했다 (권장: `ap-northeast-2` 서울)
 
-{% tab title="macOS" %}
-- [ ] Homebrew 설치 완료
-- [ ] Node.js 20.18.1+ (`node --version`)
-- [ ] Python 3.13 (`python3 --version`)
-- [ ] AWS CLI v2 (`aws --version`)
-- [ ] SAM CLI v1 (`sam --version`)
-- [ ] Docker Desktop 실행 중
-- [ ] `aws configure`로 자격증명과 기본 리전 설정
-{% endtab %}
-
-{% tab title="Windows" %}
-- [ ] WSL2 (Ubuntu 22.04 권장) 또는 Windows용 네이티브 도구
-- [ ] Node.js 20.18.1+
-- [ ] Python 3.13
-- [ ] AWS CLI v2
-- [ ] SAM CLI v1
-- [ ] Docker Desktop (WSL 통합 활성화)
-- [ ] `aws configure`로 자격증명 설정
-{% endtab %}
-{% endtabs %}
+상세는 [AWS CloudShell 환경 준비](../02-setup/cloudshell-setup.md)에서 안내합니다.
 
 ## 필수 데이터
 
@@ -68,4 +44,4 @@ icon: list-check
 
 ## 준비 완료
 
-모든 체크박스에 표시가 되었다면 [환경 준비 → 배포 경로 고르기](../02-setup/choose-your-path.md)로 이동합니다.
+모든 체크박스에 표시가 되었다면 [AWS CloudShell 환경 준비](../02-setup/cloudshell-setup.md)로 이동합니다.

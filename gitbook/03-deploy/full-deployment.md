@@ -35,31 +35,12 @@ icon: rocket
 
 ## 1. 기본 배포 실행
 
-{% tabs %}
-{% tab title="CloudShell" %}
 CloudShell은 로그인된 IAM 자격증명을 쓰므로 `default` 프로필을 사용합니다.
 
 ```bash
 cd ~/sample-prechat-ai
 ./deploy-full.sh default dev ap-northeast-2 ap-northeast-2 mte-prechat-workshop
 ```
-{% endtab %}
-
-{% tab title="macOS / Windows WSL" %}
-`aws configure`로 등록한 프로필명을 사용합니다.
-
-```bash
-cd ~/sample-prechat-ai
-./deploy-full.sh workshop dev ap-northeast-2 ap-northeast-2 mte-prechat-workshop
-```
-
-SSO 사용자는 먼저 로그인합니다.
-
-```bash
-aws sso login --profile workshop
-```
-{% endtab %}
-{% endtabs %}
 
 ## 2. 스크립트 파라미터
 

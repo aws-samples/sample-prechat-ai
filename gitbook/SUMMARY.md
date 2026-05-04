@@ -10,10 +10,7 @@
 
 ## 2. 환경 준비
 
-* [배포 경로 고르기](02-setup/choose-your-path.md)
-* [AWS CloudShell로 시작하기 (권장)](02-setup/cloudshell-setup.md)
-* [macOS 로컬 환경 구성](02-setup/macos-setup.md)
-* [Windows 로컬 환경 구성](02-setup/windows-setup.md)
+* [AWS CloudShell 환경 준비](02-setup/cloudshell-setup.md)
 
 ## 3. 배포
 
