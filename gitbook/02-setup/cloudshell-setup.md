@@ -11,7 +11,7 @@ CloudShell은 브라우저에서 바로 사용하는 AWS 인증된 쉘 환경입
 
 AWS Console에 로그인한 뒤 상단 헤더의 CloudShell 아이콘(터미널 모양)을 클릭합니다. 워크샵을 진행할 리전인지 확인합니다.
 
-**[수동 캡처 필요]** AWS Console 상단 CloudShell 아이콘
+![AWS Console 상단 CloudShell 아이콘](../.gitbook/assets/02-open-cloudshell.png)
 
 ## 2. 도구 확인과 추가 설치
 
