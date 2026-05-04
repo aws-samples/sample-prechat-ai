@@ -220,6 +220,7 @@ All tables support KMS encryption, TTL auto-expiry (30 days), and GSI.
 
 ## Documentation
 
+- [**Workshop Guide (GitBook)**](gitbook/README.md) — **ISV 고객 e2e 워크샵 가이드** (prsworkshop 브랜치 전용, 한국어)
 - [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) — Detailed deployment guide
 - [docs/API_REFERENCE.md](docs/API_REFERENCE.md) — API endpoint reference
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md) — Migration guide
