@@ -1,5 +1,5 @@
 ---
-description: PreChat의 핵심 가치와 시스템 구성, 주요 화면을 한눈에 소개
+description: PreChat의 핵심 가치와 시스템 구성, 주요 화면 소개
 icon: compass
 ---
 
