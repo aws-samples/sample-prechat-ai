@@ -9,16 +9,16 @@ PreChat 워크샵은 **`prsworkshop` 브랜치**를 기반으로 진행합니다
 
 ## 1. 레포지토리 클론
 
-선택한 환경(CloudShell, macOS, Windows WSL)의 쉘에서 홈 디렉토리로 이동한 뒤 클론합니다.
+선택한 환경의 쉘에서 다음을 실행합니다.
 
 ```bash
-cd ~
+cd /home
 git clone https://github.com/aws-samples/sample-prechat-ai.git
 cd sample-prechat-ai
 ```
 
-{% hint style="warning" %}
-WSL2 사용자는 반드시 WSL 내부 `~` 경로에 클론합니다. `/mnt/c/...`(Windows 드라이브)에 두면 파일시스템 성능이 크게 저하됩니다.
+{% hint style="info" %}
+CloudShell 사용자는 반드시 `/home`에 클론합니다. `~/`(홈 디렉토리)는 974MB 한도가 있어 SAM 빌드 중 용량이 부족합니다. `/home`은 16GB 임시 스토리지로 워크샵 진행에 충분합니다. 단, CloudShell 세션이 종료되면 `/home`의 데이터는 삭제됩니다.
 {% endhint %}
 
 ## 2. `prsworkshop` 브랜치로 전환

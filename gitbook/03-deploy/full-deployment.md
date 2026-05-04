@@ -12,9 +12,11 @@ icon: rocket
 CloudShell에서 다음을 복사해 붙여넣고 Enter를 누릅니다.
 
 ```bash
-cd ~/sample-prechat-ai
+cd /home/sample-prechat-ai
 ./deploy-full.sh default dev ap-northeast-2 ap-northeast-2 mte-prechat-workshop
 ```
+
+![CloudShell 에서 배포 명령하기](../.gitbook/assets/03-full-deployment.png)
 
 {% hint style="info" %}
 배포는 20~40분 걸립니다. 중간에 터미널을 닫지 마세요.
