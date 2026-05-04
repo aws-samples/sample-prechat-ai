@@ -21,7 +21,7 @@ icon: arrows-rotate
 ## 프론트엔드만 재배포
 
 ```bash
-cd /home/sample-prechat-ai
+cd /home/workshop/sample-prechat-ai
 ./deploy-website.sh dev default ap-northeast-2 mte-prechat-workshop
 ```
 

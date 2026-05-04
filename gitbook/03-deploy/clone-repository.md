@@ -12,13 +12,14 @@ PreChat 워크샵은 **`prsworkshop` 브랜치**를 기반으로 진행합니다
 선택한 환경의 쉘에서 다음을 실행합니다.
 
 ```bash
-cd /home
+sudo mkdir -p /home/workshop && sudo chown $(whoami) /home/workshop
+cd /home/workshop
 git clone https://github.com/aws-samples/sample-prechat-ai.git
 cd sample-prechat-ai
 ```
 
 {% hint style="info" %}
-CloudShell 사용자는 반드시 `/home`에 클론합니다. `~/`(홈 디렉토리)는 974MB 한도가 있어 SAM 빌드 중 용량이 부족합니다. `/home`은 16GB 임시 스토리지로 워크샵 진행에 충분합니다. 단, CloudShell 세션이 종료되면 `/home`의 데이터는 삭제됩니다.
+CloudShell의 `~/`(홈 디렉토리)는 974MB 한도가 있어 SAM 빌드 중 용량이 부족합니다. `/home`은 16GB 임시 스토리지로 워크샵 진행에 충분합니다. 단, CloudShell 세션이 종료되면 `/home/workshop`의 데이터는 삭제됩니다.
 {% endhint %}
 
 ## 2. `prsworkshop` 브랜치로 전환
