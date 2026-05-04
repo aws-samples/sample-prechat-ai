@@ -7,8 +7,6 @@ icon: compass
 
 PreChat은 고객과의 **대화**만으로 사전상담 정보를 수집하고, AI가 BANT 분석 리포트와 미팅 플랜을 자동 생성하는 시스템입니다.
 
-![PreChat 주요 화면 — 고객 채팅 UI와 관리자 대시보드](../.gitbook/assets/01-prechat-intro-ui.png)
-
 ## 전체 흐름
 
 ![PreChat 시스템 흐름](../.gitbook/assets/01-prechat-intro-flow.png)
@@ -40,6 +38,8 @@ PreChat은 고객과의 **대화**만으로 사전상담 정보를 수집하고,
 {% endstepper %}
 
 ## 주요 화면
+
+![고객 채팅 UI와 관리자 대시보드](../.gitbook/assets/01-prechat-intro-ui.png)
 
 | 화면 | 역할 |
 |------|------|
