@@ -7,11 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "yarn workspaces run build",
-    "test": "yarn workspaces run test",
-    "lint": "yarn workspaces run lint",
-    "dev": "yarn workspace @mte-prechat/web-app dev",
-    "preview": "yarn workspace @mte-prechat/web-app preview"
+    "build": "npm --workspaces run build",
+    "test": "npm --workspaces run test",
+    "lint": "npm --workspaces run lint",
+    "dev": "npm --workspace @mte-prechat/web-app run dev",
+    "preview": "npm --workspace @mte-prechat/web-app run preview"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",
@@ -24,13 +24,12 @@
     "typescript": "^5.1.6"
   },
   "engines": {
-    "node": ">=20.18.1",
-    "yarn": ">=1.22.22"
+    "node": ">=20.18.1"
   },
   "dependencies": {
     "@cloudscape-design/component-toolkit": "^1.0.0-beta.157"
   },
-  "resolutions": {
+  "overrides": {
     "@cloudscape-design/component-toolkit": "1.0.0-beta.157",
     "@cloudscape-design/components": "3.0.1285"
   }

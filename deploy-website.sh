@@ -18,7 +18,7 @@ echo ""
 # Build the website
 echo "🔨 Building website..."
 cd packages/web-app
-NODE_ENV=production yarn build
+NODE_ENV=production npm run build
 cd ../..
 
 # Get CloudFormation outputs

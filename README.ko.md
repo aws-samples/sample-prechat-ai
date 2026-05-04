@@ -79,7 +79,7 @@ prechat/
 ├── template.yaml             # AWS SAM IaC
 ├── deploy-full.sh            # 전체 배포 (에이전트 → SAM → 프론트엔드)
 ├── deploy-website.sh         # 프론트엔드만 배포
-└── package.json              # Yarn Workspaces 루트
+└── package.json              # npm Workspaces 루트
 ```
 
 ## 기술 스택
@@ -99,7 +99,7 @@ prechat/
 
 ### 사전 요구사항
 
-- Node.js v20.18.1+, Yarn v1.22.22+
+- Node.js v20.18.1+
 - Python 3.13, uv (uvx)
 - AWS CLI v2, SAM CLI v1
 - Docker (에이전트 빌드용)
@@ -109,7 +109,7 @@ prechat/
 
 ```bash
 # 1. 의존성 설치
-yarn install
+npm install
 
 # 2. 전체 배포 (에이전트 → SAM → 프론트엔드)
 chmod +x deploy-full.sh deploy-website.sh
@@ -140,22 +140,22 @@ chmod +x deploy-full.sh deploy-website.sh
 
 ```bash
 # 프론트엔드 개발 서버 (포트 5173)
-yarn dev
+npm run dev
 
 # 전체 린팅
-yarn lint
+npm run lint
 
 # 전체 테스트 (Vitest, 단일 실행)
-yarn test
+npm run test
 
 # SAM 백엔드 빌드
 sam build
 
 # 번역 키 관리
 cd packages/web-app
-yarn extract-text           # 번역 키 추출
-yarn manage-translations    # 번역 파일 관리
-yarn validate-translations  # 번역 검증
+npm run extract-text           # 번역 키 추출
+npm run manage-translations    # 번역 파일 관리
+npm run validate-translations  # 번역 검증
 ```
 
 ### 변경 시 재배포 범위

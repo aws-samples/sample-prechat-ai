@@ -32,7 +32,7 @@ echo ""
 
 # Step 2: Install dependencies
 echo "📦 Installing dependencies..."
-yarn install
+npm install
 
 # Step 3: Build SAM application
 echo "🔨 Building SAM application..."
