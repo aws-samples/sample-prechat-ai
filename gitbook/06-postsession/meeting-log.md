@@ -22,7 +22,7 @@ icon: file-pen
 
 미팅 플랜과 같은 세션 내에 Meeting Log 탭이 있습니다.
 
-**[사진첨부]** Meeting Log 빈 상태
+![Meeting Log 빈 상태](../.gitbook/assets/06-meeting-log-01-session-detail.png)
 {% endstep %}
 
 {% step %}
@@ -40,7 +40,7 @@ icon: file-pen
 - **Next Action** — 다음 행동, 담당자, 기한
 - **Notes** — 자유 메모
 
-**[사진첨부]** Meeting Log 입력 폼
+![Meeting Log 입력 폼](../.gitbook/assets/06-meeting-log-02-log-form.png)
 {% endstep %}
 
 {% step %}

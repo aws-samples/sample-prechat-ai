@@ -89,7 +89,7 @@ AWS Console → **Amazon Bedrock** → 좌측 **AgentCore** → **Runtime**
 
 `prechat-consultation-agent-*`, `prechat-summary-agent-*` 선택 후 **Delete**
 
-**[사진첨부]** AgentCore Runtime 삭제 버튼
+**[수동 캡처 필요]** AgentCore Runtime 삭제 버튼
 {% endstep %}
 
 {% step %}

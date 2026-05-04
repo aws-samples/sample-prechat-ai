@@ -28,7 +28,7 @@ icon: right-to-bracket
 https://dxxx.cloudfront.net/inbound/FY26INBOUND
 ```
 
-**[사진첨부]** 인바운드 랜딩 화면
+![인바운드 랜딩 화면](../.gitbook/assets/05-inbound-session-01-landing.png)
 {% endstep %}
 
 {% step %}
@@ -36,7 +36,7 @@ https://dxxx.cloudfront.net/inbound/FY26INBOUND
 
 공유받은 6자리 PIN을 입력합니다. HMAC-SHA256 해시로 검증되므로 잘못 입력하면 바로 실패합니다.
 
-**[사진첨부]** PIN 입력 화면
+![PIN 입력 화면](../.gitbook/assets/05-inbound-session-01-landing.png)
 {% endstep %}
 
 {% step %}
@@ -50,7 +50,7 @@ https://dxxx.cloudfront.net/inbound/FY26INBOUND
 - **Phone** — 전화번호 (중복 검증 기준)
 - **Consent** — 개인정보 이용 동의 체크
 
-**[사진첨부]** PII 입력과 동의 체크박스
+![PII 입력과 동의 체크박스](../.gitbook/assets/05-inbound-session-01-landing.png)
 {% endstep %}
 
 {% step %}
@@ -58,7 +58,7 @@ https://dxxx.cloudfront.net/inbound/FY26INBOUND
 
 입력한 전화번호가 처음 등장하는 번호라면 새 세션이 생성됩니다. 기존에 같은 번호로 세션을 시작한 적이 있다면 **기존 세션이 복원**됩니다.
 
-**[사진첨부]** 채팅 화면 진입 직후
+![채팅 화면 진입 직후](../.gitbook/assets/05-customer-conversation-01-chat-history.png)
 {% endstep %}
 {% endstepper %}
 
@@ -80,7 +80,7 @@ https://dxxx.cloudfront.net/inbound/FY26INBOUND
 
 인바운드 캠페인은 **관리자가 세션을 생성하지 않습니다**. 따라서 Sessions 리스트에 나타나는 세션은 모두 고객이 직접 생성한 것입니다.
 
-**[사진첨부]** 인바운드 캠페인의 Sessions 리스트 — Created By 컬럼이 "Inbound"로 표시
+![인바운드 캠페인의 Sessions 리스트 — Created By 컬럼이 "Inbound"로 표시](../.gitbook/assets/05-outbound-session-03-sessions-full-list.png)
 
 ## 세션 수량 통제
 

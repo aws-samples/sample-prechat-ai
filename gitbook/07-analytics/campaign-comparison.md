@@ -11,7 +11,7 @@ icon: scale-balanced
 
 대시보드 좌측 메뉴 → **Analytics** → **Campaign Comparison**
 
-**[사진첨부]** 캠페인 비교 페이지 진입
+![캠페인 비교 페이지 진입](../.gitbook/assets/07-campaign-dashboard-01-detail-tabs.png)
 
 ## 캠페인 선택
 
@@ -21,7 +21,7 @@ icon: scale-balanced
 
 드롭다운에서 2~5개의 캠페인을 선택합니다.
 
-**[사진첨부]** 캠페인 멀티 셀렉트
+![캠페인 멀티 셀렉트](../.gitbook/assets/07-campaign-dashboard-01-detail-tabs.png)
 {% endstep %}
 
 {% step %}
@@ -29,13 +29,13 @@ icon: scale-balanced
 
 기간을 통일하지 않으면 비교가 왜곡될 수 있습니다. 동일 기간(예: 최근 30일)을 지정합니다.
 
-**[사진첨부]** 기간 셀렉터
+![기간 셀렉터](../.gitbook/assets/07-campaign-dashboard-01-detail-tabs.png)
 {% endstep %}
 {% endstepper %}
 
 ## 비교 뷰
 
-**[사진첨부]** 캠페인 비교 테이블
+![캠페인 비교 테이블](../.gitbook/assets/07-campaign-dashboard-02-metrics-cards.png)
 
 | 지표 | 설명 |
 |------|-----|
@@ -52,7 +52,7 @@ icon: scale-balanced
 
 각 지표를 그룹 막대 차트로 비교합니다.
 
-**[사진첨부]** 지표별 그룹 막대 차트
+![지표별 그룹 막대 차트](../.gitbook/assets/07-campaign-dashboard-02-metrics-cards.png)
 
 ### 해석 예시
 

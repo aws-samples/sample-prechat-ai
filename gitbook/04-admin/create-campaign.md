@@ -25,7 +25,7 @@ icon: bullhorn
 
 대시보드 → **Campaigns** → **Create Campaign**
 
-**[사진첨부]** Campaigns 리스트와 Create 버튼
+![Campaigns 리스트와 Create 버튼](../.gitbook/assets/04-create-campaign-01-campaigns-list.png)
 {% endstep %}
 
 {% step %}
@@ -36,7 +36,7 @@ icon: bullhorn
 - **Description** — 캠페인 목적을 자유 기술
 - **Campaign Type** — **Outbound** 선택
 
-**[사진첨부]** 캠페인 생성 폼 기본 정보
+![캠페인 생성 폼 기본 정보](../.gitbook/assets/04-create-campaign-02-create-form.png)
 {% endstep %}
 
 {% step %}
@@ -52,7 +52,7 @@ icon: bullhorn
 
 PreChat Agent만 커스텀해도 충분합니다. Summary/Planning은 기본 제공 에이전트가 BANT 분석과 미팅 플랜을 자동 생성합니다.
 
-**[사진첨부]** Agent Configurations 섹션
+![Agent Configurations 섹션](../.gitbook/assets/04-create-campaign-02-create-form.png)
 {% endstep %}
 
 {% step %}
@@ -60,7 +60,7 @@ PreChat Agent만 커스텀해도 충분합니다. Summary/Planning은 기본 제
 
 **Save**로 저장 후 **Status**를 **Active**로 바꿉니다.
 
-**[사진첨부]** Active 상태로 전환된 캠페인
+![Active 상태로 전환된 캠페인](../.gitbook/assets/04-create-campaign-04-campaigns-list-full.png)
 {% endstep %}
 {% endstepper %}
 
@@ -81,7 +81,7 @@ PreChat Agent만 커스텀해도 충분합니다. Summary/Planning은 기본 제
 - **Campaign PIN** — 고객이 URL 접근 시 입력할 6자리 PIN
 - **Allow duplicate contacts?** — 같은 전화번호의 재진입 허용 여부 (기본 off 권장)
 
-**[사진첨부]** Inbound 타입 선택 시 나타나는 PIN 필드
+![Inbound 타입 선택 시 나타나는 PIN 필드](../.gitbook/assets/04-create-campaign-05-inbound-tab.png)
 {% endstep %}
 
 {% step %}
@@ -101,7 +101,7 @@ https://{WebsiteURL}/inbound/{campaignCode}
 
 이 URL을 세미나 참석자나 마케팅 페이지에 공유합니다. PIN은 URL과 별도로 공유합니다.
 
-**[사진첨부]** 캠페인 URL 복사 버튼
+![캠페인 URL 복사 버튼](../.gitbook/assets/04-create-campaign-07-inbound-detail.png)
 {% endstep %}
 {% endstepper %}
 
@@ -111,7 +111,7 @@ https://{WebsiteURL}/inbound/{campaignCode}
 
 ## 캠페인 리스트 이해하기
 
-**[사진첨부]** 캠페인 리스트 화면
+![캠페인 리스트 화면](../.gitbook/assets/04-create-campaign-07-campaigns-list.png)
 
 | 컬럼 | 의미 |
 |------|-----|

@@ -26,7 +26,7 @@ icon: robot
 
 대시보드 좌측 메뉴 → **Agents** → **Create Agent** 버튼
 
-**[사진첨부]** Agents 리스트 화면
+![Agents 리스트 화면](../.gitbook/assets/04-create-agent-01-agents-list.png)
 {% endstep %}
 
 {% step %}
@@ -48,7 +48,7 @@ icon: robot
 
 Bedrock 모델 액세스에서 승인된 모델만 표시됩니다.
 
-**[사진첨부]** 모델 선택 드롭다운
+![모델 선택 드롭다운](../.gitbook/assets/04-create-agent-03-role-dropdown.png)
 {% endstep %}
 
 {% step %}
@@ -77,7 +77,7 @@ Bedrock 모델 액세스에서 승인된 모델만 표시됩니다.
 - 대화 종료 전 파악한 내용을 간단히 요약하고 고객의 확인을 받습니다.
 ```
 
-**[사진첨부]** 시스템 프롬프트 입력 영역
+![시스템 프롬프트 입력 영역](../.gitbook/assets/04-create-agent-02-create-form.png)
 
 {% hint style="info" %}
 프롬프트는 한국어/영어 모두 가능합니다. 고객이 사용할 언어에 맞춰 작성합니다.
@@ -97,7 +97,7 @@ Bedrock 모델 액세스에서 승인된 모델만 표시됩니다.
 
 워크샵에서는 **`render_form` + `aws_docs_mcp`** 두 가지로 시작하는 것을 권장합니다.
 
-**[사진첨부]** 도구 선택 체크리스트
+![도구 선택 체크리스트](../.gitbook/assets/04-create-agent-04-edit-full.png)
 {% endstep %}
 
 {% step %}
@@ -109,7 +109,7 @@ Bedrock 모델 액세스에서 승인된 모델만 표시됩니다.
 - 데이터 소스로 S3 버킷(고객 사례, 제품 문서, FAQ 등) 지정
 - Vector database로 OpenSearch Serverless 또는 Pinecone 선택
 
-**[사진첨부]** KB ID 입력 필드
+**[수동 캡처 필요]** KB ID 입력 필드
 {% endstep %}
 
 {% step %}
@@ -119,7 +119,7 @@ Bedrock 모델 액세스에서 승인된 모델만 표시됩니다.
 
 Status가 `PREPARED`로 바뀌면 완료입니다.
 
-**[사진첨부]** Prepare 버튼 및 Status 표시
+![Prepare 버튼 및 Status 표시](../.gitbook/assets/04-create-agent-04-edit-full.png)
 {% endstep %}
 {% endstepper %}
 

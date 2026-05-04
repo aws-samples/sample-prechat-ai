@@ -15,7 +15,7 @@ icon: paper-plane
 
 대시보드 좌측 **Sessions** → **Create Session**
 
-**[사진첨부]** Sessions 리스트와 Create 버튼
+![Sessions 리스트와 Create 버튼](../.gitbook/assets/05-outbound-session-02-sessions-list.png)
 {% endstep %}
 
 {% step %}
@@ -23,7 +23,7 @@ icon: paper-plane
 
 **Campaign** 드롭다운에서 조금 전에 만든 **Outbound 캠페인**을 선택합니다.
 
-**[사진첨부]** 캠페인 드롭다운
+![캠페인 드롭다운](../.gitbook/assets/05-outbound-session-01-create-form.png)
 {% endstep %}
 
 {% step %}
@@ -36,7 +36,7 @@ icon: paper-plane
 
 필수는 Customer Name과 Email이며, 나머지는 선택입니다.
 
-**[사진첨부]** 고객 정보 입력 폼
+![고객 정보 입력 폼](../.gitbook/assets/05-outbound-session-01-create-form.png)
 {% endstep %}
 
 {% step %}
@@ -44,7 +44,7 @@ icon: paper-plane
 
 캠페인의 기본 에이전트 대신 이 세션만 다른 에이전트를 쓰고 싶다면 **Agent override** 드롭다운에서 선택합니다. 비워 두면 캠페인 기본 에이전트가 사용됩니다.
 
-**[사진첨부]** Agent override 드롭다운
+![Agent override 드롭다운](../.gitbook/assets/05-outbound-session-01-create-form.png)
 {% endstep %}
 
 {% step %}
@@ -52,7 +52,7 @@ icon: paper-plane
 
 **Create**를 누르면 세션이 생성되며 URL과 PIN이 표시됩니다.
 
-**[사진첨부]** 세션 생성 완료 화면 — URL과 PIN 표시
+![세션 생성 완료 화면 — URL과 PIN 표시](../.gitbook/assets/05-outbound-session-02-sessions-list.png)
 {% endstep %}
 {% endstepper %}
 
@@ -94,7 +94,7 @@ ACME 솔루션즈 사전상담을 위한 전용 링크를 보내드립니다.
 
 **Sessions** 리스트에서 모든 세션 상태를 추적합니다.
 
-**[사진첨부]** Sessions 리스트 전체 뷰
+![Sessions 리스트 전체 뷰](../.gitbook/assets/05-outbound-session-03-sessions-full-list.png)
 
 | Status | 의미 |
 |--------|-----|
@@ -115,13 +115,13 @@ ACME 솔루션즈 사전상담을 위한 전용 링크를 보내드립니다.
 | **Meeting Plan** | 미팅 준비 플랜 (세션 종료 후 생성) |
 | **Meeting Log** | 본 미팅의 기록 (수동 작성) |
 
-**[사진첨부]** 세션 상세 화면 (Info 탭)
+![세션 상세 화면 (Info 탭)](../.gitbook/assets/06-meeting-log-01-session-detail.png)
 
 ## 세션 수동 종료
 
 고객이 대화를 끝냈지만 명시적으로 종료하지 않은 경우 관리자가 수동으로 **Inactivate** 버튼을 눌러 종료할 수 있습니다. 종료 시 AI 요약 파이프라인이 자동으로 시작됩니다.
 
-**[사진첨부]** Inactivate 버튼 위치
+![Inactivate 버튼 위치](../.gitbook/assets/06-meeting-log-01-session-detail.png)
 
 ## 다음 단계
 

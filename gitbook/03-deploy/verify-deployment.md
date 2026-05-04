@@ -59,7 +59,7 @@ aws ssm get-parameters-by-path \
 
 브라우저에서 `WebsiteURL`을 열어 PreChat 첫 화면이 로드되는지 확인합니다.
 
-**[사진첨부]** PreChat 랜딩 페이지 (캠페인 코드 입력 화면)
+![PreChat 랜딩 페이지](../.gitbook/assets/03-verify-01-landing-page.png)
 
 화면이 비어 있거나 `Network Error`가 뜨면 CloudFront 캐시 무효화가 완료되지 않았을 수 있습니다. 1~3분 기다린 뒤 새로고침합니다.
 
@@ -112,7 +112,7 @@ AWS Console → **Amazon Bedrock** → 좌측 **AgentCore** → **Runtime**
 
 `prechat-consultation-agent-dev`, `prechat-summary-agent-dev`와 유사한 이름의 런타임 두 개가 `Status: READY` 상태여야 합니다.
 
-**[사진첨부]** AgentCore Runtime 목록 화면
+**[수동 캡처 필요]** AgentCore Runtime 목록 화면
 {% endstep %}
 
 {% step %}
@@ -120,7 +120,7 @@ AWS Console → **Amazon Bedrock** → 좌측 **AgentCore** → **Runtime**
 
 컨테이너 시작 로그가 정상 출력되었는지 확인합니다.
 
-**[사진첨부]** Runtime 상세 → Logs 탭
+**[수동 캡처 필요]** Runtime 상세 → Logs 탭
 {% endstep %}
 {% endstepper %}
 

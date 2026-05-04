@@ -32,13 +32,13 @@ Summary Agent는 Pydantic 기반 Structured Output으로 타입 안전한 응답
 
 세션이 Completed 상태라면 자동 생성된 리포트가 표시됩니다. 상태가 `Generating`이면 잠시 기다린 뒤 새로고침합니다.
 
-**[사진첨부]** AI Report 탭 전체 화면
+![AI Report 탭 전체 화면](../.gitbook/assets/06-ai-report-01-session-detail-full.png)
 {% endstep %}
 {% endstepper %}
 
 ## 리포트 구성
 
-**[사진첨부]** 실제 BANT 리포트 렌더링 예시
+![실제 BANT 리포트 렌더링 예시](../.gitbook/assets/06-ai-report-02-conversation-tab.png)
 
 생성된 리포트는 다음 섹션으로 구성됩니다.
 
@@ -84,7 +84,7 @@ Timeline
 
 대화 로그를 수정하지 않는 한 리포트는 한 번 생성되면 재사용됩니다. 강제로 재생성하려면 **Regenerate Report** 버튼을 누릅니다.
 
-**[사진첨부]** Regenerate Report 버튼
+![Regenerate Report 버튼](../.gitbook/assets/06-ai-report-01-session-detail-full.png)
 
 {% hint style="info" %}
 Summary Agent는 호출당 Bedrock 모델 사용료가 발생합니다. 꼭 필요할 때만 재생성하세요.

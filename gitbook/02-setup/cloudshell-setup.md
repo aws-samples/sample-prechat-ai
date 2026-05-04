@@ -25,7 +25,7 @@ CloudShell 홈 디렉토리는 **1 GB 한도**가 있습니다. 배포 중 `node
 
 터미널 모양 아이콘입니다. 새 탭으로 CloudShell 세션이 열립니다.
 
-**[사진첨부]** AWS Console 상단 CloudShell 아이콘
+**[수동 캡처 필요]** AWS Console 상단 CloudShell 아이콘
 {% endstep %}
 
 {% step %}

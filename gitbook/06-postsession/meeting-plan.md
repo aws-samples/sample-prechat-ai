@@ -9,7 +9,7 @@ icon: calendar-check
 
 ## 플랜 구성
 
-**[사진첨부]** Meeting Plan 탭 전체 화면
+![Meeting Plan 탭 전체 화면](../.gitbook/assets/06-meeting-plan-01-planning-tab.png)
 
 | 섹션 | 내용 |
 |------|------|
@@ -28,7 +28,7 @@ icon: calendar-check
 
 세션이 Completed 상태이고 AI Report가 생성된 뒤 약 1~2분 내에 플랜이 준비됩니다.
 
-**[사진첨부]** Meeting Plan 탭 진입
+![Meeting Plan 탭 진입](../.gitbook/assets/06-meeting-plan-01-planning-tab.png)
 {% endstep %}
 
 {% step %}
@@ -39,7 +39,7 @@ icon: calendar-check
 - KB 레퍼런스: 사내 Knowledge Base에 등록한 사례 문서
 - AWS Docs: `docs.aws.amazon.com` 공식 페이지
 
-**[사진첨부]** References 섹션
+![References 섹션](../.gitbook/assets/06-meeting-plan-01-planning-tab.png)
 {% endstep %}
 
 {% step %}
@@ -47,7 +47,7 @@ icon: calendar-check
 
 본 미팅 참석자들이 플랜에 코멘트를 남길 수 있습니다. CSR이 영업 관점, SA가 기술 관점의 메모를 추가합니다.
 
-**[사진첨부]** Comments 입력 UI
+![Comments 입력 UI](../.gitbook/assets/06-meeting-plan-02-discussion-tab.png)
 {% endstep %}
 {% endstepper %}
 
@@ -55,7 +55,7 @@ icon: calendar-check
 
 Planning Agent는 세션 이후에도 **Sales Rep과 대화**할 수 있습니다. 미팅 준비 중 추가 질문이 있을 때 활용합니다.
 
-**[사진첨부]** Planning Agent 채팅 사이드 패널
+![Planning Agent 채팅 사이드 패널](../.gitbook/assets/06-meeting-plan-02-discussion-tab.png)
 
 ### 활용 예시
 
@@ -91,7 +91,7 @@ Planning Agent는 대화 중 다음 도구를 사용합니다.
 
 마크다운 에디터가 열립니다.
 
-**[사진첨부]** 플랜 섹션 인라인 편집
+![플랜 섹션 인라인 편집](../.gitbook/assets/06-meeting-plan-01-planning-tab.png)
 {% endstep %}
 
 {% step %}

@@ -126,7 +126,7 @@ source ~/.bashrc
 
 이미 Docker Desktop이 설치되어 있다면 **Settings** → **General** → **Use the WSL 2 based engine**을 활성화합니다.
 
-**[사진첨부]** Docker Desktop Settings의 WSL 2 based engine 옵션
+**[수동 캡처 필요]** Docker Desktop Settings의 WSL 2 based engine 옵션
 {% endstep %}
 
 {% step %}
@@ -134,7 +134,7 @@ source ~/.bashrc
 
 **Settings** → **Resources** → **WSL integration** → Ubuntu-22.04 토글을 켭니다.
 
-**[사진첨부]** WSL integration 화면
+**[수동 캡처 필요]** WSL integration 화면
 {% endstep %}
 
 {% step %}

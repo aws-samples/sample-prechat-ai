@@ -34,7 +34,7 @@ sam deploy \
 
 브라우저에서 `{WebsiteURL}/admin`을 엽니다.
 
-**[사진첨부]** 관리자 로그인 화면
+![관리자 로그인 화면](../.gitbook/assets/04-create-admin-account-01-login.png)
 {% endstep %}
 
 {% step %}
@@ -42,7 +42,7 @@ sam deploy \
 
 하단의 "Don't have an account? Sign up" 링크를 누릅니다.
 
-**[사진첨부]** Sign up 링크 위치
+![Sign up 링크 위치](../.gitbook/assets/04-create-admin-account-02-signup-tab.png)
 {% endstep %}
 
 {% step %}
@@ -53,7 +53,7 @@ sam deploy \
 - **Name** — 표시 이름
 - **Phone number** — 국가 코드 포함 (예: `+821012345678`)
 
-**[사진첨부]** 회원가입 폼
+![회원가입 폼](../.gitbook/assets/04-create-admin-account-02-signup-tab.png)
 {% endstep %}
 
 {% step %}
@@ -63,7 +63,7 @@ sam deploy \
 
 스팸함도 확인합니다.
 
-**[사진첨부]** 이메일 인증 화면
+**[수동 캡처 필요]** 이메일 인증 화면
 {% endstep %}
 
 {% step %}
@@ -71,7 +71,7 @@ sam deploy \
 
 인증 완료 후 로그인 화면으로 돌아와 이메일/비밀번호를 입력합니다.
 
-**[사진첨부]** 관리자 대시보드 첫 화면
+![관리자 대시보드 첫 화면](../.gitbook/assets/04-create-admin-account-05-admin-dashboard.png)
 {% endstep %}
 {% endstepper %}
 
@@ -88,7 +88,7 @@ sam deploy \
 | 5. Review AI Report | BANT 요약 확인 | 6장 |
 | 6. Analyze Campaigns | 캠페인 분석 | 7장 |
 
-**[사진첨부]** 온보딩 Quest 카드 6개
+![온보딩 Quest 카드 6개](../.gitbook/assets/04-create-admin-account-06-onboarding-quests.png)
 
 ## 추가 관리자 초대
 

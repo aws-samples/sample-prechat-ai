@@ -19,13 +19,13 @@ icon: chart-line
 
 기본 탭은 Info, Sessions, Analytics, Settings 순서입니다.
 
-**[사진첨부]** 캠페인 상세 상단 탭
+![캠페인 상세 상단 탭](../.gitbook/assets/07-campaign-dashboard-01-detail-tabs.png)
 {% endstep %}
 {% endstepper %}
 
 ## 주요 지표 카드
 
-**[사진첨부]** 캠페인 대시보드 최상단 메트릭 카드
+![캠페인 대시보드 최상단 메트릭 카드](../.gitbook/assets/07-campaign-dashboard-01-detail-tabs.png)
 
 | 카드 | 설명 |
 |------|------|
@@ -40,7 +40,7 @@ icon: chart-line
 
 시간대별 세션 생성/완료 추이를 라인 차트로 보여줍니다.
 
-**[사진첨부]** 세션 추이 라인 차트
+![세션 추이 라인 차트](../.gitbook/assets/07-campaign-dashboard-02-metrics-cards.png)
 
 {% tabs %}
 {% tab title="일별" %}
@@ -60,7 +60,7 @@ icon: chart-line
 
 고객이 대화 초반에 선택한 Consultation Purpose를 집계하여 도넛 차트로 표시합니다.
 
-**[사진첨부]** 상담 목적 도넛 차트
+![상담 목적 도넛 차트](../.gitbook/assets/07-campaign-dashboard-02-metrics-cards.png)
 
 | 목적 예시 | 의미 |
 |---------|-----|
@@ -76,23 +76,23 @@ icon: chart-line
 
 BANT 네 항목별로 "파악됨/누락" 비율을 막대 그래프로 표시합니다. 어떤 항목에서 대화가 충분히 진행되지 못하는지 파악할 수 있습니다.
 
-**[사진첨부]** BANT 파악률 막대 차트
+![BANT 파악률 막대 차트](../.gitbook/assets/07-campaign-dashboard-02-metrics-cards.png)
 
 ## CSAT 분포
 
 피드백 점수(1~5)의 분포와 평균을 표시합니다. 점수 하락 추세는 에이전트 프롬프트나 대화 흐름 개선이 필요하다는 신호입니다.
 
-**[사진첨부]** CSAT 히스토그램
+![CSAT 히스토그램](../.gitbook/assets/07-campaign-dashboard-02-metrics-cards.png)
 
 ## AWS Services 언급 빈도
 
 대화 중 언급되거나 Summary Agent가 추천한 AWS 서비스의 빈도를 워드 클라우드 또는 막대 그래프로 표시합니다. 고객 관심 서비스 트렌드를 읽을 수 있습니다.
 
-**[사진첨부]** AWS 서비스 언급 빈도
+![AWS 서비스 언급 빈도](../.gitbook/assets/07-campaign-dashboard-02-metrics-cards.png)
 
 ## 필터와 드릴다운
 
-**[사진첨부]** 필터 패널
+![필터 패널](../.gitbook/assets/07-campaign-dashboard-01-detail-tabs.png)
 
 대시보드 상단에서 다음 필터를 적용할 수 있습니다.
 
