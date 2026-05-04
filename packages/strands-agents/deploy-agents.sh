@@ -27,6 +27,12 @@ PROFILE=${1:-default}
 STAGE=${2:-dev}
 REGION=${3:-ap-northeast-2}
 
+# CloudShell은 프로필 없이 환경변수로 자격증명을 제공하므로 default일 때는 --profile을 생략
+PROFILE_FLAG=""
+if [ "$PROFILE" != "default" ]; then
+    PROFILE_FLAG="--profile ${PROFILE}"
+fi
+
 # SSM 파라미터 경로 prefix
 SSM_PREFIX="/prechat/${STAGE}/agents"
 
@@ -90,7 +96,7 @@ except:
         --type "String" \
         --overwrite \
         --region "${REGION}" \
-        --profile "${PROFILE}" \
+        ${PROFILE_FLAG} \
         --description "PreChat ${AGENT_ROLE} agent runtime ARN (${STAGE})"
 
     echo "✅ SSM parameter registered: ${SSM_KEY} = ${AGENT_ARN}"
@@ -121,7 +127,7 @@ aws ssm get-parameters-by-path \
     --path "${SSM_PREFIX}" \
     --recursive \
     --region "${REGION}" \
-    --profile "${PROFILE}" \
+    ${PROFILE_FLAG} \
     --query 'Parameters[].{Name:Name,Value:Value}' \
     --output table 2>/dev/null || echo "(SSM 조회 실패 - 권한을 확인하세요)"
 

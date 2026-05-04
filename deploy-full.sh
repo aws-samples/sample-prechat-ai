@@ -10,6 +10,12 @@ REGION=${3:-ap-northeast-2}
 BEDROCK_REGION=${4:-$REGION}
 STACK_NAME=${5:-mte-prechat}
 
+# CloudShell은 프로필 없이 환경변수로 자격증명 제공
+PROFILE_FLAG=""
+if [ "$PROFILE" != "default" ]; then
+    PROFILE_FLAG="$PROFILE_FLAG"
+fi
+
 echo "🚀 Starting full deployment..."
 echo "📋 Configuration:"
 echo "   AWS Profile: $PROFILE"
@@ -36,12 +42,12 @@ npm install
 
 # Step 3: Build SAM application
 echo "🔨 Building SAM application..."
-sam build --profile $PROFILE
+sam build $PROFILE_FLAG
 
 # Step 4: Deploy infrastructure
 echo "🏗️  Deploying infrastructure..."
 sam deploy \
-  --profile $PROFILE \
+  $PROFILE_FLAG \
   --region $REGION \
   --stack-name $STACK_NAME \
   --resolve-s3 \
@@ -67,14 +73,14 @@ API_URL=$(aws cloudformation describe-stacks \
   --region $REGION \
   --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
   --output text \
-  --profile $PROFILE)
+  $PROFILE_FLAG)
 
 WEBSITE_URL=$(aws cloudformation describe-stacks \
   --stack-name $STACK_NAME \
   --region $REGION \
   --query 'Stacks[0].Outputs[?OutputKey==`WebsiteURL`].OutputValue' \
   --output text \
-  --profile $PROFILE)
+  $PROFILE_FLAG)
 
 echo ""
 echo "📋 Deployment Summary:"

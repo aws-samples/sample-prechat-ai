@@ -8,6 +8,12 @@ STAGE=${2:-dev}
 REGION=${3:-ap-northeast-2}
 STACK_NAME=${4:-mte-prechat}
 
+# CloudShell은 프로필 없이 환경변수로 자격증명 제공
+PROFILE_FLAG=""
+if [ "$PROFILE" != "default" ]; then
+    PROFILE_FLAG="$PROFILE_FLAG"
+fi
+
 echo "📋 CloudFormation 출력값 가져오는 중..."
 
 # API Gateway URL 가져오기
@@ -16,7 +22,7 @@ API_URL=$(aws cloudformation describe-stacks \
   --region $REGION \
   --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
   --output text \
-  --profile $PROFILE)
+  $PROFILE_FLAG)
 
 if [ -z "$API_URL" ]; then
   echo "❌ CloudFormation 스택에서 API URL을 가져오지 못했습니다"
@@ -29,7 +35,7 @@ WS_URL=$(aws cloudformation describe-stacks \
   --region $REGION \
   --query 'Stacks[0].Outputs[?OutputKey==`WebSocketUrl`].OutputValue' \
   --output text \
-  --profile $PROFILE)
+  $PROFILE_FLAG)
 
 if [ -z "$WS_URL" ]; then
   echo "⚠️  WebSocket URL을 가져오지 못했습니다. VITE_WS_URL이 설정되지 않습니다."
