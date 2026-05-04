@@ -44,7 +44,7 @@ aws sts get-caller-identity
 API Gateway가 CloudWatch에 로그를 기록하려면 계정 수준에서 역할을 한 번 등록해야 합니다. 이미 설정된 계정이라면 건너뛰어도 됩니다.
 
 ```bash
-# API Gateway용 CloudWatch Logs 역할 생성
+# 1. API Gateway용 CloudWatch Logs 역할 생성
 aws iam create-role \
   --role-name ApiGatewayCloudWatchLogsRole \
   --assume-role-policy-document '{
@@ -55,15 +55,19 @@ aws iam create-role \
       "Action": "sts:AssumeRole"
     }]
   }' 2>/dev/null || echo "역할이 이미 존재합니다 (정상)"
+```
 
+```bash
+# 2. 로깅 권한 정책 연결
 aws iam attach-role-policy \
   --role-name ApiGatewayCloudWatchLogsRole \
   --policy-arn arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+```
 
-# API Gateway 계정 설정에 역할 등록
+```bash
+# 3. API Gateway 계정 설정에 역할 등록
 ROLE_ARN=$(aws iam get-role --role-name ApiGatewayCloudWatchLogsRole --query 'Role.Arn' --output text)
 aws apigateway update-account --patch-operations op=replace,path=/cloudwatchRoleArn,value=$ROLE_ARN
-
 echo "✅ API Gateway 로깅 역할 설정 완료"
 ```
 
