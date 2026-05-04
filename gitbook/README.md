@@ -1,27 +1,25 @@
 ---
-description: ISV 고객이 PreChat 캠페인으로 자사 고객 사전상담을 직접 운영할 수 있도록 배포부터 캠페인 분석까지 안내하는 워크샵 가이드
+description: 자사 고객 사전상담을 AI Agent로 운영할 수 있도록 배포부터 사용법까지 안내하는 워크샵 가이드
 icon: rocket
 ---
 
-# PreChat 워크샵에 오신 것을 환영합니다
+# 상담 에이전트 (PreChat) 만들기 워크샵
 
-PreChat은 Amazon Bedrock AgentCore와 Strands SDK로 만든 AI 사전상담 시스템입니다. 폼 기반 정보 수집을 대화형 챗봇으로 대체하여 고객과의 자연스러운 대화만으로 요구사항을 수집하고, 세션 종료 후 BANT 분석 리포트와 미팅 플랜을 자동으로 생성합니다.
+여러분은 고객 접촉면을 어떻게 넓히고 있나요?
 
-이 워크샵은 **ISV 고객(고객이 있는 고객)이 자사 서비스에 PreChat을 도입**할 수 있도록 배포부터 운영까지 전 과정을 안내합니다.
+마케팅 메일, eDM, 모객 콜, 광고 디스플레이 — 고객에게 먼저 다가가는 채널은 많지만, 정작 고객이 무엇을 원하는지 파악하는 단계에서 병목이 생깁니다. 초기 상담에 시간이 몰리고, 고객마다 맞는 서비스를 추천하기 어렵고, 미팅 전 정보 정리가 번거롭습니다.
+
+PreChat은 이 문제를 AI 챗봇으로 풀어냅니다. Amazon Bedrock AgentCore와 Strands SDK로 만든 사전상담 시스템으로, 폼 대신 대화를 통해 고객 요구사항을 수집하고, 세션 종료 후 BANT 분석 리포트와 미팅 플랜을 자동 생성합니다.
+
+이 워크샵은 **자사 서비스에 PreChat을 도입**하려는 분들을 위해 배포부터 운영까지 전 과정을 안내합니다.
 
 ## 워크샵에서 다루는 내용
 
 {% stepper %}
 {% step %}
-### 환경 준비
+### AWS에 배포
 
-AWS CloudShell 또는 로컬 환경(macOS/Windows)에 AWS CLI, SAM CLI, Node.js, Python, Docker를 준비합니다.
-{% endstep %}
-
-{% step %}
-### 배포
-
-`prsworkshop` 브랜치를 체크아웃하고 두 단계로 배포합니다. 먼저 Strands 에이전트를 Bedrock AgentCore에 올리고, 이어 SAM으로 백엔드와 프론트엔드를 한 번에 올립니다.
+`prsworkshop` 브랜치를 체크아웃하고 두 단계로 배포합니다. Strands 에이전트를 Bedrock AgentCore에 올리고, SAM으로 백엔드와 프론트엔드를 한 번에 올립니다.
 {% endstep %}
 
 {% step %}
@@ -45,9 +43,9 @@ AWS CloudShell 또는 로컬 환경(macOS/Windows)에 AWS CLI, SAM CLI, Node.js,
 
 ## 대상 독자
 
-- 사내 영업/CS 프로세스에 AI 사전상담을 도입하려는 **ISV 고객의 IT/플랫폼 담당자**
+- 사내 영업/CS 프로세스에 AI 사전상담을 도입하려는 **IT/플랫폼 담당자**
 - AWS 서비스 경험이 있는 **솔루션 아키텍트, 개발자, 운영자**
-- PreChat을 자사 고객 응대 시나리오에 커스터마이즈하려는 **프로덕트 오너**
+- PreChat을 자사 고객 응대 시나리오에 맞춰 커스터마이즈하려는 **프로덕트 오너**
 
 ## 사전 요구사항
 
@@ -55,7 +53,6 @@ AWS CloudShell 또는 로컬 환경(macOS/Windows)에 AWS CLI, SAM CLI, Node.js,
 워크샵을 진행하려면 다음이 준비되어야 합니다.
 
 - **AWS 계정** — IAM 사용자 또는 IAM Identity Center 권한 (Administrator 또는 동등한 수준)
-- **Bedrock 모델 액세스** — Claude 계열 또는 Amazon Nova 모델 승인
 - **브라우저** — 최신 버전 Chrome, Edge, Firefox, Safari 중 하나
 {% endhint %}
 
@@ -63,14 +60,14 @@ AWS CloudShell 또는 로컬 환경(macOS/Windows)에 AWS CLI, SAM CLI, Node.js,
 
 ## 진행 시간
 
+
 | 섹션 | 예상 시간 |
 |------|---------|
-| 환경 준비 | 15분 |
-| 배포 | 30~45분 (네트워크/에이전트 빌드 속도에 따라 변동) |
-| 관리자 온보딩 | 10분 |
-| 세션 시나리오 체험 | 20분 |
-| 분석과 정리 | 15분 |
-| **합계** | **약 90~120분** |
+| 배포 | 20분 |
+| 관리자 온보딩 | 15분 |
+| 세션 시나리오 체험 | 15분 |
+| 분석과 정리 | 10분 |
+| **합계** | **약 60분** |
 
 ## 레포지토리
 
@@ -80,7 +77,7 @@ AWS CloudShell 또는 로컬 환경(macOS/Windows)에 AWS CLI, SAM CLI, Node.js,
 https://github.com/aws-samples/sample-prechat-ai.git
 ```
 
-워크샵 전용으로 이 브랜치는 VPC/PrivateLink 옵션이 제거되어 있어 고객 환경에서 네트워크 구성 없이 그대로 배포됩니다.
+워크샵 전용으로 이 브랜치는 VPC/PrivateLink 옵션이 제거되어 있어 네트워크 구성 없이 그대로 배포됩니다.
 
 {% hint style="warning" %}
 프로덕션 환경에 도입할 때는 VPC 격리, WAF, 세분화된 IAM 정책, CloudFront 커스텀 인증서 등을 추가로 검토해야 합니다. 본 워크샵은 학습 목적의 빠른 배포를 우선합니다.
