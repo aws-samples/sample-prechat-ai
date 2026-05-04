@@ -16,17 +16,6 @@ icon: list-check
   - Bedrock, Bedrock AgentCore, ECR, CodeBuild
 - [ ] 배포 리전을 정했다 (권장: `ap-northeast-2` 서울 또는 `us-east-1` 버지니아 북부)
 
-## Bedrock 모델 액세스
-
-- [ ] AWS Console → Amazon Bedrock → **Model access**에서 다음 모델 중 최소 한 가지가 **Access granted** 상태다
-  - Anthropic Claude 3.5 Sonnet 또는 Claude Sonnet 4
-  - Amazon Nova Pro / Lite / Micro
-- [ ] 상담에 사용할 Bedrock 리전이 선택한 배포 리전과 일치한다 (다른 경우 `BEDROCK_REGION`을 따로 지정)
-
-{% hint style="warning" %}
-Bedrock 모델 액세스 승인은 즉시 처리되는 경우가 많지만 드물게 몇 분 이상 걸릴 수 있습니다. 다른 준비를 먼저 시작하고 승인 완료 후 배포를 진행하세요.
-{% endhint %}
-
 ## 도구 준비
 
 다음 중 **하나의 경로**를 택해 준비합니다. 상세는 [환경 준비](../02-setup/choose-your-path.md) 섹션에서 안내합니다.
