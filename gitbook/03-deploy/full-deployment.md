@@ -40,6 +40,7 @@ cd /home/workshop/sample-prechat-ai
    2. Configure Agent settings for your campaigns
    3. Create customer sessions and start chatting!
 ```
+![전체 배포 성공시 결과](../.gitbook/assets/03-full-deployment-result.png)
 
 {% hint style="warning" %}
 **Website URL을 메모장에 복사해 두세요.** 이후 모든 단계에서 이 URL을 사용합니다.
