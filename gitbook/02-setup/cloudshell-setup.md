@@ -39,7 +39,35 @@ aws sts get-caller-identity
 
 `UserId`, `Account`, `Arn`이 나오면 정상입니다.
 
-## 4. 다음 단계
+## 4. API Gateway 로깅 역할 설정
+
+API Gateway가 CloudWatch에 로그를 기록하려면 계정 수준에서 역할을 한 번 등록해야 합니다. 이미 설정된 계정이라면 건너뛰어도 됩니다.
+
+```bash
+# API Gateway용 CloudWatch Logs 역할 생성
+aws iam create-role \
+  --role-name ApiGatewayCloudWatchLogsRole \
+  --assume-role-policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Principal": {"Service": "apigateway.amazonaws.com"},
+      "Action": "sts:AssumeRole"
+    }]
+  }' 2>/dev/null || echo "역할이 이미 존재합니다 (정상)"
+
+aws iam attach-role-policy \
+  --role-name ApiGatewayCloudWatchLogsRole \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+
+# API Gateway 계정 설정에 역할 등록
+ROLE_ARN=$(aws iam get-role --role-name ApiGatewayCloudWatchLogsRole --query 'Role.Arn' --output text)
+aws apigateway update-account --patch-operations op=replace,path=/cloudwatchRoleArn,value=$ROLE_ARN
+
+echo "✅ API Gateway 로깅 역할 설정 완료"
+```
+
+## 5. 다음 단계
 
 CloudShell 준비가 끝났으면 [레포지토리 클론](../03-deploy/clone-repository.md)으로 이동합니다.
 
