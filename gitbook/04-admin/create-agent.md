@@ -5,18 +5,7 @@ icon: robot
 
 # 에이전트 생성과 프롬프트 작성
 
-관리자 대시보드에서 상담에 사용할 에이전트를 생성합니다. 에이전트는 캠페인에 연결되어 고객 대화를 담당합니다.
-
-## 에이전트란
-
-**PreChat Agent**는 상담 에이전트(AgentCore에 배포된 런타임) 위에서 실행되는 **구성 객체**입니다. 같은 런타임에 여러 에이전트 구성을 만들어 캠페인마다 다른 프롬프트와 도구 조합으로 운영할 수 있습니다.
-
-| 구성 요소 | 설명 |
-|---------|------|
-| **이름 (Name)** | 관리자 식별용 이름 |
-| **시스템 프롬프트 (System Prompt)** | 에이전트의 페르소나와 행동 지침 |
-| **모델 ID (Model)** | 사용할 Bedrock 파운데이션 모델 |
-| **도구 (Tools)** | retrieve (KB RAG), render_form, aws_docs_mcp, http_request 등 |
+에이전트는 고객 대화를 담당하는 AI 구성 객체입니다. 캠페인에 연결해 사용합니다.
 
 ## 생성 절차
 
@@ -24,7 +13,7 @@ icon: robot
 {% step %}
 ### 에이전트 페이지로 이동한다
 
-대시보드 좌측 메뉴 → **Agents** → **Create Agent** 버튼
+대시보드 좌측 메뉴 → **Agents** → **Create Agent** 버튼을 클릭합니다.
 
 ![Agents 리스트 화면](../.gitbook/assets/04-create-agent-01-agents-list.png)
 {% endstep %}
@@ -32,21 +21,19 @@ icon: robot
 {% step %}
 ### 이름을 정한다
 
-예: `workshop-consultation-ko`, `enterprise-migration-agent`
+예: `workshop-consultation-ko`
 
-에이전트 이름은 관리자만 보는 식별자입니다.
+관리자만 보는 식별용 이름입니다.
 {% endstep %}
 
 {% step %}
 ### 모델을 선택한다
 
-드롭다운에서 Bedrock 모델을 고릅니다. 권장:
+드롭다운에서 Bedrock 모델을 고릅니다.
 
 - **Anthropic Claude 3.5 Sonnet** — 범용, 높은 품질
-- **Amazon Nova Pro** — 한국어 품질이 좋고 응답 속도가 빠름
+- **Amazon Nova Pro** — 한국어 품질 우수, 빠른 응답
 - **Amazon Nova Lite** — 비용 절감용
-
-Bedrock에서 사용 가능한 모델이 표시됩니다.
 
 ![모델 선택 드롭다운](../.gitbook/assets/04-create-agent-03-role-dropdown.png)
 {% endstep %}
@@ -54,7 +41,7 @@ Bedrock에서 사용 가능한 모델이 표시됩니다.
 {% step %}
 ### 시스템 프롬프트를 작성한다
 
-고객과 대화할 때의 역할, 톤, 수집할 정보를 지정합니다. 아래는 워크샵 예시입니다.
+고객과 대화할 때의 역할, 톤, 수집할 정보를 지정합니다. 아래 예시를 복사해 사용합니다.
 
 ```
 당신은 ACME 솔루션즈의 AI 사전상담 어시스턴트입니다.
@@ -87,49 +74,36 @@ Bedrock에서 사용 가능한 모델이 표시됩니다.
 {% step %}
 ### 도구를 선택한다
 
+워크샵에서는 **`render_form` + `aws_docs_mcp`** 두 가지로 시작합니다.
+
 | 도구 | 용도 | 권장 |
 |------|------|------|
-| `retrieve` | Bedrock Knowledge Base RAG 검색. `kb_id` 속성 필요 | 유사 사례/문서 제공 시 |
-| `render_form` | 구조화된 정보 수집 폼을 채팅에 렌더링 | 항상 권장 |
+| `retrieve` | Knowledge Base RAG 검색 | 유사 사례/문서 제공 시 |
+| `render_form` | 구조화된 정보 수집 폼 렌더링 | 항상 권장 |
 | `aws_docs_mcp` | AWS 공식 문서 실시간 검색 | 기술 상담에 권장 |
 | `current_time` | 현재 시간 조회 | 일정 논의에 권장 |
 | `http_request` | 외부 API 호출 | 고급 통합 |
-
-워크샵에서는 **`render_form` + `aws_docs_mcp`** 두 가지로 시작하는 것을 권장합니다.
 
 ![도구 선택 체크리스트](../.gitbook/assets/04-create-agent-04-edit-full.png)
 {% endstep %}
 
 {% step %}
-### Knowledge Base를 연결한다 (선택)
-
-`retrieve` 도구를 선택했다면 Knowledge Base ID를 지정합니다. Knowledge Base가 없다면 다음 경로로 미리 생성합니다.
-
-- AWS Console → **Amazon Bedrock** → **Knowledge bases** → **Create knowledge base**
-- 데이터 소스로 S3 버킷(고객 사례, 제품 문서, FAQ 등) 지정
-- Vector database로 OpenSearch Serverless 또는 Pinecone 선택
-
-**[수동 캡처 필요]** KB ID 입력 필드
-{% endstep %}
-
-{% step %}
 ### Agent를 저장하고 Prepare를 실행한다
 
-**Save** 버튼으로 구성을 저장한 뒤 **Prepare** 버튼을 누릅니다. AgentCore Memory 리소스가 준비되고 에이전트가 호출 가능한 상태가 됩니다.
-
-Status가 `PREPARED`로 바뀌면 완료입니다.
+**Save** → **Prepare** 버튼을 순서대로 클릭합니다. Status가 `PREPARED`로 바뀌면 완료입니다.
 
 ![Prepare 버튼 및 Status 표시](../.gitbook/assets/04-create-agent-04-edit-full.png)
 {% endstep %}
 {% endstepper %}
 
-## 에이전트 관리 팁
+<details>
+<summary>에이전트 관리 팁</summary>
 
-### 프롬프트 이터레이션
+**프롬프트 이터레이션**
 
-실제 테스트 세션을 수행한 뒤 대화 로그를 보고 프롬프트를 개선합니다. 에이전트 상세 페이지에서 시스템 프롬프트를 편집하면 기존 캠페인에도 즉시 반영됩니다.
+테스트 세션 후 대화 로그를 보고 프롬프트를 개선합니다. 에이전트 상세 페이지에서 시스템 프롬프트를 편집하면 기존 캠페인에도 즉시 반영됩니다.
 
-### 여러 에이전트 운영
+**여러 에이전트 운영**
 
 업종별, 제품별로 별도 에이전트를 만들면 관리가 편합니다.
 
@@ -139,9 +113,18 @@ Status가 `PREPARED`로 바뀌면 완료입니다.
 | `kr-migration-ko` | 한국 마이그레이션 상담 |
 | `global-partner-en` | 글로벌 파트너 영문 상담 |
 
-### 도구 속성 동적 주입
+</details>
 
-`retrieve` 도구는 에이전트 구성 시점에 `kb_id`를 지정합니다. 캠페인마다 다른 KB를 쓰고 싶다면 에이전트를 복제해 `kb_id`만 바꾸면 됩니다.
+<details>
+<summary>Knowledge Base 연결 (선택)</summary>
+
+`retrieve` 도구를 선택했다면 Knowledge Base ID를 지정합니다.
+
+KB가 없다면 AWS Console → **Amazon Bedrock** → **Knowledge bases** → **Create knowledge base**에서 생성합니다. 데이터 소스로 S3 버킷(고객 사례, 제품 문서, FAQ 등)을 지정합니다.
+
+캠페인마다 다른 KB를 쓰고 싶다면 에이전트를 복제해 `kb_id`만 바꿉니다.
+
+</details>
 
 ## 다음 단계
 

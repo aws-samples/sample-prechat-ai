@@ -17,7 +17,7 @@ cd /home/workshop/sample-prechat-ai
 ```
 
 {% hint style="info" %}
-배포는 20~40분 걸립니다. 중간에 터미널을 닫지 마세요.
+배포는 10분 가량 소요됩니다. 중간에 터미널을 닫지 마세요.
 {% endhint %}
 
 ## 2. 배포 완료 확인
