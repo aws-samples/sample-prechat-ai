@@ -115,9 +115,9 @@ export default function Login() {
           </Box>
         </Box>
 
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <style>{`
-            .awsui_input_2rhyz_x45v2_149 { width: 100% !important; min-width: 300px !important; }
+            .awsui_input_2rhyz_x45v2_149 { width: 100% !important; min-width: 450px !important; }
           `}</style>
           {error && (
             <Alert type="error" dismissible onDismiss={() => setError('')}>
