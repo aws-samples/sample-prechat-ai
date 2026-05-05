@@ -5,24 +5,22 @@ icon: right-to-bracket
 
 # 인바운드 세션 — 캠페인 URL로 자가 입장
 
-인바운드 캠페인은 고객이 URL로 직접 접근하고 PII를 입력해 세션을 스스로 생성하는 방식입니다. 세미나 후속 접수, 마케팅 랜딩, 파트너 상담 등에 적합합니다.
+고객이 URL로 직접 접근하고 정보를 입력해 세션을 스스로 생성합니다. 세미나 후속 접수, 마케팅 랜딩, 파트너 상담 등에 적합합니다.
 
 ## 사전 준비
 
-[캠페인 만들기](../04-admin/create-campaign.md)에서 **Inbound** 유형 캠페인을 만들어 둡니다.
+[캠페인 만들기](../04-admin/create-campaign.md)에서 **Inbound** 유형 캠페인을 생성합니다.
 
 - 캠페인 URL: `https://{WebsiteURL}/inbound/{campaignCode}`
-- 캠페인 PIN: 생성 시 지정한 6자리 (평문으로 고객에게 별도 공유)
+- 캠페인 PIN: 생성 시 지정한 6자리 (고객에게 별도 공유)
 
 ## 고객 입장 체험
 
-관리자 본인이 고객이 되어 플로우를 체험해봅니다.
-
 {% stepper %}
 {% step %}
-### 시크릿 브라우저 탭에서 캠페인 URL 열기
+### 시크릿 브라우저에서 캠페인 URL 열기
 
-관리자 세션과 섞이지 않도록 시크릿 창 또는 다른 브라우저에서 엽니다.
+관리자 세션과 섞이지 않도록 시크릿 창에서 엽니다.
 
 ```
 https://dxxx.cloudfront.net/inbound/FY26INBOUND
@@ -34,7 +32,7 @@ https://dxxx.cloudfront.net/inbound/FY26INBOUND
 {% step %}
 ### 캠페인 PIN 입력
 
-공유받은 6자리 PIN을 입력합니다. HMAC-SHA256 해시로 검증되므로 잘못 입력하면 바로 실패합니다.
+공유받은 6자리 PIN을 입력합니다.
 
 ![PIN 입력 화면](../.gitbook/assets/05-inbound-session-01-landing.png)
 {% endstep %}
@@ -42,21 +40,15 @@ https://dxxx.cloudfront.net/inbound/FY26INBOUND
 {% step %}
 ### 개인정보와 상담 동의 입력
 
-다음 정보를 입력합니다.
-
-- **Name** — 고객 이름
-- **Email** — 이메일 주소
-- **Company** — 회사명
-- **Phone** — 전화번호 (중복 검증 기준)
-- **Consent** — 개인정보 이용 동의 체크
+Name, Email, Company, Phone, Consent 체크를 완료합니다.
 
 ![PII 입력과 동의 체크박스](../.gitbook/assets/05-inbound-session-01-landing.png)
 {% endstep %}
 
 {% step %}
-### 세션이 자동 생성되고 채팅으로 진입
+### 세션 자동 생성 → 채팅 진입
 
-입력한 전화번호가 처음 등장하는 번호라면 새 세션이 생성됩니다. 기존에 같은 번호로 세션을 시작한 적이 있다면 **기존 세션이 복원**됩니다.
+새 전화번호면 새 세션이 생성됩니다. 기존 번호면 기존 세션이 복원됩니다.
 
 ![채팅 화면 진입 직후](../.gitbook/assets/05-customer-conversation-01-chat-history.png)
 {% endstep %}
@@ -64,7 +56,7 @@ https://dxxx.cloudfront.net/inbound/FY26INBOUND
 
 ## 전화번호 기반 중복 방지
 
-인바운드 캠페인은 같은 캠페인 내에서 **하나의 전화번호 = 하나의 세션**을 보장합니다.
+하나의 캠페인 내에서 **하나의 전화번호 = 하나의 세션**을 보장합니다.
 
 | 상황 | 결과 |
 |------|-----|
@@ -72,54 +64,37 @@ https://dxxx.cloudfront.net/inbound/FY26INBOUND
 | 기존 번호로 재입장 | 기존 세션 복원, 대화 이어가기 |
 | 다른 캠페인에서 같은 번호 | 캠페인마다 독립된 세션 (서로 영향 없음) |
 
-{% hint style="info" %}
+<details>
+<summary>기술 참고</summary>
+
 중복 방지는 DynamoDB GSI3 인덱스를 사용합니다(`INBOUND#{campaignId}#PHONE#{phone}`). 캠페인과 전화번호 조합으로 조회하여 기존 세션을 찾습니다.
-{% endhint %}
+</details>
 
 ## 관리자 대시보드에서의 차이
 
-인바운드 캠페인은 **관리자가 세션을 생성하지 않습니다**. 따라서 Sessions 리스트에 나타나는 세션은 모두 고객이 직접 생성한 것입니다.
+인바운드 캠페인은 관리자가 세션을 생성하지 않습니다. Sessions 리스트에 나타나는 세션은 모두 고객이 직접 생성한 것입니다.
 
 ![인바운드 캠페인의 Sessions 리스트 — Created By 컬럼이 "Inbound"로 표시](../.gitbook/assets/05-outbound-session-03-sessions-full-list.png)
 
 ## 세션 수량 통제
 
-인바운드 캠페인을 일시 중단하려면 캠페인 **Status**를 **Inactive**로 바꿉니다. 기존 세션은 계속 진행되지만 새 세션은 생성되지 않습니다.
-
-PIN을 변경하면 기존 URL을 가진 고객이 새로 입장할 수 없게 됩니다 (기존 진행 중 세션은 영향 없음).
+- 새 세션 차단: 캠페인 **Status**를 **Inactive**로 변경
+- PIN 변경: 기존 URL을 가진 고객의 신규 입장 차단 (진행 중 세션은 영향 없음)
 
 ## 에이전트 선택 우선순위
 
-인바운드 캠페인에서 세션의 에이전트 선택은 다음 우선순위를 따릅니다.
-
-{% stepper %}
-{% step %}
-### 캠페인의 `agentConfigurations.prechat` 사용
-
-인바운드 타입에서는 세션 단위 에이전트 오버라이드가 **허용되지 않으며** 캠페인 설정이 강제됩니다.
-{% endstep %}
-
-{% step %}
-### 아웃바운드와 차이점
-
-아웃바운드는 세션별 `agentId`를 지정할 수 있지만, 인바운드는 캠페인 전체가 동일한 에이전트를 사용합니다.
-{% endstep %}
-{% endstepper %}
+인바운드 캠페인은 세션별 에이전트 오버라이드가 불가합니다. 캠페인 `agentConfigurations.prechat` 설정이 모든 세션에 강제 적용됩니다.
 
 ## 다음 단계
 
-세션이 시작됐다면 [고객 대화 흐름](customer-conversation.md)으로 이동해 채팅 기능을 자세히 살펴봅니다.
+세션이 시작됐다면 [고객 대화 흐름](customer-conversation.md)으로 이동합니다.
 
-## 문제 해결
+<details>
+<summary>문제 해결</summary>
 
-### "Invalid PIN"
+**"Invalid PIN"** — 캠페인 PIN을 잘못 입력했습니다. 관리자에게 정확한 PIN을 확인합니다.
 
-캠페인 PIN을 잘못 입력했습니다. 관리자에게 정확한 PIN을 다시 확인합니다. PIN은 해시되어 저장되므로 관리자도 원문을 조회할 수 없습니다.
+**"Phone number already registered"** — 같은 캠페인 내에서 기존 세션이 있습니다. 자동으로 기존 세션이 복원됩니다. 복원 실패 시 관리자에게 기존 세션의 Inactivate 처리를 요청합니다.
 
-### "Phone number already registered"
-
-같은 캠페인 내에서 기존 세션이 있습니다. 대부분의 경우 자동으로 기존 세션이 복원됩니다. 복원이 실패한다면 관리자에게 기존 세션의 **Inactivate** 처리를 요청하세요.
-
-### PIN을 분실한 경우
-
-관리자가 캠페인을 편집하여 새 PIN을 설정하고 재공유합니다. 기존 세션은 영향받지 않습니다.
+**PIN 분실** — 관리자가 캠페인을 편집하여 새 PIN을 설정하고 재공유합니다.
+</details>

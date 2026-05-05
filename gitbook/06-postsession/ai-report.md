@@ -16,21 +16,21 @@ icon: chart-simple
 | **Need** | 해결해야 할 문제와 비즈니스 동기 |
 | **Timeline** | 도입 희망 시기와 주요 마일스톤 |
 
-요약 에이전트는 Pydantic 기반 Structured Output으로 타입 안전한 응답을 반환하며, 화면에는 사람이 읽기 좋은 마크다운 리포트로 렌더링됩니다.
+<details>
+<summary>기술 참고</summary>
+
+요약 에이전트는 Pydantic 기반 Structured Output으로 타입 안전한 응답을 반환합니다. 화면에는 마크다운 리포트로 렌더링됩니다.
+</details>
 
 ## 리포트 확인
 
 {% stepper %}
 {% step %}
-### 세션 상세 페이지로 이동
+### 세션 상세 → AI Report 탭
 
-대시보드 → **Sessions** → 해당 세션 클릭
-{% endstep %}
+대시보드 → **Sessions** → 해당 세션 클릭 → **AI Report** 탭 선택
 
-{% step %}
-### AI Report 탭을 연다
-
-세션이 Completed 상태라면 자동 생성된 리포트가 표시됩니다. 상태가 `Generating`이면 잠시 기다린 뒤 새로고침합니다.
+상태가 `Generating`이면 잠시 기다린 뒤 새로고침합니다.
 
 ![AI Report 탭 전체 화면](../.gitbook/assets/06-ai-report-01-session-detail-full.png)
 {% endstep %}
@@ -40,11 +40,9 @@ icon: chart-simple
 
 ![실제 BANT 리포트 렌더링 예시](../.gitbook/assets/06-ai-report-02-conversation-tab.png)
 
-생성된 리포트는 다음 섹션으로 구성됩니다.
-
 ### 1. Markdown Summary
 
-대화 전체를 한두 단락으로 요약한 서술형 문단입니다. 본 미팅 참석자가 5분 안에 파악할 수 있도록 작성됩니다.
+대화 전체를 한두 단락으로 요약한 서술형 문단입니다.
 
 ### 2. BANT Analysis
 
@@ -72,8 +70,6 @@ Timeline
 
 ### 3. AWS Services 추천
 
-대화 맥락을 기반으로 요약 에이전트가 관련 AWS 서비스를 추천합니다.
-
 | 서비스 | 이유 |
 |--------|-----|
 | Aurora PostgreSQL | Oracle 대체, 라이선스 비용 절감 |
@@ -82,7 +78,7 @@ Timeline
 
 ## 리포트 재생성
 
-대화 로그를 수정하지 않는 한 리포트는 한 번 생성되면 재사용됩니다. 강제로 재생성하려면 **Regenerate Report** 버튼을 누릅니다.
+**Regenerate Report** 버튼을 클릭하면 리포트를 다시 생성합니다.
 
 ![Regenerate Report 버튼](../.gitbook/assets/06-ai-report-01-session-detail-full.png)
 
@@ -92,32 +88,22 @@ Timeline
 
 ## 리포트 내보내기
 
-리포트를 PDF 또는 마크다운으로 내보내 외부 공유할 수 있습니다.
-
 - **Copy to Clipboard** — 마크다운 원문 복사
 - **Download PDF** — 브라우저 인쇄 → PDF 저장
 
 ## 여러 세션 비교하기
 
-캠페인 분석 대시보드에서 여러 세션의 BANT 요약을 한눈에 비교할 수 있습니다. [캠페인 대시보드](../07-analytics/campaign-dashboard.md) 참고.
+캠페인 분석 대시보드에서 여러 세션의 BANT 요약을 한눈에 비교합니다. [캠페인 대시보드](../07-analytics/campaign-dashboard.md) 참고.
 
-## 리포트 품질 개선 팁
+<details>
+<summary>리포트 품질 개선 팁</summary>
 
-리포트 품질이 기대에 못 미친다면 다음을 점검합니다.
+**대화가 짧은 경우** — 에이전트 프롬프트에 "각 BANT 항목을 충분히 파악할 때까지 질문을 계속하라"는 지시를 추가합니다.
 
-{% tabs %}
-{% tab title="대화가 짧음" %}
-에이전트 프롬프트에 **"각 BANT 항목을 충분히 파악할 때까지 질문을 계속하라"**는 지시를 추가합니다.
-{% endtab %}
+**모델 품질** — 요약 에이전트의 모델을 Claude Sonnet 4 또는 Claude 3.5 Sonnet 같은 고품질 모델로 교체합니다. 에이전트 설정에서 변경 가능하며 재배포는 불필요합니다.
 
-{% tab title="모델 품질" %}
-요약 에이전트의 모델을 Claude Sonnet 4 또는 Claude 3.5 Sonnet 같은 고품질 모델로 교체합니다. 모델 변경은 에이전트 설정에서 가능하며 재배포는 필요하지 않습니다.
-{% endtab %}
-
-{% tab title="언어 불일치" %}
-대화는 한국어인데 리포트가 영어로 나오는 경우, 에이전트 `locale` 설정을 `ko`로 지정합니다.
-{% endtab %}
-{% endtabs %}
+**언어 불일치** — 대화는 한국어인데 리포트가 영어로 나오는 경우, 에이전트 `locale` 설정을 `ko`로 지정합니다.
+</details>
 
 ## 다음 단계
 

@@ -5,11 +5,11 @@ icon: scale-balanced
 
 # 캠페인 간 비교
 
-여러 캠페인을 동시에 운영할 때, 어떤 캠페인이 효과적이고 어떤 캠페인이 개선이 필요한지 한눈에 비교합니다.
+여러 캠페인을 동시에 운영할 때, 어떤 캠페인이 효과적인지 한눈에 비교합니다.
 
 ## 진입 방법
 
-대시보드 좌측 메뉴 → **Analytics** → **Campaign Comparison**
+좌측 메뉴 → **Analytics** → **Campaign Comparison**
 
 ![캠페인 비교 페이지 진입](../.gitbook/assets/07-campaign-dashboard-01-detail-tabs.png)
 
@@ -17,17 +17,17 @@ icon: scale-balanced
 
 {% stepper %}
 {% step %}
-### 비교할 캠페인을 선택한다
+### 비교할 캠페인 선택
 
-드롭다운에서 2~5개의 캠페인을 선택합니다.
+드롭다운에서 2~5개 캠페인을 선택합니다.
 
 ![캠페인 멀티 셀렉트](../.gitbook/assets/07-campaign-dashboard-01-detail-tabs.png)
 {% endstep %}
 
 {% step %}
-### 기간을 맞춘다
+### 기간 통일
 
-기간을 통일하지 않으면 비교가 왜곡될 수 있습니다. 동일 기간(예: 최근 30일)을 지정합니다.
+동일 기간(예: 최근 30일)을 지정합니다. 기간이 다르면 비교가 왜곡됩니다.
 
 ![기간 셀렉터](../.gitbook/assets/07-campaign-dashboard-01-detail-tabs.png)
 {% endstep %}
@@ -63,17 +63,16 @@ icon: scale-balanced
 | CSAT 격차 | 특정 에이전트나 캠페인 주제의 만족도 문제 | 해당 대화 로그 샘플링하여 품질 분석 |
 | BANT Coverage 편차 | 특정 항목 수집이 부족 | 프롬프트에 해당 항목 강조 지시 추가 |
 
-## 인사이트 활용
+<details>
+<summary>인사이트 활용</summary>
 
-### 성공 요소 공유
+**성공 요소 공유** — 성과가 우수한 캠페인의 에이전트 프롬프트를 다른 캠페인에 이식하여 공통 개선을 유도합니다.
 
-성과가 우수한 캠페인의 에이전트 프롬프트를 다른 캠페인에 이식하여 공통 개선을 유도합니다.
+**실패 패턴 차단** — Completion Rate 30% 미만이거나 CSAT 3점 이하인 캠페인은 임시 비활성화하고 개선 작업을 진행합니다.
+</details>
 
-### 실패 패턴 차단
-
-Completion Rate가 30% 미만이거나 CSAT 3점 이하인 캠페인은 **임시 비활성화**하고 개선 작업을 진행합니다.
-
-## 데이터 내보내기
+<details>
+<summary>데이터 내보내기</summary>
 
 비교 결과를 CSV로 내보내 경영진 보고나 정기 리뷰에 활용합니다.
 
@@ -83,6 +82,7 @@ FY26 Enterprise, 120, 72%, 18.5, 4.3, New Adoption
 FY26 Migration,  87, 65%, 22.1, 4.0, Migration
 FY26 SMB,        42, 54%, 14.3, 3.8, Cost Optimization
 ```
+</details>
 
 ## 다음 단계
 

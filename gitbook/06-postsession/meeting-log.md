@@ -7,28 +7,13 @@ icon: file-pen
 
 본 미팅이 끝나면 결과를 **Meeting Log**에 기록합니다. 이후 분석과 후속 영업 활동의 근거가 됩니다.
 
-## 목적
-
-- 미팅에서 얻은 구체적인 사실(예산 승인 상태, 담당자 변경 등)을 기록
-- 플랜 대비 달성도 평가
-- 다음 행동(Next Action)의 명확한 정의
-- 캠페인 분석의 정성적 데이터 제공
-
 ## 로그 작성
 
 {% stepper %}
 {% step %}
-### 세션 상세 → Meeting Log 탭
-
-미팅 플랜과 같은 세션 내에 Meeting Log 탭이 있습니다.
+### 세션 상세 → Meeting Log 탭 → "Create Meeting Log" 클릭
 
 ![Meeting Log 빈 상태](../.gitbook/assets/06-meeting-log-01-session-detail.png)
-{% endstep %}
-
-{% step %}
-### "Create Meeting Log" 클릭
-
-폼이 열립니다.
 {% endstep %}
 
 {% step %}
@@ -85,7 +70,7 @@ icon: file-pen
 ```
 관리자: 유사한 이관 일정으로 진행한 사례 있어?
 
-Planning Agent: KB에서 검색한 결과 다음 사례가 있습니다.
+요약 에이전트: KB에서 검색한 결과 다음 사례가 있습니다.
 
   - xyz-corp: 2024 Q3 PoC → 2025 Q1 Production 이관 (6개월)
   - abc-inc: 2023 Q4 PoC → 2024 Q2 Production (9개월, 보안 리뷰로 지연)
@@ -93,14 +78,10 @@ Planning Agent: KB에서 검색한 결과 다음 사례가 있습니다.
   고객이 제시한 2027 Q2 Go-Live는 xyz-corp과 유사한 템포입니다.
 ```
 
-## 로그 편집과 버전
+## 로그 편집
 
-로그는 생성 후에도 편집 가능합니다. 편집 이력은 `updatedAt` 타임스탬프에 반영되지만 별도 버전 관리 UI는 제공하지 않습니다. 중요한 변경은 별도 노트로 보관하는 것을 권장합니다.
-
-## 캠페인 차원 통계
-
-여러 세션의 Meeting Log를 종합한 통계는 [캠페인 대시보드](../07-analytics/campaign-dashboard.md)에서 확인합니다.
+로그는 생성 후에도 편집 가능합니다. 편집 이력은 `updatedAt` 타임스탬프에 반영됩니다.
 
 ## 다음 단계
 
-[캠페인 대시보드](../07-analytics/campaign-dashboard.md)로 이동하여 전체 캠페인 관점의 분석을 살펴봅니다.
+[캠페인 대시보드](../07-analytics/campaign-dashboard.md)로 이동합니다.
