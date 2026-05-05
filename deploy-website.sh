@@ -22,9 +22,13 @@ echo "   Stack Name: $STACK_NAME"
 echo ""
 
 # Build the website
+# Vite mode를 STAGE에 맞춰 설정 (dev→development, prod→production)
 echo "🔨 Building website..."
 cd packages/web-app
-NODE_ENV=production npm run build
+VITE_MODE="$STAGE"
+if [ "$STAGE" = "dev" ]; then VITE_MODE="development"; fi
+if [ "$STAGE" = "prod" ]; then VITE_MODE="production"; fi
+npx vite build --mode $VITE_MODE
 cd ../..
 
 # Get CloudFormation outputs
