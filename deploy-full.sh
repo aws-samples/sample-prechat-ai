@@ -13,7 +13,7 @@ STACK_NAME=${5:-mte-prechat}
 # CloudShell은 프로필 없이 환경변수로 자격증명 제공
 PROFILE_FLAG=""
 if [ "$PROFILE" != "default" ]; then
-    PROFILE_FLAG="$PROFILE_FLAG"
+    PROFILE_FLAG="--profile $PROFILE"
 fi
 
 echo "🚀 Starting full deployment..."
