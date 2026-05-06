@@ -94,13 +94,13 @@ def list_sessions(event, context):
             
             session_data = {
                 'sessionId': session_id,
-                'status': item['status'],
-                'customerName': item['customerInfo']['name'],
-                'customerEmail': item['customerInfo']['email'],
-                'customerCompany': item['customerInfo']['company'],
-                'customerTitle': item['customerInfo'].get('title', ''),
+                'status': item.get('status', 'unknown'),
+                'customerName': item.get('customerInfo', {}).get('name', ''),
+                'customerEmail': item.get('customerInfo', {}).get('email', ''),
+                'customerCompany': item.get('customerInfo', {}).get('company', ''),
+                'customerTitle': item.get('customerInfo', {}).get('title', ''),
                 'consultationPurposes': item.get('consultationPurposes', ''),
-                'createdAt': item['createdAt'],
+                'createdAt': item.get('createdAt', ''),
                 'completedAt': item.get('completedAt', ''),
                 'salesRepEmail': item.get('salesRepEmail', item.get('salesRepId', '')),
                 'agentId': item.get('agentId', ''),
@@ -156,8 +156,12 @@ def inactivate_session(event, context):
         sessions_table.update_item(
             Key={'PK': f'SESSION#{session_id}', 'SK': 'METADATA'},
             UpdateExpression='SET #status = :status',
+            ConditionExpression='attribute_exists(PK) AND #status = :active',
             ExpressionAttributeNames={'#status': 'status'},
-            ExpressionAttributeValues={':status': 'inactive'}
+            ExpressionAttributeValues={
+                ':status': 'inactive',
+                ':active': 'active',
+            }
         )
         
         return lambda_response(200, {'message': 'Session inactivated'})
