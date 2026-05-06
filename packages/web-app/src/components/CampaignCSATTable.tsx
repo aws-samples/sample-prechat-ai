@@ -36,9 +36,9 @@ export function CampaignCSATTable({ analytics, loading = false }: CampaignCSATTa
     }
   }
 
-  const csatData = (analytics as any).csatFeedback || []
-  const averageCSAT = (analytics as any).averageCSAT || 0
-  const totalResponses = (analytics as any).totalCSATResponses || 0
+  const csatData = analytics.csatFeedback || []
+  const averageCSAT = analytics.averageCSAT || 0
+  const totalResponses = analytics.totalCSATResponses || 0
 
   return (
     <Container>
