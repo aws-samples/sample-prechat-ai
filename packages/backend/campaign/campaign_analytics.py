@@ -1,4 +1,3 @@
-# nosemgrep
 import json
 import boto3
 import logging
@@ -48,6 +47,24 @@ def get_campaign_analytics(event, context):
         )
         
         sessions = sessions_resp.get('Items', [])
+        
+        # 각 세션의 피드백 아이템을 조회하여 병합
+        # 피드백은 PK=SESSION#{sessionId}, SK=FEEDBACK 으로 별도 저장됨
+        for session in sessions:
+            session_id = session.get('sessionId', session['PK'].replace('SESSION#', ''))
+            try:
+                feedback_resp = sessions_table.get_item(
+                    Key={'PK': f'SESSION#{session_id}', 'SK': 'FEEDBACK'}
+                )
+                if 'Item' in feedback_resp:
+                    feedback_item = feedback_resp['Item']
+                    session['feedback'] = {
+                        'rating': feedback_item.get('rating'),
+                        'narrative': feedback_item.get('feedback', ''),
+                    }
+            except Exception as e:
+                logger.debug(f"No feedback for session {session_id}: {str(e)}")
+                continue
         
         # Calculate analytics
         analytics = calculate_campaign_analytics(campaign_id, sessions)

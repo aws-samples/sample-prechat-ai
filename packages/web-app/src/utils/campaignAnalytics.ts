@@ -87,7 +87,10 @@ export function calculateCampaignMetrics(sessions: Session[]): Omit<CampaignAnal
     averageSessionDuration: Math.round(averageSessionDuration * 100) / 100,
     topConsultationPurposes,
     sessionsByDate,
-    customerCompanies
+    customerCompanies,
+    csatFeedback: [],
+    averageCSAT: 0,
+    totalCSATResponses: 0,
   }
 }
 

@@ -27,6 +27,12 @@ PROFILE=${1:-default}
 STAGE=${2:-dev}
 REGION=${3:-ap-northeast-2}
 
+# CloudShell은 프로필 없이 환경변수로 자격증명을 제공하므로 default일 때는 --profile을 생략
+PROFILE_FLAG=""
+if [ "$PROFILE" != "default" ]; then
+    PROFILE_FLAG="--profile ${PROFILE}"
+fi
+
 # SSM 파라미터 경로 prefix
 SSM_PREFIX="/prechat/${STAGE}/agents"
 
@@ -55,7 +61,12 @@ deploy_agent() {
     cd "${SCRIPT_DIR}/${AGENT_DIR}"
 
     # deploy_agent.py 실행 (STAGE만 컨테이너 환경변수로 주입)
-    DEPLOY_OUTPUT=$(AWS_PROFILE=$PROFILE AWS_DEFAULT_REGION=$REGION STAGE=$STAGE python deploy_agent.py 2>&1 | tee /dev/stderr | tail -1)
+    # CloudShell은 프로필 없이 환경변수로 자격증명을 제공하므로 default일 때는 AWS_PROFILE을 설정하지 않음
+    local PROFILE_ENV=""
+    if [ "$PROFILE" != "default" ]; then
+        PROFILE_ENV="AWS_PROFILE=$PROFILE"
+    fi
+    DEPLOY_OUTPUT=$(env $PROFILE_ENV AWS_DEFAULT_REGION=$REGION STAGE=$STAGE uv run --python 3.13 --with bedrock-agentcore-starter-toolkit python deploy_agent.py 2>&1 | tee /dev/stderr | tail -1)
 
     # JSON에서 ARN 추출
     AGENT_ARN=$(echo "$DEPLOY_OUTPUT" | python3 -c "
@@ -85,7 +96,7 @@ except:
         --type "String" \
         --overwrite \
         --region "${REGION}" \
-        --profile "${PROFILE}" \
+        ${PROFILE_FLAG} \
         --description "PreChat ${AGENT_ROLE} agent runtime ARN (${STAGE})"
 
     echo "✅ SSM parameter registered: ${SSM_KEY} = ${AGENT_ARN}"
@@ -116,7 +127,7 @@ aws ssm get-parameters-by-path \
     --path "${SSM_PREFIX}" \
     --recursive \
     --region "${REGION}" \
-    --profile "${PROFILE}" \
+    ${PROFILE_FLAG} \
     --query 'Parameters[].{Name:Name,Value:Value}' \
     --output table 2>/dev/null || echo "(SSM 조회 실패 - 권한을 확인하세요)"
 

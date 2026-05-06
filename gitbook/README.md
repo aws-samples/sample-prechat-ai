@@ -1,0 +1,87 @@
+---
+description: 자사 고객 사전상담을 AI Agent로 운영할 수 있도록 배포부터 사용법까지 안내하는 워크샵 가이드
+icon: rocket
+---
+
+# AWS 와 함께 상담 에이전트 (PreChat) 만들기 워크샵
+
+<figure><img src=".gitbook/assets/00-landing-page.png" alt="PreChat 랜딩 화면"><figcaption></figcaption></figure>
+
+여러분은 고객 접촉면을 어떻게 넓히고 있나요?
+
+마케팅 메일, eDM, 모객 콜, 광고 디스플레이 - 고객과 연결되는 채널은 많지만, 정작 고객이 무엇을 원하는지 파악하는 단계에서 영업 병목이 생깁니다. **초기 상담에 시간이 몰리고, 고객마다 맞는 서비스를 추천하기 어렵고, 미팅 전 정보 정리가 번거롭습니다**.
+
+PreChat은 이 문제를 AI 챗봇으로 풀어냅니다. AWS 클라우드가 지원하는 에이전틱 AI 구성요소로 만든 사전상담 시스템이며, 양식 입력 대신 대화를 통해 고객 목소리를 수집하고, 대화를 마치면 [BANT 분석 리포트](06-postsession/ai-report.md)와 [미팅 플랜](06-postsession/meeting-plan.md)을 함께 논의할 수 있습니다. 
+
+전체 구조가 궁금하다면 [PreChat 한눈에 보기](01-overview/product-tour.md)와 [아키텍처 레퍼런스](appendix/architecture.md)를 참고하세요.
+
+이 워크샵은 **자사 서비스에 PreChat을 도입**하려는 분들을 위해 배포부터 운영까지 전 과정을 안내합니다.
+
+## 워크샵에서 다루는 내용
+
+{% stepper %}
+{% step %}
+### AWS에 배포
+
+`prsworkshop` 브랜치를 체크아웃하고 두 단계로 배포합니다. Strands 에이전트를 Bedrock AgentCore에 올리고, SAM으로 백엔드와 프론트엔드를 한 번에 올립니다.
+{% endstep %}
+
+{% step %}
+### 캠페인 구성
+
+관리자 계정을 만들고 에이전트와 캠페인을 생성합니다. 아웃바운드와 인바운드 두 유형을 모두 다룹니다.
+{% endstep %}
+
+{% step %}
+### 세션 운영
+
+고객이 챗봇과 대화하는 흐름을 직접 체험하고, 세션 완료 후 자동 생성되는 BANT 요약과 미팅 플랜을 확인합니다.
+{% endstep %}
+
+{% step %}
+### 캠페인 분석
+
+다수의 세션이 집계된 캠페인 대시보드에서 트렌드와 상담 목적 분포를 분석합니다.
+{% endstep %}
+{% endstepper %}
+
+## 대상 독자
+
+- 사내 영업/CS 프로세스에 AI 사전상담을 도입하려는 **IT/플랫폼 담당자**
+- AWS 서비스 경험이 있는 **솔루션 아키텍트, 개발자, 운영자**
+- PreChat을 자사 고객 응대 시나리오에 맞춰 커스터마이즈하려는 **프로덕트 오너**
+
+## 사전 요구사항
+
+{% hint style="info" %}
+워크샵을 진행하려면 다음이 준비되어야 합니다.
+
+- **AWS 계정** — IAM 사용자 또는 IAM Identity Center 권한 (Administrator 또는 동등한 수준)
+- **브라우저** — 최신 버전 Chrome, Edge, Firefox, Safari 중 하나
+{% endhint %}
+
+클라우드 예상 비용은 [보안과 비용 고려사항](appendix/security-and-cost.md)에서 미리 확인해 두는 것을 권장합니다.
+
+## 진행 시간
+
+| 섹션 | 예상 시간 |
+|------|---------|
+| 배포 | 20분 |
+| 관리자 온보딩 | 15분 |
+| 세션 시나리오 체험 | 15분 |
+| 분석과 정리 | 10분 |
+| **합계** | **약 60분** |
+
+## 레포지토리
+
+이 워크샵은 다음 레포지토리의 `prsworkshop` 브랜치를 기반으로 합니다.
+
+{% embed url="https://github.com/aws-samples/sample-prechat-ai" %}
+
+워크샵 전용으로 이 브랜치는 VPC/PrivateLink 옵션이 제거되어 있어 네트워크 구성 없이 그대로 배포됩니다.
+
+{% hint style="warning" %}
+프로덕션 환경에 도입할 때는 VPC 격리, WAF, 세분화된 IAM 정책, CloudFront 커스텀 인증서 등을 추가로 검토해야 합니다. 본 워크샵은 학습 목적의 빠른 배포를 우선합니다.
+{% endhint %}
+
+[시작하기 →](01-overview/product-tour.md)

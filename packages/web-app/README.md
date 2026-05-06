@@ -7,11 +7,11 @@ React SPA — Vite + AWS Cloudscape Design System + TypeScript
 ## 개발
 
 ```bash
-yarn install          # 의존성 설치
-yarn dev              # 개발 서버 (포트 5173)
-yarn build            # 프로덕션 빌드
-yarn lint             # ESLint + Prettier
-yarn test             # Vitest (단일 실행)
+npm install          # 의존성 설치
+npm run dev          # 개발 서버 (포트 5173)
+npm run build        # 프로덕션 빌드
+npm run lint         # ESLint + Prettier
+npm run test         # Vitest (단일 실행)
 ```
 
 ## 라우트
@@ -104,10 +104,10 @@ src/
 | `en.json` / `ko.json` | 레거시 |
 
 ```bash
-yarn extract-text           # 코드에서 번역 키 추출
-yarn manage-translations    # 번역 파일 관리
-yarn validate-translations  # 번역 검증
-yarn build:optimized        # 번역 검증 후 빌드
+npm run extract-text           # 코드에서 번역 키 추출
+npm run manage-translations    # 번역 파일 관리
+npm run validate-translations  # 번역 검증
+npm run build:optimized        # 번역 검증 후 빌드
 ```
 
 ## 환경 변수

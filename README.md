@@ -79,7 +79,7 @@ prechat/
 ├── template.yaml             # AWS SAM IaC
 ├── deploy-full.sh            # Full deploy (agents → SAM → frontend)
 ├── deploy-website.sh         # Frontend-only deploy
-└── package.json              # Yarn Workspaces root
+└── package.json              # npm Workspaces root
 ```
 
 ## Tech Stack
@@ -99,7 +99,7 @@ prechat/
 
 ### Prerequisites
 
-- Node.js v20.18.1+, Yarn v1.22.22+
+- Node.js v20.18.1+
 - Python 3.13, uv (uvx)
 - AWS CLI v2, SAM CLI v1
 - Docker (for agent builds)
@@ -109,7 +109,7 @@ prechat/
 
 ```bash
 # 1. Install dependencies
-yarn install
+npm install
 
 # 2. Full deploy (agents → SAM → frontend)
 chmod +x deploy-full.sh deploy-website.sh
@@ -140,22 +140,22 @@ Deploy order: `deploy-agents.sh` (AgentCore) → `sam deploy` (infra) → `deplo
 
 ```bash
 # Frontend dev server (port 5173)
-yarn dev
+npm run dev
 
 # Lint all
-yarn lint
+npm run lint
 
 # Test all (Vitest, single run)
-yarn test
+npm run test
 
 # SAM backend build
 sam build
 
 # Translation management
 cd packages/web-app
-yarn extract-text           # Extract translation keys
-yarn manage-translations    # Manage translation files
-yarn validate-translations  # Validate translations
+npm run extract-text           # Extract translation keys
+npm run manage-translations    # Manage translation files
+npm run validate-translations  # Validate translations
 ```
 
 ### Redeployment Scope
@@ -220,6 +220,7 @@ All tables support KMS encryption, TTL auto-expiry (30 days), and GSI.
 
 ## Documentation
 
+- [**Workshop Guide (GitBook)**](gitbook/README.md) — **ISV 고객 e2e 워크샵 가이드** (prsworkshop 브랜치 전용, 한국어)
 - [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) — Detailed deployment guide
 - [docs/API_REFERENCE.md](docs/API_REFERENCE.md) — API endpoint reference
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md) — Migration guide

@@ -574,7 +574,10 @@ export const campaignApi = {
           averageSessionDuration: analytics.averageSessionDuration || 0,
           topConsultationPurposes: analytics.topConsultationPurposes || [],
           sessionsByDate: analytics.sessionsByDate || [],
-          customerCompanies: analytics.customerCompanies || []
+          customerCompanies: analytics.customerCompanies || [],
+          csatFeedback: analytics.csatFeedback || [],
+          averageCSAT: analytics.averageCSAT || 0,
+          totalCSATResponses: analytics.totalCSATResponses || 0,
         }
       })
     } catch (error) {

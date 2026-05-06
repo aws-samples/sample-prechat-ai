@@ -188,6 +188,16 @@ export interface CampaignAnalytics {
     company: string;
     sessionCount: number;
   }>;
+  csatFeedback: Array<{
+    sessionId: string;
+    customerName: string;
+    customerCompany: string;
+    rating: number;
+    narrative: string;
+    completedAt: string;
+  }>;
+  averageCSAT: number;
+  totalCSATResponses: number;
 }
 
 export interface ChatMessageRequest {
