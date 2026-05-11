@@ -67,8 +67,7 @@ aws iam attach-role-policy \
 ```bash
 # 3. API Gateway 계정 설정에 역할 등록
 ROLE_ARN=$(aws iam get-role --role-name ApiGatewayCloudWatchLogsRole --query 'Role.Arn' --output text)
-aws apigateway update-account --patch-operations op=replace,path=/cloudwatchRoleArn,value=$ROLE_ARN
-echo "✅ API Gateway 로깅 역할 설정 완료"
+aws apigateway update-account --patch-operations op=replace,path=/cloudwatchRoleArn,value=$ROLE_ARN && echo "✅ API Gateway 로깅 역할 설정 완료"
 ```
 
 ## 5. 다음 단계
