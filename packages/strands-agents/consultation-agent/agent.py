@@ -142,6 +142,17 @@ def _get_locale_instruction(locale: str) -> str:
     return ""
 
 
+# --- 인프라 프로토콜: 유저 프롬프트와 무관하게 항상 주입 ---
+
+_BUBBLE_PROTOCOL = (
+    "## Streaming Protocol (MUST FOLLOW)\n"
+    "Your response is split into chat bubbles at paragraph boundaries (\\n\\n). "
+    "Use \\n\\n ONLY when the topic changes. "
+    "Keep the same topic in a single paragraph of 2-4 sentences. "
+    "Do NOT produce single-sentence paragraphs repeatedly."
+)
+
+
 def _build_session_manager(session_id: str):
     """AgentCore Memory STM 세션 매니저를 생성합니다.
 
@@ -199,6 +210,10 @@ def create_consultation_agent(
             effective_prompt = (
                 f"{effective_prompt}\n\n{locale_instruction}"
             )
+        # 인프라 프로토콜은 항상 주입 (유저 프롬프트와 무관)
+        effective_prompt = (
+            f"{effective_prompt}\n\n{_BUBBLE_PROTOCOL}"
+        )
         return Agent(
             model=parsed['model_id'] or DEFAULT_MODEL_ID,
             system_prompt=effective_prompt,
@@ -221,6 +236,10 @@ def create_consultation_agent(
         effective_prompt = (
             f"{effective_prompt}\n\n{locale_instruction}"
         )
+    # 인프라 프로토콜은 항상 주입 (유저 프롬프트와 무관)
+    effective_prompt = (
+        f"{effective_prompt}\n\n{_BUBBLE_PROTOCOL}"
+    )
     return Agent(
         model=(
             config.get('model_id') if config
