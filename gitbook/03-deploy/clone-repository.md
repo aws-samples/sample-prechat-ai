@@ -12,10 +12,10 @@ icon: code-branch
 AWS CloudShell 화면에서 다음을 복사-붙여넣기 후 엔터(Enter)를 입력해 실행합니다.
 
 ```bash
-sudo mkdir -p /home/workshop && sudo chown $(whoami) /home/workshop
-cd /home/workshop
-git clone https://github.com/aws-samples/sample-prechat-ai.git
-cd sample-prechat-ai
+sudo mkdir -p /home/workshop && sudo chown $(whoami) /home/workshop \
+  && cd /home/workshop \
+  && git clone https://github.com/aws-samples/sample-prechat-ai.git \
+  && cd sample-prechat-ai
 ```
 
 {% hint style="info" %}

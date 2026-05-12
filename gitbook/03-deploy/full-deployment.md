@@ -12,8 +12,8 @@ icon: rocket
 CloudShell에서 다음을 복사해 붙여넣고 Enter를 누릅니다.
 
 ```bash
-cd /home/workshop/sample-prechat-ai
-./deploy-full.sh default dev ap-northeast-2 ap-northeast-2 mte-prechat-workshop
+cd /home/workshop/sample-prechat-ai \
+  && ./deploy-full.sh default dev ap-northeast-2 ap-northeast-2 mte-prechat-workshop
 ```
 
 {% hint style="info" %}
